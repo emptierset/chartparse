@@ -2,18 +2,16 @@ import collections
 import re
 
 import chartparse.track
-
 from chartparse.enums import Note
-from chartparse.exceptions import RegexFatalNotMatchError
 from chartparse.event import Event
+from chartparse.exceptions import RegexFatalNotMatchError
 from chartparse.util import DictPropertiesEqMixin
-
 
 _min_note_instrument_track_index = 0
 _max_note_instrument_track_index = 4
-_open_instrument_track_index     = 7
-_forced_instrument_track_index   = 5
-_tap_instrument_track_index      = 6
+_open_instrument_track_index = 7
+_forced_instrument_track_index = 5
+_tap_instrument_track_index = 6
 
 
 class InstrumentTrack(DictPropertiesEqMixin):
@@ -22,19 +20,21 @@ class InstrumentTrack(DictPropertiesEqMixin):
         self.difficulty = difficulty
         self.note_events = self._parse_note_events_from_iterable(iterator_getter())
         self.star_power_events = chartparse.track.parse_events_from_iterable(
-                iterator_getter(), StarPowerEvent.from_chart_line)
+            iterator_getter(), StarPowerEvent.from_chart_line
+        )
 
     def __str__(self):  # pragma: no cover
         return (
-                f"Instrument: {self.instrument}\n"
-                f"Difficulty: {self.difficulty}\n"
-                f"Note count: {len(self.note_events)}\n"
-                f"Star power phrase count: {len(self.star_power_events)}")
+            f"Instrument: {self.instrument}\n"
+            f"Difficulty: {self.difficulty}\n"
+            f"Note count: {len(self.note_events)}\n"
+            f"Star power phrase count: {len(self.star_power_events)}"
+        )
 
     @staticmethod
     def _parse_note_events_from_iterable(iterable):
         tick_to_note_array = collections.defaultdict(lambda: bytearray(5))
-        tick_to_duration_list = collections.defaultdict(lambda: [None]*5)
+        tick_to_duration_list = collections.defaultdict(lambda: [None] * 5)
         tick_to_is_tap = collections.defaultdict(bool)
         tick_to_is_forced = collections.defaultdict(bool)
         for line in iterable:
@@ -57,8 +57,12 @@ class InstrumentTrack(DictPropertiesEqMixin):
         for tick in tick_to_note_array.keys():
             note = Note(tick_to_note_array[tick])
             event = NoteEvent(
-                    tick, note, duration=tick_to_duration_list[tick],
-                    is_forced=tick_to_is_forced[tick], is_tap=tick_to_is_tap[tick])
+                tick,
+                note,
+                duration=tick_to_duration_list[tick],
+                is_forced=tick_to_is_forced[tick],
+                is_tap=tick_to_is_tap[tick],
+            )
             events.append(event)
         events.sort(key=lambda e: e.tick)
 
@@ -106,8 +110,10 @@ class NoteEvent(Event, DictPropertiesEqMixin):
             lane_is_active = note_lane_value == 1
             duration_is_set = duration_lane_value is not None
             if lane_is_active != duration_is_set:
-                raise ValueError(f"list duration {duration} must have "
-                                  "values for exactly the active note lanes.")
+                raise ValueError(
+                    f"list duration {duration} must have "
+                    "values for exactly the active note lanes."
+                )
 
     @staticmethod
     def _refine_duration(duration):
@@ -131,9 +137,9 @@ class NoteEvent(Event, DictPropertiesEqMixin):
         if self.is_tap:
             flags.append("T")
         if flags:
-            to_join.extend([" [flags=", ''.join(flags), "]"])
+            to_join.extend([" [flags=", "".join(flags), "]"])
 
-        return ''.join(to_join)
+        return "".join(to_join)
 
     def __repr__(self):  # pragma: no cover
         return str(self.__dict__)
@@ -161,9 +167,7 @@ class StarPowerEvent(Event, DictPropertiesEqMixin):
     def __str__(self):  # pragma: no cover
         to_join = [super().__str__()]
         to_join.append(f": duration={self.duration}")
-        return ''.join(to_join)
+        return "".join(to_join)
 
     def __repr__(self):  # pragma: no cover
         return str(self.__dict__)
-
-

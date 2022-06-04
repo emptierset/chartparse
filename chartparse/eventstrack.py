@@ -1,16 +1,16 @@
 import re
 
 import chartparse.track
-
-from chartparse.exceptions import RegexFatalNotMatchError
 from chartparse.event import Event
+from chartparse.exceptions import RegexFatalNotMatchError
 from chartparse.util import DictPropertiesEqMixin
 
 
 class Events(DictPropertiesEqMixin):
     def __init__(self, iterator_getter):
         self.events = chartparse.track.parse_events_from_iterable(
-                iterator_getter(), EventsEvent.from_chart_line)
+            iterator_getter(), EventsEvent.from_chart_line
+        )
 
 
 class EventsEvent(Event, DictPropertiesEqMixin):
@@ -38,7 +38,7 @@ class EventsEvent(Event, DictPropertiesEqMixin):
         to_join.append(f": {self.command}")
         if self.params:
             to_join.append(f" [params={self.params}]")
-        return ''.join(to_join)
+        return "".join(to_join)
 
     def __repr__(self):  # pragma: no cover
         return str(self.__dict__)

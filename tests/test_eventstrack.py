@@ -26,5 +26,3 @@ class TestEventsEvent(object):
         line = "asdf"
         with pytest.raises(RegexFatalNotMatchError):
             _ = EventsEvent.from_chart_line(line)
-
-
