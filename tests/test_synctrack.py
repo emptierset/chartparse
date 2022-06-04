@@ -4,19 +4,24 @@ from chartparse.exceptions import RegexFatalNotMatchError
 from chartparse.synctrack import BPMEvent, TimeSignatureEvent, SyncTrack
 
 
-
 class TestSyncTrack(object):
     def test_init(self, basic_sync_track):
         assert basic_sync_track.time_signature_events == pytest.default_time_signature_event_list
         assert basic_sync_track.bpm_events == pytest.default_bpm_event_list
 
-    def test_init_missing_first_time_signature_event(self, mocker, placeholder_string_iterator_getter):
+    def test_init_missing_first_time_signature_event(
+        self, mocker, placeholder_string_iterator_getter
+    ):
         mocker.patch(
-                'chartparse.synctrack.chartparse.track.parse_events_from_iterable',
-                return_value=[
-                    TimeSignatureEvent(
-                        1, pytest.default_upper_time_signature_numeral,
-                        pytest.default_lower_time_signature_numeral)])
+            "chartparse.synctrack.chartparse.track.parse_events_from_iterable",
+            return_value=[
+                TimeSignatureEvent(
+                    1,
+                    pytest.default_upper_time_signature_numeral,
+                    pytest.default_lower_time_signature_numeral,
+                )
+            ],
+        )
         with pytest.raises(ValueError):
             _ = SyncTrack(placeholder_string_iterator_getter)
 
@@ -29,9 +34,11 @@ class TestSyncTrack(object):
                 return [BPMEvent(1, pytest.default_bpm)]
             else:
                 raise ValueError(f"event_type {event_type} not handled")
+
         mocker.patch(
-                'chartparse.synctrack.chartparse.track.parse_events_from_iterable',
-                side_effect=fake_parse_events_from_iterable)
+            "chartparse.synctrack.chartparse.track.parse_events_from_iterable",
+            side_effect=fake_parse_events_from_iterable,
+        )
         with pytest.raises(ValueError):
             _ = SyncTrack(placeholder_string_iterator_getter)
 
@@ -74,5 +81,3 @@ class TestBPMEvent(object):
         line = generate_valid_short_time_signature_line()
         with pytest.raises(RegexFatalNotMatchError):
             _ = BPMEvent.from_chart_line(line)
-
-

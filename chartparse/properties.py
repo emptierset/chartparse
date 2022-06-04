@@ -1,5 +1,6 @@
-import inflection
 import re
+
+import inflection
 
 from chartparse.exceptions import RegexFatalNotMatchError
 from chartparse.util import DictPropertiesEqMixin
@@ -9,20 +10,21 @@ class Properties(DictPropertiesEqMixin):
     # Known fields in the [Song] section and the functions that should be used
     # to process them.
     _field_transformers = {
-            "Name": str,
-            "Artist": str,
-            "Charter": str,
-            "Album": str,
-            "Year": str,
-            "Offset": int,
-            "Resolution": int,
-            "Player2": str,
-            "Difficulty": int,
-            "PreviewStart": int,
-            "PreviewEnd": int,
-            "Genre": str,
-            "MediaType": str,
-            "MusicStream": str}
+        "Name": str,
+        "Artist": str,
+        "Charter": str,
+        "Album": str,
+        "Year": str,
+        "Offset": int,
+        "Resolution": int,
+        "Player2": str,
+        "Difficulty": int,
+        "PreviewStart": int,
+        "PreviewEnd": int,
+        "Genre": str,
+        "MediaType": str,
+        "MusicStream": str,
+    }
 
     _regex = r"^\s*?([A-Za-z0-9]+?)\s=\s\"?(.*?)\"?\s*?$"
     _regex_prog = re.compile(_regex)
