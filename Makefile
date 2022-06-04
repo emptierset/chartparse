@@ -27,14 +27,14 @@ install:          ## Install the project in dev mode.
 .PHONY: fmt
 fmt:              ## Format code using black & isort.
 	$(ENV_PREFIX)isort chartparse/
-	$(ENV_PREFIX)black -l 79 chartparse/
-	$(ENV_PREFIX)black -l 79 tests/
+	$(ENV_PREFIX)black -l 99 chartparse/
+	$(ENV_PREFIX)black -l 99 tests/
 
 .PHONY: lint
 lint:             ## Run pep8, black, mypy linters.
-	$(ENV_PREFIX)flake8 chartparse/
-	$(ENV_PREFIX)black -l 79 --check chartparse/
-	$(ENV_PREFIX)black -l 79 --check tests/
+	$(ENV_PREFIX)flake8 --max-line-length 99 chartparse/
+	$(ENV_PREFIX)black -l 99 --check chartparse/
+	$(ENV_PREFIX)black -l 99 --check tests/
 	$(ENV_PREFIX)mypy --ignore-missing-imports chartparse/
 
 .PHONY: test
