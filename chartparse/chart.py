@@ -13,6 +13,7 @@ from chartparse.util import iterate_from_second_elem
 
 class Chart(object):
     _required_sections = ("Song", "SyncTrack")
+    _required_properties = ("resolution",)
     _instrument_track_name_to_instrument_difficulty_pair = {
         d + i: (Instrument(i), Difficulty(d))
         for i, d in itertools.product(Instrument.all_values(), Difficulty.all_values())
@@ -31,6 +32,12 @@ class Chart(object):
         for section_name, iterator_getter in sections.items():
             if section_name == "Song":
                 self.properties = Properties.from_chart_lines(iterator_getter())
+                if not all (hasattr(self.properties, p) for p in self._required_properties):
+                    raise ValueError(
+                        f"parsed properties list {list(self.properties.__dict__.keys())} does not contain all "
+                        f"required properties {self._required_properties}"
+                    )
+
             elif section_name == "Events":
                 self.events_track = Events(iterator_getter)
             elif section_name == "SyncTrack":
