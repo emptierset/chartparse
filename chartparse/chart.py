@@ -42,8 +42,8 @@ class Chart(object):
                 track = InstrumentTrack(instrument, difficulty, iterator_getter)
                 self.instrument_tracks[instrument][difficulty] = track
             else:
-                # TODO: Log unhandled section.
                 pass
+                # TODO: Log unhandled section.
 
         self._populate_bpm_event_timestamps()
         self._populate_event_timestamps(self.sync_track.time_signature_events)
