@@ -7,12 +7,16 @@ from chartparse.enums import Difficulty, Instrument
 
 
 _directory_of_this_file = pathlib.Path(__file__).parent.resolve()
-_test_chart_filepath = _directory_of_this_file / "data" / "test.chart"
+_chart_directory_filepath = _directory_of_this_file / "data"
+_valid_chart_filepath = _chart_directory_filepath / "test.chart"
+_missing_properties_chart_filepath = _chart_directory_filepath / "missing_properties.chart"
+_missing_resolution_chart_filepath = _chart_directory_filepath / "missing_resolution.chart"
+_missing_sync_track_chart_filepath = _chart_directory_filepath / "missing_sync_track.chart"
 
 
 class TestChart(object):
     def test_init(self):
-        with open(_test_chart_filepath, "r", encoding="utf-8-sig") as f:
+        with open(_valid_chart_filepath, "r", encoding="utf-8-sig") as f:
             c = Chart(f)
 
         assert c.properties is not None
@@ -71,6 +75,15 @@ class TestChart(object):
                 datetime.timedelta(seconds=6, microseconds=102564),
             ],
         )
+
+    @pytest.mark.parametrize("path", [
+        pytest.param(_missing_properties_chart_filepath, id="missing_properties"),
+        pytest.param(_missing_resolution_chart_filepath, id="missing_resolution"),
+        pytest.param(_missing_sync_track_chart_filepath, id="missing_sync_track"),
+    ])
+    def test_init_invalid_chart(self, path):
+        with open(path, "r", encoding="utf-8-sig") as f, pytest.raises(ValueError):
+            _ = Chart(f)
 
     @pytest.mark.parametrize(
         "ticks,bpm,resolution,want",
