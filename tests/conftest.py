@@ -3,16 +3,18 @@ import pytest
 
 from chartparse.chart import Chart
 from chartparse.enums import Instrument, Difficulty, Note
-from chartparse.eventstrack import Events, EventsEvent
-from chartparse.instrumenttrack import (
-    InstrumentTrack,
-    NoteEvent,
-    StarPowerEvent,
-    _min_note_instrument_track_index,
-)
+from chartparse.eventstrack import Events
+from chartparse.instrumenttrack import InstrumentTrack, _min_note_instrument_track_index
 from chartparse.properties import Properties
-from chartparse.synctrack import SyncTrack, BPMEvent, TimeSignatureEvent
-from chartparse.event import Event
+from chartparse.synctrack import SyncTrack
+from chartparse.event import (
+    Event,
+    BPMEvent,
+    TimeSignatureEvent,
+    StarPowerEvent,
+    NoteEvent,
+    EventsEvent,
+)
 
 _default_filepath = "/not/a/real/path"
 

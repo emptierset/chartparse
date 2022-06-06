@@ -4,7 +4,7 @@ import pytest
 
 from chartparse.chart import Chart
 from chartparse.enums import Difficulty, Instrument, Note
-from chartparse.instrumenttrack import NoteEvent
+from chartparse.event import NoteEvent
 
 
 _directory_of_this_file = pathlib.Path(__file__).parent.resolve()
@@ -15,7 +15,7 @@ _missing_resolution_chart_filepath = _chart_directory_filepath / "missing_resolu
 _missing_sync_track_chart_filepath = _chart_directory_filepath / "missing_sync_track.chart"
 
 
-class TestChart(object):
+class TestChartInit(object):
     def test_init(self):
         with open(_valid_chart_filepath, "r", encoding="utf-8-sig") as f:
             c = Chart(f)
@@ -85,10 +85,12 @@ class TestChart(object):
             pytest.param(_missing_sync_track_chart_filepath, id="missing_sync_track"),
         ],
     )
-    def test_init_invalid_chart(self, path):
+    def test_invalid_chart(self, path):
         with open(path, "r", encoding="utf-8-sig") as f, pytest.raises(ValueError):
             _ = Chart(f)
 
+
+class TestSecondsFromTicksAtBPM(object):
     @pytest.mark.parametrize(
         "ticks,bpm,resolution,want",
         [
@@ -98,7 +100,7 @@ class TestChart(object):
             pytest.param(400, 200, 100, 1.2),
         ],
     )
-    def test_seconds_from_ticks_at_bpm(self, basic_chart, ticks, bpm, resolution, want):
+    def test_basic(self, basic_chart, ticks, bpm, resolution, want):
         basic_chart.properties.resolution = resolution
         assert basic_chart._seconds_from_ticks_at_bpm(ticks, bpm) == want
 
@@ -109,12 +111,12 @@ class TestChart(object):
             pytest.param(100, 0, 192, id="zero_bpm"),
         ],
     )
-    def test_seconds_from_ticks_at_bpm_raises_ValueError(
-        self, basic_chart, ticks, bpm, resolution
-    ):
+    def test_error(self, basic_chart, ticks, bpm, resolution):
         with pytest.raises(ValueError):
             _ = basic_chart._seconds_from_ticks_at_bpm(ticks, bpm)
 
+
+class TestNotesPerSecond(object):
     @pytest.mark.parametrize(
         "events,want",
         [
@@ -155,7 +157,7 @@ class TestChart(object):
             ),
         ],
     )
-    def test_notes_per_second_from_note_events(self, basic_chart, events, want):
+    def test_from_note_events(self, basic_chart, events, want):
         assert basic_chart._notes_per_second_from_note_events(events) == want
 
     note_event1 = NoteEvent(0, pytest.default_note, timestamp=datetime.timedelta(seconds=5))
@@ -171,7 +173,7 @@ class TestChart(object):
             pytest.param(0, 2, [note_event1, note_event2, note_event3]),
         ],
     )
-    def test_notes_per_second_ticks(self, mocker, basic_chart, start_tick, end_tick, want):
+    def test_with_ticks(self, mocker, basic_chart, start_tick, end_tick, want):
         basic_chart.instrument_tracks[pytest.default_instrument][
             pytest.default_difficulty
         ].note_events = self.notes_per_second_note_events
@@ -200,7 +202,7 @@ class TestChart(object):
             ),
         ],
     )
-    def test_notes_per_second_time(self, mocker, basic_chart, start_time, end_time, want):
+    def test_with_time(self, mocker, basic_chart, start_time, end_time, want):
         basic_chart.instrument_tracks[pytest.default_instrument][
             pytest.default_difficulty
         ].note_events = self.notes_per_second_note_events
@@ -221,7 +223,7 @@ class TestChart(object):
             pytest.param(0, 30, [note_event1, note_event2, note_event3]),
         ],
     )
-    def test_notes_per_second_seconds(self, mocker, basic_chart, start_seconds, end_seconds, want):
+    def test_with_seconds(self, mocker, basic_chart, start_seconds, end_seconds, want):
         basic_chart.instrument_tracks[pytest.default_instrument][
             pytest.default_difficulty
         ].note_events = self.notes_per_second_note_events
@@ -242,9 +244,7 @@ class TestChart(object):
             pytest.param(20, 30),
         ],
     )
-    def test_notes_per_second_insufficient_note_events(
-        self, basic_chart, start_seconds, end_seconds
-    ):
+    def test_insufficient_number_of_note_events(self, basic_chart, start_seconds, end_seconds):
         basic_chart.instrument_tracks[pytest.default_instrument][
             pytest.default_difficulty
         ].note_events = self.notes_per_second_note_events
@@ -265,9 +265,7 @@ class TestChart(object):
             pytest.param(datetime.timedelta(0), 0, 0),
         ],
     )
-    def test_notes_per_second_too_many_start_args(
-        self, basic_chart, start_time, start_tick, start_seconds
-    ):
+    def test_too_many_start_args(self, basic_chart, start_time, start_tick, start_seconds):
         with pytest.raises(ValueError):
             _ = basic_chart.notes_per_second(
                 pytest.default_instrument,
@@ -285,9 +283,7 @@ class TestChart(object):
             pytest.param(Instrument.BASS, Difficulty.MEDIUM),
         ],
     )
-    def test_notes_per_second_missing_instrument_difficulty(
-        self, basic_chart, instrument, difficulty
-    ):
+    def test_missing_instrument_difficulty(self, basic_chart, instrument, difficulty):
         with pytest.raises(ValueError):
             _ = basic_chart.notes_per_second(
                 instrument,
