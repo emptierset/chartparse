@@ -1,3 +1,6 @@
+# Actual files
+/data/
+
 # Vim
 .*.sw?
 
