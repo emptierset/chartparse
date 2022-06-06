@@ -23,6 +23,16 @@ class SyncTrack(DictPropertiesEqMixin):
         if self.bpm_events[0].tick != 0:
             raise ValueError(f"first BPMEvent {self.bpm_events[0]} must have tick 0")
 
+    def idx_of_proximal_bpm_event(self, tick, start_idx=0):
+        # A BPMEvent is "proximal" relative to tick `T` if it is the
+        # BPMEvent with the highest tick value not greater than `T`.
+        for idx in range(start_idx, len(self.bpm_events)):
+            is_last_bpm_event = idx == len(self.bpm_events) - 1
+            next_bpm_event = self.bpm_events[idx + 1] if not is_last_bpm_event else None
+            if is_last_bpm_event or next_bpm_event.tick > tick:
+                return idx
+        raise ValueError(f"there are no BPMEvents at or after index {start_idx} in bpm_events")
+
 
 class TimeSignatureEvent(Event, DictPropertiesEqMixin):
     # Match 1: Tick

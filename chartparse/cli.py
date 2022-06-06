@@ -25,6 +25,11 @@ def main():
     for e in c.events_track.events[:5]:
         print(e)
 
+    print(c.notes_per_second(Instrument.GUITAR, Difficulty.EXPERT))
+    print(
+        c.notes_per_second(Instrument.GUITAR, Difficulty.EXPERT, start_tick=10000, end_tick=12000)
+    )
+
 
 if __name__ == "__main__":
     main()
