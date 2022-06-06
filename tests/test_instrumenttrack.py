@@ -1,8 +1,9 @@
 import pytest
 
 from chartparse.enums import Note, NoteTrackIndex
+from chartparse.event import StarPowerEvent, NoteEvent
 from chartparse.exceptions import RegexFatalNotMatchError
-from chartparse.instrumenttrack import InstrumentTrack, NoteEvent, StarPowerEvent
+from chartparse.instrumenttrack import InstrumentTrack
 
 from tests.conftest import (
     generate_valid_note_line_fn,
@@ -114,64 +115,3 @@ class TestInstrumentTrack(object):
         assert instrument_track.difficulty == pytest.default_difficulty
         assert instrument_track.note_events == want_note_events
         assert instrument_track.star_power_events == want_star_power_events
-
-
-class TestNoteEvent(object):
-    def test_init(self, note_event_with_all_optionals_set):
-        assert note_event_with_all_optionals_set.note == pytest.default_note
-        assert note_event_with_all_optionals_set.duration == pytest.default_duration
-        assert note_event_with_all_optionals_set.is_forced == True
-        assert note_event_with_all_optionals_set.is_tap == True
-
-    def test_validate_duration(self):
-        NoteEvent._validate_duration(0, Note.G)
-        NoteEvent._validate_duration([100, None, None, None, None], Note.G)
-        with pytest.raises(TypeError):
-            NoteEvent._validate_duration((100, None, None, None, None), Note.G)
-
-    def test_validate_int_duration_negative(self):
-        with pytest.raises(ValueError):
-            NoteEvent._validate_int_duration(-1)
-
-    @pytest.mark.parametrize(
-        "duration, note",
-        [
-            pytest.param(
-                [None, None, None, None], pytest.default_note, id="incorrect_length_list"
-            ),
-            pytest.param([100, 100, None, None, None], Note.G, id="mismatched_set_lanes"),
-        ],
-    )
-    def test_validate_list_duration_raises_ValueError(self, duration, note):
-        with pytest.raises(ValueError):
-            NoteEvent._validate_list_duration(duration, note)
-
-    @pytest.mark.parametrize(
-        "duration, want",
-        [
-            pytest.param([None, None, None, None, None], 0, id="all_none"),
-            pytest.param([100, None, None, 100, None], 100, id="all_the_same"),
-            pytest.param(100, 100, id="int_pass_through"),
-            pytest.param(
-                [100, 0, None, None, None], [100, 0, None, None, None], id="list_pass_through"
-            ),
-        ],
-    )
-    def test_refine_duration(self, duration, want):
-        assert NoteEvent._refine_duration(duration) == want
-
-
-class TestStarPowerEvent(object):
-    def test_init(self, star_power_event):
-        assert star_power_event.duration == pytest.default_duration
-
-    def test_from_chart_line(self, generate_valid_star_power_line):
-        line = generate_valid_star_power_line()
-        event = StarPowerEvent.from_chart_line(line)
-        assert event.tick == pytest.default_tick
-        assert event.duration == pytest.default_duration
-
-    def test_from_chart_line_no_match(self, generate_valid_note_line):
-        line = generate_valid_note_line()
-        with pytest.raises(RegexFatalNotMatchError):
-            _ = StarPowerEvent.from_chart_line(line)
