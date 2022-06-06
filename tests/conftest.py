@@ -3,10 +3,8 @@ import pytest
 
 from chartparse.chart import Chart
 from chartparse.enums import Instrument, Difficulty, Note
-from chartparse.eventstrack import Events
-from chartparse.instrumenttrack import InstrumentTrack, _min_note_instrument_track_index
+from chartparse.track import Events, InstrumentTrack, SyncTrack
 from chartparse.properties import Properties
-from chartparse.synctrack import SyncTrack
 from chartparse.event import (
     Event,
     BPMEvent,
@@ -97,7 +95,7 @@ _default_instrument = Instrument.GUITAR
 _default_duration = 100  # ticks
 
 _default_note = Note.G
-_default_note_instrument_track_index = _min_note_instrument_track_index
+_default_note_instrument_track_index = InstrumentTrack._min_note_instrument_track_index
 
 
 @pytest.fixture
@@ -262,7 +260,7 @@ def basic_properties():
 @pytest.fixture
 def basic_events_track(mocker, placeholder_string_iterator_getter):
     mocker.patch(
-        "chartparse.track.parse_events_from_iterable", return_value=_default_events_event_list
+        "chartparse.track._parse_events_from_iterable", return_value=_default_events_event_list
     )
     return Events(placeholder_string_iterator_getter)
 
@@ -270,7 +268,7 @@ def basic_events_track(mocker, placeholder_string_iterator_getter):
 @pytest.fixture
 def basic_sync_track(mocker, placeholder_string_iterator_getter):
     mocker.patch(
-        "chartparse.track.parse_events_from_iterable",
+        "chartparse.track._parse_events_from_iterable",
         side_effect=[_default_time_signature_event_list, _default_bpm_event_list],
     )
     return SyncTrack(placeholder_string_iterator_getter)
@@ -279,11 +277,11 @@ def basic_sync_track(mocker, placeholder_string_iterator_getter):
 @pytest.fixture
 def basic_instrument_track(mocker, placeholder_string_iterator_getter):
     mocker.patch(
-        "chartparse.instrumenttrack.InstrumentTrack._parse_note_events_from_iterable",
-        return_value=pytest.default_note_event_list,
+        "chartparse.track.InstrumentTrack._parse_note_events_from_iterable",
+        return_value=_default_note_event_list,
     )
     mocker.patch(
-        "chartparse.track.parse_events_from_iterable", return_value=_default_star_power_event_list
+        "chartparse.track._parse_events_from_iterable", return_value=_default_star_power_event_list
     )
     return InstrumentTrack(
         pytest.default_instrument, pytest.default_difficulty, placeholder_string_iterator_getter
