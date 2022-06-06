@@ -3,7 +3,8 @@ import pathlib
 import pytest
 
 from chartparse.chart import Chart
-from chartparse.enums import Difficulty, Instrument
+from chartparse.enums import Difficulty, Instrument, Note
+from chartparse.instrumenttrack import NoteEvent
 
 
 _directory_of_this_file = pathlib.Path(__file__).parent.resolve()
@@ -97,9 +98,9 @@ class TestChart(object):
             pytest.param(400, 200, 100, 1.2),
         ],
     )
-    def test_seconds_from_ticks(self, basic_chart, ticks, bpm, resolution, want):
+    def test_seconds_from_ticks_at_bpm(self, basic_chart, ticks, bpm, resolution, want):
         basic_chart.properties.resolution = resolution
-        assert basic_chart._seconds_from_ticks(ticks, bpm) == want
+        assert basic_chart._seconds_from_ticks_at_bpm(ticks, bpm) == want
 
     @pytest.mark.parametrize(
         "ticks,bpm,resolution",
@@ -108,6 +109,188 @@ class TestChart(object):
             pytest.param(100, 0, 192, id="zero_bpm"),
         ],
     )
-    def test_seconds_from_ticks_raises_ValueError(self, basic_chart, ticks, bpm, resolution):
+    def test_seconds_from_ticks_at_bpm_raises_ValueError(
+        self, basic_chart, ticks, bpm, resolution
+    ):
         with pytest.raises(ValueError):
-            _ = basic_chart._seconds_from_ticks(ticks, bpm)
+            _ = basic_chart._seconds_from_ticks_at_bpm(ticks, bpm)
+
+    @pytest.mark.parametrize(
+        "events,want",
+        [
+            pytest.param(
+                [
+                    NoteEvent(
+                        pytest.default_tick,
+                        pytest.default_note,
+                        timestamp=datetime.timedelta(seconds=0),
+                    ),
+                    NoteEvent(
+                        pytest.default_tick,
+                        pytest.default_note,
+                        timestamp=datetime.timedelta(seconds=1),
+                    ),
+                ],
+                2,
+            ),
+            pytest.param(
+                [
+                    NoteEvent(
+                        pytest.default_tick,
+                        pytest.default_note,
+                        timestamp=datetime.timedelta(seconds=15),
+                    ),
+                    NoteEvent(
+                        pytest.default_tick,
+                        pytest.default_note,
+                        timestamp=datetime.timedelta(seconds=18.5),
+                    ),
+                    NoteEvent(
+                        pytest.default_tick,
+                        pytest.default_note,
+                        timestamp=datetime.timedelta(seconds=20.5),
+                    ),
+                ],
+                3 / 5.5,
+            ),
+        ],
+    )
+    def test_notes_per_second_from_note_events(self, basic_chart, events, want):
+        assert basic_chart._notes_per_second_from_note_events(events) == want
+
+    note_event1 = NoteEvent(0, pytest.default_note, timestamp=datetime.timedelta(seconds=5))
+    note_event2 = NoteEvent(1, pytest.default_note, timestamp=datetime.timedelta(seconds=15))
+    note_event3 = NoteEvent(2, pytest.default_note, timestamp=datetime.timedelta(seconds=25))
+    notes_per_second_note_events = [note_event1, note_event2, note_event3]
+
+    @pytest.mark.parametrize(
+        "start_tick,end_tick,want",
+        [
+            pytest.param(1, None, [note_event2, note_event3]),
+            pytest.param(1, 2, [note_event2, note_event3]),
+            pytest.param(0, 2, [note_event1, note_event2, note_event3]),
+        ],
+    )
+    def test_notes_per_second_ticks(self, mocker, basic_chart, start_tick, end_tick, want):
+        basic_chart.instrument_tracks[pytest.default_instrument][
+            pytest.default_difficulty
+        ].note_events = self.notes_per_second_note_events
+        spy = mocker.spy(basic_chart, "_notes_per_second_from_note_events")
+        _ = basic_chart.notes_per_second(
+            pytest.default_instrument,
+            pytest.default_difficulty,
+            start_tick=start_tick,
+            end_tick=end_tick,
+        )
+        spy.assert_called_once_with(want)
+
+    @pytest.mark.parametrize(
+        "start_time,end_time,want",
+        [
+            pytest.param(datetime.timedelta(seconds=10), None, [note_event2, note_event3]),
+            pytest.param(
+                datetime.timedelta(seconds=10),
+                datetime.timedelta(seconds=30),
+                [note_event2, note_event3],
+            ),
+            pytest.param(
+                datetime.timedelta(seconds=0),
+                datetime.timedelta(seconds=30),
+                [note_event1, note_event2, note_event3],
+            ),
+        ],
+    )
+    def test_notes_per_second_time(self, mocker, basic_chart, start_time, end_time, want):
+        basic_chart.instrument_tracks[pytest.default_instrument][
+            pytest.default_difficulty
+        ].note_events = self.notes_per_second_note_events
+        spy = mocker.spy(basic_chart, "_notes_per_second_from_note_events")
+        _ = basic_chart.notes_per_second(
+            pytest.default_instrument,
+            pytest.default_difficulty,
+            start_time=start_time,
+            end_time=end_time,
+        )
+        spy.assert_called_once_with(want)
+
+    @pytest.mark.parametrize(
+        "start_seconds,end_seconds,want",
+        [
+            pytest.param(10, None, [note_event2, note_event3]),
+            pytest.param(10, 30, [note_event2, note_event3]),
+            pytest.param(0, 30, [note_event1, note_event2, note_event3]),
+        ],
+    )
+    def test_notes_per_second_seconds(self, mocker, basic_chart, start_seconds, end_seconds, want):
+        basic_chart.instrument_tracks[pytest.default_instrument][
+            pytest.default_difficulty
+        ].note_events = self.notes_per_second_note_events
+        spy = mocker.spy(basic_chart, "_notes_per_second_from_note_events")
+        _ = basic_chart.notes_per_second(
+            pytest.default_instrument,
+            pytest.default_difficulty,
+            start_seconds=start_seconds,
+            end_seconds=end_seconds,
+        )
+        spy.assert_called_once_with(want)
+
+    @pytest.mark.parametrize(
+        "start_seconds,end_seconds",
+        [
+            pytest.param(30, None),
+            pytest.param(30, 40),
+            pytest.param(20, 30),
+        ],
+    )
+    def test_notes_per_second_insufficient_note_events(
+        self, basic_chart, start_seconds, end_seconds
+    ):
+        basic_chart.instrument_tracks[pytest.default_instrument][
+            pytest.default_difficulty
+        ].note_events = self.notes_per_second_note_events
+        with pytest.raises(ValueError):
+            _ = basic_chart.notes_per_second(
+                pytest.default_instrument,
+                pytest.default_difficulty,
+                start_seconds=start_seconds,
+                end_seconds=end_seconds,
+            )
+
+    @pytest.mark.parametrize(
+        "start_time,start_tick,start_seconds",
+        [
+            pytest.param(datetime.timedelta(0), 0, None),
+            pytest.param(datetime.timedelta(0), None, 0),
+            pytest.param(None, 0, 0),
+            pytest.param(datetime.timedelta(0), 0, 0),
+        ],
+    )
+    def test_notes_per_second_too_many_start_args(
+        self, basic_chart, start_time, start_tick, start_seconds
+    ):
+        with pytest.raises(ValueError):
+            _ = basic_chart.notes_per_second(
+                pytest.default_instrument,
+                pytest.default_difficulty,
+                start_time=start_time,
+                start_tick=start_tick,
+                start_seconds=start_seconds,
+            )
+
+    @pytest.mark.parametrize(
+        "instrument,difficulty",
+        [
+            pytest.param(Instrument.BASS, Difficulty.EXPERT),
+            pytest.param(Instrument.GUITAR, Difficulty.MEDIUM),
+            pytest.param(Instrument.BASS, Difficulty.MEDIUM),
+        ],
+    )
+    def test_notes_per_second_missing_instrument_difficulty(
+        self, basic_chart, instrument, difficulty
+    ):
+        with pytest.raises(ValueError):
+            _ = basic_chart.notes_per_second(
+                instrument,
+                difficulty,
+                start_tick=0,
+            )
