@@ -32,7 +32,7 @@ class Chart(object):
         for section_name, iterator_getter in sections.items():
             if section_name == "Song":
                 self.properties = Properties.from_chart_lines(iterator_getter())
-                if not all (hasattr(self.properties, p) for p in self._required_properties):
+                if not all(hasattr(self.properties, p) for p in self._required_properties):
                     raise ValueError(
                         f"parsed properties list {list(self.properties.__dict__.keys())} does not contain all "
                         f"required properties {self._required_properties}"

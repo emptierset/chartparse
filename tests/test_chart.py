@@ -76,11 +76,14 @@ class TestChart(object):
             ],
         )
 
-    @pytest.mark.parametrize("path", [
-        pytest.param(_missing_properties_chart_filepath, id="missing_properties"),
-        pytest.param(_missing_resolution_chart_filepath, id="missing_resolution"),
-        pytest.param(_missing_sync_track_chart_filepath, id="missing_sync_track"),
-    ])
+    @pytest.mark.parametrize(
+        "path",
+        [
+            pytest.param(_missing_properties_chart_filepath, id="missing_properties"),
+            pytest.param(_missing_resolution_chart_filepath, id="missing_resolution"),
+            pytest.param(_missing_sync_track_chart_filepath, id="missing_sync_track"),
+        ],
+    )
     def test_init_invalid_chart(self, path):
         with open(path, "r", encoding="utf-8-sig") as f, pytest.raises(ValueError):
             _ = Chart(f)
