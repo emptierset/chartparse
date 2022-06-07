@@ -40,7 +40,6 @@ class InstrumentTrack(DictPropertiesEqMixin):
             if not m:
                 continue
             tick, note_index, duration = int(m.group(1)), int(m.group(2)), int(m.group(3))
-            # TODO: Ensure open notes are handled.
             if (
                 InstrumentTrack._min_note_instrument_track_index
                 <= note_index
@@ -48,6 +47,11 @@ class InstrumentTrack(DictPropertiesEqMixin):
             ):
                 tick_to_note_array[tick][note_index] = 1
                 tick_to_duration_list[tick][note_index] = duration
+            elif note_index == InstrumentTrack._open_instrument_track_index:
+                # Because `tick_to_note_array` is a defaultdict, simply accessing it at `tick` is
+                # sufficient to conjure a bytearray representing an open note.
+                tick_to_note_array[tick]
+                tick_to_duration_list[tick]
             elif note_index == InstrumentTrack._tap_instrument_track_index:
                 tick_to_is_tap[tick] = True
             elif note_index == InstrumentTrack._forced_instrument_track_index:

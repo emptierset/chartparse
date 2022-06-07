@@ -50,10 +50,40 @@ class TestInstrumentTrack(object):
         "lines, want_note_events, want_star_power_events",
         [
             pytest.param(
+                [generate_valid_note_line_fn(0, NoteTrackIndex.OPEN.value)],
+                [NoteEvent(0, Note.OPEN)],
+                [],
+                id="open_note",
+            ),
+            pytest.param(
                 [generate_valid_note_line_fn(0, NoteTrackIndex.G.value)],
                 [NoteEvent(0, Note.G)],
                 [],
-                id="single_note",
+                id="green_note",
+            ),
+            pytest.param(
+                [generate_valid_note_line_fn(0, NoteTrackIndex.R.value)],
+                [NoteEvent(0, Note.R)],
+                [],
+                id="red_note",
+            ),
+            pytest.param(
+                [generate_valid_note_line_fn(0, NoteTrackIndex.Y.value)],
+                [NoteEvent(0, Note.Y)],
+                [],
+                id="yellow_note",
+            ),
+            pytest.param(
+                [generate_valid_note_line_fn(0, NoteTrackIndex.B.value)],
+                [NoteEvent(0, Note.B)],
+                [],
+                id="blue_note",
+            ),
+            pytest.param(
+                [generate_valid_note_line_fn(0, NoteTrackIndex.O.value)],
+                [NoteEvent(0, Note.O)],
+                [],
+                id="orange_note",
             ),
             pytest.param(
                 [
