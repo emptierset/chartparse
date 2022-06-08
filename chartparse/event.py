@@ -23,6 +23,9 @@ class Event(object):
         to_join.append(")")
         return "".join(to_join)
 
+    def __repr__(self):  # pragma: no cover
+        return str(self.__dict__)
+
 
 class TimeSignatureEvent(Event, DictPropertiesEqMixin):
     # Match 1: Tick
@@ -52,9 +55,6 @@ class TimeSignatureEvent(Event, DictPropertiesEqMixin):
         to_join.append(f": {self.upper_numeral}/{self.lower_numeral}")
         return "".join(to_join)
 
-    def __repr__(self):
-        return str(self.__dict__)  # pragma: no cover
-
 
 class BPMEvent(Event):
     # Match 1: Tick
@@ -82,9 +82,6 @@ class BPMEvent(Event):
         to_join = [super().__str__()]
         to_join.append(f": {self.bpm} BPM")
         return "".join(to_join)
-
-    def __repr__(self):
-        return str(self.__dict__)  # pragma: no cover
 
 
 class StarPowerEvent(Event, DictPropertiesEqMixin):
@@ -187,9 +184,6 @@ class NoteEvent(Event, DictPropertiesEqMixin):
 
         return "".join(to_join)
 
-    def __repr__(self):  # pragma: no cover
-        return str(self.__dict__)
-
 
 class EventsEvent(Event, DictPropertiesEqMixin):
     # Match 1: Tick
@@ -217,6 +211,3 @@ class EventsEvent(Event, DictPropertiesEqMixin):
         if self.params:
             to_join.append(f" [params={self.params}]")
         return "".join(to_join)
-
-    def __repr__(self):  # pragma: no cover
-        return str(self.__dict__)
