@@ -75,6 +75,10 @@ class InstrumentTrack(DictPropertiesEqMixin):
 
         return events
 
+    # TODO: Implement note_event_is_covered_by_star_power
+    def note_event_is_covered_by_star_power(self, tick):
+        raise NotImplementedError
+
 
 class SyncTrack(DictPropertiesEqMixin):
     def __init__(self, iterator_getter):
