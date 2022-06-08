@@ -13,17 +13,25 @@ pip install chartparse
 ## Usage
 
 ```py
-from chartparse import BaseClass
-from chartparse import base_function
+from chartparse.chart import Chart
+from chartparse.enums import Instrument, Difficulty
 
-BaseClass().base_method()
-base_function()
-```
+with open("/path/to/file.chart", "r", encoding="utf-8-sig") as f:
+	c = Chart(f)
 
-```bash
-$ python -m chartparse
-#or
-$ chartparse
+# the first 7 BPM changes
+c.sync_track.bpm_events[:7]
+
+# the first 8 time signature changes
+c.sync_track.time_signature_events[:8]
+
+expert_guitar = c.instrument_tracks[Instrument.GUITAR][Difficulty.EXPERT]
+
+# the first 10 notes of the expert guitar chart
+expert_guitar.note_events[:10]
+
+# the first 3 star power phrases of the expert guitar chart
+expert_guitar.star_power_events[:3]
 ```
 
 ## Development
