@@ -6,7 +6,7 @@ from chartparse.exceptions import RegexFatalNotMatchError
 from chartparse.util import DictPropertiesEqMixin
 
 
-class Event(object):
+class Event(DictPropertiesEqMixin):
     def __init__(self, tick, timestamp=None):
         self.tick = tick
         self.timestamp = timestamp
@@ -27,7 +27,7 @@ class Event(object):
         return str(self.__dict__)
 
 
-class TimeSignatureEvent(Event, DictPropertiesEqMixin):
+class TimeSignatureEvent(Event):
     # Match 1: Tick
     # Match 2: Upper numeral
     # Match 3: Lower numeral (optional; assumed to be 4 if absent)
@@ -84,7 +84,7 @@ class BPMEvent(Event):
         return "".join(to_join)
 
 
-class StarPowerEvent(Event, DictPropertiesEqMixin):
+class StarPowerEvent(Event):
     # Match 1: Tick
     # Match 2: Note index (Might be always 2? Not sure what this is, to be honest.)
     # Match 3: Duration (ticks)
@@ -112,7 +112,7 @@ class StarPowerEvent(Event, DictPropertiesEqMixin):
         return str(self.__dict__)
 
 
-class NoteEvent(Event, DictPropertiesEqMixin):
+class NoteEvent(Event):
     # This regex matches a single "N" line within a instrument track section,
     # but this class should be used to represent all of the notes at a
     # particular tick. This means that you might need to consolidate multiple
@@ -185,7 +185,7 @@ class NoteEvent(Event, DictPropertiesEqMixin):
         return "".join(to_join)
 
 
-class EventsEvent(Event, DictPropertiesEqMixin):
+class EventsEvent(Event):
     # Match 1: Tick
     # Match 2: Event command
     # Match 3: Event parameters (optional)

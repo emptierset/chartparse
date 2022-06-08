@@ -14,6 +14,11 @@ class DictPropertiesEqMixin(object):
         return self.__dict__ == other.__dict__
 
 
+class DictReprMixin(object):
+    def __repr__(self):  # pragma: no cover
+        return f"{type(self).__name__}({self.__dict__})"
+
+
 def iterate_from_second_elem(xs):
     it = iter(xs)
     next(it)
