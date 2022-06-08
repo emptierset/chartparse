@@ -24,6 +24,17 @@ class Event(DictPropertiesEqMixin, DictReprMixin):
         return "".join(to_join)
 
 
+class DurationedEvent(Event):
+    def __init__(self, tick, duration, timestamp=None):
+        super().__init__(tick, timestamp=timestamp)
+        self.duration = duration
+
+    def __str__(self):  # pragma: no cover
+        to_join = [super().__str__()]
+        to_join.append(f": duration={self.duration}")
+        return "".join(to_join)
+
+
 class TimeSignatureEvent(Event):
     # Match 1: Tick
     # Match 2: Upper numeral
@@ -81,7 +92,7 @@ class BPMEvent(Event):
         return "".join(to_join)
 
 
-class StarPowerEvent(Event):
+class StarPowerEvent(DurationedEvent):
     # Match 1: Tick
     # Match 2: Note index (Might be always 2? Not sure what this is, to be honest.)
     # Match 3: Duration (ticks)
@@ -89,8 +100,7 @@ class StarPowerEvent(Event):
     _regex_prog = re.compile(_regex)
 
     def __init__(self, tick, duration, timestamp=None):
-        super().__init__(tick, timestamp=timestamp)
-        self.duration = duration
+        super().__init__(tick, duration, timestamp=timestamp)
 
     @classmethod
     def from_chart_line(cls, line):
@@ -100,13 +110,8 @@ class StarPowerEvent(Event):
         tick, duration = int(m.group(1)), int(m.group(3))
         return cls(tick, duration)
 
-    def __str__(self):  # pragma: no cover
-        to_join = [super().__str__()]
-        to_join.append(f": duration={self.duration}")
-        return "".join(to_join)
 
-
-class NoteEvent(Event):
+class NoteEvent(DurationedEvent):
     # This regex matches a single "N" line within a instrument track section,
     # but this class should be used to represent all of the notes at a
     # particular tick. This means that you might need to consolidate multiple
@@ -119,9 +124,9 @@ class NoteEvent(Event):
 
     def __init__(self, tick, note, timestamp=None, duration=0, is_forced=False, is_tap=False):
         self._validate_duration(duration, note)
-        super().__init__(tick, timestamp=timestamp)
+        refined_duration = self._refine_duration(duration)
+        super().__init__(tick, refined_duration, timestamp=timestamp)
         self.note = note
-        self.duration = self._refine_duration(duration)
         self.is_forced = is_forced
         self.is_tap = is_tap
 
@@ -165,8 +170,6 @@ class NoteEvent(Event):
     def __str__(self):  # pragma: no cover
         to_join = [super().__str__()]
         to_join.append(f": {self.note}")
-        if self.duration:
-            to_join.append(f" duration={self.duration}")
 
         flags = []
         if self.is_forced:
