@@ -34,6 +34,11 @@ expert_guitar.note_events[:10]
 expert_guitar.star_power_events[:3]
 ```
 
+Note: this software is tested only with .chart files that are written by
+[Moonscraper](https://github.com/FireFox2000000/Moonscraper-Chart-Editor).
+Files written by other editors or are handwritten may produce undefined
+behavior.
+
 ## Development
 
 Read the [CONTRIBUTING.md](CONTRIBUTING.md) file.
