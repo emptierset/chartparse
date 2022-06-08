@@ -1,5 +1,6 @@
 # Actual files
 /data/
+/chartparse/playground.py
 
 # Vim
 .*.sw?
