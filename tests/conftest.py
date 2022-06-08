@@ -266,6 +266,11 @@ def basic_events_track(mocker, placeholder_string_iterator_getter):
 
 
 @pytest.fixture
+def bare_sync_track():
+    return SyncTrack.__new__(SyncTrack)
+
+
+@pytest.fixture
 def basic_sync_track(mocker, placeholder_string_iterator_getter):
     mocker.patch(
         "chartparse.track._parse_events_from_iterable",
