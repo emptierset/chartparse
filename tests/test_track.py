@@ -226,9 +226,9 @@ class TestSyncTrack(object):
             ),
         ],
     )
-    def test_idx_of_proximal_bpm_event(self, basic_sync_track, tick, start_idx, bpm_events, want):
-        basic_sync_track.bpm_events = bpm_events
-        assert basic_sync_track.idx_of_proximal_bpm_event(tick, start_idx=start_idx) == want
+    def test_idx_of_proximal_bpm_event(self, bare_sync_track, tick, start_idx, bpm_events, want):
+        bare_sync_track.bpm_events = bpm_events
+        assert bare_sync_track.idx_of_proximal_bpm_event(tick, start_idx=start_idx) == want
 
     @pytest.mark.parametrize(
         "start_idx,bpm_events",
@@ -238,8 +238,8 @@ class TestSyncTrack(object):
         ],
     )
     def test_idx_of_proximal_bpm_event_raises_ValueError(
-        self, basic_sync_track, start_idx, bpm_events
+        self, bare_sync_track, start_idx, bpm_events
     ):
-        basic_sync_track.bpm_events = bpm_events
+        bare_sync_track.bpm_events = bpm_events
         with pytest.raises(ValueError):
-            _ = basic_sync_track.idx_of_proximal_bpm_event(0, start_idx=start_idx)
+            _ = bare_sync_track.idx_of_proximal_bpm_event(0, start_idx=start_idx)
