@@ -3,10 +3,10 @@
 import re
 
 from chartparse.exceptions import RegexFatalNotMatchError
-from chartparse.util import DictPropertiesEqMixin
+from chartparse.util import DictPropertiesEqMixin, DictReprMixin
 
 
-class Event(DictPropertiesEqMixin):
+class Event(DictPropertiesEqMixin, DictReprMixin):
     def __init__(self, tick, timestamp=None):
         self.tick = tick
         self.timestamp = timestamp
@@ -22,9 +22,6 @@ class Event(DictPropertiesEqMixin):
             to_join.append(f" {as_str}")
         to_join.append(")")
         return "".join(to_join)
-
-    def __repr__(self):  # pragma: no cover
-        return str(self.__dict__)
 
 
 class TimeSignatureEvent(Event):
@@ -107,9 +104,6 @@ class StarPowerEvent(Event):
         to_join = [super().__str__()]
         to_join.append(f": duration={self.duration}")
         return "".join(to_join)
-
-    def __repr__(self):  # pragma: no cover
-        return str(self.__dict__)
 
 
 class NoteEvent(Event):
