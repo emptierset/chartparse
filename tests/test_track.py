@@ -153,10 +153,30 @@ class TestInstrumentTrack(object):
                     generate_valid_note_line_fn(0, NoteTrackIndex.G.value, duration=100),
                     generate_valid_star_power_line_fn(0, 100),
                     generate_valid_note_line_fn(2000, NoteTrackIndex.R.value, duration=50),
-                    generate_valid_star_power_line_fn(2000, 100),
+                    generate_valid_note_line_fn(2075, NoteTrackIndex.Y.value),
+                    generate_valid_note_line_fn(2075, NoteTrackIndex.B.value),
+                    generate_valid_star_power_line_fn(2000, 80),
                 ],
-                [NoteEvent(0, Note.G, duration=100), NoteEvent(2000, Note.R, duration=50)],
-                [StarPowerEvent(0, 100), StarPowerEvent(2000, 100)],
+                [
+                    NoteEvent(
+                        0,
+                        Note.G,
+                        duration=100,
+                        star_power_data=NoteEvent.StarPowerData(0, True),
+                    ),
+                    NoteEvent(
+                        2000,
+                        Note.R,
+                        duration=50,
+                        star_power_data=NoteEvent.StarPowerData(1, False),
+                    ),
+                    NoteEvent(
+                        2075,
+                        Note.YB,
+                        star_power_data=NoteEvent.StarPowerData(1, True),
+                    ),
+                ],
+                [StarPowerEvent(0, 100), StarPowerEvent(2000, 80)],
                 id="mix_of_notes_and_star_power",
             ),
         ],
@@ -172,6 +192,50 @@ class TestInstrumentTrack(object):
         assert instrument_track.difficulty == pytest.default_difficulty
         assert instrument_track.note_events == want_note_events
         assert instrument_track.star_power_events == want_star_power_events
+
+    @pytest.mark.parametrize(
+        "note_events,star_power_events,want_note_events",
+        [
+            pytest.param(
+                id="basic",
+                [
+                    NoteEvent(0, Note.G, duration=100),
+                    NoteEvent(2000, Note.R, duration=50),
+                    NoteEvent(2075, Note.YB),
+                ],
+                [
+                    StarPowerEvent(0, 100),
+                    StarPowerEvent(2000, 80),
+                ],
+                [
+                    NoteEvent(
+                        0,
+                        Note.G,
+                        duration=100,
+                        star_power_data=NoteEvent.StarPowerData(0, True),
+                    ),
+                    NoteEvent(
+                        2000,
+                        Note.R,
+                        duration=50,
+                        star_power_data=NoteEvent.StarPowerData(1, False),
+                    ),
+                    NoteEvent(
+                        2075,
+                        Note.YB,
+                        star_power_data=NoteEvent.StarPowerData(1, True),
+                    ),
+                ],
+            ),
+        ],
+    )
+    def test_populate_star_power_data(
+        self, bare_instrument_track, note_events, star_power_events, want_note_events
+    ):
+        bare_instrument_track.note_events = note_events
+        bare_instrument_track.star_power_events = star_power_events
+        bare_instrument_track._populate_star_power_data()
+        assert bare_instrument_track.note_events == want_note_events
 
 
 class TestSyncTrack(object):

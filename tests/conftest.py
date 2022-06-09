@@ -280,6 +280,11 @@ def basic_sync_track(mocker, placeholder_string_iterator_getter):
 
 
 @pytest.fixture
+def bare_instrument_track():
+    return InstrumentTrack.__new__(InstrumentTrack)
+
+
+@pytest.fixture
 def basic_instrument_track(mocker, placeholder_string_iterator_getter):
     mocker.patch(
         "chartparse.track.InstrumentTrack._parse_note_events_from_iterable",
