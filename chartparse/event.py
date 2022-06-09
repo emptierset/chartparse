@@ -122,13 +122,28 @@ class NoteEvent(DurationedEvent):
     _regex = r"^\s*?(\d+?)\s=\sN\s([0-7])\s(\d+?)\s*?$"
     _regex_prog = re.compile(_regex)
 
-    def __init__(self, tick, note, timestamp=None, duration=0, is_forced=False, is_tap=False):
+    class StarPowerData(DictPropertiesEqMixin, DictReprMixin):
+        def __init__(self, event_idx, is_end_of_phrase):
+            self.event_idx = event_idx
+            self.is_end_of_phrase = is_end_of_phrase
+
+    def __init__(
+        self,
+        tick,
+        note,
+        timestamp=None,
+        duration=0,
+        is_forced=False,
+        is_tap=False,
+        star_power_data=None,
+    ):
         self._validate_duration(duration, note)
         refined_duration = self._refine_duration(duration)
         super().__init__(tick, refined_duration, timestamp=timestamp)
         self.note = note
         self.is_forced = is_forced
         self.is_tap = is_tap
+        self.star_power_data = star_power_data
 
     @staticmethod
     def _validate_duration(duration, note):
@@ -170,6 +185,9 @@ class NoteEvent(DurationedEvent):
     def __str__(self):  # pragma: no cover
         to_join = [super().__str__()]
         to_join.append(f": {self.note}")
+
+        if self.star_power_data:
+            to_join.append("*")
 
         flags = []
         if self.is_forced:

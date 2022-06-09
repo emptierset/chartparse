@@ -20,6 +20,7 @@ class InstrumentTrack(DictPropertiesEqMixin):
         self.star_power_events = _parse_events_from_iterable(
             iterator_getter(), StarPowerEvent.from_chart_line
         )
+        self._populate_star_power_data()
 
     def __str__(self):  # pragma: no cover
         return (
@@ -75,9 +76,31 @@ class InstrumentTrack(DictPropertiesEqMixin):
 
         return events
 
-    # TODO: Implement note_event_is_covered_by_star_power
-    def note_event_is_covered_by_star_power(self, tick):
-        raise NotImplementedError
+    def _populate_star_power_data(self):
+        num_notes = len(self.note_events)
+
+        note_idx_to_star_power_idx = dict()
+        note_idx = 0
+        for star_power_idx, star_power_event in enumerate(self.star_power_events):
+            start_tick = star_power_event.tick
+            end_tick = start_tick + star_power_event.duration
+
+            # Seek until the first note after this star power phrase.
+            while note_idx < num_notes and self.note_events[note_idx].tick < end_tick:
+                note = self.note_events[note_idx]
+                if start_tick <= note.tick:
+                    note_idx_to_star_power_idx[note_idx] = star_power_idx
+                note_idx += 1
+
+        for note_idx, note_event in enumerate(self.note_events):
+            current_star_power_idx = note_idx_to_star_power_idx.get(note_idx, None)
+            if current_star_power_idx is None:
+                continue
+            next_star_power_idx = note_idx_to_star_power_idx.get(note_idx + 1, None)
+            current_note_is_end_of_phrase = current_star_power_idx != next_star_power_idx
+            note_event.star_power_data = NoteEvent.StarPowerData(
+                current_star_power_idx, current_note_is_end_of_phrase
+            )
 
 
 class SyncTrack(DictPropertiesEqMixin):
