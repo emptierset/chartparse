@@ -3,15 +3,13 @@ import pytest
 
 from chartparse.chart import Chart
 from chartparse.enums import Instrument, Difficulty, Note
-from chartparse.track import SyncTrack
 from chartparse.instrumenttrack import InstrumentTrack
 from chartparse.globalevents import GlobalEventsTrack, GlobalEvent
 from chartparse.metadata import Metadata
+from chartparse.synctrack import SyncTrack, BPMEvent, TimeSignatureEvent
 from chartparse.instrumenttrack import StarPowerEvent, NoteEvent
 from chartparse.event import (
     Event,
-    BPMEvent,
-    TimeSignatureEvent,
 )
 
 _invalid_chart_line = "this_line_is_invalid"
@@ -278,7 +276,7 @@ def bare_sync_track():
 @pytest.fixture
 def basic_sync_track(mocker, placeholder_string_iterator_getter):
     mocker.patch(
-        "chartparse.track._parse_events_from_iterable",
+        "chartparse.synctrack._parse_events_from_iterable",
         side_effect=[_default_time_signature_event_list, _default_bpm_event_list],
     )
     return SyncTrack(placeholder_string_iterator_getter)

@@ -7,7 +7,7 @@ from chartparse.enums import Difficulty, Instrument
 from chartparse.globalevents import GlobalEventsTrack
 from chartparse.instrumenttrack import InstrumentTrack
 from chartparse.metadata import Metadata
-from chartparse.track import SyncTrack
+from chartparse.synctrack import SyncTrack
 from chartparse.util import iterate_from_second_elem
 
 _max_timedelta = datetime.datetime.max - datetime.datetime.min
