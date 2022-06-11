@@ -14,6 +14,8 @@ from chartparse.event import (
     EventsEvent,
 )
 
+_invalid_chart_line = "this_line_is_invalid"
+
 _default_filepath = "/not/a/real/path"
 
 _default_tick = 0
@@ -146,6 +148,8 @@ def generate_valid_star_power_line_fn(tick=_default_tick, duration=_default_dura
 
 
 def pytest_configure():
+    pytest.invalid_chart_line = _invalid_chart_line
+
     pytest.default_filepath = _default_filepath
 
     pytest.default_tick = _default_tick
@@ -179,7 +183,7 @@ def mock_open_empty_string(mocker):
 
 @pytest.fixture
 def invalid_chart_line():
-    return "this_line_is_invalid"
+    return _invalid_chart_line
 
 
 @pytest.fixture
