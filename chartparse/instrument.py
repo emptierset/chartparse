@@ -109,7 +109,7 @@ class StarPowerEvent(DurationedEvent):
     # Match 1: Tick
     # Match 2: Note index (Might be always 2? Not sure what this is, to be honest.)
     # Match 3: Duration (ticks)
-    _regex = r"^\s*?(\d+?)\s=\sS\s(\d+?)\s(\d+?)\s*?$"
+    _regex = r"^\s*?(\d+?) = S 2 (\d+?)\s*?$"
     _regex_prog = re.compile(_regex)
 
     def __init__(self, tick, duration, timestamp=None):
@@ -120,7 +120,7 @@ class StarPowerEvent(DurationedEvent):
         m = cls._regex_prog.match(line)
         if not m:
             raise RegexFatalNotMatchError(cls._regex, line)
-        tick, duration = int(m.group(1)), int(m.group(3))
+        tick, duration = int(m.group(1)), int(m.group(2))
         return cls(tick, duration)
 
 
@@ -132,7 +132,7 @@ class NoteEvent(DurationedEvent):
     # Match 1: Tick
     # Match 2: Note index
     # Match 3: Duration (ticks)
-    _regex = r"^\s*?(\d+?)\s=\sN\s([0-7])\s(\d+?)\s*?$"
+    _regex = r"^\s*?(\d+?) = N ([0-7]) (\d+?)\s*?$"
     _regex_prog = re.compile(_regex)
 
     class StarPowerData(DictPropertiesEqMixin, DictReprMixin):
