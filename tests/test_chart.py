@@ -10,7 +10,7 @@ from chartparse.event import NoteEvent
 _directory_of_this_file = pathlib.Path(__file__).parent.resolve()
 _chart_directory_filepath = _directory_of_this_file / "data"
 _valid_chart_filepath = _chart_directory_filepath / "test.chart"
-_missing_metadata_chart_filepath = _chart_directory_filepath / "missing_properties.chart"
+_missing_metadata_chart_filepath = _chart_directory_filepath / "missing_metadata.chart"
 _missing_resolution_chart_filepath = _chart_directory_filepath / "missing_resolution.chart"
 _missing_sync_track_chart_filepath = _chart_directory_filepath / "missing_sync_track.chart"
 

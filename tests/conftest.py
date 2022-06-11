@@ -4,7 +4,7 @@ import pytest
 from chartparse.chart import Chart
 from chartparse.enums import Instrument, Difficulty, Note
 from chartparse.track import Events, InstrumentTrack, SyncTrack
-from chartparse.properties import Metadata
+from chartparse.metadata import Metadata
 from chartparse.event import (
     Event,
     BPMEvent,
@@ -340,8 +340,6 @@ def basic_chart(
             "ExpertSingle": placeholder_string_iterator_getter,
         },
     )
-    mocker.patch(
-        "chartparse.properties.Metadata.from_chart_lines", return_value=basic_metadata
-    )
+    mocker.patch("chartparse.metadata.Metadata.from_chart_lines", return_value=basic_metadata)
     with open(_default_filepath, "r") as f:
         return Chart(f)
