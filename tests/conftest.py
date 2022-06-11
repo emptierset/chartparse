@@ -10,7 +10,7 @@ from chartparse.globalevents import (
     SectionEvent,
     LyricEvent,
 )
-from chartparse.instrumenttrack import InstrumentTrack, NoteEvent, StarPowerEvent
+from chartparse.instrument import InstrumentTrack, NoteEvent, StarPowerEvent
 from chartparse.metadata import Metadata
 from chartparse.sync import SyncTrack, BPMEvent, TimeSignatureEvent
 from chartparse.track import EventTrack
@@ -336,11 +336,11 @@ def bare_instrument_track():
 @pytest.fixture
 def basic_instrument_track(mocker, placeholder_string_iterator_getter):
     mocker.patch(
-        "chartparse.instrumenttrack.InstrumentTrack._parse_note_events_from_iterable",
+        "chartparse.instrument.InstrumentTrack._parse_note_events_from_iterable",
         return_value=_default_note_event_list,
     )
     mocker.patch(
-        "chartparse.instrumenttrack.InstrumentTrack._parse_events_from_iterable",
+        "chartparse.instrument.InstrumentTrack._parse_events_from_iterable",
         return_value=_default_star_power_event_list,
     )
     return InstrumentTrack(

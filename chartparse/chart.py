@@ -5,7 +5,7 @@ import re
 
 from chartparse.enums import Difficulty, Instrument
 from chartparse.globalevents import GlobalEventsTrack
-from chartparse.instrumenttrack import InstrumentTrack
+from chartparse.instrument import InstrumentTrack
 from chartparse.metadata import Metadata
 from chartparse.sync import SyncTrack
 from chartparse.util import iterate_from_second_elem

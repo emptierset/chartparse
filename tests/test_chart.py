@@ -4,7 +4,7 @@ import pytest
 
 from chartparse.chart import Chart
 from chartparse.enums import Difficulty, Instrument
-from chartparse.instrumenttrack import NoteEvent
+from chartparse.instrument import NoteEvent
 
 
 _directory_of_this_file = pathlib.Path(__file__).parent.resolve()

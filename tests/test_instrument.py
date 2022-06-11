@@ -2,7 +2,7 @@ import pytest
 
 from chartparse.enums import Note, NoteTrackIndex
 from chartparse.exceptions import RegexFatalNotMatchError
-from chartparse.instrumenttrack import InstrumentTrack, StarPowerEvent, NoteEvent
+from chartparse.instrument import InstrumentTrack, StarPowerEvent, NoteEvent
 
 from tests.conftest import (
     generate_valid_note_line_fn,
