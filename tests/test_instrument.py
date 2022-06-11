@@ -77,11 +77,11 @@ class TestInstrumentTrack(object):
             ),
             pytest.param(
                 [
-                    generate_valid_note_line_fn(0, NoteTrackIndex.G.value, duration=100),
+                    generate_valid_note_line_fn(0, NoteTrackIndex.G.value, sustain=100),
                 ],
-                [NoteEvent(0, Note.G, duration=100)],
+                [NoteEvent(0, Note.G, sustain=100)],
                 [],
-                id="green_with_duration",
+                id="green_with_sustain",
             ),
             pytest.param(
                 [
@@ -94,12 +94,12 @@ class TestInstrumentTrack(object):
             ),
             pytest.param(
                 [
-                    generate_valid_note_line_fn(0, NoteTrackIndex.G.value, duration=100),
+                    generate_valid_note_line_fn(0, NoteTrackIndex.G.value, sustain=100),
                     generate_valid_note_line_fn(0, NoteTrackIndex.R.value),
                 ],
-                [NoteEvent(0, Note.GR, duration=[100, 0, None, None, None])],
+                [NoteEvent(0, Note.GR, sustain=[100, 0, None, None, None])],
                 [],
-                id="nonuniform_durations",
+                id="nonuniform_sustains",
             ),
             pytest.param(
                 [generate_valid_star_power_line_fn(0, 100)],
@@ -109,9 +109,9 @@ class TestInstrumentTrack(object):
             ),
             pytest.param(
                 [
-                    generate_valid_note_line_fn(0, NoteTrackIndex.G.value, duration=100),
+                    generate_valid_note_line_fn(0, NoteTrackIndex.G.value, sustain=100),
                     generate_valid_star_power_line_fn(0, 100),
-                    generate_valid_note_line_fn(2000, NoteTrackIndex.R.value, duration=50),
+                    generate_valid_note_line_fn(2000, NoteTrackIndex.R.value, sustain=50),
                     generate_valid_note_line_fn(2075, NoteTrackIndex.Y.value),
                     generate_valid_note_line_fn(2075, NoteTrackIndex.B.value),
                     generate_valid_star_power_line_fn(2000, 80),
@@ -125,13 +125,13 @@ class TestInstrumentTrack(object):
                     NoteEvent(
                         0,
                         Note.G,
-                        duration=100,
+                        sustain=100,
                         star_power_data=NoteEvent.StarPowerData(0, True),
                     ),
                     NoteEvent(
                         2000,
                         Note.R,
-                        duration=50,
+                        sustain=50,
                         star_power_data=NoteEvent.StarPowerData(1, False),
                     ),
                     NoteEvent(
@@ -165,8 +165,8 @@ class TestInstrumentTrack(object):
         [
             pytest.param(
                 [
-                    NoteEvent(0, Note.G, duration=100),
-                    NoteEvent(2000, Note.R, duration=50),
+                    NoteEvent(0, Note.G, sustain=100),
+                    NoteEvent(2000, Note.R, sustain=50),
                     NoteEvent(2075, Note.YB),
                 ],
                 [
@@ -177,13 +177,13 @@ class TestInstrumentTrack(object):
                     NoteEvent(
                         0,
                         Note.G,
-                        duration=100,
+                        sustain=100,
                         star_power_data=NoteEvent.StarPowerData(0, True),
                     ),
                     NoteEvent(
                         2000,
                         Note.R,
-                        duration=50,
+                        sustain=50,
                         star_power_data=NoteEvent.StarPowerData(1, False),
                     ),
                     NoteEvent(
@@ -208,22 +208,22 @@ class TestInstrumentTrack(object):
 class TestNoteEvent(object):
     def test_init(self, note_event_with_all_optionals_set):
         assert note_event_with_all_optionals_set.note == pytest.default_note
-        assert note_event_with_all_optionals_set.duration == pytest.default_duration
+        assert note_event_with_all_optionals_set.sustain == pytest.default_sustain
         assert note_event_with_all_optionals_set.is_forced is True
         assert note_event_with_all_optionals_set.is_tap is True
 
-    def test_validate_duration(self):
-        NoteEvent._validate_duration(0, Note.G)
-        NoteEvent._validate_duration([100, None, None, None, None], Note.G)
+    def test_validate_sustain(self):
+        NoteEvent._validate_sustain(0, Note.G)
+        NoteEvent._validate_sustain([100, None, None, None, None], Note.G)
         with pytest.raises(TypeError):
-            NoteEvent._validate_duration((100, None, None, None, None), Note.G)
+            NoteEvent._validate_sustain((100, None, None, None, None), Note.G)
 
-    def test_validate_int_duration_negative(self):
+    def test_validate_int_sustain_negative(self):
         with pytest.raises(ValueError):
-            NoteEvent._validate_int_duration(-1)
+            NoteEvent._validate_int_sustain(-1)
 
     @pytest.mark.parametrize(
-        "duration, note",
+        "sustain, note",
         [
             pytest.param(
                 [None, None, None, None], pytest.default_note, id="incorrect_length_list"
@@ -231,12 +231,12 @@ class TestNoteEvent(object):
             pytest.param([100, 100, None, None, None], Note.G, id="mismatched_set_lanes"),
         ],
     )
-    def test_validate_list_duration_raises_ValueError(self, duration, note):
+    def test_validate_list_sustain_raises_ValueError(self, sustain, note):
         with pytest.raises(ValueError):
-            NoteEvent._validate_list_duration(duration, note)
+            NoteEvent._validate_list_sustain(sustain, note)
 
     @pytest.mark.parametrize(
-        "duration, want",
+        "sustain, want",
         [
             pytest.param([None, None, None, None, None], 0, id="all_none"),
             pytest.param([100, None, None, 100, None], 100, id="all_the_same"),
@@ -246,19 +246,19 @@ class TestNoteEvent(object):
             ),
         ],
     )
-    def test_refine_duration(self, duration, want):
-        assert NoteEvent._refine_duration(duration) == want
+    def test_refine_sustain(self, sustain, want):
+        assert NoteEvent._refine_sustain(sustain) == want
 
 
 class TestStarPowerEvent(object):
     def test_init(self, star_power_event):
-        assert star_power_event.duration == pytest.default_duration
+        assert star_power_event.sustain == pytest.default_sustain
 
     def test_from_chart_line(self, generate_valid_star_power_line):
         line = generate_valid_star_power_line()
         event = StarPowerEvent.from_chart_line(line)
         assert event.tick == pytest.default_tick
-        assert event.duration == pytest.default_duration
+        assert event.sustain == pytest.default_sustain
 
     def test_from_chart_line_no_match(self, generate_valid_note_line):
         line = generate_valid_note_line()

@@ -21,12 +21,12 @@ class Event(DictPropertiesEqMixin, DictReprMixin):
         return "".join(to_join)
 
 
-class DurationedEvent(Event):
-    def __init__(self, tick, duration, timestamp=None):
+class SustainedEvent(Event):
+    def __init__(self, tick, sustain, timestamp=None):
         super().__init__(tick, timestamp=timestamp)
-        self.duration = duration
+        self.sustain = sustain
 
     def __str__(self):  # pragma: no cover
         to_join = [super().__str__()]
-        to_join.append(f": duration={self.duration}")
+        to_join.append(f": sustain={self.sustain}")
         return "".join(to_join)
