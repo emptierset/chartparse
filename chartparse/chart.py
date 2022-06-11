@@ -4,7 +4,7 @@ import itertools
 import re
 
 from chartparse.enums import Difficulty, Instrument
-from chartparse.properties import Properties
+from chartparse.properties import Metadata
 from chartparse.track import Events, InstrumentTrack, SyncTrack
 from chartparse.util import iterate_from_second_elem
 
@@ -13,7 +13,7 @@ _max_timedelta = datetime.datetime.max - datetime.datetime.min
 
 class Chart(object):
     _required_sections = ("Song", "SyncTrack")
-    _required_properties = ("resolution",)
+    _required_metadata = ("resolution",)
     _instrument_track_name_to_instrument_difficulty_pair = {
         d + i: (Instrument(i), Difficulty(d))
         for i, d in itertools.product(Instrument.all_values(), Difficulty.all_values())
@@ -31,11 +31,11 @@ class Chart(object):
         self.instrument_tracks = collections.defaultdict(dict)
         for section_name, iterator_getter in sections.items():
             if section_name == "Song":
-                self.properties = Properties.from_chart_lines(iterator_getter())
-                if not all(hasattr(self.properties, p) for p in self._required_properties):
+                self.metadata = Metadata.from_chart_lines(iterator_getter())
+                if not all(hasattr(self.metadata, p) for p in self._required_metadata):
                     raise ValueError(
-                        f"parsed properties list {list(self.properties.__dict__.keys())} does not "
-                        f"contain all required properties {self._required_properties}"
+                        f"parsed metadata list {list(self.metadata.__dict__.keys())} does not "
+                        f"contain all required metadata {self._required_metadata}"
                     )
 
             elif section_name == "Events":
@@ -136,7 +136,7 @@ class Chart(object):
     def _seconds_from_ticks_at_bpm(self, ticks, bpm):
         if bpm <= 0:
             raise ValueError(f"bpm {bpm} must be positive")
-        ticks_per_minute = bpm * self.properties.resolution
+        ticks_per_minute = bpm * self.metadata.resolution
         ticks_per_second = ticks_per_minute / 60
         seconds_per_tick = 1 / ticks_per_second
         return ticks * seconds_per_tick

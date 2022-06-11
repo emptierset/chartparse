@@ -6,7 +6,7 @@ from chartparse.exceptions import RegexFatalNotMatchError
 from chartparse.util import DictPropertiesEqMixin
 
 
-class Properties(DictPropertiesEqMixin):
+class Metadata(DictPropertiesEqMixin):
     # Known fields in the [Song] section and the functions that should be used
     # to process them.
     _field_transformers = {
