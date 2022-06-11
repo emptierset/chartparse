@@ -49,6 +49,7 @@ class TestInstrumentTrack(object):
     @pytest.mark.parametrize(
         "lines, want_note_events, want_star_power_events",
         [
+            pytest.param([pytest.invalid_chart_line], [], [], id="skip_invalid_line"),
             pytest.param(
                 [generate_valid_note_line_fn(0, NoteTrackIndex.OPEN.value)],
                 [NoteEvent(0, Note.OPEN)],
@@ -88,22 +89,29 @@ class TestInstrumentTrack(object):
             pytest.param(
                 [
                     generate_valid_note_line_fn(0, NoteTrackIndex.G.value),
-                    generate_valid_note_line_fn(1, NoteTrackIndex.R.value),
-                    generate_valid_note_line_fn(1, NoteTrackIndex.Y.value),
-                    generate_valid_note_line_fn(2, NoteTrackIndex.B.value),
-                    generate_valid_note_line_fn(3, NoteTrackIndex.FORCED.value),
-                    generate_valid_note_line_fn(3, NoteTrackIndex.Y.value),
+                    generate_valid_note_line_fn(0, NoteTrackIndex.TAP.value),
                 ],
-                [
-                    NoteEvent(0, Note.G),
-                    NoteEvent(1, Note.RY),
-                    NoteEvent(2, Note.B),
-                    NoteEvent(3, Note.Y, is_forced=True),
-                ],
+                [NoteEvent(0, Note.G, is_tap=True)],
                 [],
-                id="note_sequence",
+                id="tap_green_note",
             ),
-            pytest.param([generate_valid_bpm_line_fn()], [], [], id="errant_bpm_event"),
+            pytest.param(
+                [
+                    generate_valid_note_line_fn(0, NoteTrackIndex.G.value),
+                    generate_valid_note_line_fn(0, NoteTrackIndex.FORCED.value),
+                ],
+                [NoteEvent(0, Note.G, is_forced=True)],
+                [],
+                id="forced_green_note",
+            ),
+            pytest.param(
+                [
+                    generate_valid_note_line_fn(0, NoteTrackIndex.G.value, duration=100),
+                ],
+                [NoteEvent(0, Note.G, duration=100)],
+                [],
+                id="green_with_duration",
+            ),
             pytest.param(
                 [
                     generate_valid_note_line_fn(0, NoteTrackIndex.G.value),
@@ -112,26 +120,6 @@ class TestInstrumentTrack(object):
                 [NoteEvent(0, Note.GR)],
                 [],
                 id="chord",
-            ),
-            pytest.param(
-                [
-                    generate_valid_note_line_fn(0, NoteTrackIndex.G.value),
-                    generate_valid_note_line_fn(0, NoteTrackIndex.R.value),
-                    generate_valid_note_line_fn(0, NoteTrackIndex.TAP.value),
-                    generate_valid_note_line_fn(0, NoteTrackIndex.FORCED.value),
-                ],
-                [NoteEvent(0, Note.GR, is_forced=True, is_tap=True)],
-                [],
-                id="chord_tap_forced",
-            ),
-            pytest.param(
-                [
-                    generate_valid_note_line_fn(0, NoteTrackIndex.G.value, duration=100),
-                    generate_valid_note_line_fn(0, NoteTrackIndex.R.value, duration=100),
-                ],
-                [NoteEvent(0, Note.GR, duration=100)],
-                [],
-                id="basic_duration",
             ),
             pytest.param(
                 [
@@ -156,6 +144,11 @@ class TestInstrumentTrack(object):
                     generate_valid_note_line_fn(2075, NoteTrackIndex.Y.value),
                     generate_valid_note_line_fn(2075, NoteTrackIndex.B.value),
                     generate_valid_star_power_line_fn(2000, 80),
+                    generate_valid_note_line_fn(2100, NoteTrackIndex.O.value),
+                    generate_valid_note_line_fn(2100, NoteTrackIndex.FORCED.value),
+                    generate_valid_note_line_fn(2200, NoteTrackIndex.B.value),
+                    generate_valid_note_line_fn(2200, NoteTrackIndex.TAP.value),
+                    generate_valid_note_line_fn(2300, NoteTrackIndex.OPEN.value),
                 ],
                 [
                     NoteEvent(
@@ -175,14 +168,17 @@ class TestInstrumentTrack(object):
                         Note.YB,
                         star_power_data=NoteEvent.StarPowerData(1, True),
                     ),
+                    NoteEvent(2100, Note.O, is_forced=True),
+                    NoteEvent(2200, Note.B, is_tap=True),
+                    NoteEvent(2300, Note.OPEN),
                 ],
                 [StarPowerEvent(0, 100), StarPowerEvent(2000, 80)],
-                id="mix_of_notes_and_star_power",
+                id="everything_together",
             ),
         ],
     )
     def test_parse_note_events_from_iterable(
-        self, lines, want_note_events, want_star_power_events
+        self, invalid_chart_line, lines, want_note_events, want_star_power_events
     ):
         lines_iterator_getter = lambda: iter(lines)
         instrument_track = InstrumentTrack(
@@ -197,7 +193,6 @@ class TestInstrumentTrack(object):
         "note_events,star_power_events,want_note_events",
         [
             pytest.param(
-                id="basic",
                 [
                     NoteEvent(0, Note.G, duration=100),
                     NoteEvent(2000, Note.R, duration=50),
@@ -226,6 +221,7 @@ class TestInstrumentTrack(object):
                         star_power_data=NoteEvent.StarPowerData(1, True),
                     ),
                 ],
+                id="basic",
             ),
         ],
     )
