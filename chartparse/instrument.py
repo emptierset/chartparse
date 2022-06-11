@@ -105,23 +105,39 @@ class InstrumentTrack(EventTrack, DictPropertiesEqMixin):
             )
 
 
-class StarPowerEvent(SustainedEvent):
+class _SpecialEvent(SustainedEvent):
     # Match 1: Tick
-    # Match 2: Note index (Might be always 2? Not sure what this is, to be honest.)
-    # Match 3: Sustain (ticks)
-    _regex = r"^\s*?(\d+?) = S 2 (\d+?)\s*?$"
-    _regex_prog = re.compile(_regex)
+    # Match 2: Sustain (ticks)
+    _regex_template = r"^\s*?(\d+?) = S {} (\d+?)\s*?$"
 
     def __init__(self, tick, sustain, timestamp=None):
         super().__init__(tick, sustain, timestamp=timestamp)
 
     @classmethod
     def from_chart_line(cls, line):
+        if not hasattr(cls, "_regex_prog"):
+            raise NotImplementedError(
+                f"{cls.__name__} does not have a _regex_prog value. Perhaps you are trying to "
+                "instantiate a {cls.__bases__[0].__name__} value, rather than one of its "
+                "implementing subclasses?"
+            )
+
         m = cls._regex_prog.match(line)
         if not m:
             raise RegexFatalNotMatchError(cls._regex, line)
         tick, sustain = int(m.group(1)), int(m.group(2))
         return cls(tick, sustain)
+
+
+class StarPowerEvent(_SpecialEvent):
+    _regex = _SpecialEvent._regex_template.format(r"2")
+    _regex_prog = re.compile(_regex)
+
+
+# TODO: Support S 0 ## and S 1 ## (GH1/2 Co-op)
+
+
+# TODO: Support S 64 ## (Rock Band drum fills)
 
 
 class NoteEvent(SustainedEvent):

@@ -34,7 +34,8 @@ class _GlobalEvent(Event):
         if not hasattr(cls, "_regex_prog"):
             raise NotImplementedError(
                 f"{cls.__name__} does not have a _regex_prog value. Perhaps you are trying to "
-                "instantiate a _GlobalEvent value, rather than one of its implementing subclasses?"
+                "instantiate a {cls.__bases__[0].__name__} value, rather than one of its "
+                "implementing subclasses?"
             )
 
         m = cls._regex_prog.match(line)
