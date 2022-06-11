@@ -10,7 +10,7 @@ from chartparse.event import NoteEvent
 _directory_of_this_file = pathlib.Path(__file__).parent.resolve()
 _chart_directory_filepath = _directory_of_this_file / "data"
 _valid_chart_filepath = _chart_directory_filepath / "test.chart"
-_missing_properties_chart_filepath = _chart_directory_filepath / "missing_properties.chart"
+_missing_metadata_chart_filepath = _chart_directory_filepath / "missing_properties.chart"
 _missing_resolution_chart_filepath = _chart_directory_filepath / "missing_resolution.chart"
 _missing_sync_track_chart_filepath = _chart_directory_filepath / "missing_sync_track.chart"
 
@@ -20,7 +20,7 @@ class TestChartInit(object):
         with open(_valid_chart_filepath, "r", encoding="utf-8-sig") as f:
             c = Chart(f)
 
-        assert c.properties is not None
+        assert c.metadata is not None
 
         def validate_timestamps(got_events, want_timestamps):
             assert len(got_events) == len(want_timestamps)
@@ -80,7 +80,7 @@ class TestChartInit(object):
     @pytest.mark.parametrize(
         "path",
         [
-            pytest.param(_missing_properties_chart_filepath, id="missing_properties"),
+            pytest.param(_missing_metadata_chart_filepath, id="missing_metadata"),
             pytest.param(_missing_resolution_chart_filepath, id="missing_resolution"),
             pytest.param(_missing_sync_track_chart_filepath, id="missing_sync_track"),
         ],
@@ -101,7 +101,7 @@ class TestSecondsFromTicksAtBPM(object):
         ],
     )
     def test_basic(self, basic_chart, ticks, bpm, resolution, want):
-        basic_chart.properties.resolution = resolution
+        basic_chart.metadata.resolution = resolution
         assert basic_chart._seconds_from_ticks_at_bpm(ticks, bpm) == want
 
     @pytest.mark.parametrize(

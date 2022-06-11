@@ -4,7 +4,7 @@ import pytest
 from chartparse.chart import Chart
 from chartparse.enums import Instrument, Difficulty, Note
 from chartparse.track import Events, InstrumentTrack, SyncTrack
-from chartparse.properties import Properties
+from chartparse.properties import Metadata
 from chartparse.event import (
     Event,
     BPMEvent,
@@ -119,7 +119,7 @@ _default_note_event_list = [_default_note_event]
 _default_star_power_event = StarPowerEvent(_default_tick, _default_duration)
 _default_star_power_event_list = [_default_star_power_event]
 
-_default_properties_fields = {
+_default_metadata_fields = {
     "name": "Song Name",
     "artist": "Artist Name",
     "charter": "Charter Name",
@@ -257,8 +257,8 @@ def note_lines():  # pragma: no cover
 
 
 @pytest.fixture
-def basic_properties():
-    return Properties(_default_properties_fields)
+def basic_metadata():
+    return Metadata(_default_metadata_fields)
 
 
 @pytest.fixture
@@ -307,7 +307,7 @@ def basic_chart(
     mocker,
     mock_open_empty_string,
     placeholder_string_iterator_getter,
-    basic_properties,
+    basic_metadata,
     basic_sync_track,
     basic_events_track,
     basic_instrument_track,
@@ -341,7 +341,7 @@ def basic_chart(
         },
     )
     mocker.patch(
-        "chartparse.properties.Properties.from_chart_lines", return_value=basic_properties
+        "chartparse.properties.Metadata.from_chart_lines", return_value=basic_metadata
     )
     with open(_default_filepath, "r") as f:
         return Chart(f)
