@@ -28,10 +28,20 @@ class TestChartInit(object):
                 assert got_event.timestamp == want_timestamp
 
         validate_timestamps(
-            c.global_events_track.events,
+            c.global_events_track.text_events,
+            [
+                datetime.timedelta(seconds=5, microseconds=102564),
+            ],
+        )
+        validate_timestamps(
+            c.global_events_track.section_events,
             [
                 datetime.timedelta(seconds=4, microseconds=102564),
-                datetime.timedelta(seconds=5, microseconds=102564),
+            ],
+        )
+        validate_timestamps(
+            c.global_events_track.lyric_events,
+            [
                 datetime.timedelta(seconds=6, microseconds=102564),
                 datetime.timedelta(seconds=6, microseconds=302564),
                 datetime.timedelta(seconds=10, microseconds=102564),

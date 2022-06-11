@@ -56,7 +56,9 @@ class Chart(object):
 
         self._populate_bpm_event_timestamps()
         self._populate_event_timestamps(self.sync_track.time_signature_events)
-        self._populate_event_timestamps(self.global_events_track.events)
+        self._populate_event_timestamps(self.global_events_track.text_events)
+        self._populate_event_timestamps(self.global_events_track.section_events)
+        self._populate_event_timestamps(self.global_events_track.lyric_events)
         for instrument, difficulties in self.instrument_tracks.items():
             for difficulty, track in difficulties.items():
                 self._populate_event_timestamps(track.note_events)

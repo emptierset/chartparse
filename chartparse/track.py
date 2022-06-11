@@ -1,6 +1,11 @@
 from chartparse.exceptions import RegexFatalNotMatchError
 
 
+class EventTrack(object):
+    def __init__(self):
+        pass
+
+
 def _parse_events_from_iterable(iterable, from_chart_line_fn):
     events = []
     for line in iterable:

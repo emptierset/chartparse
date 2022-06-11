@@ -22,8 +22,3 @@ class TestParseEventsFromIterable(object):
             raise RegexFatalNotMatchError(unmatchable_regex, invalid_chart_line)
 
         assert _parse_events_from_iterable([invalid_chart_line], fake_from_chart_line) == []
-
-
-class TestGlobalEventsTrack(object):
-    def test_init(self, basic_global_events_track):
-        assert basic_global_events_track.events == pytest.default_global_event_list

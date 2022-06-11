@@ -4,7 +4,12 @@ import pytest
 from chartparse.chart import Chart
 from chartparse.enums import Instrument, Difficulty, Note
 from chartparse.event import Event
-from chartparse.globalevents import GlobalEventsTrack, GlobalEvent
+from chartparse.globalevents import (
+    GlobalEventsTrack,
+    TextEvent,
+    SectionEvent,
+    LyricEvent,
+)
 from chartparse.instrumenttrack import InstrumentTrack, NoteEvent, StarPowerEvent
 from chartparse.metadata import Metadata
 from chartparse.synctrack import SyncTrack, BPMEvent, TimeSignatureEvent
@@ -20,6 +25,8 @@ _default_bpm_event = BPMEvent(_default_tick, _default_bpm)
 _default_bpm_event_list = [_default_bpm_event]
 
 
+# TODO: Put all line generation logic in some pytest_plugin module; see stackoverflow below:
+# https://stackoverflow.com/questions/27064004/splitting-a-conftest-py-file-into-several-smaller-conftest-like-parts
 @pytest.fixture
 def generate_valid_bpm_line():
     return generate_valid_bpm_line_fn
@@ -64,27 +71,43 @@ def generate_valid_time_signature_line_fn(
         return f"  {tick} = TS {upper_numeral}"
 
 
-_default_global_event_command = "test_command"
-_default_global_event_params = "test_param"
-_default_global_event = GlobalEvent(
-    _default_tick, _default_global_event_command, params=_default_global_event_params
-)
-_default_global_event_list = [_default_global_event]
+_default_global_event_value = "default_global_event_value"
+_default_text_event_value = "default_text_event_value"
+_default_section_event_value = "default_section_event_value"
+_default_lyric_event_value = "default_lyric_event_value"
+_default_text_event = TextEvent(_default_tick, _default_text_event_value)
+_default_section_event = SectionEvent(_default_tick, _default_section_event_value)
+_default_lyric_event = LyricEvent(_default_tick, _default_lyric_event_value)
+_default_text_events_list = [_default_text_event]
+_default_section_events_list = [_default_section_event]
+_default_lyric_events_list = [_default_lyric_event]
 
 
 @pytest.fixture
-def generate_valid_events_line():
-    return generate_valid_events_line_fn
+def generate_valid_text_event_line():
+    return generate_valid_text_event_line_fn
 
 
-def generate_valid_events_line_fn(
-    tick=_default_tick, command=_default_global_event_command, params=None
-):
-    to_join = [f'  {tick} = E "{command}']
-    if params:
-        to_join.append(f" {params}")
-    to_join.append('"')
-    return "".join(to_join)
+def generate_valid_text_event_line_fn(tick=_default_tick, value=_default_text_event_value):
+    return f'  {tick} = E "{value}"'
+
+
+@pytest.fixture
+def generate_valid_section_event_line():
+    return generate_valid_section_event_line_fn
+
+
+def generate_valid_section_event_line_fn(tick=_default_tick, value=_default_section_event_value):
+    return f'  {tick} = E "section {value}"'
+
+
+@pytest.fixture
+def generate_valid_lyric_event_line():
+    return generate_valid_lyric_event_line_fn
+
+
+def generate_valid_lyric_event_line_fn(tick=_default_tick, value=_default_lyric_event_value):
+    return f'  {tick} = E "lyric {value}"'
 
 
 _default_difficulty = Difficulty.EXPERT
@@ -158,9 +181,13 @@ def pytest_configure():
     pytest.default_lower_time_signature_numeral = _default_lower_time_signature_numeral
     pytest.default_time_signature_event_list = _default_time_signature_event_list
 
-    pytest.default_global_event_command = _default_global_event_command
-    pytest.default_global_event_params = _default_global_event_params
-    pytest.default_global_event_list = _default_global_event_list
+    pytest.default_global_event_value = _default_global_event_value
+    pytest.default_text_event_value = _default_text_event_value
+    pytest.default_section_event_value = _default_section_event_value
+    pytest.default_lyric_event_value = _default_lyric_event_value
+    pytest.default_text_event_list = _default_text_events_list
+    pytest.default_section_event_list = _default_section_events_list
+    pytest.default_lyric_event_list = _default_lyric_events_list
 
     pytest.default_instrument = _default_instrument
     pytest.default_difficulty = _default_difficulty
@@ -209,8 +236,18 @@ def bpm_event():
 
 
 @pytest.fixture
-def global_event():
-    return _default_global_event
+def text_event():
+    return _default_text_event
+
+
+@pytest.fixture
+def section_event():
+    return _default_section_event
+
+
+@pytest.fixture
+def lyric_event():
+    return _default_lyric_event
 
 
 # TODO: ... why does coverage care about this fixture?
@@ -236,7 +273,9 @@ def star_power_event():
         "tick_event",
         "time_signature_event",
         "bpm_event",
-        "global_event",
+        "text_event",
+        "section_event",
+        "lyric_event",
         "note_event",
         "star_power_event",
     ]
@@ -260,7 +299,11 @@ def basic_metadata():
 def basic_global_events_track(mocker, placeholder_string_iterator_getter):
     mocker.patch(
         "chartparse.globalevents._parse_events_from_iterable",
-        return_value=_default_global_event_list,
+        side_effect=[
+            _default_text_events_list,
+            _default_section_events_list,
+            _default_lyric_events_list,
+        ],
     )
     return GlobalEventsTrack(placeholder_string_iterator_getter)
 
@@ -306,7 +349,6 @@ def basic_chart(
     placeholder_string_iterator_getter,
     basic_metadata,
     basic_sync_track,
-    basic_global_events_track,
     basic_instrument_track,
 ):
     def fake_sync_track_init(self, iterator_getter):
@@ -316,7 +358,9 @@ def basic_chart(
     mocker.patch.object(SyncTrack, "__init__", fake_sync_track_init)
 
     def fake_global_events_track_init(self, iterator_getter):
-        self.events = _default_global_event_list
+        self.text_events = _default_text_events_list
+        self.section_events = _default_section_events_list
+        self.lyric_events = _default_lyric_events_list
 
     mocker.patch.object(GlobalEventsTrack, "__init__", fake_global_events_track_init)
 
