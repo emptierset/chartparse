@@ -69,12 +69,12 @@ def generate_valid_time_signature_line_fn(
         return f"  {tick} = TS {upper_numeral}"
 
 
-_default_events_event_command = "test_command"
-_default_events_event_params = "test_param"
-_default_events_event = GlobalEvent(
-    _default_tick, _default_events_event_command, params=_default_events_event_params
+_default_global_event_command = "test_command"
+_default_global_event_params = "test_param"
+_default_global_event = GlobalEvent(
+    _default_tick, _default_global_event_command, params=_default_global_event_params
 )
-_default_events_event_list = [_default_events_event]
+_default_global_event_list = [_default_global_event]
 
 
 @pytest.fixture
@@ -83,7 +83,7 @@ def generate_valid_events_line():
 
 
 def generate_valid_events_line_fn(
-    tick=_default_tick, command=_default_events_event_command, params=None
+    tick=_default_tick, command=_default_global_event_command, params=None
 ):
     to_join = [f'  {tick} = E "{command}']
     if params:
@@ -163,9 +163,9 @@ def pytest_configure():
     pytest.default_lower_time_signature_numeral = _default_lower_time_signature_numeral
     pytest.default_time_signature_event_list = _default_time_signature_event_list
 
-    pytest.default_events_event_command = _default_events_event_command
-    pytest.default_events_event_params = _default_events_event_params
-    pytest.default_events_event_list = _default_events_event_list
+    pytest.default_global_event_command = _default_global_event_command
+    pytest.default_global_event_params = _default_global_event_params
+    pytest.default_global_event_list = _default_global_event_list
 
     pytest.default_instrument = _default_instrument
     pytest.default_difficulty = _default_difficulty
@@ -214,8 +214,8 @@ def bpm_event():
 
 
 @pytest.fixture
-def events_event():
-    return _default_events_event
+def global_event():
+    return _default_global_event
 
 
 # TODO: ... why does coverage care about this fixture?
@@ -241,7 +241,7 @@ def star_power_event():
         "tick_event",
         "time_signature_event",
         "bpm_event",
-        "events_event",
+        "global_event",
         "note_event",
         "star_power_event",
     ]
@@ -264,7 +264,7 @@ def basic_metadata():
 @pytest.fixture
 def basic_global_events_track(mocker, placeholder_string_iterator_getter):
     mocker.patch(
-        "chartparse.track._parse_events_from_iterable", return_value=_default_events_event_list
+        "chartparse.track._parse_events_from_iterable", return_value=_default_global_event_list
     )
     return GlobalEventsTrack(placeholder_string_iterator_getter)
 
@@ -319,7 +319,7 @@ def basic_chart(
     mocker.patch.object(SyncTrack, "__init__", fake_sync_track_init)
 
     def fake_global_events_track_init(self, iterator_getter):
-        self.events = _default_events_event_list
+        self.events = _default_global_event_list
 
     mocker.patch.object(GlobalEventsTrack, "__init__", fake_global_events_track_init)
 

@@ -41,7 +41,7 @@ class TestParseEventsFromIterable(object):
 
 class TestGlobalEventsTrack(object):
     def test_init(self, basic_events_track):
-        assert basic_events_track.events == pytest.default_events_event_list
+        assert basic_events_track.events == pytest.default_global_event_list
 
 
 class TestInstrumentTrack(object):

@@ -39,6 +39,10 @@ lint:             ## Run pep8, black, mypy linters.
 	$(ENV_PREFIX)black -l 99 --check tests/
 	$(ENV_PREFIX)mypy --ignore-missing-imports chartparse/
 
+.PHONY: mypy
+mypy:             ## Run mypy linter.
+	$(ENV_PREFIX)mypy --ignore-missing-imports chartparse/
+
 .PHONY: test
 test: lint        ## Run tests and generate coverage report.
 	$(ENV_PREFIX)pytest -v --cov-config .coveragerc --cov-report term-missing \
