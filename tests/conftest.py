@@ -3,7 +3,8 @@ import pytest
 
 from chartparse.chart import Chart
 from chartparse.enums import Instrument, Difficulty, Note
-from chartparse.track import GlobalEventsTrack, InstrumentTrack, SyncTrack
+from chartparse.track import InstrumentTrack, SyncTrack
+from chartparse.globalevents import GlobalEventsTrack, GlobalEvent
 from chartparse.metadata import Metadata
 from chartparse.event import (
     Event,
@@ -11,7 +12,6 @@ from chartparse.event import (
     TimeSignatureEvent,
     StarPowerEvent,
     NoteEvent,
-    GlobalEvent,
 )
 
 _invalid_chart_line = "this_line_is_invalid"
@@ -264,7 +264,8 @@ def basic_metadata():
 @pytest.fixture
 def basic_global_events_track(mocker, placeholder_string_iterator_getter):
     mocker.patch(
-        "chartparse.track._parse_events_from_iterable", return_value=_default_global_event_list
+        "chartparse.globalevents._parse_events_from_iterable",
+        return_value=_default_global_event_list,
     )
     return GlobalEventsTrack(placeholder_string_iterator_getter)
 
