@@ -1,7 +1,5 @@
 import pytest
 
-from chartparse.event import Event
-
 
 class TestEvent(object):
     def test_init(self, tick_having_event):

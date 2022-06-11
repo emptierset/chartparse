@@ -1,7 +1,5 @@
 import pytest
 
-from enum import Enum
-
 from chartparse.util import AllValuesGettableEnum, DictPropertiesEqMixin, iterate_from_second_elem
 
 
