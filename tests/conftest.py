@@ -3,15 +3,15 @@ import pytest
 
 from chartparse.chart import Chart
 from chartparse.enums import Instrument, Difficulty, Note
-from chartparse.track import InstrumentTrack, SyncTrack
+from chartparse.track import SyncTrack
+from chartparse.instrumenttrack import InstrumentTrack
 from chartparse.globalevents import GlobalEventsTrack, GlobalEvent
 from chartparse.metadata import Metadata
+from chartparse.instrumenttrack import StarPowerEvent, NoteEvent
 from chartparse.event import (
     Event,
     BPMEvent,
     TimeSignatureEvent,
-    StarPowerEvent,
-    NoteEvent,
 )
 
 _invalid_chart_line = "this_line_is_invalid"
@@ -292,11 +292,12 @@ def bare_instrument_track():
 @pytest.fixture
 def basic_instrument_track(mocker, placeholder_string_iterator_getter):
     mocker.patch(
-        "chartparse.track.InstrumentTrack._parse_note_events_from_iterable",
+        "chartparse.instrumenttrack.InstrumentTrack._parse_note_events_from_iterable",
         return_value=_default_note_event_list,
     )
     mocker.patch(
-        "chartparse.track._parse_events_from_iterable", return_value=_default_star_power_event_list
+        "chartparse.instrumenttrack._parse_events_from_iterable",
+        return_value=_default_star_power_event_list,
     )
     return InstrumentTrack(
         pytest.default_instrument, pytest.default_difficulty, placeholder_string_iterator_getter

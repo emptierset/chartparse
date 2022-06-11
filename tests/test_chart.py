@@ -3,8 +3,8 @@ import pathlib
 import pytest
 
 from chartparse.chart import Chart
-from chartparse.event import NoteEvent
 from chartparse.enums import Difficulty, Instrument
+from chartparse.instrumenttrack import NoteEvent
 
 
 _directory_of_this_file = pathlib.Path(__file__).parent.resolve()
