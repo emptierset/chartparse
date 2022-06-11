@@ -2,7 +2,7 @@ import collections
 import re
 
 from chartparse.enums import Note
-from chartparse.event import DurationedEvent
+from chartparse.event import SustainedEvent
 from chartparse.exceptions import RegexFatalNotMatchError
 from chartparse.track import EventTrack
 from chartparse.util import DictPropertiesEqMixin, DictReprMixin
@@ -35,26 +35,26 @@ class InstrumentTrack(EventTrack, DictPropertiesEqMixin):
     @staticmethod
     def _parse_note_events_from_iterable(iterable):
         tick_to_note_array = collections.defaultdict(lambda: bytearray(5))
-        tick_to_duration_list = collections.defaultdict(lambda: [None] * 5)
+        tick_to_sustain_list = collections.defaultdict(lambda: [None] * 5)
         tick_to_is_tap = collections.defaultdict(bool)
         tick_to_is_forced = collections.defaultdict(bool)
         for line in iterable:
             m = NoteEvent._regex_prog.match(line)
             if not m:
                 continue
-            tick, note_index, duration = int(m.group(1)), int(m.group(2)), int(m.group(3))
+            tick, note_index, sustain = int(m.group(1)), int(m.group(2)), int(m.group(3))
             if (
                 InstrumentTrack._min_note_instrument_track_index
                 <= note_index
                 <= InstrumentTrack._max_note_instrument_track_index
             ):
                 tick_to_note_array[tick][note_index] = 1
-                tick_to_duration_list[tick][note_index] = duration
+                tick_to_sustain_list[tick][note_index] = sustain
             elif note_index == InstrumentTrack._open_instrument_track_index:
                 # Because `tick_to_note_array` is a defaultdict, simply accessing it at `tick` is
                 # sufficient to conjure a bytearray representing an open note.
                 tick_to_note_array[tick]
-                tick_to_duration_list[tick]
+                tick_to_sustain_list[tick]
             elif note_index == InstrumentTrack._tap_instrument_track_index:
                 tick_to_is_tap[tick] = True
             elif note_index == InstrumentTrack._forced_instrument_track_index:
@@ -69,7 +69,7 @@ class InstrumentTrack(EventTrack, DictPropertiesEqMixin):
             event = NoteEvent(
                 tick,
                 note,
-                duration=tick_to_duration_list[tick],
+                sustain=tick_to_sustain_list[tick],
                 is_forced=tick_to_is_forced[tick],
                 is_tap=tick_to_is_tap[tick],
             )
@@ -85,7 +85,7 @@ class InstrumentTrack(EventTrack, DictPropertiesEqMixin):
         note_idx = 0
         for star_power_idx, star_power_event in enumerate(self.star_power_events):
             start_tick = star_power_event.tick
-            end_tick = start_tick + star_power_event.duration
+            end_tick = start_tick + star_power_event.sustain
 
             # Seek until the first note after this star power phrase.
             while note_idx < num_notes and self.note_events[note_idx].tick < end_tick:
@@ -105,33 +105,33 @@ class InstrumentTrack(EventTrack, DictPropertiesEqMixin):
             )
 
 
-class StarPowerEvent(DurationedEvent):
+class StarPowerEvent(SustainedEvent):
     # Match 1: Tick
     # Match 2: Note index (Might be always 2? Not sure what this is, to be honest.)
-    # Match 3: Duration (ticks)
+    # Match 3: Sustain (ticks)
     _regex = r"^\s*?(\d+?) = S 2 (\d+?)\s*?$"
     _regex_prog = re.compile(_regex)
 
-    def __init__(self, tick, duration, timestamp=None):
-        super().__init__(tick, duration, timestamp=timestamp)
+    def __init__(self, tick, sustain, timestamp=None):
+        super().__init__(tick, sustain, timestamp=timestamp)
 
     @classmethod
     def from_chart_line(cls, line):
         m = cls._regex_prog.match(line)
         if not m:
             raise RegexFatalNotMatchError(cls._regex, line)
-        tick, duration = int(m.group(1)), int(m.group(2))
-        return cls(tick, duration)
+        tick, sustain = int(m.group(1)), int(m.group(2))
+        return cls(tick, sustain)
 
 
-class NoteEvent(DurationedEvent):
+class NoteEvent(SustainedEvent):
     # This regex matches a single "N" line within a instrument track section,
     # but this class should be used to represent all of the notes at a
     # particular tick. This means that you might need to consolidate multiple
     # "N" lines into a single NoteEvent, e.g. for chords.
     # Match 1: Tick
     # Match 2: Note index
-    # Match 3: Duration (ticks)
+    # Match 3: Sustain (ticks)
     _regex = r"^\s*?(\d+?) = N ([0-7]) (\d+?)\s*?$"
     _regex_prog = re.compile(_regex)
 
@@ -145,55 +145,55 @@ class NoteEvent(DurationedEvent):
         tick,
         note,
         timestamp=None,
-        duration=0,
+        sustain=0,
         is_forced=False,
         is_tap=False,
         star_power_data=None,
     ):
-        self._validate_duration(duration, note)
-        refined_duration = self._refine_duration(duration)
-        super().__init__(tick, refined_duration, timestamp=timestamp)
+        self._validate_sustain(sustain, note)
+        refined_sustain = self._refine_sustain(sustain)
+        super().__init__(tick, refined_sustain, timestamp=timestamp)
         self.note = note
         self.is_forced = is_forced
         self.is_tap = is_tap
         self.star_power_data = star_power_data
 
     @staticmethod
-    def _validate_duration(duration, note):
-        if isinstance(duration, int):
-            NoteEvent._validate_int_duration(duration)
-        elif isinstance(duration, list):
-            NoteEvent._validate_list_duration(duration, note)
+    def _validate_sustain(sustain, note):
+        if isinstance(sustain, int):
+            NoteEvent._validate_int_sustain(sustain)
+        elif isinstance(sustain, list):
+            NoteEvent._validate_list_sustain(sustain, note)
         else:
-            raise TypeError(f"duration {duration} must be type list, or int.")
+            raise TypeError(f"sustain {sustain} must be type list, or int.")
 
     @staticmethod
-    def _validate_int_duration(duration):
-        if duration < 0:
-            raise ValueError(f"int duration {duration} must be positive.")
+    def _validate_int_sustain(sustain):
+        if sustain < 0:
+            raise ValueError(f"int sustain {sustain} must be positive.")
 
     @staticmethod
-    def _validate_list_duration(duration, note):
-        if len(duration) != len(note.value):
-            raise ValueError(f"list duration {duration} must have length {len(note.value)}")
-        for note_lane_value, duration_lane_value in zip(note.value, duration):
+    def _validate_list_sustain(sustain, note):
+        if len(sustain) != len(note.value):
+            raise ValueError(f"list sustain {sustain} must have length {len(note.value)}")
+        for note_lane_value, sustain_lane_value in zip(note.value, sustain):
             lane_is_active = note_lane_value == 1
-            duration_is_set = duration_lane_value is not None
-            if lane_is_active != duration_is_set:
+            sustain_is_set = sustain_lane_value is not None
+            if lane_is_active != sustain_is_set:
                 raise ValueError(
-                    f"list duration {duration} must have "
+                    f"list sustain {sustain} must have "
                     "values for exactly the active note lanes."
                 )
 
     @staticmethod
-    def _refine_duration(duration):
-        if isinstance(duration, list):
-            if all(d is None for d in duration):
+    def _refine_sustain(sustain):
+        if isinstance(sustain, list):
+            if all(d is None for d in sustain):
                 return 0
-            first_non_none_duration = next(d for d in duration if d is not None)
-            if all(d is None or d == first_non_none_duration for d in duration):
-                return first_non_none_duration
-        return duration
+            first_non_none_sustain = next(d for d in sustain if d is not None)
+            if all(d is None or d == first_non_none_sustain for d in sustain):
+                return first_non_none_sustain
+        return sustain
 
     def __str__(self):  # pragma: no cover
         to_join = [super().__str__()]

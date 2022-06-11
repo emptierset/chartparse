@@ -113,7 +113,7 @@ def generate_valid_lyric_event_line_fn(tick=_default_tick, value=_default_lyric_
 
 _default_difficulty = Difficulty.EXPERT
 _default_instrument = Instrument.GUITAR
-_default_duration = 100  # ticks
+_default_sustain = 100  # ticks
 
 _default_note = Note.G
 _default_note_instrument_track_index = InstrumentTrack._min_note_instrument_track_index
@@ -125,9 +125,9 @@ def generate_valid_note_line():
 
 
 def generate_valid_note_line_fn(
-    tick=_default_tick, note=_default_note_instrument_track_index, duration=0
+    tick=_default_tick, note=_default_note_instrument_track_index, sustain=0
 ):
-    return f"  {tick} = N {note} {duration}"
+    return f"  {tick} = N {note} {sustain}"
 
 
 _default_note_line = generate_valid_note_line_fn()
@@ -135,7 +135,7 @@ _default_note_event = NoteEvent(_default_tick, _default_note)
 _default_note_event_list = [_default_note_event]
 
 
-_default_star_power_event = StarPowerEvent(_default_tick, _default_duration)
+_default_star_power_event = StarPowerEvent(_default_tick, _default_sustain)
 _default_star_power_event_list = [_default_star_power_event]
 
 _default_metadata_fields = {
@@ -162,8 +162,8 @@ def generate_valid_star_power_line():
     return generate_valid_star_power_line_fn
 
 
-def generate_valid_star_power_line_fn(tick=_default_tick, duration=_default_duration):
-    return f"  {tick} = S 2 {duration}"
+def generate_valid_star_power_line_fn(tick=_default_tick, sustain=_default_sustain):
+    return f"  {tick} = S 2 {sustain}"
 
 
 def pytest_configure():
@@ -172,7 +172,7 @@ def pytest_configure():
     pytest.default_filepath = _default_filepath
 
     pytest.default_tick = _default_tick
-    pytest.default_duration = _default_duration
+    pytest.default_sustain = _default_sustain
 
     pytest.default_bpm = _default_bpm
     pytest.default_bpm_event = _default_bpm_event
@@ -260,7 +260,7 @@ def note_event():  # pragma: no cover
 @pytest.fixture
 def note_event_with_all_optionals_set():
     return NoteEvent(
-        _default_tick, _default_note, duration=_default_duration, is_forced=True, is_tap=True
+        _default_tick, _default_note, sustain=_default_sustain, is_forced=True, is_tap=True
     )
 
 
