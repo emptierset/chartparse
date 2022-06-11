@@ -1,9 +1,9 @@
 import re
 
 from chartparse.event import Event
-from chartparse.util import DictPropertiesEqMixin
 from chartparse.exceptions import RegexFatalNotMatchError
 from chartparse.track import _parse_events_from_iterable
+from chartparse.util import DictPropertiesEqMixin
 
 
 class SyncTrack(DictPropertiesEqMixin):

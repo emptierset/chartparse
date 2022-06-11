@@ -1,9 +1,7 @@
 import pytest
 
 from chartparse.exceptions import RegexFatalNotMatchError
-from chartparse.track import (
-    _parse_events_from_iterable,
-)
+from chartparse.track import _parse_events_from_iterable
 
 
 class TestParseEventsFromIterable(object):

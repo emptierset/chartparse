@@ -1,7 +1,7 @@
 import pytest
 
-from chartparse.synctrack import SyncTrack, BPMEvent, TimeSignatureEvent
 from chartparse.exceptions import RegexFatalNotMatchError
+from chartparse.synctrack import SyncTrack, BPMEvent, TimeSignatureEvent
 
 
 class TestSyncTrack(object):
