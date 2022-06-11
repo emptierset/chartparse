@@ -5,7 +5,12 @@ import unittest.mock
 from chartparse.enums import Note, NoteTrackIndex
 from chartparse.event import BPMEvent, TimeSignatureEvent, StarPowerEvent, NoteEvent
 from chartparse.exceptions import RegexFatalNotMatchError
-from chartparse.track import Events, InstrumentTrack, SyncTrack, _parse_events_from_iterable
+from chartparse.track import (
+    GlobalEventsTrack,
+    InstrumentTrack,
+    SyncTrack,
+    _parse_events_from_iterable,
+)
 
 from tests.conftest import (
     generate_valid_note_line_fn,
@@ -34,7 +39,7 @@ class TestParseEventsFromIterable(object):
         assert _parse_events_from_iterable([invalid_chart_line], fake_from_chart_line) == []
 
 
-class TestEvents(object):
+class TestGlobalEventsTrack(object):
     def test_init(self, basic_events_track):
         assert basic_events_track.events == pytest.default_events_event_list
 

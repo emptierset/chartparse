@@ -28,7 +28,7 @@ class TestChartInit(object):
                 assert got_event.timestamp == want_timestamp
 
         validate_timestamps(
-            c.events_track.events,
+            c.global_events_track.events,
             [
                 datetime.timedelta(seconds=4, microseconds=102564),
                 datetime.timedelta(seconds=5, microseconds=102564),

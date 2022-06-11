@@ -2,7 +2,7 @@ import pytest
 
 from chartparse.exceptions import RegexFatalNotMatchError
 from chartparse.enums import Note
-from chartparse.event import BPMEvent, TimeSignatureEvent, StarPowerEvent, NoteEvent, EventsEvent
+from chartparse.event import BPMEvent, TimeSignatureEvent, StarPowerEvent, NoteEvent, GlobalEvent
 
 
 class TestTimeSignatureEvent(object):
@@ -106,7 +106,7 @@ class TestNoteEvent(object):
         assert NoteEvent._refine_duration(duration) == want
 
 
-class TestEventsEvent(object):
+class TestGlobalEvent(object):
     def test_init(self, events_event):
         assert events_event.command == pytest.default_events_event_command
         assert events_event.params == pytest.default_events_event_params
@@ -114,7 +114,7 @@ class TestEventsEvent(object):
     def test_from_chart_line(self, generate_valid_events_line):
 
         line = generate_valid_events_line(params=pytest.default_events_event_params)
-        event = EventsEvent.from_chart_line(line)
+        event = GlobalEvent.from_chart_line(line)
         assert event.tick == pytest.default_tick
         assert event.command == pytest.default_events_event_command
         assert event.params == pytest.default_events_event_params
@@ -122,4 +122,4 @@ class TestEventsEvent(object):
     def test_from_chart_line_no_match(self):
         line = "asdf"
         with pytest.raises(RegexFatalNotMatchError):
-            _ = EventsEvent.from_chart_line(line)
+            _ = GlobalEvent.from_chart_line(line)

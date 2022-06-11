@@ -1,7 +1,7 @@
 import collections
 
 from chartparse.enums import Note
-from chartparse.event import BPMEvent, EventsEvent, NoteEvent, StarPowerEvent, TimeSignatureEvent
+from chartparse.event import BPMEvent, GlobalEvent, NoteEvent, StarPowerEvent, TimeSignatureEvent
 from chartparse.exceptions import RegexFatalNotMatchError
 from chartparse.util import DictPropertiesEqMixin
 
@@ -128,9 +128,9 @@ class SyncTrack(DictPropertiesEqMixin):
         raise ValueError(f"there are no BPMEvents at or after index {start_idx} in bpm_events")
 
 
-class Events(DictPropertiesEqMixin):
+class GlobalEventsTrack(DictPropertiesEqMixin):
     def __init__(self, iterator_getter):
-        self.events = _parse_events_from_iterable(iterator_getter(), EventsEvent.from_chart_line)
+        self.events = _parse_events_from_iterable(iterator_getter(), GlobalEvent.from_chart_line)
 
 
 def _parse_events_from_iterable(iterable, from_chart_line_fn):

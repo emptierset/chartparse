@@ -3,7 +3,7 @@ import pytest
 
 from chartparse.chart import Chart
 from chartparse.enums import Instrument, Difficulty, Note
-from chartparse.track import Events, InstrumentTrack, SyncTrack
+from chartparse.track import GlobalEventsTrack, InstrumentTrack, SyncTrack
 from chartparse.metadata import Metadata
 from chartparse.event import (
     Event,
@@ -11,7 +11,7 @@ from chartparse.event import (
     TimeSignatureEvent,
     StarPowerEvent,
     NoteEvent,
-    EventsEvent,
+    GlobalEvent,
 )
 
 _invalid_chart_line = "this_line_is_invalid"
@@ -71,7 +71,7 @@ def generate_valid_time_signature_line_fn(
 
 _default_events_event_command = "test_command"
 _default_events_event_params = "test_param"
-_default_events_event = EventsEvent(
+_default_events_event = GlobalEvent(
     _default_tick, _default_events_event_command, params=_default_events_event_params
 )
 _default_events_event_list = [_default_events_event]
@@ -262,11 +262,11 @@ def basic_metadata():
 
 
 @pytest.fixture
-def basic_events_track(mocker, placeholder_string_iterator_getter):
+def basic_global_events_track(mocker, placeholder_string_iterator_getter):
     mocker.patch(
         "chartparse.track._parse_events_from_iterable", return_value=_default_events_event_list
     )
-    return Events(placeholder_string_iterator_getter)
+    return GlobalEventsTrack(placeholder_string_iterator_getter)
 
 
 @pytest.fixture
@@ -309,7 +309,7 @@ def basic_chart(
     placeholder_string_iterator_getter,
     basic_metadata,
     basic_sync_track,
-    basic_events_track,
+    basic_global_events_track,
     basic_instrument_track,
 ):
     def fake_sync_track_init(self, iterator_getter):
@@ -318,10 +318,10 @@ def basic_chart(
 
     mocker.patch.object(SyncTrack, "__init__", fake_sync_track_init)
 
-    def fake_events_track_init(self, iterator_getter):
+    def fake_global_events_track_init(self, iterator_getter):
         self.events = _default_events_event_list
 
-    mocker.patch.object(Events, "__init__", fake_events_track_init)
+    mocker.patch.object(GlobalEventsTrack, "__init__", fake_global_events_track_init)
 
     def fake_instrument_track_init(self, instrument, difficulty, iterator_getter):
         self.instrument = _default_instrument
