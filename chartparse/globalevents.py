@@ -20,7 +20,7 @@ class GlobalEventsTrack(DictPropertiesEqMixin):
 
 
 # TODO: Rename to _GlobalEvent.
-class GlobalEvent(Event):
+class _GlobalEvent(Event):
     # Match 1: Tick
     # Match 2: Event value (to be added by subclass via template hole)
     _regex_template = r"^\s*?(\d+?) = E \"{}\"\s*?$"
@@ -34,7 +34,7 @@ class GlobalEvent(Event):
         if not hasattr(cls, "_regex_prog"):
             raise NotImplementedError(
                 f"{cls.__name__} does not have a _regex_prog value. Perhaps you are trying to "
-                "instantiate a GlobalEvent value, rather than one of its implementing subclasses?"
+                "instantiate a _GlobalEvent value, rather than one of its implementing subclasses?"
             )
 
         m = cls._regex_prog.match(line)
@@ -49,16 +49,16 @@ class GlobalEvent(Event):
         return "".join(to_join)
 
 
-class TextEvent(GlobalEvent):
-    _regex = GlobalEvent._regex_template.format("([^ ]*?)")
+class TextEvent(_GlobalEvent):
+    _regex = _GlobalEvent._regex_template.format("([^ ]*?)")
     _regex_prog = re.compile(_regex)
 
 
-class SectionEvent(GlobalEvent):
-    _regex = GlobalEvent._regex_template.format("section (.*?)")
+class SectionEvent(_GlobalEvent):
+    _regex = _GlobalEvent._regex_template.format("section (.*?)")
     _regex_prog = re.compile(_regex)
 
 
-class LyricEvent(GlobalEvent):
-    _regex = GlobalEvent._regex_template.format("lyric (.*?)")
+class LyricEvent(_GlobalEvent):
+    _regex = _GlobalEvent._regex_template.format("lyric (.*?)")
     _regex_prog = re.compile(_regex)

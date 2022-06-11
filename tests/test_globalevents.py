@@ -1,7 +1,7 @@
 import pytest
 
 from chartparse.exceptions import RegexFatalNotMatchError
-from chartparse.globalevents import GlobalEvent, TextEvent, SectionEvent, LyricEvent
+from chartparse.globalevents import _GlobalEvent, TextEvent, SectionEvent, LyricEvent
 
 
 class TestGlobalEventsTrack(object):
@@ -13,12 +13,12 @@ class TestGlobalEventsTrack(object):
 
 class TestGlobalEvent(object):
     def test_init(self):
-        event = GlobalEvent(pytest.default_tick, pytest.default_global_event_value)
+        event = _GlobalEvent(pytest.default_tick, pytest.default_global_event_value)
         assert event.value == pytest.default_global_event_value
 
     def test_from_chart_line_not_implemented(self, invalid_chart_line):
         with pytest.raises(NotImplementedError):
-            _ = GlobalEvent.from_chart_line(invalid_chart_line)
+            _ = _GlobalEvent.from_chart_line(invalid_chart_line)
 
 
 class TestTextEvent(object):
