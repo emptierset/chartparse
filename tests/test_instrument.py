@@ -2,7 +2,7 @@ import pytest
 
 from chartparse.enums import Note, NoteTrackIndex
 from chartparse.exceptions import RegexFatalNotMatchError
-from chartparse.instrument import InstrumentTrack, StarPowerEvent, NoteEvent
+from chartparse.instrument import InstrumentTrack, StarPowerEvent, NoteEvent, _SpecialEvent
 
 from tests.conftest import (
     generate_valid_note_line_fn,
@@ -250,10 +250,16 @@ class TestNoteEvent(object):
         assert NoteEvent._refine_sustain(sustain) == want
 
 
-class TestStarPowerEvent(object):
+class TestSpecialEvent(object):
     def test_init(self, star_power_event):
         assert star_power_event.sustain == pytest.default_sustain
 
+    def test_from_chart_line_not_implemented(self, invalid_chart_line):
+        with pytest.raises(NotImplementedError):
+            _ = _SpecialEvent.from_chart_line(invalid_chart_line)
+
+
+class TestStarPowerEvent(object):
     def test_from_chart_line(self, generate_valid_star_power_line):
         line = generate_valid_star_power_line()
         event = StarPowerEvent.from_chart_line(line)
