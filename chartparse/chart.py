@@ -5,7 +5,7 @@ import re
 
 from chartparse.enums import Difficulty, Instrument
 from chartparse.metadata import Metadata
-from chartparse.track import Events, InstrumentTrack, SyncTrack
+from chartparse.track import GlobalEventsTrack, InstrumentTrack, SyncTrack
 from chartparse.util import iterate_from_second_elem
 
 _max_timedelta = datetime.datetime.max - datetime.datetime.min
@@ -39,7 +39,7 @@ class Chart(object):
                     )
 
             elif section_name == "Events":
-                self.events_track = Events(iterator_getter)
+                self.global_events_track = GlobalEventsTrack(iterator_getter)
             elif section_name == "SyncTrack":
                 self.sync_track = SyncTrack(iterator_getter)
             elif section_name in self._instrument_track_name_to_instrument_difficulty_pair:
@@ -54,7 +54,7 @@ class Chart(object):
 
         self._populate_bpm_event_timestamps()
         self._populate_event_timestamps(self.sync_track.time_signature_events)
-        self._populate_event_timestamps(self.events_track.events)
+        self._populate_event_timestamps(self.global_events_track.events)
         for instrument, difficulties in self.instrument_tracks.items():
             for difficulty, track in difficulties.items():
                 self._populate_event_timestamps(track.note_events)

@@ -200,7 +200,7 @@ class NoteEvent(DurationedEvent):
         return "".join(to_join)
 
 
-class EventsEvent(Event):
+class GlobalEvent(Event):
     # Match 1: Tick
     # Match 2: Event command
     # Match 3: Event parameters (optional)
