@@ -13,7 +13,7 @@ class TestSyncTrack(object):
         self, mocker, placeholder_string_iterator_getter
     ):
         mocker.patch(
-            "chartparse.synctrack._parse_events_from_iterable",
+            "chartparse.synctrack.SyncTrack._parse_events_from_iterable",
             return_value=[
                 TimeSignatureEvent(
                     1,
@@ -27,7 +27,7 @@ class TestSyncTrack(object):
 
     def test_init_missing_first_bpm_event(self, mocker, placeholder_string_iterator_getter):
         mocker.patch(
-            "chartparse.synctrack._parse_events_from_iterable",
+            "chartparse.synctrack.SyncTrack._parse_events_from_iterable",
             side_effect=[
                 pytest.default_time_signature_event_list,
                 [BPMEvent(1, pytest.default_bpm)],

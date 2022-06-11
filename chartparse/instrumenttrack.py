@@ -4,11 +4,11 @@ import re
 from chartparse.enums import Note
 from chartparse.event import DurationedEvent
 from chartparse.exceptions import RegexFatalNotMatchError
-from chartparse.track import _parse_events_from_iterable
+from chartparse.track import EventTrack
 from chartparse.util import DictPropertiesEqMixin, DictReprMixin
 
 
-class InstrumentTrack(DictPropertiesEqMixin):
+class InstrumentTrack(EventTrack, DictPropertiesEqMixin):
     _min_note_instrument_track_index = 0
     _max_note_instrument_track_index = 4
     _open_instrument_track_index = 7
@@ -19,7 +19,7 @@ class InstrumentTrack(DictPropertiesEqMixin):
         self.instrument = instrument
         self.difficulty = difficulty
         self.note_events = self._parse_note_events_from_iterable(iterator_getter())
-        self.star_power_events = _parse_events_from_iterable(
+        self.star_power_events = self._parse_events_from_iterable(
             iterator_getter(), StarPowerEvent.from_chart_line
         )
         self._populate_star_power_data()
