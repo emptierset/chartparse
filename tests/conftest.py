@@ -3,14 +3,11 @@ import pytest
 
 from chartparse.chart import Chart
 from chartparse.enums import Instrument, Difficulty, Note
-from chartparse.instrumenttrack import InstrumentTrack
+from chartparse.event import Event
 from chartparse.globalevents import GlobalEventsTrack, GlobalEvent
+from chartparse.instrumenttrack import InstrumentTrack, NoteEvent, StarPowerEvent
 from chartparse.metadata import Metadata
 from chartparse.synctrack import SyncTrack, BPMEvent, TimeSignatureEvent
-from chartparse.instrumenttrack import StarPowerEvent, NoteEvent
-from chartparse.event import (
-    Event,
-)
 
 _invalid_chart_line = "this_line_is_invalid"
 

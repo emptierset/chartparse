@@ -2,9 +2,9 @@ import pytest
 
 from tests.conftest import (
     generate_valid_bpm_line_fn,
-    generate_valid_time_signature_line_fn,
-    generate_valid_star_power_line_fn,
     generate_valid_note_line_fn,
+    generate_valid_star_power_line_fn,
+    generate_valid_time_signature_line_fn,
 )
 
 
