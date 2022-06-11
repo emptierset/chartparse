@@ -2,19 +2,19 @@ import re
 
 from chartparse.event import Event
 from chartparse.exceptions import RegexFatalNotMatchError
-from chartparse.track import _parse_events_from_iterable
+from chartparse.track import EventTrack
 from chartparse.util import DictPropertiesEqMixin
 
 
-class GlobalEventsTrack(DictPropertiesEqMixin):
+class GlobalEventsTrack(EventTrack, DictPropertiesEqMixin):
     def __init__(self, iterator_getter):
-        self.text_events = _parse_events_from_iterable(
+        self.text_events = self._parse_events_from_iterable(
             iterator_getter(), TextEvent.from_chart_line
         )
-        self.section_events = _parse_events_from_iterable(
+        self.section_events = self._parse_events_from_iterable(
             iterator_getter(), SectionEvent.from_chart_line
         )
-        self.lyric_events = _parse_events_from_iterable(
+        self.lyric_events = self._parse_events_from_iterable(
             iterator_getter(), LyricEvent.from_chart_line
         )
 

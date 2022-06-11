@@ -13,6 +13,7 @@ from chartparse.globalevents import (
 from chartparse.instrumenttrack import InstrumentTrack, NoteEvent, StarPowerEvent
 from chartparse.metadata import Metadata
 from chartparse.synctrack import SyncTrack, BPMEvent, TimeSignatureEvent
+from chartparse.track import EventTrack
 
 _invalid_chart_line = "this_line_is_invalid"
 
@@ -296,9 +297,14 @@ def basic_metadata():
 
 
 @pytest.fixture
+def bare_event_track():
+    return EventTrack.__new__(EventTrack)
+
+
+@pytest.fixture
 def basic_global_events_track(mocker, placeholder_string_iterator_getter):
     mocker.patch(
-        "chartparse.globalevents._parse_events_from_iterable",
+        "chartparse.globalevents.GlobalEventsTrack._parse_events_from_iterable",
         side_effect=[
             _default_text_events_list,
             _default_section_events_list,
@@ -316,7 +322,7 @@ def bare_sync_track():
 @pytest.fixture
 def basic_sync_track(mocker, placeholder_string_iterator_getter):
     mocker.patch(
-        "chartparse.synctrack._parse_events_from_iterable",
+        "chartparse.synctrack.SyncTrack._parse_events_from_iterable",
         side_effect=[_default_time_signature_event_list, _default_bpm_event_list],
     )
     return SyncTrack(placeholder_string_iterator_getter)
@@ -334,7 +340,7 @@ def basic_instrument_track(mocker, placeholder_string_iterator_getter):
         return_value=_default_note_event_list,
     )
     mocker.patch(
-        "chartparse.instrumenttrack._parse_events_from_iterable",
+        "chartparse.instrumenttrack.InstrumentTrack._parse_events_from_iterable",
         return_value=_default_star_power_event_list,
     )
     return InstrumentTrack(

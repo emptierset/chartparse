@@ -2,13 +2,13 @@ import re
 
 from chartparse.event import Event
 from chartparse.exceptions import RegexFatalNotMatchError
-from chartparse.track import _parse_events_from_iterable
+from chartparse.track import EventTrack
 from chartparse.util import DictPropertiesEqMixin
 
 
-class SyncTrack(DictPropertiesEqMixin):
+class SyncTrack(EventTrack, DictPropertiesEqMixin):
     def __init__(self, iterator_getter):
-        self.time_signature_events = _parse_events_from_iterable(
+        self.time_signature_events = self._parse_events_from_iterable(
             iterator_getter(), TimeSignatureEvent.from_chart_line
         )
         if self.time_signature_events[0].tick != 0:
@@ -16,7 +16,9 @@ class SyncTrack(DictPropertiesEqMixin):
                 f"first TimeSignatureEvent {self.time_signature_events[0]} must have tick 0"
             )
 
-        self.bpm_events = _parse_events_from_iterable(iterator_getter(), BPMEvent.from_chart_line)
+        self.bpm_events = self._parse_events_from_iterable(
+            iterator_getter(), BPMEvent.from_chart_line
+        )
         if self.bpm_events[0].tick != 0:
             raise ValueError(f"first BPMEvent {self.bpm_events[0]} must have tick 0")
 
