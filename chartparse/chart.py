@@ -4,8 +4,9 @@ import itertools
 import re
 
 from chartparse.enums import Difficulty, Instrument
+from chartparse.globalevents import GlobalEventsTrack
 from chartparse.metadata import Metadata
-from chartparse.track import GlobalEventsTrack, InstrumentTrack, SyncTrack
+from chartparse.track import InstrumentTrack, SyncTrack
 from chartparse.util import iterate_from_second_elem
 
 _max_timedelta = datetime.datetime.max - datetime.datetime.min
