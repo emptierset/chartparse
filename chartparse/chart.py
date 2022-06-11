@@ -4,7 +4,7 @@ import itertools
 import re
 
 from chartparse.enums import Difficulty, Instrument
-from chartparse.properties import Metadata
+from chartparse.metadata import Metadata
 from chartparse.track import Events, InstrumentTrack, SyncTrack
 from chartparse.util import iterate_from_second_elem
 
