@@ -37,7 +37,7 @@ class TimeSignatureEvent(Event):
     # Match 1: Tick
     # Match 2: Upper numeral
     # Match 3: Lower numeral (optional; assumed to be 4 if absent)
-    _regex = r"^\s\s(\d+?)\s=\sTS\s(\d+?)(?:\s(\d+?))?$"
+    _regex = r"^\s*?(\d+?) = TS (\d+?)(?: (\d+?))?\s*?$"
     _regex_prog = re.compile(_regex)
 
     def __init__(self, tick, upper_numeral, lower_numeral, timestamp=None):
@@ -65,7 +65,7 @@ class TimeSignatureEvent(Event):
 class BPMEvent(Event):
     # Match 1: Tick
     # Match 2: BPM (the last 3 digits are the decimal places)
-    _regex = r"^\s*?(\d+?)\s=\sB\s(\d+?)\s*?$"
+    _regex = r"^\s*?(\d+?) = B (\d+?)\s*?$"
     _regex_prog = re.compile(_regex)
 
     def __init__(self, tick, bpm, timestamp=None):
