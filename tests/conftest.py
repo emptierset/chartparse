@@ -12,7 +12,7 @@ from chartparse.globalevents import (
 )
 from chartparse.instrumenttrack import InstrumentTrack, NoteEvent, StarPowerEvent
 from chartparse.metadata import Metadata
-from chartparse.synctrack import SyncTrack, BPMEvent, TimeSignatureEvent
+from chartparse.sync import SyncTrack, BPMEvent, TimeSignatureEvent
 from chartparse.track import EventTrack
 
 _invalid_chart_line = "this_line_is_invalid"
@@ -322,7 +322,7 @@ def bare_sync_track():
 @pytest.fixture
 def basic_sync_track(mocker, placeholder_string_iterator_getter):
     mocker.patch(
-        "chartparse.synctrack.SyncTrack._parse_events_from_iterable",
+        "chartparse.sync.SyncTrack._parse_events_from_iterable",
         side_effect=[_default_time_signature_event_list, _default_bpm_event_list],
     )
     return SyncTrack(placeholder_string_iterator_getter)
