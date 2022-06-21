@@ -17,12 +17,10 @@ class TestParseEventsFromIterable(object):
     def test_parse_events_from_iterable_regex_no_match(
         self, bare_event_track, invalid_chart_line, unmatchable_regex
     ):
-        def fake_from_chart_line(_):
+        def fake_from_chart_line_fn(_):
             raise RegexFatalNotMatchError(unmatchable_regex, invalid_chart_line)
 
-        assert (
-            bare_event_track._parse_events_from_iterable(
-                [invalid_chart_line], fake_from_chart_line
-            )
-            == []
+        events = bare_event_track._parse_events_from_iterable(
+            [invalid_chart_line], fake_from_chart_line_fn
         )
+        assert len(events) == 0

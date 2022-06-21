@@ -1,26 +1,34 @@
 import re
 
-from chartparse.event import Event
+from chartparse.event import Event, FromChartLineMixin
 from chartparse.exceptions import RegexFatalNotMatchError
 from chartparse.track import EventTrack
 from chartparse.util import DictPropertiesEqMixin
 
 
 class SyncTrack(EventTrack, DictPropertiesEqMixin):
-    def __init__(self, iterator_getter):
-        self.time_signature_events = self._parse_events_from_iterable(
+    def __init__(self, time_signature_events, bpm_events):
+        if not time_signature_events:
+            raise ValueError("time_signature_events must not be empty")
+        if time_signature_events[0].tick != 0:
+            raise ValueError(
+                f"first TimeSignatureEvent {time_signature_events[0]} must have tick 0"
+            )
+        if not bpm_events:
+            raise ValueError("bpm_events must not be empty")
+        if bpm_events[0].tick != 0:
+            raise ValueError(f"first BPMEvent {bpm_events[0]} must have tick 0")
+
+        self.time_signature_events = time_signature_events
+        self.bpm_events = bpm_events
+
+    @classmethod
+    def from_chart_lines(cls, iterator_getter):
+        time_signature_events = cls._parse_events_from_iterable(
             iterator_getter(), TimeSignatureEvent.from_chart_line
         )
-        if self.time_signature_events[0].tick != 0:
-            raise ValueError(
-                f"first TimeSignatureEvent {self.time_signature_events[0]} must have tick 0"
-            )
-
-        self.bpm_events = self._parse_events_from_iterable(
-            iterator_getter(), BPMEvent.from_chart_line
-        )
-        if self.bpm_events[0].tick != 0:
-            raise ValueError(f"first BPMEvent {self.bpm_events[0]} must have tick 0")
+        bpm_events = cls._parse_events_from_iterable(iterator_getter(), BPMEvent.from_chart_line)
+        return cls(time_signature_events, bpm_events)
 
     def idx_of_proximal_bpm_event(self, tick, start_idx=0):
         # A BPMEvent is "proximal" relative to tick `T` if it is the
@@ -51,8 +59,7 @@ class TimeSignatureEvent(Event):
         if not m:
             raise RegexFatalNotMatchError(cls._regex, line)
         tick, upper_numeral = int(m.group(1)), int(m.group(2))
-        # For some reason, the lower number is written by Moonscraper as the
-        # exponent of whatever power of 2 it is.
+        # The lower number is written by Moonscraper as the log2 of the true value.
         lower_numeral = 2 ** int(m.group(3)) if m.group(3) else 4
         return cls(tick, upper_numeral, lower_numeral)
 
@@ -62,7 +69,7 @@ class TimeSignatureEvent(Event):
         return "".join(to_join)
 
 
-class BPMEvent(Event):
+class BPMEvent(Event, FromChartLineMixin):
     # Match 1: Tick
     # Match 2: BPM (the last 3 digits are the decimal places)
     _regex = r"^\s*?(\d+?) = B (\d+?)\s*?$"
@@ -74,15 +81,14 @@ class BPMEvent(Event):
 
     @classmethod
     def from_chart_line(cls, line):
-        m = cls._regex_prog.match(line)
-        if not m:
-            raise RegexFatalNotMatchError(cls._regex, line)
-        tick, raw_bpm = int(m.group(1)), m.group(2)
+        event = super().from_chart_line(line)
+        raw_bpm = event.bpm
         bpm_whole_part_str, bpm_decimal_part_str = raw_bpm[:-3], raw_bpm[-3:]
         bpm_whole_part = int(bpm_whole_part_str) if bpm_whole_part_str != "" else 0
         bpm_decimal_part = int(bpm_decimal_part_str) / 1000
         bpm = bpm_whole_part + bpm_decimal_part
-        return cls(tick, bpm)
+        event.bpm = bpm
+        return event
 
     def __str__(self):  # pragma: no cover
         to_join = [super().__str__()]

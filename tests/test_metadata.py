@@ -23,6 +23,24 @@ class TestMetadata(object):
         "unknown_property": "unknown value",
     }
 
+    def test_init(self):
+        metadata = Metadata(self.fields)
+        assert metadata.name == self.fields["name"]
+        assert metadata.artist == self.fields["artist"]
+        assert metadata.charter == self.fields["charter"]
+        assert metadata.album == self.fields["album"]
+        assert metadata.year == self.fields["year"]
+        assert metadata.offset == self.fields["offset"]
+        assert metadata.resolution == self.fields["resolution"]
+        assert metadata.player2 == self.fields["player2"]
+        assert metadata.difficulty == self.fields["difficulty"]
+        assert metadata.preview_start == self.fields["preview_start"]
+        assert metadata.preview_end == self.fields["preview_end"]
+        assert metadata.genre == self.fields["genre"]
+        assert metadata.media_type == self.fields["media_type"]
+        assert metadata.music_stream == self.fields["music_stream"]
+        assert metadata.unknown_property == self.fields["unknown_property"]
+
     def test_from_chart_lines(self):
         lines = [
             f"  Name = \"{self.fields['name']}\"",
@@ -62,21 +80,3 @@ class TestMetadata(object):
         lines = [invalid_chart_line]
         with pytest.raises(RegexFatalNotMatchError):
             _ = Metadata.from_chart_lines(lines)
-
-    def test_init(self):
-        metadata = Metadata(self.fields)
-        assert metadata.name == self.fields["name"]
-        assert metadata.artist == self.fields["artist"]
-        assert metadata.charter == self.fields["charter"]
-        assert metadata.album == self.fields["album"]
-        assert metadata.year == self.fields["year"]
-        assert metadata.offset == self.fields["offset"]
-        assert metadata.resolution == self.fields["resolution"]
-        assert metadata.player2 == self.fields["player2"]
-        assert metadata.difficulty == self.fields["difficulty"]
-        assert metadata.preview_start == self.fields["preview_start"]
-        assert metadata.preview_end == self.fields["preview_end"]
-        assert metadata.genre == self.fields["genre"]
-        assert metadata.media_type == self.fields["media_type"]
-        assert metadata.music_stream == self.fields["music_stream"]
-        assert metadata.unknown_property == self.fields["unknown_property"]

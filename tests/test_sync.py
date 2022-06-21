@@ -1,4 +1,5 @@
 import pytest
+import unittest.mock
 
 from chartparse.exceptions import RegexFatalNotMatchError
 from chartparse.sync import SyncTrack, BPMEvent, TimeSignatureEvent
@@ -9,32 +10,45 @@ class TestSyncTrack(object):
         assert basic_sync_track.time_signature_events == pytest.default_time_signature_event_list
         assert basic_sync_track.bpm_events == pytest.default_bpm_event_list
 
-    def test_init_missing_first_time_signature_event(
-        self, mocker, placeholder_string_iterator_getter
-    ):
-        mocker.patch(
-            "chartparse.sync.SyncTrack._parse_events_from_iterable",
-            return_value=[
-                TimeSignatureEvent(
-                    1,
-                    pytest.default_upper_time_signature_numeral,
-                    pytest.default_lower_time_signature_numeral,
-                )
-            ],
-        )
+    def test_init_empty_time_signature_events(self):
         with pytest.raises(ValueError):
-            _ = SyncTrack(placeholder_string_iterator_getter)
+            _ = SyncTrack([], pytest.default_bpm_event_list)
 
-    def test_init_missing_first_bpm_event(self, mocker, placeholder_string_iterator_getter):
-        mocker.patch(
+    def test_init_missing_first_time_signature_event(self, noninitial_time_signature_event):
+        with pytest.raises(ValueError):
+            _ = SyncTrack([noninitial_time_signature_event], pytest.default_bpm_event_list)
+
+    def test_init_empty_bpm_events(self):
+        with pytest.raises(ValueError):
+            _ = SyncTrack(pytest.default_time_signature_event_list, [])
+
+    def test_init_missing_first_bpm_event(self, noninitial_bpm_event):
+        with pytest.raises(ValueError):
+            _ = SyncTrack(pytest.default_time_signature_event_list, [noninitial_bpm_event])
+
+    def test_from_chart_lines(self, mocker, placeholder_string_iterator_getter):
+        mock_parse_events = mocker.patch(
             "chartparse.sync.SyncTrack._parse_events_from_iterable",
             side_effect=[
                 pytest.default_time_signature_event_list,
-                [BPMEvent(1, pytest.default_bpm)],
+                pytest.default_bpm_event_list,
             ],
         )
-        with pytest.raises(ValueError):
-            _ = SyncTrack(placeholder_string_iterator_getter)
+        init_spy = mocker.spy(SyncTrack, "__init__")
+        _ = SyncTrack.from_chart_lines(placeholder_string_iterator_getter)
+        mock_parse_events.assert_has_calls(
+            [
+                unittest.mock.call(
+                    placeholder_string_iterator_getter(), TimeSignatureEvent.from_chart_line
+                ),
+                unittest.mock.call(placeholder_string_iterator_getter(), BPMEvent.from_chart_line),
+            ]
+        )
+        init_spy.assert_called_once_with(
+            unittest.mock.ANY,
+            pytest.default_time_signature_event_list,
+            pytest.default_bpm_event_list,
+        )
 
     @pytest.mark.parametrize(
         "tick,start_idx,bpm_events,want",
@@ -67,9 +81,7 @@ class TestSyncTrack(object):
             pytest.param(1, [BPMEvent(0, pytest.default_bpm)]),
         ],
     )
-    def test_idx_of_proximal_bpm_event_raises_ValueError(
-        self, bare_sync_track, start_idx, bpm_events
-    ):
+    def test_idx_of_proximal_bpm_event_raises(self, bare_sync_track, start_idx, bpm_events):
         bare_sync_track.bpm_events = bpm_events
         with pytest.raises(ValueError):
             _ = bare_sync_track.idx_of_proximal_bpm_event(0, start_idx=start_idx)
@@ -83,20 +95,17 @@ class TestTimeSignatureEvent(object):
     def test_from_chart_line_short(self, generate_valid_short_time_signature_line):
         line = generate_valid_short_time_signature_line()
         event = TimeSignatureEvent.from_chart_line(line)
-        assert event.tick == pytest.default_tick
         assert event.upper_numeral == pytest.default_upper_time_signature_numeral
 
     def test_from_chart_line_long(self, generate_valid_long_time_signature_line):
         line = generate_valid_long_time_signature_line()
         event = TimeSignatureEvent.from_chart_line(line)
-        assert event.tick == pytest.default_tick
         assert event.upper_numeral == pytest.default_upper_time_signature_numeral
         assert event.lower_numeral == pytest.default_lower_time_signature_numeral
 
-    def test_from_chart_line_no_match(self, generate_valid_bpm_line):
-        line = generate_valid_bpm_line()
+    def test_from_chart_line_no_match(self, invalid_chart_line):
         with pytest.raises(RegexFatalNotMatchError):
-            _ = TimeSignatureEvent.from_chart_line(line)
+            _ = TimeSignatureEvent.from_chart_line(invalid_chart_line)
 
 
 class TestBPMEvent(object):
@@ -106,7 +115,6 @@ class TestBPMEvent(object):
     def test_from_chart_line(self, generate_valid_bpm_line):
         line = generate_valid_bpm_line()
         event = BPMEvent.from_chart_line(line)
-        assert event.tick == pytest.default_tick
         assert event.bpm == pytest.default_bpm
 
     def test_from_chart_line_no_match(self, generate_valid_short_time_signature_line):

@@ -1,9 +1,10 @@
+import datetime
 import math
 import pytest
 
 from chartparse.chart import Chart
 from chartparse.enums import Instrument, Difficulty, Note
-from chartparse.event import Event
+from chartparse.event import Event, SustainedEvent
 from chartparse.globalevents import (
     GlobalEventsTrack,
     TextEvent,
@@ -21,8 +22,11 @@ _default_filepath = "/not/a/real/path"
 
 _default_tick = 0
 
+_default_timestamp = datetime.timedelta(0)
+
 _default_bpm = 120.000
 _default_bpm_event = BPMEvent(_default_tick, _default_bpm)
+_noninitial_bpm_event = BPMEvent(1, _default_bpm)
 _default_bpm_event_list = [_default_bpm_event]
 
 
@@ -44,6 +48,9 @@ _default_upper_time_signature_numeral = 4
 _default_lower_time_signature_numeral = 8
 _default_time_signature_event = TimeSignatureEvent(
     _default_tick, _default_upper_time_signature_numeral, _default_lower_time_signature_numeral
+)
+_noninitial_time_signature_event = TimeSignatureEvent(
+    1, _default_upper_time_signature_numeral, _default_lower_time_signature_numeral
 )
 _default_time_signature_event_list = [_default_time_signature_event]
 
@@ -79,6 +86,7 @@ _default_lyric_event_value = "default_lyric_event_value"
 _default_text_event = TextEvent(_default_tick, _default_text_event_value)
 _default_section_event = SectionEvent(_default_tick, _default_section_event_value)
 _default_lyric_event = LyricEvent(_default_tick, _default_lyric_event_value)
+# TODO: Rename all `events_list` and `event_list` names to `events`.
 _default_text_events_list = [_default_text_event]
 _default_section_events_list = [_default_section_event]
 _default_lyric_events_list = [_default_lyric_event]
@@ -174,6 +182,8 @@ def pytest_configure():
     pytest.default_tick = _default_tick
     pytest.default_sustain = _default_sustain
 
+    pytest.default_timestamp = _default_timestamp
+
     pytest.default_bpm = _default_bpm
     pytest.default_bpm_event = _default_bpm_event
     pytest.default_bpm_event_list = _default_bpm_event_list
@@ -220,10 +230,19 @@ def unmatchable_regex():
     return r"(?!x)x"
 
 
-# TODO: Rename to `event`.
 @pytest.fixture
-def tick_event():
+def event():
     return Event(_default_tick)
+
+
+@pytest.fixture
+def bare_sustained_event():
+    return SustainedEvent.__new__(SustainedEvent)
+
+
+@pytest.fixture
+def sustained_event():
+    return SustainedEvent(_default_tick, _default_sustain)
 
 
 @pytest.fixture
@@ -232,8 +251,18 @@ def time_signature_event():
 
 
 @pytest.fixture
+def noninitial_time_signature_event():
+    return _noninitial_time_signature_event
+
+
+@pytest.fixture
 def bpm_event():
     return _default_bpm_event
+
+
+@pytest.fixture
+def noninitial_bpm_event():
+    return _noninitial_bpm_event
 
 
 @pytest.fixture
@@ -271,12 +300,17 @@ def star_power_event():
 
 @pytest.fixture(
     params=[
-        "tick_event",
+        # Base events
+        "event",
+        "sustained_event",
+        # Sync events
         "time_signature_event",
         "bpm_event",
+        # Global events
         "text_event",
         "section_event",
         "lyric_event",
+        # Instrument events
         "note_event",
         "star_power_event",
     ]
@@ -302,16 +336,10 @@ def bare_event_track():
 
 
 @pytest.fixture
-def basic_global_events_track(mocker, placeholder_string_iterator_getter):
-    mocker.patch(
-        "chartparse.globalevents.GlobalEventsTrack._parse_events_from_iterable",
-        side_effect=[
-            _default_text_events_list,
-            _default_section_events_list,
-            _default_lyric_events_list,
-        ],
+def basic_global_events_track():
+    return GlobalEventsTrack(
+        _default_text_events_list, _default_section_events_list, _default_lyric_events_list
     )
-    return GlobalEventsTrack(placeholder_string_iterator_getter)
 
 
 @pytest.fixture
@@ -320,12 +348,8 @@ def bare_sync_track():
 
 
 @pytest.fixture
-def basic_sync_track(mocker, placeholder_string_iterator_getter):
-    mocker.patch(
-        "chartparse.sync.SyncTrack._parse_events_from_iterable",
-        side_effect=[_default_time_signature_event_list, _default_bpm_event_list],
-    )
-    return SyncTrack(placeholder_string_iterator_getter)
+def basic_sync_track():
+    return SyncTrack(_default_time_signature_event_list, _default_bpm_event_list)
 
 
 @pytest.fixture
@@ -334,59 +358,35 @@ def bare_instrument_track():
 
 
 @pytest.fixture
-def basic_instrument_track(mocker, placeholder_string_iterator_getter):
-    mocker.patch(
-        "chartparse.instrument.InstrumentTrack._parse_note_events_from_iterable",
-        return_value=_default_note_event_list,
-    )
-    mocker.patch(
-        "chartparse.instrument.InstrumentTrack._parse_events_from_iterable",
-        return_value=_default_star_power_event_list,
-    )
+def basic_instrument_track():
     return InstrumentTrack(
-        pytest.default_instrument, pytest.default_difficulty, placeholder_string_iterator_getter
+        _default_instrument,
+        _default_difficulty,
+        _default_note_event_list,
+        _default_star_power_event_list,
     )
 
 
 @pytest.fixture
+def basic_instrument_tracks(basic_instrument_track):
+    return {_default_instrument: {_default_difficulty: basic_instrument_track}}
+
+
+@pytest.fixture
+def bare_chart():
+    return Chart.__new__(Chart)
+
+
+@pytest.fixture
 def basic_chart(
-    mocker,
-    mock_open_empty_string,
-    placeholder_string_iterator_getter,
     basic_metadata,
+    basic_global_events_track,
     basic_sync_track,
     basic_instrument_track,
 ):
-    def fake_sync_track_init(self, iterator_getter):
-        self.time_signature_events = _default_time_signature_event_list
-        self.bpm_events = _default_bpm_event_list
-
-    mocker.patch.object(SyncTrack, "__init__", fake_sync_track_init)
-
-    def fake_global_events_track_init(self, iterator_getter):
-        self.text_events = _default_text_events_list
-        self.section_events = _default_section_events_list
-        self.lyric_events = _default_lyric_events_list
-
-    mocker.patch.object(GlobalEventsTrack, "__init__", fake_global_events_track_init)
-
-    def fake_instrument_track_init(self, instrument, difficulty, iterator_getter):
-        self.instrument = _default_instrument
-        self.difficulty = _default_difficulty
-        self.note_events = _default_note_event_list
-        self.star_power_events = _default_star_power_event_list
-
-    mocker.patch.object(InstrumentTrack, "__init__", fake_instrument_track_init)
-
-    mocker.patch(
-        "chartparse.chart.Chart._find_sections",
-        return_value={
-            "Song": placeholder_string_iterator_getter,
-            "Events": placeholder_string_iterator_getter,
-            "SyncTrack": placeholder_string_iterator_getter,
-            "ExpertSingle": placeholder_string_iterator_getter,
-        },
+    basic_instrument_tracks_dict = {
+        _default_instrument: {_default_difficulty: basic_instrument_track}
+    }
+    return Chart(
+        basic_metadata, basic_global_events_track, basic_sync_track, basic_instrument_tracks_dict
     )
-    mocker.patch("chartparse.metadata.Metadata.from_chart_lines", return_value=basic_metadata)
-    with open(_default_filepath, "r") as f:
-        return Chart(f)

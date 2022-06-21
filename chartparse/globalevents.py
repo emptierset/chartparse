@@ -1,26 +1,29 @@
 import re
 
-from chartparse.event import Event
-from chartparse.exceptions import RegexFatalNotMatchError
+from chartparse.event import Event, FromChartLineMixin
 from chartparse.track import EventTrack
 from chartparse.util import DictPropertiesEqMixin
 
 
 class GlobalEventsTrack(EventTrack, DictPropertiesEqMixin):
-    def __init__(self, iterator_getter):
-        self.text_events = self._parse_events_from_iterable(
-            iterator_getter(), TextEvent.from_chart_line
-        )
-        self.section_events = self._parse_events_from_iterable(
+    def __init__(self, text_events, section_events, lyric_events):
+        self.text_events = text_events
+        self.section_events = section_events
+        self.lyric_events = lyric_events
+
+    @classmethod
+    def from_chart_lines(cls, iterator_getter):
+        text_events = cls._parse_events_from_iterable(iterator_getter(), TextEvent.from_chart_line)
+        section_events = cls._parse_events_from_iterable(
             iterator_getter(), SectionEvent.from_chart_line
         )
-        self.lyric_events = self._parse_events_from_iterable(
+        lyric_events = cls._parse_events_from_iterable(
             iterator_getter(), LyricEvent.from_chart_line
         )
+        return cls(text_events, section_events, lyric_events)
 
 
-# TODO: Rename to _GlobalEvent.
-class _GlobalEvent(Event):
+class _GlobalEvent(Event, FromChartLineMixin):
     # Match 1: Tick
     # Match 2: Event value (to be added by subclass via template hole)
     _regex_template = r"^\s*?(\d+?) = E \"{}\"\s*?$"
@@ -28,21 +31,6 @@ class _GlobalEvent(Event):
     def __init__(self, tick, value, timestamp=None):
         super().__init__(tick, timestamp=timestamp)
         self.value = value
-
-    @classmethod
-    def from_chart_line(cls, line):
-        if not hasattr(cls, "_regex_prog"):
-            raise NotImplementedError(
-                f"{cls.__name__} does not have a _regex_prog value. Perhaps you are trying to "
-                "instantiate a {cls.__bases__[0].__name__} value, rather than one of its "
-                "implementing subclasses?"
-            )
-
-        m = cls._regex_prog.match(line)
-        if not m:
-            raise RegexFatalNotMatchError(cls._regex, line)
-        tick, value = int(m.group(1)), m.group(2)
-        return cls(tick, value)
 
     def __str__(self):  # pragma: no cover
         to_join = [super().__str__()]
