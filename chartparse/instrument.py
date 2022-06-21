@@ -2,8 +2,7 @@ import collections
 import re
 
 from chartparse.enums import Note
-from chartparse.event import SustainedEvent
-from chartparse.exceptions import RegexFatalNotMatchError
+from chartparse.event import FromChartLineMixin, SustainedEvent
 from chartparse.track import EventTrack
 from chartparse.util import DictPropertiesEqMixin, DictReprMixin
 
@@ -15,14 +14,20 @@ class InstrumentTrack(EventTrack, DictPropertiesEqMixin):
     _forced_instrument_track_index = 5
     _tap_instrument_track_index = 6
 
-    def __init__(self, instrument, difficulty, iterator_getter):
+    def __init__(self, instrument, difficulty, note_events, star_power_events):
         self.instrument = instrument
         self.difficulty = difficulty
-        self.note_events = self._parse_note_events_from_iterable(iterator_getter())
-        self.star_power_events = self._parse_events_from_iterable(
+        self.note_events = note_events
+        self.star_power_events = star_power_events
+        self._populate_star_power_data()
+
+    @classmethod
+    def from_chart_lines(cls, instrument, difficulty, iterator_getter):
+        note_events = cls._parse_note_events_from_iterable(iterator_getter())
+        star_power_events = cls._parse_events_from_iterable(
             iterator_getter(), StarPowerEvent.from_chart_line
         )
-        self._populate_star_power_data()
+        return cls(instrument, difficulty, note_events, star_power_events)
 
     def __str__(self):  # pragma: no cover
         return (
@@ -105,41 +110,6 @@ class InstrumentTrack(EventTrack, DictPropertiesEqMixin):
             )
 
 
-class _SpecialEvent(SustainedEvent):
-    # Match 1: Tick
-    # Match 2: Sustain (ticks)
-    _regex_template = r"^\s*?(\d+?) = S {} (\d+?)\s*?$"
-
-    def __init__(self, tick, sustain, timestamp=None):
-        super().__init__(tick, sustain, timestamp=timestamp)
-
-    @classmethod
-    def from_chart_line(cls, line):
-        if not hasattr(cls, "_regex_prog"):
-            raise NotImplementedError(
-                f"{cls.__name__} does not have a _regex_prog value. Perhaps you are trying to "
-                "instantiate a {cls.__bases__[0].__name__} value, rather than one of its "
-                "implementing subclasses?"
-            )
-
-        m = cls._regex_prog.match(line)
-        if not m:
-            raise RegexFatalNotMatchError(cls._regex, line)
-        tick, sustain = int(m.group(1)), int(m.group(2))
-        return cls(tick, sustain)
-
-
-class StarPowerEvent(_SpecialEvent):
-    _regex = _SpecialEvent._regex_template.format(r"2")
-    _regex_prog = re.compile(_regex)
-
-
-# TODO: Support S 0 ## and S 1 ## (GH1/2 Co-op)
-
-
-# TODO: Support S 64 ## (Rock Band drum fills)
-
-
 class NoteEvent(SustainedEvent):
     # This regex matches a single "N" line within a instrument track section,
     # but this class should be used to represent all of the notes at a
@@ -211,6 +181,11 @@ class NoteEvent(SustainedEvent):
                 return first_non_none_sustain
         return sustain
 
+    def from_chart_line(self):
+        raise NotImplementedError(
+            f"'{type(self).__name__}' cannot be fully created from a single chart line."
+        )
+
     def __str__(self):  # pragma: no cover
         to_join = [super().__str__()]
         to_join.append(f": {self.note}")
@@ -227,3 +202,23 @@ class NoteEvent(SustainedEvent):
             to_join.extend([" [flags=", "".join(flags), "]"])
 
         return "".join(to_join)
+
+
+class _SpecialEvent(SustainedEvent, FromChartLineMixin):
+    # Match 1: Tick
+    # Match 2: Sustain (ticks)
+    _regex_template = r"^\s*?(\d+?) = S {} (\d+?)\s*?$"
+
+    def __init__(self, tick, sustain, timestamp=None):
+        super().__init__(tick, sustain, timestamp=timestamp)
+
+
+class StarPowerEvent(_SpecialEvent):
+    _regex = _SpecialEvent._regex_template.format(r"2")
+    _regex_prog = re.compile(_regex)
+
+
+# TODO: Support S 0 ## and S 1 ## (GH1/2 Co-op)
+
+
+# TODO: Support S 64 ## (Rock Band drum fills)

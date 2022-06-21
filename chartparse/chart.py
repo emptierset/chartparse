@@ -4,55 +4,30 @@ import itertools
 import re
 
 from chartparse.enums import Difficulty, Instrument
+from chartparse.exceptions import RegexFatalNotMatchError
 from chartparse.globalevents import GlobalEventsTrack
 from chartparse.instrument import InstrumentTrack
 from chartparse.metadata import Metadata
 from chartparse.sync import SyncTrack
-from chartparse.util import iterate_from_second_elem
+from chartparse.util import DictPropertiesEqMixin, iterate_from_second_elem
 
 _max_timedelta = datetime.datetime.max - datetime.datetime.min
 
 
-class Chart(object):
-    _required_sections = ("Song", "SyncTrack")
+class Chart(DictPropertiesEqMixin):
     _required_metadata = ("resolution",)
-    _instrument_track_name_to_instrument_difficulty_pair = {
-        d + i: (Instrument(i), Difficulty(d))
-        for i, d in itertools.product(Instrument.all_values(), Difficulty.all_values())
-    }
 
-    def __init__(self, fp):
-        lines = fp.read().splitlines()
-        sections = self._find_sections(lines)
-        if not all(section in sections for section in self._required_sections):
+    def __init__(self, metadata, global_events_track, sync_track, instrument_tracks):
+        if not all(hasattr(metadata, p) for p in self._required_metadata):
             raise ValueError(
-                f"parsed section list {list(sections.keys())} does not contain all "
-                f"required sections {self._required_sections}"
+                f"metadata list {list(metadata.__dict__.keys())} does not "
+                f"contain all required metadata {self._required_metadata}"
             )
 
-        self.instrument_tracks = collections.defaultdict(dict)
-        for section_name, iterator_getter in sections.items():
-            if section_name == "Song":
-                self.metadata = Metadata.from_chart_lines(iterator_getter())
-                if not all(hasattr(self.metadata, p) for p in self._required_metadata):
-                    raise ValueError(
-                        f"parsed metadata list {list(self.metadata.__dict__.keys())} does not "
-                        f"contain all required metadata {self._required_metadata}"
-                    )
-
-            elif section_name == "Events":
-                self.global_events_track = GlobalEventsTrack(iterator_getter)
-            elif section_name == "SyncTrack":
-                self.sync_track = SyncTrack(iterator_getter)
-            elif section_name in self._instrument_track_name_to_instrument_difficulty_pair:
-                instrument, difficulty = self._instrument_track_name_to_instrument_difficulty_pair[
-                    section_name
-                ]
-                track = InstrumentTrack(instrument, difficulty, iterator_getter)
-                self.instrument_tracks[instrument][difficulty] = track
-            else:
-                pass
-                # TODO: Log unhandled section.
+        self.metadata = metadata
+        self.global_events_track = global_events_track
+        self.sync_track = sync_track
+        self.instrument_tracks = instrument_tracks
 
         self._populate_bpm_event_timestamps()
         self._populate_event_timestamps(self.sync_track.time_signature_events)
@@ -64,7 +39,45 @@ class Chart(object):
                 self._populate_event_timestamps(track.note_events)
                 self._populate_event_timestamps(track.star_power_events)
 
-    _section_name_regex_prog = re.compile(r"^\[(.+?)\]$")
+    _required_sections = ("Song", "SyncTrack")
+    _instrument_track_name_to_instrument_difficulty_pair = {
+        d + i: (Instrument(i), Difficulty(d))
+        for i, d in itertools.product(Instrument.all_values(), Difficulty.all_values())
+    }
+
+    @classmethod
+    def from_file(cls, fp):
+        lines = fp.read().splitlines()
+        sections = cls._find_sections(lines)
+        if not all(section in sections for section in cls._required_sections):
+            raise ValueError(
+                f"parsed section list {list(sections.keys())} does not contain all "
+                f"required sections {cls._required_sections}"
+            )
+
+        instrument_tracks = collections.defaultdict(dict)
+        for section_name, iterator_getter in sections.items():
+            # TODO: Don't hardcode the section names.
+            if section_name == "Song":
+                metadata = Metadata.from_chart_lines(iterator_getter())
+            elif section_name == "Events":
+                global_events_track = GlobalEventsTrack.from_chart_lines(iterator_getter)
+            elif section_name == "SyncTrack":
+                sync_track = SyncTrack.from_chart_lines(iterator_getter)
+            elif section_name in cls._instrument_track_name_to_instrument_difficulty_pair:
+                instrument, difficulty = cls._instrument_track_name_to_instrument_difficulty_pair[
+                    section_name
+                ]
+                track = InstrumentTrack.from_chart_lines(instrument, difficulty, iterator_getter)
+                instrument_tracks[instrument][difficulty] = track
+            else:
+                pass
+                # TODO: Log unhandled section.
+
+        return cls(metadata, global_events_track, sync_track, instrument_tracks)
+
+    _section_name_regex = r"^\[(.+?)\]$"
+    _section_name_regex_prog = re.compile(_section_name_regex)
 
     @classmethod
     def _find_sections(cls, lines):
@@ -76,7 +89,7 @@ class Chart(object):
             if curr_section_name is None:
                 m = cls._section_name_regex_prog.match(line)
                 if not m:
-                    raise ValueError(f"could not parse section name from line '{line}'")
+                    raise RegexFatalNotMatchError(cls._section_name_regex, line)
                 curr_section_name = m.group(1)
             elif line == "{":
                 curr_first_line_idx = i + 1
@@ -112,17 +125,13 @@ class Chart(object):
         for i, event in enumerate(events):
             timestamp, proximal_bpm_event_idx = self._timestamp_at_tick(
                 event.tick,
-                prev_proximal_bpm_event_idx=proximal_bpm_event_idx,
-                return_proximal_bpm_event_idx=True,
+                start_bpm_event_index=proximal_bpm_event_idx,
             )
             event.timestamp = timestamp
 
-    # TODO: Unit test this function.
-    def _timestamp_at_tick(
-        self, tick, prev_proximal_bpm_event_idx=0, return_proximal_bpm_event_idx=False
-    ):
+    def _timestamp_at_tick(self, tick, start_bpm_event_index=0):
         proximal_bpm_event_idx = self.sync_track.idx_of_proximal_bpm_event(
-            tick, start_idx=prev_proximal_bpm_event_idx
+            tick, start_idx=start_bpm_event_index
         )
         proximal_bpm_event = self.sync_track.bpm_events[proximal_bpm_event_idx]
         ticks_since_proximal_bpm_event = tick - proximal_bpm_event.tick
@@ -133,9 +142,7 @@ class Chart(object):
             seconds=seconds_since_proximal_bpm_event
         )
         timestamp = proximal_bpm_event.timestamp + timedelta_since_proximal_bpm_event
-        if return_proximal_bpm_event_idx:
-            return timestamp, proximal_bpm_event_idx
-        return timestamp
+        return timestamp, proximal_bpm_event_idx
 
     def _seconds_from_ticks_at_bpm(self, ticks, bpm):
         if bpm <= 0:

@@ -10,7 +10,12 @@ class AllValuesGettableEnum(Enum):
 class DictPropertiesEqMixin(object):
     def __eq__(self, other):
         if not issubclass(other.__class__, DictPropertiesEqMixin):
-            raise NotImplementedError
+            raise NotImplementedError(
+                (
+                    f"cannot equate values of type {self.__class__.__name__} and "
+                    f"{other.__class__.__name__}"
+                )
+            )
         return self.__dict__ == other.__dict__
 
 

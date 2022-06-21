@@ -1,8 +1,8 @@
 import pytest
+import unittest.mock
 
 from chartparse.enums import Note, NoteTrackIndex
-from chartparse.exceptions import RegexFatalNotMatchError
-from chartparse.instrument import InstrumentTrack, StarPowerEvent, NoteEvent, _SpecialEvent
+from chartparse.instrument import InstrumentTrack, StarPowerEvent, NoteEvent
 
 from tests.conftest import (
     generate_valid_note_line_fn,
@@ -12,10 +12,47 @@ from tests.conftest import (
 
 class TestInstrumentTrack(object):
     def test_init(self, mocker, basic_instrument_track):
+        mock_populate_star_power_data = mocker.patch.object(
+            InstrumentTrack, "_populate_star_power_data"
+        )
+        _ = InstrumentTrack(
+            pytest.default_instrument,
+            pytest.default_difficulty,
+            pytest.default_note_event_list,
+            pytest.default_star_power_event_list,
+        )
         assert basic_instrument_track.instrument == pytest.default_instrument
         assert basic_instrument_track.difficulty == pytest.default_difficulty
         assert basic_instrument_track.note_events == pytest.default_note_event_list
         assert basic_instrument_track.star_power_events == pytest.default_star_power_event_list
+        mock_populate_star_power_data.assert_called_once()
+
+    def test_from_chart_lines(self, mocker, placeholder_string_iterator_getter):
+        mock_parse_events = mocker.patch(
+            "chartparse.instrument.InstrumentTrack._parse_events_from_iterable",
+            return_value=pytest.default_star_power_event_list,
+        )
+        mock_parse_note_events = mocker.patch(
+            "chartparse.instrument.InstrumentTrack._parse_note_events_from_iterable",
+            return_value=pytest.default_note_event_list,
+        )
+        init_spy = mocker.spy(InstrumentTrack, "__init__")
+        _ = InstrumentTrack.from_chart_lines(
+            pytest.default_instrument,
+            pytest.default_difficulty,
+            placeholder_string_iterator_getter,
+        )
+        mock_parse_events.assert_called_once_with(
+            placeholder_string_iterator_getter(), StarPowerEvent.from_chart_line
+        )
+        mock_parse_note_events.assert_called_once_with(placeholder_string_iterator_getter())
+        init_spy.assert_called_once_with(
+            unittest.mock.ANY,
+            pytest.default_instrument,
+            pytest.default_difficulty,
+            pytest.default_note_event_list,
+            pytest.default_star_power_event_list,
+        )
 
     @pytest.mark.parametrize(
         "lines, want_note_events, want_star_power_events",
@@ -148,11 +185,9 @@ class TestInstrumentTrack(object):
             ),
         ],
     )
-    def test_parse_note_events_from_iterable(
-        self, invalid_chart_line, lines, want_note_events, want_star_power_events
-    ):
+    def test_from_chart_lines_integration(self, lines, want_note_events, want_star_power_events):
         lines_iterator_getter = lambda: iter(lines)
-        instrument_track = InstrumentTrack(
+        instrument_track = InstrumentTrack.from_chart_lines(
             pytest.default_instrument, pytest.default_difficulty, lines_iterator_getter
         )
         assert instrument_track.instrument == pytest.default_instrument
@@ -231,7 +266,7 @@ class TestNoteEvent(object):
             pytest.param([100, 100, None, None, None], Note.G, id="mismatched_set_lanes"),
         ],
     )
-    def test_validate_list_sustain_raises_ValueError(self, sustain, note):
+    def test_validate_list_sustain_raises(self, sustain, note):
         with pytest.raises(ValueError):
             NoteEvent._validate_list_sustain(sustain, note)
 
@@ -249,24 +284,16 @@ class TestNoteEvent(object):
     def test_refine_sustain(self, sustain, want):
         assert NoteEvent._refine_sustain(sustain) == want
 
+    def test_from_chart_line(self):
+        with pytest.raises(NotImplementedError):
+            _ = NoteEvent.from_chart_line("")
+
 
 class TestSpecialEvent(object):
     def test_init(self, star_power_event):
         assert star_power_event.sustain == pytest.default_sustain
 
-    def test_from_chart_line_not_implemented(self, invalid_chart_line):
-        with pytest.raises(NotImplementedError):
-            _ = _SpecialEvent.from_chart_line(invalid_chart_line)
 
-
+# TODO: Test regex?
 class TestStarPowerEvent(object):
-    def test_from_chart_line(self, generate_valid_star_power_line):
-        line = generate_valid_star_power_line()
-        event = StarPowerEvent.from_chart_line(line)
-        assert event.tick == pytest.default_tick
-        assert event.sustain == pytest.default_sustain
-
-    def test_from_chart_line_no_match(self, generate_valid_note_line):
-        line = generate_valid_note_line()
-        with pytest.raises(RegexFatalNotMatchError):
-            _ = StarPowerEvent.from_chart_line(line)
+    pass
