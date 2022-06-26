@@ -6,7 +6,40 @@ from chartparse.exceptions import RegexFatalNotMatchError
 from chartparse.util import DictPropertiesEqMixin
 
 
+# TODO: Parse known attributes, rather than allow arbitrary injections.
+# TODO: Parse multiple audiostreams; Audio streams can include:
+#     MusicStream = "5000 Robots.ogg"
+#     GuitarStream = "guitar.ogg"
+#     RhythmStream = "rhythm.ogg"
+#     BassStream = "bass.ogg"
+#     DrumStream = "drums_1.ogg"
+#     Drum2Stream = "drums_2.ogg"
+#     Drum3Stream = "drums_3.ogg"
+#     Drum4Stream = "drums_4.ogg"
+#     VocalStream = “vocals.ogg”
+#     KeysStream = “keys.ogg”
+#     CrowdStream = “crowd.ogg”
 class Metadata(DictPropertiesEqMixin):
+    """All of a :class:`~chartparse.chart.Chart` object's metadata.
+
+    All attributes are set dynamically, but the following attributes are known and can be handled
+    explicitly:
+    ``Name``
+    ``Artist``
+    ``Charter``
+    ``Album``
+    ``Year``
+    ``Offset``
+    ``Resolution``
+    ``Player2``
+    ``Difficulty``
+    ``PreviewStart``
+    ``PreviewEnd``
+    ``Genre``
+    ``MediaType``
+    ``MusicStream``.
+    """
+
     # Known fields in the [Song] section and the functions that should be used
     # to process them.
     _field_transformers = {
@@ -30,11 +63,23 @@ class Metadata(DictPropertiesEqMixin):
     _regex_prog = re.compile(_regex)
 
     def __init__(self, injections):
+        """Initializes instance attributes from a dictionary.
+
+        Args:
+            injections (dict[str, Any]): A dictionary mapping instance attribute names to values of
+                any type.
+        """
         for field_name, value in injections.items():
             setattr(self, field_name, value)
 
     @classmethod
     def from_chart_lines(cls, lines):
+        """Initializes instance attributes by parsing a list of strings.
+
+        Args:
+            lines (list[str]): An iterable of a series of strings, most likely from a
+                Moonscraper ``.chart``.
+        """
         injections = dict()
         for line in lines:
             m = cls._regex_prog.match(line)
