@@ -3,7 +3,7 @@ import unittest.mock
 
 from chartparse.globalevents import (
     GlobalEventsTrack,
-    _GlobalEvent,
+    GlobalEvent,
     TextEvent,
     SectionEvent,
     LyricEvent,
@@ -50,7 +50,7 @@ class TestGlobalEventsTrack(object):
 
 class TestGlobalEvent(object):
     def test_init(self):
-        event = _GlobalEvent(pytest.default_tick, pytest.default_global_event_value)
+        event = GlobalEvent(pytest.default_tick, pytest.default_global_event_value)
         assert event.value == pytest.default_global_event_value
 
 
