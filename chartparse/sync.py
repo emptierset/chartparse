@@ -7,7 +7,28 @@ from chartparse.util import DictPropertiesEqMixin
 
 
 class SyncTrack(EventTrack, DictPropertiesEqMixin):
+    """All of a :class:`~chartparse.chart.Chart` object's tempo-mapping related events.
+
+    Attributes:
+        time_signature_events (list[TimeSignatureEvent]): A :class:`~chartparse.chart.Chart`
+            object's :class:`~chartparse.sync.TimeSignatureEvent` objects. In ascending tick order.
+        bpm_events (list[BPMEvent]): A :class:`~chartparse.chart.Chart` object's
+            :class:`~chartparse.sync.BPMEvent` objects. In ascending tick order.
+    """
     def __init__(self, time_signature_events, bpm_events):
+        """Instantiates all instance attributes.
+
+        Args:
+            time_signature_events (list[TimeSignatureEvent]): A :class:`~chartparse.chart.Chart`
+                object's :class:`~chartparse.sync.TimeSignatureEvent` objects.
+            bpm_events (list[BPMEvent]): A :class:`~chartparse.chart.Chart` object's
+                :class:`~chartparse.sync.BPMEvent` objects.
+
+        Raises:
+            ValueError: If ``time_signature_events`` or ``bpm_events`` is empty, or if either of
+                their first elements has a ``tick`` value of ``0``.
+        """
+
         if not time_signature_events:
             raise ValueError("time_signature_events must not be empty")
         if time_signature_events[0].tick != 0:
@@ -24,6 +45,17 @@ class SyncTrack(EventTrack, DictPropertiesEqMixin):
 
     @classmethod
     def from_chart_lines(cls, iterator_getter):
+        """Initializes instance attributes by parsing an iterable of strings.
+
+        Args:
+            iterator_getter (function): A function that returns an iterator over a series of
+                strings, most likely from a Moonscraper ``.chart``. Must be a function so the
+                strings could be iterated over multiple times, if necessary.
+
+        Returns:
+            A ``SyncTrack`` parsed from the strings returned by ``iterator_getter``.
+        """
+
         time_signature_events = cls._parse_events_from_iterable(
             iterator_getter(), TimeSignatureEvent.from_chart_line
         )
@@ -31,8 +63,27 @@ class SyncTrack(EventTrack, DictPropertiesEqMixin):
         return cls(time_signature_events, bpm_events)
 
     def idx_of_proximal_bpm_event(self, tick, start_idx=0):
-        # A BPMEvent is "proximal" relative to tick `T` if it is the
-        # BPMEvent with the highest tick value not greater than `T`.
+        """Returns the index of the :class:`~chartparse.sync.BPMEvent` proximal to ``tick``.
+
+        A BPMEvent is "proximal" relative to tick `T` if it is the BPMEvent with the highest tick
+        value not greater than `T`.
+
+        Args:
+            tick (int): The tick value for which the proximal :class:`~chartparse.sync.BPMEvent`
+                should be found.
+            start_idx (int, optional): The index from which
+                :attr:`~chartparse.sync.SyncTrack.bpm_events` should be searched. This is only an
+                optimization to avoid searching known irrelevant events.
+
+        Returns:
+            The index of the :class:`~chartparse.sync.BPMEvent` proximal to ``tick``.
+
+        Raises:
+            ValueError: If there are no :class:`~chartparse.sync.BPMEvent` objects at or after
+                ``tick`` in :attr:`~chartparse.sync.SyncTrack.bpm_events`.
+
+        """
+
         for idx in range(start_idx, len(self.bpm_events)):
             is_last_bpm_event = idx == len(self.bpm_events) - 1
             next_bpm_event = self.bpm_events[idx + 1] if not is_last_bpm_event else None
@@ -42,6 +93,14 @@ class SyncTrack(EventTrack, DictPropertiesEqMixin):
 
 
 class TimeSignatureEvent(Event):
+    """An event representing a time signature change at a particular tick.
+
+    Attributes:
+        upper_numeral (int). The number indicating how many beats constitute a bar.
+        lower_numeral (int): The number indicating the note value that represents one beat.
+
+    """
+
     # Match 1: Tick
     # Match 2: Upper numeral
     # Match 3: Lower numeral (optional; assumed to be 4 if absent)
@@ -49,6 +108,13 @@ class TimeSignatureEvent(Event):
     _regex_prog = re.compile(_regex)
 
     def __init__(self, tick, upper_numeral, lower_numeral, timestamp=None):
+        """Initializes all instance attributes.
+
+        Args:
+            upper_numeral (int). The number indicating how many beats constitute a bar.
+            lower_numeral (int): The number indicating the note value that represents one beat.
+        """
+
         super().__init__(tick, timestamp=timestamp)
         self.upper_numeral = upper_numeral
         self.lower_numeral = lower_numeral
@@ -70,12 +136,25 @@ class TimeSignatureEvent(Event):
 
 
 class BPMEvent(Event, FromChartLineMixin):
+    """An event representing a BPM (beats per minute) change at a particular tick.
+
+    Attributes:
+        bpm (float): The beats per minute value. Should not have more than 3 decimal places.
+
+    """
     # Match 1: Tick
     # Match 2: BPM (the last 3 digits are the decimal places)
     _regex = r"^\s*?(\d+?) = B (\d+?)\s*?$"
     _regex_prog = re.compile(_regex)
 
+    # TODO: Validate that ``bpm`` does not have more than 3 decimal places.
     def __init__(self, tick, bpm, timestamp=None):
+        """Initialize all instance attributes.
+
+        Args:
+            bpm (float): The beats per minute value. Should not have more than 3 decimal places.
+
+        """
         super().__init__(tick, timestamp=timestamp)
         self.bpm = bpm
 

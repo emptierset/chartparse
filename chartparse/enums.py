@@ -3,16 +3,23 @@ import enum
 from chartparse.util import AllValuesGettableEnum
 
 
+# TODO: Reorder easy->expert.
+# TODO: Move to instrument.py? <21-06-2022, Andrew Conant> #
 @enum.unique
 class Difficulty(AllValuesGettableEnum):
+    """An :class:`~chartparse.instrument.InstrumentTrack`'s difficulty setting."""
+
     EXPERT = "Expert"
     HARD = "Hard"
     MEDIUM = "Medium"
     EASY = "Easy"
 
 
+# TODO: Move to instrument.py? <21-06-2022, Andrew Conant> #
 @enum.unique
 class Instrument(AllValuesGettableEnum):
+    """The instrument to which a :class:`~chartparse.instrument.InstrumentTrack` corresponds."""
+
     GUITAR = "Single"
     GUITAR_COOP = "DoubleGuitar"
     BASS = "DoubleBass"
@@ -23,7 +30,10 @@ class Instrument(AllValuesGettableEnum):
     GHL_BASS = "GHLBass"  # Bass (Guitar Hero: Live)
 
 
+# TODO: Move to instrument.py? <21-06-2022, Andrew Conant> #
 class Note(enum.Enum):
+    """The note(s) to which a :class:`~chartparse.instrument.NoteEvent` corresponds."""
+
     P = bytearray((0, 0, 0, 0, 0))
     G = bytearray((1, 0, 0, 0, 0))
     GR = bytearray((1, 1, 0, 0, 0))
@@ -91,7 +101,10 @@ class Note(enum.Enum):
     ORANGE = bytearray((0, 0, 0, 0, 1))
 
 
+# TODO: Move to instrument.py? <21-06-2022, Andrew Conant> #
 class NoteTrackIndex(AllValuesGettableEnum):
+    """The integer in a line in a Moonscraper ``.chart`` file's instrument track."""
+
     G = 0
     R = 1
     Y = 2

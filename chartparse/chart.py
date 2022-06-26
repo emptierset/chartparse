@@ -15,9 +15,47 @@ _max_timedelta = datetime.datetime.max - datetime.datetime.min
 
 
 class Chart(DictPropertiesEqMixin):
+    """A Clone Hero / Moonscraper chart and its relevant gameplay data.
+
+    While it is possible to create a :class:`~chartparse.chart.Chart` with its initializer, as a
+    user, you will most likely have a ``.chart`` file and not the constituent objects necessary to
+    use ``__init__``. To initialize a ``Chart`` from a file, you should instead use
+    :meth:`~chartparse.chart.Chart.from_file`.
+
+    Attributes:
+        metadata (Metadata): Contains the chart's metadata, such as song title or charter name.
+        global_events_track (GlobalEventsTrack): Contains the chart's
+            :class:`~chartparse.globalevents.TextEvent`,
+            :class:`~chartparse.globalevents.SectionEvent`, and
+            :class:`~chartparse.globalevents.LyricEvent` objects.
+        sync_track (SyncTrack): Contains the chart's sync-related events, including its
+            :class:`~chartparse.sync.TimeSignatureEvent` and :class:`~chartparse.sync.BPMEvent`
+            objects.
+        instrument_tracks (dict[Instrument, dict[Difficulty, InstrumentTrack]]): A nested
+            dictionary containing all of the chart's
+            :class:`~chartparse.instrument.InstrumentTrack` objects.
+    """
+
     _required_metadata = ("resolution",)
 
     def __init__(self, metadata, global_events_track, sync_track, instrument_tracks):
+        """Instantiates all instance attributes and populates event timestamps.
+
+        Args:
+            metadata (Metadata): Contains the chart's metadata, such as song title or charter name.
+                Must have a numeric ``resolution`` attribute.
+            global_events_track (GlobalEventsTrack): Contains the chart's
+                :class:`~chartparse.globalevents.TextEvent`,
+                :class:`~chartparse.globalevents.SectionEvent`, and
+                :class:`~chartparse.globalevents.LyricEvent` objects.
+            sync_track (SyncTrack): Contains the chart's sync-related events, including its
+                :class:`~chartparse.sync.TimeSignatureEvent` and :class:`~chartparse.sync.BPMEvent`
+                objects.
+            instrument_tracks (dict[Instrument, dict[Difficulty, InstrumentTrack]]): A nested
+                dictionary containing all of the chart's
+                :class:`~chartparse.instrument.InstrumentTrack` objects.
+        """
+
         if not all(hasattr(metadata, p) for p in self._required_metadata):
             raise ValueError(
                 f"metadata list {list(metadata.__dict__.keys())} does not "
@@ -45,8 +83,18 @@ class Chart(DictPropertiesEqMixin):
         for i, d in itertools.product(Instrument.all_values(), Difficulty.all_values())
     }
 
+    # TODO: Add from_filepath wrapper that takes a path rather than a file pointer.
     @classmethod
     def from_file(cls, fp):
+        """Given a file object, parses its contents and returns a new Chart.
+
+        Args:
+            fp (file): A file object that allows reading from a .chart file written by Moonscraper.
+                Must have a ``[Song]`` section and a ``[SyncTrack]`` section.
+
+        Returns:
+            A Chart object, initialized with data parsed from ``fp``.
+        """
         lines = fp.read().splitlines()
         sections = cls._find_sections(lines)
         if not all(section in sections for section in cls._required_sections):
@@ -152,6 +200,8 @@ class Chart(DictPropertiesEqMixin):
         seconds_per_tick = 1 / ticks_per_second
         return ticks * seconds_per_tick
 
+    # TODO: Calculate this over the actual interval, not the interval formed by the first and last
+    # notes.
     def notes_per_second(
         self,
         instrument,
@@ -163,6 +213,44 @@ class Chart(DictPropertiesEqMixin):
         start_seconds=None,
         end_seconds=None,
     ):
+        """Returns the average notes per second from the first and last note in the interval.
+
+        More specifically, this calculates the number of :class:`~chartparse.instrument.NoteEvent`
+        objects per second. Chords do not count as multiple "notes" in one instant.
+
+        The interval is always a closed interval.
+
+        You may pass one or zero of ``start_time``, ``start_tick``, and ``start_seconds``, or else
+        ``ValueError`` will be raised.  If none of ``start_time``, ``start_tick``, and
+        ``start_seconds`` are passed, the beginning of the track will be treated as the start of
+        the interval.  If none of ``end_time``, ``end_tick``, and ``end_seconds`` are passed, the
+        end of the track will be treated as the end of the interval.
+
+        Args:
+            instrument (Instrument): The instrument for which the
+                :class:`~chartparse.instrument.InstrumentTrack` should be looked up.
+            difficulty (Difficulty): The instrument for which the
+                :class:`~chartparse.instrument.InstrumentTrack` should be looked up.
+            start_time (datetime.timedelta, optional): The beginning of the interval.
+            end_time (datetime.timedelta, optional): The end of the interval.
+            start_tick (int, optional): The beginning of the interval.
+            end_tick (int, optional): The end of the interval.
+            start_seconds (int, optional): The beginning of the interval.
+            end_seconds (int, optional): The end of the interval.
+
+        Returns:
+            The average notes per second value over the interval formed by the first and last note,
+            as a float.
+
+        Raises:
+            ValueError: If more than one of ``start_time``, ``start_tick``, and ``start_seconds``
+                is ``None``.
+            ValueError: If there is no :class:`~chartparse.instrument.InstrumentTrack`
+                corresponding to ``instrument`` and ``difficulty``.
+            ValueError: If there are fewer than two :class:`~chartparse.instrument.NoteEvent`
+                objects within the indicated interval.
+        """
+
         start_args = (start_time, start_seconds, start_tick)
         num_of_start_args_none = start_args.count(None)
         if num_of_start_args_none < 2:

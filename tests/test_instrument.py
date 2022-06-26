@@ -2,7 +2,7 @@ import pytest
 import unittest.mock
 
 from chartparse.enums import Note, NoteTrackIndex
-from chartparse.instrument import InstrumentTrack, StarPowerEvent, NoteEvent
+from chartparse.instrument import InstrumentTrack, StarPowerEvent, NoteEvent, StarPowerData
 
 from tests.conftest import (
     generate_valid_note_line_fn,
@@ -163,18 +163,18 @@ class TestInstrumentTrack(object):
                         0,
                         Note.G,
                         sustain=100,
-                        star_power_data=NoteEvent.StarPowerData(0, True),
+                        star_power_data=StarPowerData(0, True),
                     ),
                     NoteEvent(
                         2000,
                         Note.R,
                         sustain=50,
-                        star_power_data=NoteEvent.StarPowerData(1, False),
+                        star_power_data=StarPowerData(1, False),
                     ),
                     NoteEvent(
                         2075,
                         Note.YB,
-                        star_power_data=NoteEvent.StarPowerData(1, True),
+                        star_power_data=StarPowerData(1, True),
                     ),
                     NoteEvent(2100, Note.O, is_forced=True),
                     NoteEvent(2200, Note.B, is_tap=True),
@@ -213,18 +213,18 @@ class TestInstrumentTrack(object):
                         0,
                         Note.G,
                         sustain=100,
-                        star_power_data=NoteEvent.StarPowerData(0, True),
+                        star_power_data=StarPowerData(0, True),
                     ),
                     NoteEvent(
                         2000,
                         Note.R,
                         sustain=50,
-                        star_power_data=NoteEvent.StarPowerData(1, False),
+                        star_power_data=StarPowerData(1, False),
                     ),
                     NoteEvent(
                         2075,
                         Note.YB,
-                        star_power_data=NoteEvent.StarPowerData(1, True),
+                        star_power_data=StarPowerData(1, True),
                     ),
                 ],
                 id="basic",

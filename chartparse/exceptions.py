@@ -1,3 +1,4 @@
+# TODO: Rename to RegexFatalNotMatchError <22-06-2022, Andrew Conant> #
 class RegexFatalNotMatchError(Exception):
     """Exception raised when a regex fatally failed to match."""
 
