@@ -1,13 +1,26 @@
 import collections
 import re
 
+from dataclasses import dataclass
+
 from chartparse.enums import Note
-from chartparse.event import FromChartLineMixin, SustainedEvent
+from chartparse.event import SustainedEvent
 from chartparse.track import EventTrack
-from chartparse.util import DictPropertiesEqMixin, DictReprMixin
+from chartparse.util import DictPropertiesEqMixin
 
 
 class InstrumentTrack(EventTrack, DictPropertiesEqMixin):
+    """All of the instrument-related events for one (instrument, difficulty) pair.
+
+    Attributes:
+        instrument (Instrument): The instrument to which this track corresponds.
+        difficulty (Difficulty): This track's difficulty setting.
+        note_events (list[NoteEvent]): An (instrument, difficulty) pair's
+            :class:`~chartparse.instrument.NoteEvent` objects. In ascending tick order.
+        star_power_events (list[StarPowerEvent]): An (instrument, difficulty) pair's
+            :class:`~chartparse.instrument.StarPowerEvent` objects. In ascending tick order.
+    """
+
     _min_note_instrument_track_index = 0
     _max_note_instrument_track_index = 4
     _open_instrument_track_index = 7
@@ -15,6 +28,19 @@ class InstrumentTrack(EventTrack, DictPropertiesEqMixin):
     _tap_instrument_track_index = 6
 
     def __init__(self, instrument, difficulty, note_events, star_power_events):
+        """Instantiates all instance attributes.
+
+        Attributes:
+            instrument (Instrument): The instrument to which this track corresponds.
+            difficulty (Difficulty): This track's difficulty setting.
+            note_events (list[NoteEvent]): An (instrument, difficulty) pair's
+                :class:`~chartparse.instrument.NoteEvent` objects. Should be in ascending tick
+                order.
+            star_power_events (list[StarPowerEvent]): An (instrument, difficulty) pair's
+                :class:`~chartparse.instrument.StarPowerEvent` objects. Should be in ascending tick
+                order.
+        """
+
         self.instrument = instrument
         self.difficulty = difficulty
         self.note_events = note_events
@@ -23,6 +49,17 @@ class InstrumentTrack(EventTrack, DictPropertiesEqMixin):
 
     @classmethod
     def from_chart_lines(cls, instrument, difficulty, iterator_getter):
+        """Initializes instance attributes by parsing an iterable of strings.
+
+        Args:
+            iterator_getter (function): A function that returns an iterator over a series of
+                strings, most likely from a Moonscraper ``.chart``. Must be a function so the
+                strings could be iterated over multiple times, if necessary.
+
+        Returns:
+            An ``InstrumentTrack`` parsed from the strings returned by ``iterator_getter``.
+        """
+
         note_events = cls._parse_note_events_from_iterable(iterator_getter())
         star_power_events = cls._parse_events_from_iterable(
             iterator_getter(), StarPowerEvent.from_chart_line
@@ -105,12 +142,30 @@ class InstrumentTrack(EventTrack, DictPropertiesEqMixin):
                 continue
             next_star_power_idx = note_idx_to_star_power_idx.get(note_idx + 1, None)
             current_note_is_end_of_phrase = current_star_power_idx != next_star_power_idx
-            note_event.star_power_data = NoteEvent.StarPowerData(
+            note_event.star_power_data = StarPowerData(
                 current_star_power_idx, current_note_is_end_of_phrase
             )
 
 
+@dataclass
+class StarPowerData(DictPropertiesEqMixin):
+    """Star power related info for a :class:`~chartparse.instrument.NoteEvent`."""
+
+    star_power_event_idx: int
+    is_end_of_phrase: bool
+
+
 class NoteEvent(SustainedEvent):
+    """An event representing all of the notes at a particular tick.
+
+    Attributes:
+        note (Note): The note lane(s) that are active.
+        is_forced (bool): Whether the note's HOPO value is manually inverted.
+        is_tap (bool): Whether the note is a tap note.
+        star_power_data (StarPowerData): Information associated with star power for this note. If
+            this is ``None``, then the note is not a star power note.
+    """
+
     # This regex matches a single "N" line within a instrument track section,
     # but this class should be used to represent all of the notes at a
     # particular tick. This means that you might need to consolidate multiple
@@ -120,11 +175,6 @@ class NoteEvent(SustainedEvent):
     # Match 3: Sustain (ticks)
     _regex = r"^\s*?(\d+?) = N ([0-7]) (\d+?)\s*?$"
     _regex_prog = re.compile(_regex)
-
-    class StarPowerData(DictPropertiesEqMixin, DictReprMixin):
-        def __init__(self, event_idx, is_end_of_phrase):
-            self.event_idx = event_idx
-            self.is_end_of_phrase = is_end_of_phrase
 
     def __init__(
         self,
@@ -140,6 +190,8 @@ class NoteEvent(SustainedEvent):
         refined_sustain = self._refine_sustain(sustain)
         super().__init__(tick, refined_sustain, timestamp=timestamp)
         self.note = note
+        # TODO: Refactor is_forced to is_hopo. We can calculate whether any given note is a hopo,
+        # so a user probably does not need to know whether a note was forced to be a hopo.
         self.is_forced = is_forced
         self.is_tap = is_tap
         self.star_power_data = star_power_data
@@ -182,6 +234,12 @@ class NoteEvent(SustainedEvent):
         return sustain
 
     def from_chart_line(self):
+        """Not implemented.
+
+        Raises:
+            NotImplementedError: If called.
+        """
+
         raise NotImplementedError(
             f"'{type(self).__name__}' cannot be fully created from a single chart line."
         )
@@ -204,7 +262,12 @@ class NoteEvent(SustainedEvent):
         return "".join(to_join)
 
 
-class _SpecialEvent(SustainedEvent, FromChartLineMixin):
+class SpecialEvent(SustainedEvent):
+    """Provides a regex template for parsing 'S' style chart lines.
+
+    This is typically used only as a base class for more specialized subclasses.
+    """
+
     # Match 1: Tick
     # Match 2: Sustain (ticks)
     _regex_template = r"^\s*?(\d+?) = S {} (\d+?)\s*?$"
@@ -213,8 +276,10 @@ class _SpecialEvent(SustainedEvent, FromChartLineMixin):
         super().__init__(tick, sustain, timestamp=timestamp)
 
 
-class StarPowerEvent(_SpecialEvent):
-    _regex = _SpecialEvent._regex_template.format(r"2")
+class StarPowerEvent(SpecialEvent):
+    """An event representing star power starting at some tick and lasting for some duration."""
+
+    _regex = SpecialEvent._regex_template.format(r"2")
     _regex_prog = re.compile(_regex)
 
 
