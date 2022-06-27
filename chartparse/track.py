@@ -1,3 +1,4 @@
+from chartparse.datastructures import ImmutableSortedList
 from chartparse.exceptions import RegexFatalNotMatchError
 
 
@@ -16,8 +17,9 @@ class EventTrack(object):
                 :class:`~chartparse.exceptions.RegexFatalNotMatchError`.
 
         Returns:
-            A ``list`` of :class:`~chartparse.event.Event` objects obtained by calling
-            ``from_chart_line_fn`` on each element of ``iterable``.
+            A :class:`~chartparse.datastructures.ImmutableSortedList` of
+            :class:`~chartparse.event.Event` objects obtained by calling ``from_chart_line_fn`` on
+            each element of ``iterable``.
         """
 
         events = []
@@ -27,5 +29,4 @@ class EventTrack(object):
             except RegexFatalNotMatchError:
                 continue
             events.append(event)
-        events.sort(key=lambda e: e.tick)
-        return events
+        return ImmutableSortedList(events, key=lambda e: e.tick)

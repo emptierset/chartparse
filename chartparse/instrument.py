@@ -1,8 +1,8 @@
 import collections
 import re
-
 from dataclasses import dataclass
 
+from chartparse.datastructures import ImmutableSortedList
 from chartparse.enums import Note
 from chartparse.event import SustainedEvent
 from chartparse.track import EventTrack
@@ -15,10 +15,10 @@ class InstrumentTrack(EventTrack, DictPropertiesEqMixin):
     Attributes:
         instrument (Instrument): The instrument to which this track corresponds.
         difficulty (Difficulty): This track's difficulty setting.
-        note_events (list[NoteEvent]): An (instrument, difficulty) pair's
-            :class:`~chartparse.instrument.NoteEvent` objects. In ascending tick order.
-        star_power_events (list[StarPowerEvent]): An (instrument, difficulty) pair's
-            :class:`~chartparse.instrument.StarPowerEvent` objects. In ascending tick order.
+        note_events (ImmutableSortedList[NoteEvent]): An (instrument, difficulty) pair's
+            :class:`~chartparse.instrument.NoteEvent` objects.
+        star_power_events (ImmutableSortedList[StarPowerEvent]): An (instrument, difficulty) pair's
+            :class:`~chartparse.instrument.StarPowerEvent` objects.
     """
 
     _min_note_instrument_track_index = 0
@@ -33,12 +33,10 @@ class InstrumentTrack(EventTrack, DictPropertiesEqMixin):
         Attributes:
             instrument (Instrument): The instrument to which this track corresponds.
             difficulty (Difficulty): This track's difficulty setting.
-            note_events (list[NoteEvent]): An (instrument, difficulty) pair's
-                :class:`~chartparse.instrument.NoteEvent` objects. Should be in ascending tick
-                order.
-            star_power_events (list[StarPowerEvent]): An (instrument, difficulty) pair's
-                :class:`~chartparse.instrument.StarPowerEvent` objects. Should be in ascending tick
-                order.
+            note_events (ImmutableSortedList[NoteEvent]): An (instrument, difficulty) pair's
+                :class:`~chartparse.instrument.NoteEvent` objects.
+            star_power_events (ImmutableSortedList[StarPowerEvent]): An (instrument, difficulty)
+                pair's :class:`~chartparse.instrument.StarPowerEvent` objects.
         """
 
         self.instrument = instrument
@@ -116,9 +114,7 @@ class InstrumentTrack(EventTrack, DictPropertiesEqMixin):
                 is_tap=tick_to_is_tap[tick],
             )
             events.append(event)
-        events.sort(key=lambda e: e.tick)
-
-        return events
+        return ImmutableSortedList(events, key=lambda e: e.tick)
 
     def _populate_star_power_data(self):
         num_notes = len(self.note_events)
