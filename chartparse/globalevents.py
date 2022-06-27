@@ -9,24 +9,24 @@ class GlobalEventsTrack(EventTrack, DictPropertiesEqMixin):
     r"""All of a :class:`~chartparse.chart.Chart`'s :class:`~chartparse.globalevents.GlobalEvent`\s.
 
     Attributes:
-        text_events (list[TextEvent]): A :class:`~chartparse.chart.Chart` object's
-            :class:`~chartparse.globalevents.TextEvent` objects. In ascending tick order.
-        section_events (list[SectionEvent]): A :class:`~chartparse.chart.Chart` object's
-            :class:`~chartparse.globalevents.SectionEvent` objects. In ascending tick order.
-        lyric_events (list[LyricEvent]): A :class:`~chartparse.chart.Chart` object's
-            :class:`~chartparse.globalevents.LyricEvent` objects. In ascending tick order.
+        text_events (ImmutableSortedList[TextEvent]): A :class:`~chartparse.chart.Chart` object's
+            :class:`~chartparse.globalevents.TextEvent` objects.
+        section_events (ImmutableSortedList[SectionEvent]): A :class:`~chartparse.chart.Chart`
+            object's :class:`~chartparse.globalevents.SectionEvent` objects.
+        lyric_events (ImmutableSortedList[LyricEvent]): A :class:`~chartparse.chart.Chart` object's
+            :class:`~chartparse.globalevents.LyricEvent` objects.
     """
 
     def __init__(self, text_events, section_events, lyric_events):
         """Instantiates all instance attributes.
 
         Args:
-            text_events (list[TextEvent]): A :class:`~chartparse.chart.Chart` object's
-                :class:`~chartparse.globalevents.TextEvent` objects.
-            section_events (list[SectionEvent]): A :class:`~chartparse.chart.Chart` object's
-                :class:`~chartparse.globalevents.SectionEvent` objects.
-            lyric_events (list[LyricEvent]): A :class:`~chartparse.chart.Chart` object's
-                :class:`~chartparse.globalevents.LyricEvent` objects.
+            text_events (ImmutableSortedList[TextEvent]): A :class:`~chartparse.chart.Chart`
+                object's :class:`~chartparse.globalevents.TextEvent` objects.
+            section_events (ImmutableSortedList[SectionEvent]): A :class:`~chartparse.chart.Chart`
+                object's :class:`~chartparse.globalevents.SectionEvent` objects.
+            lyric_events (ImmutableSortedList[LyricEvent]): A :class:`~chartparse.chart.Chart`
+                object's :class:`~chartparse.globalevents.LyricEvent` objects.
         """
 
         self.text_events = text_events

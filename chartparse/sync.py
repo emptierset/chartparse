@@ -10,18 +10,19 @@ class SyncTrack(EventTrack, DictPropertiesEqMixin):
     """All of a :class:`~chartparse.chart.Chart` object's tempo-mapping related events.
 
     Attributes:
-        time_signature_events (list[TimeSignatureEvent]): A :class:`~chartparse.chart.Chart`
-            object's :class:`~chartparse.sync.TimeSignatureEvent` objects. In ascending tick order.
-        bpm_events (list[BPMEvent]): A :class:`~chartparse.chart.Chart` object's
-            :class:`~chartparse.sync.BPMEvent` objects. In ascending tick order.
+        time_signature_events (ImmutableSortedList[TimeSignatureEvent]): A :class:`~chartparse.chart.Chart`
+            object's :class:`~chartparse.sync.TimeSignatureEvent` objects.
+        bpm_events (ImmutableSortedList[BPMEvent]): A :class:`~chartparse.chart.Chart` object's
+            :class:`~chartparse.sync.BPMEvent` objects.
     """
+
     def __init__(self, time_signature_events, bpm_events):
         """Instantiates all instance attributes.
 
         Args:
-            time_signature_events (list[TimeSignatureEvent]): A :class:`~chartparse.chart.Chart`
+            time_signature_events (ImmutableSortedList[TimeSignatureEvent]): A :class:`~chartparse.chart.Chart`
                 object's :class:`~chartparse.sync.TimeSignatureEvent` objects.
-            bpm_events (list[BPMEvent]): A :class:`~chartparse.chart.Chart` object's
+            bpm_events (ImmutableSortedList[BPMEvent]): A :class:`~chartparse.chart.Chart` object's
                 :class:`~chartparse.sync.BPMEvent` objects.
 
         Raises:
@@ -142,6 +143,7 @@ class BPMEvent(Event, FromChartLineMixin):
         bpm (float): The beats per minute value. Should not have more than 3 decimal places.
 
     """
+
     # Match 1: Tick
     # Match 2: BPM (the last 3 digits are the decimal places)
     _regex = r"^\s*?(\d+?) = B (\d+?)\s*?$"
