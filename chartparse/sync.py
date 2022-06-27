@@ -10,8 +10,9 @@ class SyncTrack(EventTrack, DictPropertiesEqMixin):
     """All of a :class:`~chartparse.chart.Chart` object's tempo-mapping related events.
 
     Attributes:
-        time_signature_events (ImmutableSortedList[TimeSignatureEvent]): A :class:`~chartparse.chart.Chart`
-            object's :class:`~chartparse.sync.TimeSignatureEvent` objects.
+        time_signature_events (ImmutableSortedList[TimeSignatureEvent]): A
+            :class:`~chartparse.chart.Chart` object's :class:`~chartparse.sync.TimeSignatureEvent`
+            objects.
         bpm_events (ImmutableSortedList[BPMEvent]): A :class:`~chartparse.chart.Chart` object's
             :class:`~chartparse.sync.BPMEvent` objects.
     """
@@ -20,8 +21,9 @@ class SyncTrack(EventTrack, DictPropertiesEqMixin):
         """Instantiates all instance attributes.
 
         Args:
-            time_signature_events (ImmutableSortedList[TimeSignatureEvent]): A :class:`~chartparse.chart.Chart`
-                object's :class:`~chartparse.sync.TimeSignatureEvent` objects.
+            time_signature_events (ImmutableSortedList[TimeSignatureEvent]): A
+                :class:`~chartparse.chart.Chart` object's
+                :class:`~chartparse.sync.TimeSignatureEvent` objects.
             bpm_events (ImmutableSortedList[BPMEvent]): A :class:`~chartparse.chart.Chart` object's
                 :class:`~chartparse.sync.BPMEvent` objects.
 
