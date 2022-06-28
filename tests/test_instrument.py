@@ -2,7 +2,14 @@ import pytest
 import unittest.mock
 
 from chartparse.enums import Note, NoteTrackIndex
-from chartparse.instrument import InstrumentTrack, StarPowerEvent, NoteEvent, StarPowerData
+from chartparse.event import FromChartLineMixin
+from chartparse.instrument import (
+    InstrumentTrack,
+    StarPowerEvent,
+    NoteEvent,
+    StarPowerData,
+    SustainedEvent,
+)
 
 from tests.conftest import (
     generate_valid_note_line_fn,
@@ -238,6 +245,23 @@ class TestInstrumentTrack(object):
         bare_instrument_track.star_power_events = star_power_events
         bare_instrument_track._populate_star_power_data()
         assert bare_instrument_track.note_events == want_note_events
+
+
+class TestSustainedEvent(object):
+    def test_init(self, sustained_event):
+        assert sustained_event.sustain == pytest.default_sustain
+
+    def test_from_chart_line(self, mocker, bare_sustained_event):
+        bare_sustained_event.tick = pytest.default_tick
+        bare_sustained_event.timestamp = pytest.default_timestamp
+        bare_sustained_event.sustain = str(pytest.default_sustain)
+        mock_parent_from_chart_line = mocker.patch.object(
+            FromChartLineMixin, "from_chart_line", return_value=bare_sustained_event
+        )
+        line = "T {pytest.default_tick} V {pytest.default_sustain}"
+        e = SustainedEvent.from_chart_line(line)
+        assert e.sustain == pytest.default_sustain
+        mock_parent_from_chart_line.assert_called_once_with(line)
 
 
 class TestNoteEvent(object):
