@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from chartparse.datastructures import ImmutableSortedList
 from chartparse.enums import Note
-from chartparse.event import SustainedEvent
+from chartparse.event import Event, FromChartLineMixin
 from chartparse.track import EventTrack
 from chartparse.util import DictPropertiesEqMixin
 
@@ -149,6 +149,35 @@ class StarPowerData(DictPropertiesEqMixin):
 
     star_power_event_idx: int
     is_end_of_phrase: bool
+
+
+# TODO: Rename to `SustainableEvent`, because it might have a `sustain` value of 0.
+# TODO: Mixin FromChartLineMixin to subclasses that actually use it, since NoteEvent doesn't.
+class SustainedEvent(Event, FromChartLineMixin):
+    """An :class:`~chartparse.event.Event` with a ``sustain`` value.
+
+    This is typically used only as a base class for more specialized subclasses. It implements an
+    attractive ``__str__`` representation.
+
+    Attributes:
+        sustain (int): The number of ticks for which this event is sustained. This event does _not_
+            overlap events at ``tick + sustain``; it ends immediately before that tick.
+    """
+
+    def __init__(self, tick, sustain, timestamp=None):
+        super().__init__(tick, timestamp=timestamp)
+        self.sustain = sustain
+
+    @classmethod
+    def from_chart_line(cls, line):
+        event = super().from_chart_line(line)
+        event.sustain = int(event.sustain)
+        return event
+
+    def __str__(self):  # pragma: no cover
+        to_join = [super().__str__()]
+        to_join.append(f": sustain={self.sustain}")
+        return "".join(to_join)
 
 
 class NoteEvent(SustainedEvent):

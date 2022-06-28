@@ -4,14 +4,14 @@ import pytest
 
 from chartparse.chart import Chart
 from chartparse.enums import Instrument, Difficulty, Note
-from chartparse.event import Event, SustainedEvent
+from chartparse.event import Event
 from chartparse.globalevents import (
     GlobalEventsTrack,
     TextEvent,
     SectionEvent,
     LyricEvent,
 )
-from chartparse.instrument import InstrumentTrack, NoteEvent, StarPowerEvent
+from chartparse.instrument import InstrumentTrack, NoteEvent, StarPowerEvent, SustainedEvent
 from chartparse.metadata import Metadata
 from chartparse.sync import SyncTrack, BPMEvent, TimeSignatureEvent
 from chartparse.track import EventTrack
