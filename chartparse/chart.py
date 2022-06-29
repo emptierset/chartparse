@@ -19,24 +19,22 @@ _max_timedelta = datetime.datetime.max - datetime.datetime.min
 class Chart(DictPropertiesEqMixin):
     """A Clone Hero / Moonscraper chart and its relevant gameplay data.
 
-    While it is possible to create a :class:`~chartparse.chart.Chart` with its initializer, as a
-    user, you will most likely have a ``.chart`` file and not the constituent objects necessary to
-    use ``__init__``. To initialize a ``Chart`` from a file, you should instead use
-    :meth:`~chartparse.chart.Chart.from_file`.
-
-    Attributes:
-        metadata (Metadata): Contains the chart's metadata, such as song title or charter name.
-        global_events_track (GlobalEventsTrack): Contains the chart's
-            :class:`~chartparse.globalevents.TextEvent`,
-            :class:`~chartparse.globalevents.SectionEvent`, and
-            :class:`~chartparse.globalevents.LyricEvent` objects.
-        sync_track (SyncTrack): Contains the chart's sync-related events, including its
-            :class:`~chartparse.sync.TimeSignatureEvent` and :class:`~chartparse.sync.BPMEvent`
-            objects.
-        instrument_tracks (dict[Instrument, dict[Difficulty, InstrumentTrack]]): A nested
-            dictionary containing all of the chart's
-            :class:`~chartparse.instrument.InstrumentTrack` objects.
+    While it is possible to create this with its initializer, as a user, you will most likely have
+    a ``.chart`` file and not the constituent objects necessary to use ``__init__``. To initialize
+    a ``Chart`` from a file, you should instead use :meth:`~chartparse.chart.Chart.from_file`.
     """
+
+    metadata: Metadata
+    """The chart's metadata, such as song title or charter name."""
+
+    global_events_track: GlobalEventsTrack
+    """Contains the chart's :class:`~chartparse.globalevents.GlobalEvent` objects"""
+
+    sync_track: SyncTrack
+    """Contains the chart's sync-related events."""
+
+    instrument_tracks: dict[Instrument, dict[Difficulty, InstrumentTrack]]
+    """Contains all of the chart's :class:`~chartparse.instrument.InstrumentTrack` objects."""
 
     _required_metadata = ("resolution",)
 

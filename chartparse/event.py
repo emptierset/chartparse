@@ -6,6 +6,8 @@ from typing import Any, Optional, Pattern, Protocol, Type, TypeVar
 
 from chartparse.util import DictPropertiesEqMixin, DictReprMixin
 
+EventT = TypeVar("EventT", bound="Event")
+
 
 class Event(DictPropertiesEqMixin, DictReprMixin):
     """An event that occurs at a specific tick in an :class:`~chartparse.track.EventTrack`.
@@ -20,7 +22,7 @@ class Event(DictPropertiesEqMixin, DictReprMixin):
     timestamp: Optional[datetime.timedelta]
     """The timestamp at which this event occurs. Optional as it may need to be calculated later."""
 
-    def __init__(self, tick: int, timestamp: datetime.timedelta = None):
+    def __init__(self, tick: int, timestamp: Optional[datetime.timedelta] = None) -> None:
         self.tick = tick
         self.timestamp = timestamp
 

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import datetime
 import math
 import pytest
@@ -16,7 +18,6 @@ from chartparse.instrument import (
     InstrumentTrack,
     NoteEvent,
     StarPowerEvent,
-    SustainedEvent,
     SpecialEvent,
 )
 from chartparse.metadata import Metadata
@@ -248,16 +249,6 @@ def bare_special_event():
 
 
 @pytest.fixture
-def bare_sustained_event():
-    return SustainedEvent.__new__(SustainedEvent)
-
-
-@pytest.fixture
-def sustained_event():
-    return SustainedEvent(_default_tick, _default_sustain)
-
-
-@pytest.fixture
 def time_signature_event():
     return _default_time_signature_event
 
@@ -319,7 +310,6 @@ def star_power_event():
     params=[
         # Base events
         "event",
-        "sustained_event",
         # Sync events
         "time_signature_event",
         "bpm_event",

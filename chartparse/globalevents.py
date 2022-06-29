@@ -1,13 +1,16 @@
 from __future__ import annotations
 
+import datetime
 import re
 from collections.abc import Callable, Iterable, Sequence
-from typing import ClassVar, Pattern, TypeVar
+from typing import ClassVar, Optional, Pattern, Type, TypeVar
 
 from chartparse.event import Event
 from chartparse.exceptions import RegexFatalNotMatchError
 from chartparse.track import EventTrack
 from chartparse.util import DictPropertiesEqMixin
+
+GlobalEventsTrackT = TypeVar("GlobalEventsTrackT", bound="GlobalEventsTrack")
 
 
 class GlobalEventsTrack(EventTrack, DictPropertiesEqMixin):
@@ -27,7 +30,7 @@ class GlobalEventsTrack(EventTrack, DictPropertiesEqMixin):
         text_events: Sequence[TextEvent],
         section_events: Sequence[SectionEvent],
         lyric_events: Sequence[LyricEvent],
-    ):
+    ) -> None:
         """Instantiates all instance attributes."""
 
         self.text_events = text_events
@@ -35,11 +38,13 @@ class GlobalEventsTrack(EventTrack, DictPropertiesEqMixin):
         self.lyric_events = lyric_events
 
     @classmethod
-    def from_chart_lines(cls, iterator_getter: Callable[[], Iterable[str]]):
+    def from_chart_lines(
+        cls: Type[GlobalEventsTrackT], iterator_getter: Callable[[], Iterable[str]]
+    ) -> GlobalEventsTrackT:
         """Initializes instance attributes by parsing an iterable of strings.
 
         Args:
-            iterator_getter: The iterable of strings returned by this strings is most likely from a
+            iterator_getter: The iterable of strings returned by this is most likely from a
                 Moonscraper ``.chart``. Must be a function so the strings could be iterated over
                 multiple times, if necessary.
 
@@ -55,6 +60,9 @@ class GlobalEventsTrack(EventTrack, DictPropertiesEqMixin):
             iterator_getter(), LyricEvent.from_chart_line
         )
         return cls(text_events, section_events, lyric_events)
+
+
+GlobalEventT = TypeVar("GlobalEventT", bound="GlobalEvent")
 
 
 class GlobalEvent(Event):
@@ -78,12 +86,14 @@ class GlobalEvent(Event):
     # Match 2: Event value (to be added by subclass via template hole)
     _regex_template: ClassVar[str] = r"^\s*?(\d+?) = E \"{}\"\s*?$"
 
-    def __init__(self, tick: int, value: str, timestamp=None):
+    def __init__(
+        self, tick: int, value: str, timestamp: Optional[datetime.timedelta] = None
+    ) -> None:
         super().__init__(tick, timestamp=timestamp)
         self.value = value
 
     @classmethod
-    def from_chart_line(cls, line: str) -> Event:
+    def from_chart_line(cls: Type[GlobalEventT], line: str) -> GlobalEventT:
         """Attempt to obtain an instance of this object from a string.
 
         Args:

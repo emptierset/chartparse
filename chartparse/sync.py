@@ -1,12 +1,16 @@
 from __future__ import annotations
 
+import datetime
 import re
-from collections.abc import Sequence
+from collections.abc import Sequence, Callable, Iterable
+from typing import TypeVar, Type, Pattern, Optional
 
 from chartparse.event import Event
 from chartparse.exceptions import RegexFatalNotMatchError
 from chartparse.track import EventTrack
 from chartparse.util import DictPropertiesEqMixin
+
+SyncTrackT = TypeVar("SyncTrackT", bound="SyncTrack")
 
 
 class SyncTrack(EventTrack, DictPropertiesEqMixin):
@@ -43,13 +47,13 @@ class SyncTrack(EventTrack, DictPropertiesEqMixin):
         self.bpm_events = bpm_events
 
     @classmethod
-    def from_chart_lines(cls, iterator_getter):
+    def from_chart_lines(cls: Type[SyncTrackT], iterator_getter: Callable[[], Iterable[str]]) -> SyncTrackT:
         """Initializes instance attributes by parsing an iterable of strings.
 
         Args:
-            iterator_getter (function): A function that returns an iterator over a series of
-                strings, most likely from a Moonscraper ``.chart``. Must be a function so the
-                strings could be iterated over multiple times, if necessary.
+            iterator_getter: The iterable of strings returned by this is most likely from a
+                Moonscraper ``.chart``. Must be a function so the strings could be iterated over
+                multiple times, if necessary.
 
         Returns:
             A ``SyncTrack`` parsed from the strings returned by ``iterator_getter``.
@@ -61,18 +65,17 @@ class SyncTrack(EventTrack, DictPropertiesEqMixin):
         bpm_events = cls._parse_events_from_iterable(iterator_getter(), BPMEvent.from_chart_line)
         return cls(time_signature_events, bpm_events)
 
-    def idx_of_proximal_bpm_event(self, tick, start_idx=0):
+    def idx_of_proximal_bpm_event(self, tick: int, start_idx: int = 0) -> int:
         """Returns the index of the :class:`~chartparse.sync.BPMEvent` proximal to ``tick``.
 
         A BPMEvent is "proximal" relative to tick `T` if it is the BPMEvent with the highest tick
         value not greater than `T`.
 
         Args:
-            tick (int): The tick value for which the proximal :class:`~chartparse.sync.BPMEvent`
-                should be found.
-            start_idx (int, optional): The index from which
-                :attr:`~chartparse.sync.SyncTrack.bpm_events` should be searched. This is only an
-                optimization to avoid searching known irrelevant events.
+            tick: The tick value for which the proximal :class:`~chartparse.sync.BPMEvent` should
+                be found.
+            start_idx: The index from which :attr:`~chartparse.sync.SyncTrack.bpm_events` should be
+                searched. This is only an optimization to avoid searching known irrelevant events.
 
         Returns:
             The index of the :class:`~chartparse.sync.BPMEvent` proximal to ``tick``.
@@ -86,44 +89,43 @@ class SyncTrack(EventTrack, DictPropertiesEqMixin):
         for idx in range(start_idx, len(self.bpm_events)):
             is_last_bpm_event = idx == len(self.bpm_events) - 1
             next_bpm_event = self.bpm_events[idx + 1] if not is_last_bpm_event else None
-            if is_last_bpm_event or next_bpm_event.tick > tick:
+            if is_last_bpm_event is not None or next_bpm_event.tick > tick:
                 return idx
         raise ValueError(f"there are no BPMEvents at or after index {start_idx} in bpm_events")
 
 
+TimeSignatureEventT = TypeVar("TimeSignatureEventT", bound="TimeSignatureEvent")
+
+
 class TimeSignatureEvent(Event):
-    """An event representing a time signature change at a particular tick.
+    """An event representing a time signature change at a particular tick."""
 
-    Attributes:
-        upper_numeral (int). The number indicating how many beats constitute a bar.
-        lower_numeral (int): The number indicating the note value that represents one beat.
+    upper_numeral: int
+    """The number indicating how many beats constitute a bar."""
 
-    """
+    lower_numeral: int
+    """The number indicating the note value that represents one beat."""
 
     # Match 1: Tick
     # Match 2: Upper numeral
     # Match 3: Lower numeral (optional; assumed to be 4 if absent)
-    _regex = r"^\s*?(\d+?) = TS (\d+?)(?: (\d+?))?\s*?$"
-    _regex_prog = re.compile(_regex)
+    _regex: str = r"^\s*?(\d+?) = TS (\d+?)(?: (\d+?))?\s*?$"
+    _regex_prog: Pattern[str] = re.compile(_regex)
 
-    def __init__(self, tick, upper_numeral, lower_numeral, timestamp=None):
-        """Initializes all instance attributes.
-
-        Args:
-            upper_numeral (int). The number indicating how many beats constitute a bar.
-            lower_numeral (int): The number indicating the note value that represents one beat.
-        """
+    def __init__(self, tick: int, upper_numeral: int, lower_numeral: int, timestamp:
+                 Optional[datetime.timedelta] = None):
+        """Initializes all instance attributes."""
 
         super().__init__(tick, timestamp=timestamp)
         self.upper_numeral = upper_numeral
         self.lower_numeral = lower_numeral
 
     @classmethod
-    def from_chart_line(cls, line):
+    def from_chart_line(cls: Type[TimeSignatureEventT], line: str) -> TimeSignatureEventT:
         """Attempt to obtain an instance of this object from a string.
 
         Args:
-            line (str): A string. Most likely a line from a Moonscraper ``.chart``.
+            line: Most likely a line from a Moonscraper ``.chart``.
 
         Returns:
             An an instance of this object parsed from ``line``.
@@ -140,42 +142,38 @@ class TimeSignatureEvent(Event):
         lower_numeral = 2 ** int(m.group(3)) if m.group(3) else 4
         return cls(tick, upper_numeral, lower_numeral)
 
-    def __str__(self):  # pragma: no cover
+    def __str__(self) -> str:  # pragma: no cover
         to_join = [super().__str__()]
         to_join.append(f": {self.upper_numeral}/{self.lower_numeral}")
         return "".join(to_join)
 
 
+BPMEventT = TypeVar("BPMEventT", bound="BPMEvent")
+
+
 class BPMEvent(Event):
-    """An event representing a BPM (beats per minute) change at a particular tick.
+    """An event representing a BPM (beats per minute) change at a particular tick."""
 
-    Attributes:
-        bpm (float): The beats per minute value. Should not have more than 3 decimal places.
-
-    """
+    bpm: float
+    """The beats per minute value. Should not have more than 3 decimal places."""
 
     # Match 1: Tick
     # Match 2: BPM (the last 3 digits are the decimal places)
-    _regex = r"^\s*?(\d+?) = B (\d+?)\s*?$"
-    _regex_prog = re.compile(_regex)
+    _regex: str = r"^\s*?(\d+?) = B (\d+?)\s*?$"
+    _regex_prog: Pattern[str] = re.compile(_regex)
 
     # TODO: Validate that ``bpm`` does not have more than 3 decimal places.
-    def __init__(self, tick, bpm, timestamp=None):
-        """Initialize all instance attributes.
-
-        Args:
-            bpm (float): The beats per minute value. Should not have more than 3 decimal places.
-
-        """
+    def __init__(self, tick: int, bpm: float, timestamp: Optional[datetime.timedelta] = None):
+        """Initialize all instance attributes."""
         super().__init__(tick, timestamp=timestamp)
         self.bpm = bpm
 
     @classmethod
-    def from_chart_line(cls, line):
+    def from_chart_line(cls: Type[BPMEventT], line: str) -> BPMEventT:
         """Attempt to obtain an instance of this object from a string.
 
         Args:
-            line (str): A string. Most likely a line from a Moonscraper ``.chart``.
+            line: Most likely a line from a Moonscraper ``.chart``.
 
         Returns:
             An an instance of this object parsed from ``line``.
@@ -194,7 +192,7 @@ class BPMEvent(Event):
         bpm = bpm_whole_part + bpm_decimal_part
         return cls(tick, bpm)
 
-    def __str__(self):  # pragma: no cover
+    def __str__(self) -> str:  # pragma: no cover
         to_join = [super().__str__()]
         to_join.append(f": {self.bpm} BPM")
         return "".join(to_join)
