@@ -7,11 +7,18 @@ from chartparse.enums import Instrument, Difficulty, Note
 from chartparse.event import Event
 from chartparse.globalevents import (
     GlobalEventsTrack,
+    GlobalEvent,
     TextEvent,
     SectionEvent,
     LyricEvent,
 )
-from chartparse.instrument import InstrumentTrack, NoteEvent, StarPowerEvent, SustainedEvent
+from chartparse.instrument import (
+    InstrumentTrack,
+    NoteEvent,
+    StarPowerEvent,
+    SustainedEvent,
+    SpecialEvent,
+)
 from chartparse.metadata import Metadata
 from chartparse.sync import SyncTrack, BPMEvent, TimeSignatureEvent
 from chartparse.track import EventTrack
@@ -236,6 +243,11 @@ def event():
 
 
 @pytest.fixture
+def bare_special_event():
+    return SpecialEvent.__new__(SpecialEvent)
+
+
+@pytest.fixture
 def bare_sustained_event():
     return SustainedEvent.__new__(SustainedEvent)
 
@@ -263,6 +275,11 @@ def bpm_event():
 @pytest.fixture
 def noninitial_bpm_event():
     return _noninitial_bpm_event
+
+
+@pytest.fixture
+def bare_global_event():
+    return GlobalEvent.__new__(GlobalEvent)
 
 
 @pytest.fixture

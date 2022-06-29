@@ -1,6 +1,6 @@
 import re
 
-from chartparse.event import Event, FromChartLineMixin
+from chartparse.event import Event
 from chartparse.exceptions import RegexFatalNotMatchError
 from chartparse.track import EventTrack
 from chartparse.util import DictPropertiesEqMixin
@@ -124,6 +124,18 @@ class TimeSignatureEvent(Event):
 
     @classmethod
     def from_chart_line(cls, line):
+        """Attempt to obtain an instance of this object from a string.
+
+        Args:
+            line (str): A string. Most likely a line from a Moonscraper ``.chart``.
+
+        Returns:
+            An an instance of this object parsed from ``line``.
+
+        Raises:
+            RegexFatalNotMatchError: If the mixed-into class' ``_regex`` does not match ``line``.
+        """
+
         m = cls._regex_prog.match(line)
         if not m:
             raise RegexFatalNotMatchError(cls._regex, line)
@@ -138,7 +150,7 @@ class TimeSignatureEvent(Event):
         return "".join(to_join)
 
 
-class BPMEvent(Event, FromChartLineMixin):
+class BPMEvent(Event):
     """An event representing a BPM (beats per minute) change at a particular tick.
 
     Attributes:
@@ -164,14 +176,27 @@ class BPMEvent(Event, FromChartLineMixin):
 
     @classmethod
     def from_chart_line(cls, line):
-        event = super().from_chart_line(line)
-        raw_bpm = event.bpm
+        """Attempt to obtain an instance of this object from a string.
+
+        Args:
+            line (str): A string. Most likely a line from a Moonscraper ``.chart``.
+
+        Returns:
+            An an instance of this object parsed from ``line``.
+
+        Raises:
+            RegexFatalNotMatchError: If the mixed-into class' ``_regex`` does not match ``line``.
+        """
+
+        m = cls._regex_prog.match(line)
+        if not m:
+            raise RegexFatalNotMatchError(cls._regex, line)
+        tick, raw_bpm = int(m.group(1)), m.group(2)
         bpm_whole_part_str, bpm_decimal_part_str = raw_bpm[:-3], raw_bpm[-3:]
         bpm_whole_part = int(bpm_whole_part_str) if bpm_whole_part_str != "" else 0
         bpm_decimal_part = int(bpm_decimal_part_str) / 1000
         bpm = bpm_whole_part + bpm_decimal_part
-        event.bpm = bpm
-        return event
+        return cls(tick, bpm)
 
     def __str__(self):  # pragma: no cover
         to_join = [super().__str__()]

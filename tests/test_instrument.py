@@ -1,14 +1,15 @@
 import pytest
+import re
 import unittest.mock
 
 from chartparse.enums import Note, NoteTrackIndex
-from chartparse.event import FromChartLineMixin
+from chartparse.exceptions import RegexFatalNotMatchError
 from chartparse.instrument import (
     InstrumentTrack,
     StarPowerEvent,
     NoteEvent,
     StarPowerData,
-    SustainedEvent,
+    SpecialEvent,
 )
 
 from tests.conftest import (
@@ -251,18 +252,6 @@ class TestSustainedEvent(object):
     def test_init(self, sustained_event):
         assert sustained_event.sustain == pytest.default_sustain
 
-    def test_from_chart_line(self, mocker, bare_sustained_event):
-        bare_sustained_event.tick = pytest.default_tick
-        bare_sustained_event.timestamp = pytest.default_timestamp
-        bare_sustained_event.sustain = str(pytest.default_sustain)
-        mock_parent_from_chart_line = mocker.patch.object(
-            FromChartLineMixin, "from_chart_line", return_value=bare_sustained_event
-        )
-        line = "T {pytest.default_tick} V {pytest.default_sustain}"
-        e = SustainedEvent.from_chart_line(line)
-        assert e.sustain == pytest.default_sustain
-        mock_parent_from_chart_line.assert_called_once_with(line)
-
 
 class TestNoteEvent(object):
     def test_init(self, note_event_with_all_optionals_set):
@@ -308,14 +297,37 @@ class TestNoteEvent(object):
     def test_refine_sustain(self, sustain, want):
         assert NoteEvent._refine_sustain(sustain) == want
 
-    def test_from_chart_line(self):
-        with pytest.raises(NotImplementedError):
-            _ = NoteEvent.from_chart_line("")
-
 
 class TestSpecialEvent(object):
+    test_regex = r"^T (\d+?) V (.*?)$"
+
+    def teardown_method(self):
+        try:
+            del SpecialEvent._regex
+            del SpecialEvent._regex_prog
+        except AttributeError:
+            pass
+
     def test_init(self, star_power_event):
         assert star_power_event.sustain == pytest.default_sustain
+
+    def test_from_chart_line(self, bare_special_event):
+        SpecialEvent._regex = self.test_regex
+        SpecialEvent._regex_prog = re.compile(SpecialEvent._regex)
+
+        bare_special_event.tick = pytest.default_tick
+        bare_special_event.timestamp = pytest.default_timestamp
+        bare_special_event.sustain = str(pytest.default_sustain)
+        line = f"T {pytest.default_tick} V {pytest.default_sustain}"
+        e = SpecialEvent.from_chart_line(line)
+        assert e.sustain == pytest.default_sustain
+
+    def test_from_chart_line_no_match(self, invalid_chart_line):
+        SpecialEvent._regex = self.test_regex
+        SpecialEvent._regex_prog = re.compile(SpecialEvent._regex)
+
+        with pytest.raises(RegexFatalNotMatchError):
+            _ = SpecialEvent.from_chart_line(invalid_chart_line)
 
 
 # TODO: Test regex?
