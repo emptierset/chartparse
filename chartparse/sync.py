@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import re
+from collections.abc import Sequence
 
 from chartparse.event import Event
 from chartparse.exceptions import RegexFatalNotMatchError
@@ -7,25 +10,18 @@ from chartparse.util import DictPropertiesEqMixin
 
 
 class SyncTrack(EventTrack, DictPropertiesEqMixin):
-    """All of a :class:`~chartparse.chart.Chart` object's tempo-mapping related events.
+    """All of a :class:`~chartparse.chart.Chart` object's tempo-mapping related events."""
 
-    Attributes:
-        time_signature_events (ImmutableSortedList[TimeSignatureEvent]): A
-            :class:`~chartparse.chart.Chart` object's :class:`~chartparse.sync.TimeSignatureEvent`
-            objects.
-        bpm_events (ImmutableSortedList[BPMEvent]): A :class:`~chartparse.chart.Chart` object's
-            :class:`~chartparse.sync.BPMEvent` objects.
-    """
+    time_signature_events: Sequence[TimeSignatureEvent]
+    """A ``SyncTrack``'s ``TimeSignatureEvent``\\ s"""
 
-    def __init__(self, time_signature_events, bpm_events):
-        """Instantiates all instance attributes.
+    bpm_events: Sequence[BPMEvent]
+    """A ``SyncTrack``'s ``BPMEvent``\\ s"""
 
-        Args:
-            time_signature_events (ImmutableSortedList[TimeSignatureEvent]): A
-                :class:`~chartparse.chart.Chart` object's
-                :class:`~chartparse.sync.TimeSignatureEvent` objects.
-            bpm_events (ImmutableSortedList[BPMEvent]): A :class:`~chartparse.chart.Chart` object's
-                :class:`~chartparse.sync.BPMEvent` objects.
+    def __init__(
+        self, time_signature_events: Sequence[TimeSignatureEvent], bpm_events: Sequence[BPMEvent]
+    ):
+        """Instantiates and validates all instance attributes.
 
         Raises:
             ValueError: If ``time_signature_events`` or ``bpm_events`` is empty, or if either of

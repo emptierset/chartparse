@@ -1,4 +1,8 @@
 # TODO: Rename to `events.py`
+from __future__ import annotations
+
+import datetime
+from typing import Any, Optional, Pattern, Protocol, Type, TypeVar
 
 from chartparse.util import DictPropertiesEqMixin, DictReprMixin
 
@@ -8,18 +12,19 @@ class Event(DictPropertiesEqMixin, DictReprMixin):
 
     This is typically used only as a base class for more specialized subclasses. It implements an
     attractive ``__str__`` representation.
-
-    Attributes:
-        tick (int): The tick at which this event occurs.
-        timestamp (datetime.timedelta, optional): The timestamp at which this event occurs.
-            Optional because it may need to be calculated later.
     """
 
-    def __init__(self, tick, timestamp=None):
+    tick: int
+    """The tick at which this event occurs."""
+
+    timestamp: Optional[datetime.timedelta]
+    """The timestamp at which this event occurs. Optional as it may need to be calculated later."""
+
+    def __init__(self, tick: int, timestamp: datetime.timedelta = None):
         self.tick = tick
         self.timestamp = timestamp
 
-    def __str__(self):  # pragma: no cover
+    def __str__(self) -> str:  # pragma: no cover
         to_join = [f"{type(self).__name__: >18}(t@{self.tick:07}"]
         if self.timestamp is not None:
             as_str = (

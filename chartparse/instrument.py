@@ -1,9 +1,14 @@
+from __future__ import annotations
+
 import collections
+import datetime
 import re
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
+from typing import ClassVar, Literal, Optional, Pattern, Union
 
 from chartparse.datastructures import ImmutableSortedList
-from chartparse.enums import Note
+from chartparse.enums import Difficulty, Instrument, Note
 from chartparse.event import Event
 from chartparse.exceptions import RegexFatalNotMatchError
 from chartparse.track import EventTrack
@@ -11,16 +16,19 @@ from chartparse.util import DictPropertiesEqMixin
 
 
 class InstrumentTrack(EventTrack, DictPropertiesEqMixin):
-    """All of the instrument-related events for one (instrument, difficulty) pair.
+    """All of the instrument-related events for one (instrument, difficulty) pair."""
 
-    Attributes:
-        instrument (Instrument): The instrument to which this track corresponds.
-        difficulty (Difficulty): This track's difficulty setting.
-        note_events (ImmutableSortedList[NoteEvent]): An (instrument, difficulty) pair's
-            :class:`~chartparse.instrument.NoteEvent` objects.
-        star_power_events (ImmutableSortedList[StarPowerEvent]): An (instrument, difficulty) pair's
-            :class:`~chartparse.instrument.StarPowerEvent` objects.
-    """
+    instrument: Instrument
+    """The instrument to which this track corresponds."""
+
+    difficulty: Difficulty
+    """This track's difficulty setting."""
+
+    note_events: Sequence[NoteEvent]
+    """An (instrument, difficulty) pair's ``NoteEvent`` objects."""
+
+    star_power_events: Sequence[StarPowerEvent]
+    """An (instrument, difficulty) pair's ``StarPowerEvent`` objects."""
 
     _min_note_instrument_track_index = 0
     _max_note_instrument_track_index = 4
@@ -28,17 +36,14 @@ class InstrumentTrack(EventTrack, DictPropertiesEqMixin):
     _forced_instrument_track_index = 5
     _tap_instrument_track_index = 6
 
-    def __init__(self, instrument, difficulty, note_events, star_power_events):
-        """Instantiates all instance attributes.
-
-        Attributes:
-            instrument (Instrument): The instrument to which this track corresponds.
-            difficulty (Difficulty): This track's difficulty setting.
-            note_events (ImmutableSortedList[NoteEvent]): An (instrument, difficulty) pair's
-                :class:`~chartparse.instrument.NoteEvent` objects.
-            star_power_events (ImmutableSortedList[StarPowerEvent]): An (instrument, difficulty)
-                pair's :class:`~chartparse.instrument.StarPowerEvent` objects.
-        """
+    def __init__(
+        self,
+        instrument: Instrument,
+        difficulty: Difficulty,
+        note_events: Sequence[NoteEvent],
+        star_power_events: Sequence[StarPowerEvent],
+    ) -> None:
+        """Instantiates all instance attributes."""
 
         self.instrument = instrument
         self.difficulty = difficulty
@@ -47,13 +52,18 @@ class InstrumentTrack(EventTrack, DictPropertiesEqMixin):
         self._populate_star_power_data()
 
     @classmethod
-    def from_chart_lines(cls, instrument, difficulty, iterator_getter):
+    def from_chart_lines(
+        cls,
+        instrument: Instrument,
+        difficulty: Difficulty,
+        iterator_getter: Callable[[], Iterable[str]],
+    ) -> InstrumentTrack:
         """Initializes instance attributes by parsing an iterable of strings.
 
         Args:
-            iterator_getter (function): A function that returns an iterator over a series of
-                strings, most likely from a Moonscraper ``.chart``. Must be a function so the
-                strings could be iterated over multiple times, if necessary.
+            iterator_getter: The iterable of strings returned by this strings is most likely from a
+                Moonscraper ``.chart``. Must be a function so the strings could be iterated over
+                multiple times, if necessary.
 
         Returns:
             An ``InstrumentTrack`` parsed from the strings returned by ``iterator_getter``.
@@ -65,7 +75,7 @@ class InstrumentTrack(EventTrack, DictPropertiesEqMixin):
         )
         return cls(instrument, difficulty, note_events, star_power_events)
 
-    def __str__(self):  # pragma: no cover
+    def __str__(self) -> str:  # pragma: no cover
         return (
             f"Instrument: {self.instrument}\n"
             f"Difficulty: {self.difficulty}\n"
@@ -73,13 +83,20 @@ class InstrumentTrack(EventTrack, DictPropertiesEqMixin):
             f"Star power phrase count: {len(self.star_power_events)}"
         )
 
+    # TODO: Rename to _parse_note_events_from_chart_lines.
     @staticmethod
-    def _parse_note_events_from_iterable(iterable):
-        tick_to_note_array = collections.defaultdict(lambda: bytearray(5))
-        tick_to_sustain_list = collections.defaultdict(lambda: [None] * 5)
+    def _parse_note_events_from_iterable(
+        chart_lines: Iterable[str],
+    ) -> ImmutableSortedList[NoteEvent]:
+        tick_to_note_array: collections.defaultdict[int, bytearray] = collections.defaultdict(
+            lambda: bytearray(5)
+        )
+        tick_to_sustain_list: collections.defaultdict[
+            int, list[Optional[int]]
+        ] = collections.defaultdict(lambda: [None] * 5)
         tick_to_is_tap = collections.defaultdict(bool)
         tick_to_is_forced = collections.defaultdict(bool)
-        for line in iterable:
+        for line in chart_lines:
             m = NoteEvent._regex_prog.match(line)
             if not m:
                 continue
@@ -117,7 +134,7 @@ class InstrumentTrack(EventTrack, DictPropertiesEqMixin):
             events.append(event)
         return ImmutableSortedList(events, key=lambda e: e.tick)
 
-    def _populate_star_power_data(self):
+    def _populate_star_power_data(self) -> None:
         num_notes = len(self.note_events)
 
         note_idx_to_star_power_idx = dict()
@@ -152,6 +169,10 @@ class StarPowerData(DictPropertiesEqMixin):
     is_end_of_phrase: bool
 
 
+SustainListT = list[Optional[int]]
+SustainT = Union[int, SustainListT]
+
+
 # TODO: Rename to `SustainableEvent`, because it might have a `sustain` value of 0.
 class SustainedEvent(Event):
     """An :class:`~chartparse.event.Event` with a ``sustain`` value.
@@ -160,29 +181,36 @@ class SustainedEvent(Event):
     attractive ``__str__`` representation.
 
     Attributes:
-        sustain (int): The number of ticks for which this event is sustained. This event does _not_
+        sustain: The number of ticks for which this event is sustained. This event does _not_
             overlap events at ``tick + sustain``; it ends immediately before that tick.
     """
 
-    def __init__(self, tick, sustain, timestamp=None):
+    def __init__(self, tick: int, sustain: SustainT, timestamp: Optional[datetime.timedelta] = None):
         super().__init__(tick, timestamp=timestamp)
         self.sustain = sustain
 
-    def __str__(self):  # pragma: no cover
+    def __str__(self) -> str:  # pragma: no cover
         to_join = [super().__str__()]
         to_join.append(f": sustain={self.sustain}")
         return "".join(to_join)
 
 
 class NoteEvent(SustainedEvent):
-    """An event representing all of the notes at a particular tick.
+    """An event representing all of the notes at a particular tick."""
 
-    Attributes:
-        note (Note): The note lane(s) that are active.
-        is_forced (bool): Whether the note's HOPO value is manually inverted.
-        is_tap (bool): Whether the note is a tap note.
-        star_power_data (StarPowerData): Information associated with star power for this note. If
-            this is ``None``, then the note is not a star power note.
+    note: Note
+    """The note lane(s) that are active."""
+
+    is_forced: bool
+    """Whether the note's HOPO value is manually inverted."""
+
+    is_tap: bool
+    """Whether the note is a tap note."""
+
+    star_power_data: Optional[StarPowerData]
+    """Information associated with star power for this note.
+    
+    If this is ``None``, then the note is not a star power note.
     """
 
     # This regex matches a single "N" line within a instrument track section,
@@ -192,18 +220,18 @@ class NoteEvent(SustainedEvent):
     # Match 1: Tick
     # Match 2: Note index
     # Match 3: Sustain (ticks)
-    _regex = r"^\s*?(\d+?) = N ([0-7]) (\d+?)\s*?$"
-    _regex_prog = re.compile(_regex)
+    _regex: str = r"^\s*?(\d+?) = N ([0-7]) (\d+?)\s*?$"
+    _regex_prog: Pattern[str] = re.compile(_regex)
 
     def __init__(
         self,
-        tick,
-        note,
-        timestamp=None,
-        sustain=0,
-        is_forced=False,
-        is_tap=False,
-        star_power_data=None,
+        tick: int,
+        note: Note,
+        timestamp: datetime.timedelta = None,
+        sustain: SustainT = 0,
+        is_forced: bool = False,
+        is_tap: bool = False,
+        star_power_data: Optional[StarPowerData] = None,
     ):
         self._validate_sustain(sustain, note)
         refined_sustain = self._refine_sustain(sustain)
@@ -216,7 +244,7 @@ class NoteEvent(SustainedEvent):
         self.star_power_data = star_power_data
 
     @staticmethod
-    def _validate_sustain(sustain, note):
+    def _validate_sustain(sustain: SustainT, note: Note) -> None:
         if isinstance(sustain, int):
             NoteEvent._validate_int_sustain(sustain)
         elif isinstance(sustain, list):
@@ -225,12 +253,12 @@ class NoteEvent(SustainedEvent):
             raise TypeError(f"sustain {sustain} must be type list, or int.")
 
     @staticmethod
-    def _validate_int_sustain(sustain):
+    def _validate_int_sustain(sustain: int) -> None:
         if sustain < 0:
             raise ValueError(f"int sustain {sustain} must be positive.")
 
     @staticmethod
-    def _validate_list_sustain(sustain, note):
+    def _validate_list_sustain(sustain: list, note: Note) -> None:
         if len(sustain) != len(note.value):
             raise ValueError(f"list sustain {sustain} must have length {len(note.value)}")
         for note_lane_value, sustain_lane_value in zip(note.value, sustain):
@@ -243,7 +271,7 @@ class NoteEvent(SustainedEvent):
                 )
 
     @staticmethod
-    def _refine_sustain(sustain):
+    def _refine_sustain(sustain: SustainT) -> SustainT:
         if isinstance(sustain, list):
             if all(d is None for d in sustain):
                 return 0
@@ -252,7 +280,7 @@ class NoteEvent(SustainedEvent):
                 return first_non_none_sustain
         return sustain
 
-    def __str__(self):  # pragma: no cover
+    def __str__(self) -> str:  # pragma: no cover
         to_join = [super().__str__()]
         to_join.append(f": {self.note}")
 
@@ -278,13 +306,16 @@ class SpecialEvent(SustainedEvent):
 
     # Match 1: Tick
     # Match 2: Sustain (ticks)
-    _regex_template = r"^\s*?(\d+?) = S {} (\d+?)\s*?$"
+    _regex_template: ClassVar[str] = r"^\s*?(\d+?) = S {} (\d+?)\s*?$"
 
-    def __init__(self, tick, sustain, timestamp=None):
+    _regex: str
+    _regex_prog: Pattern[str]
+
+    def __init__(self, tick: int, sustain: int, timestamp: Optional[datetime.timedelta] = None):
         super().__init__(tick, sustain, timestamp=timestamp)
 
     @classmethod
-    def from_chart_line(cls, line):
+    def from_chart_line(cls, line: str) -> Event:
         """Attempt to obtain an instance of this object from a string.
 
         Args:

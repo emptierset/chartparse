@@ -1,5 +1,3 @@
-import pytest
-
 from chartparse.util import AllValuesGettableEnum, DictPropertiesEqMixin, iterate_from_second_elem
 
 
@@ -52,8 +50,8 @@ class TestDictPropertiesEqMixin(object):
     def test_eq_unimplemented(self):
         foo = self.Foo(1, 2)
         bar = self.Bar(1, 2)
-        with pytest.raises(NotImplementedError):
-            foo == bar
+        assert foo != bar
+        assert bar != foo
 
 
 class TestIterateFromSecondElem(object):
