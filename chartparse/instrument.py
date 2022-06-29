@@ -152,33 +152,13 @@ class StarPowerData(DictPropertiesEqMixin):
     is_end_of_phrase: bool
 
 
-# TODO: Rename to `SustainableEvent`, because it might have a `sustain` value of 0.
-class SustainedEvent(Event):
-    """An :class:`~chartparse.event.Event` with a ``sustain`` value.
-
-    This is typically used only as a base class for more specialized subclasses. It implements an
-    attractive ``__str__`` representation.
-
-    Attributes:
-        sustain (int): The number of ticks for which this event is sustained. This event does _not_
-            overlap events at ``tick + sustain``; it ends immediately before that tick.
-    """
-
-    def __init__(self, tick, sustain, timestamp=None):
-        super().__init__(tick, timestamp=timestamp)
-        self.sustain = sustain
-
-    def __str__(self):  # pragma: no cover
-        to_join = [super().__str__()]
-        to_join.append(f": sustain={self.sustain}")
-        return "".join(to_join)
-
-
-class NoteEvent(SustainedEvent):
+class NoteEvent(Event):
     """An event representing all of the notes at a particular tick.
 
     Attributes:
         note (Note): The note lane(s) that are active.
+        sustain (int): The number of ticks for which this event is sustained. This event does _not_
+            overlap events at ``tick + sustain``; it ends immediately before that tick.
         is_forced (bool): Whether the note's HOPO value is manually inverted.
         is_tap (bool): Whether the note is a tap note.
         star_power_data (StarPowerData): Information associated with star power for this note. If
@@ -206,9 +186,9 @@ class NoteEvent(SustainedEvent):
         star_power_data=None,
     ):
         self._validate_sustain(sustain, note)
-        refined_sustain = self._refine_sustain(sustain)
-        super().__init__(tick, refined_sustain, timestamp=timestamp)
+        super().__init__(tick, timestamp=timestamp)
         self.note = note
+        self.sustain = self._refine_sustain(sustain)
         # TODO: Refactor is_forced to is_hopo. We can calculate whether any given note is a hopo,
         # so a user probably does not need to know whether a note was forced to be a hopo.
         self.is_forced = is_forced
@@ -254,6 +234,7 @@ class NoteEvent(SustainedEvent):
 
     def __str__(self):  # pragma: no cover
         to_join = [super().__str__()]
+        to_join.append(f": sustain={self.sustain}")
         to_join.append(f": {self.note}")
 
         if self.star_power_data:
@@ -270,10 +251,14 @@ class NoteEvent(SustainedEvent):
         return "".join(to_join)
 
 
-class SpecialEvent(SustainedEvent):
+class SpecialEvent(Event):
     """Provides a regex template for parsing 'S' style chart lines.
 
     This is typically used only as a base class for more specialized subclasses.
+
+    Attributes:
+        sustain (int): The number of ticks for which this event is sustained. This event does _not_
+            overlap events at ``tick + sustain``; it ends immediately before that tick.
     """
 
     # Match 1: Tick
@@ -281,7 +266,8 @@ class SpecialEvent(SustainedEvent):
     _regex_template = r"^\s*?(\d+?) = S {} (\d+?)\s*?$"
 
     def __init__(self, tick, sustain, timestamp=None):
-        super().__init__(tick, sustain, timestamp=timestamp)
+        super().__init__(tick, timestamp=timestamp)
+        self.sustain = sustain
 
     @classmethod
     def from_chart_line(cls, line):
@@ -302,6 +288,11 @@ class SpecialEvent(SustainedEvent):
             raise RegexFatalNotMatchError(cls._regex, line)
         tick, sustain = int(m.group(1)), int(m.group(2))
         return cls(tick, sustain)
+
+    def __str__(self):  # pragma: no cover
+        to_join = [super().__str__()]
+        to_join.append(f": sustain={self.sustain}")
+        return "".join(to_join)
 
 
 class StarPowerEvent(SpecialEvent):
