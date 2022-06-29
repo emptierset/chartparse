@@ -1,46 +1,60 @@
-class ImmutableList(list):
-    def __init__(self, xs):
-        self._list = xs
+from __future__ import annotations
+
+from collections.abc import Callable, Iterator, Sequence
+from typing import Any, Generic, Optional, TypeVar, Union, overload
+
+from chartparse.hints import CT, T
+
+
+class ImmutableList(Sequence[T]):
+    def __init__(self, xs: Sequence[T]):
+        self._seq = xs
+
+    @overload
+    def __getitem__(self, index: int) -> T:
+        ...
+
+    @overload
+    def __getitem__(self, index: slice) -> Sequence[T]:
+        ...
 
     def __getitem__(self, index):
-        return self._list[index]
+        return self._seq[index]
 
-    def __iter__(self):
-        return iter(self._list)
+    def __iter__(self) -> Iterator[T]:
+        return iter(self._seq)
 
-    def __repr__(self):  # pragma: no cover
-        return repr(self._list)
+    def __repr__(self) -> str:  # pragma: no cover
+        return repr(self._seq)
 
-    def __len__(self):
-        return len(self._list)
+    def __len__(self) -> int:
+        return len(self._seq)
 
-    def __eq__(self, other):
+    def __contains__(self, obj: object) -> bool:
+        return obj in self._seq
+
+    def __reversed__(self) -> Iterator[T]:
+        return reversed(self._seq)
+
+    def __eq__(self, other: object) -> bool:
         if type(other) is list:
-            return self._list == other
+            return self._seq == other
         elif isinstance(other, ImmutableList):
-            return self._list == other._list
-        raise NotImplementedError(
-            (
-                f"cannot equate values of type {self.__class__.__name__} and "
-                f"{other.__class__.__name__}"
-            )
-        )
-
-    def _NotImplemented(self, *args, **kw):
-        raise NotImplementedError(
-            f"{self.__class__.__name__} does not implement mutative methods."
-        )
-
-    append = _NotImplemented
-    pop = _NotImplemented
-    __delitem__ = _NotImplemented
-
-    def __setitem__(self, key, value):
-        self._NotImplemented()
+            return self._seq == other._seq
+        return NotImplemented
 
 
-class ImmutableSortedList(ImmutableList):
+class ImmutableSortedList(ImmutableList, Sequence[T]):
+    @overload
+    def __init__(self, xs: Sequence[CT]):
+        ...
+
+    @overload
+    def __init__(self, xs: Sequence[T], key: Callable[[T], CT]):
+        ...
+
     def __init__(self, xs, key=None):
         if key is None:
-            key = lambda x: x
-        super().__init__(sorted(xs, key=key))
+            super().__init__(sorted(xs))
+        else:
+            super().__init__(sorted(xs, key=key))

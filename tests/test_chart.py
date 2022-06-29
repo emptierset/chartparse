@@ -375,6 +375,10 @@ class TestNotesPerSecond(object):
     def test_from_note_events(self, bare_chart, events, want):
         assert bare_chart._notes_per_second_from_note_events(events) == want
 
+    print(pytest.default_tick)
+    print(type(pytest.default_tick))
+    assert False
+
     note_event1 = NoteEvent(0, pytest.default_note, timestamp=datetime.timedelta(seconds=5))
     note_event2 = NoteEvent(1, pytest.default_note, timestamp=datetime.timedelta(seconds=15))
     note_event3 = NoteEvent(2, pytest.default_note, timestamp=datetime.timedelta(seconds=25))

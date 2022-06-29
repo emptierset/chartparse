@@ -39,7 +39,7 @@ def basic_immutable_sorted_list(basic_list):
 
 class TestImmutableList(object):
     def test_init(self, basic_immutable_list, basic_list):
-        assert basic_immutable_list._list == basic_list
+        assert basic_immutable_list._seq == basic_list
 
     def test_getitem(self, basic_immutable_list, basic_list):
         assert basic_immutable_list[0] == basic_list[0]
@@ -58,27 +58,11 @@ class TestImmutableList(object):
         assert basic_immutable_list == alternate_basic_immutable_list
         assert alternate_basic_immutable_list == basic_immutable_list
 
-        with pytest.raises(NotImplementedError):
-            basic_immutable_list == 1
+        assert basic_immutable_list != 1
+        assert 1 != basic_immutable_list
 
     def test_eq_(self, basic_immutable_list, basic_list):
         assert basic_immutable_list == basic_list
-
-    def test_append(self, basic_immutable_list):
-        with pytest.raises(NotImplementedError):
-            basic_immutable_list.append(4)
-
-    def test_pop(self, basic_immutable_list, basic_list):
-        with pytest.raises(NotImplementedError):
-            basic_immutable_list.pop()
-
-    def test_setitem(self, basic_immutable_list, basic_list):
-        with pytest.raises(NotImplementedError):
-            basic_immutable_list[0] = 99
-
-    def test_delitem(self, basic_immutable_list, basic_list):
-        with pytest.raises(NotImplementedError):
-            del basic_immutable_list[0]
 
 
 class TestImmutableSortedList(object):

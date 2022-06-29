@@ -1,29 +1,36 @@
+from __future__ import annotations
+
+from collections.abc import Callable, Iterable
+
 from chartparse.datastructures import ImmutableSortedList
+from chartparse.event import Event
 from chartparse.exceptions import RegexFatalNotMatchError
 
 
 class EventTrack(object):
-    """Mixes in a method for parsing :class:`~chartparse.event.Event` objects from chart lines."""
+    """Mixes in a method for parsing ``Event`` objects from chart lines."""
 
     # TODO: Rename to _parse_events_from_chart_lines. Plural noun is obviously an iterable.
     @staticmethod
-    def _parse_events_from_iterable(iterable, from_chart_line_fn):
-        """Attempt to obtain an :class:`~chartparse.event.Event` from each element of ``iterable``.
+    def _parse_events_from_iterable(
+        chart_lines: Iterable[str], from_chart_line_fn: Callable[[str], Event]
+    ) -> ImmutableSortedList[Event]:
+        """Attempt to obtain an ``Event`` from each element of ``chart_lines``.
 
         Args:
-            iterable (list): Any iterable.
-            from_chart_line_fn (function): A function that, when applied to each element of
-                ``iterable``, either returns a :class:`~chartparse.event.Event` or raises
+            chart_lines: An iterable of strings, most likely from a Moonscraper ``.chart``.
+            from_chart_line_fn: A function that, when applied to each element of ``chart_lines``,
+                either returns a :class:`~chartparse.event.Event` or raises
                 :class:`~chartparse.exceptions.RegexFatalNotMatchError`.
 
         Returns:
             A :class:`~chartparse.datastructures.ImmutableSortedList` of
             :class:`~chartparse.event.Event` objects obtained by calling ``from_chart_line_fn`` on
-            each element of ``iterable``.
+            each element of ``chart_lines``.
         """
 
         events = []
-        for line in iterable:
+        for line in chart_lines:
             try:
                 event = from_chart_line_fn(line)
             except RegexFatalNotMatchError:
