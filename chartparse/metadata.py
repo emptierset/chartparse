@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Callable, Iterable
+from typing import Any, ClassVar, Pattern, Type, TypeVar
 
 import inflection
 
 from chartparse.exceptions import RegexFatalNotMatchError
 from chartparse.util import DictPropertiesEqMixin
+
+MetadataT = TypeVar("MetadataT", bound="Metadata")
 
 
 # TODO: Parse known attributes, rather than allow arbitrary injections.
@@ -44,7 +48,7 @@ class Metadata(DictPropertiesEqMixin):
 
     # Known fields in the [Song] section and the functions that should be used
     # to process them.
-    _field_transformers = {
+    _field_transformers: ClassVar[dict[str, Callable[[Any], Any]]] = {
         "Name": str,
         "Artist": str,
         "Charter": str,
@@ -61,26 +65,24 @@ class Metadata(DictPropertiesEqMixin):
         "MusicStream": str,
     }
 
-    _regex = r"^\s*?([A-Za-z0-9]+?)\s=\s\"?(.*?)\"?\s*?$"
-    _regex_prog = re.compile(_regex)
+    _regex: str = r"^\s*?([A-Za-z0-9]+?)\s=\s\"?(.*?)\"?\s*?$"
+    _regex_prog: Pattern[str] = re.compile(_regex)
 
-    def __init__(self, injections):
+    def __init__(self, injections: dict[str, Any]) -> None:
         """Initializes instance attributes from a dictionary.
 
         Args:
-            injections (dict[str, Any]): A dictionary mapping instance attribute names to values of
-                any type.
+            injections: A dictionary mapping instance attribute names to their values.
         """
         for field_name, value in injections.items():
             setattr(self, field_name, value)
 
     @classmethod
-    def from_chart_lines(cls, lines):
-        """Initializes instance attributes by parsing a list of strings.
+    def from_chart_lines(cls: Type[MetadataT], lines: Iterable[str]) -> MetadataT:
+        """Initializes instance attributes by parsing an iterable of strings.
 
         Args:
-            lines (list[str]): An iterable of a series of strings, most likely from a
-                Moonscraper ``.chart``.
+            lines: Most likely from a Moonscraper ``.chart``.
         """
         injections = dict()
         for line in lines:
@@ -98,5 +100,5 @@ class Metadata(DictPropertiesEqMixin):
             injections[pythonic_field_name] = value_to_set
         return cls(injections)
 
-    def __repr__(self):  # pragma: no cover
+    def __repr__(self) -> str:  # pragma: no cover
         return str(self.__dict__)

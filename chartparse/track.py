@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable
 
 from chartparse.datastructures import ImmutableSortedList
-from chartparse.event import Event
+from chartparse.event import Event, EventT
 from chartparse.exceptions import RegexFatalNotMatchError
 
 
@@ -13,8 +13,8 @@ class EventTrack(object):
     # TODO: Rename to _parse_events_from_chart_lines. Plural noun is obviously an iterable.
     @staticmethod
     def _parse_events_from_iterable(
-        chart_lines: Iterable[str], from_chart_line_fn: Callable[[str], Event]
-    ) -> ImmutableSortedList[Event]:
+        chart_lines: Iterable[str], from_chart_line_fn: Callable[[str], EventT]
+    ) -> ImmutableSortedList[EventT]:
         """Attempt to obtain an ``Event`` from each element of ``chart_lines``.
 
         Args:

@@ -248,11 +248,6 @@ class TestInstrumentTrack(object):
         assert bare_instrument_track.note_events == want_note_events
 
 
-class TestSustainedEvent(object):
-    def test_init(self, sustained_event):
-        assert sustained_event.sustain == pytest.default_sustain
-
-
 class TestNoteEvent(object):
     def test_init(self, note_event_with_all_optionals_set):
         assert note_event_with_all_optionals_set.note == pytest.default_note

@@ -18,7 +18,7 @@ class ImmutableList(Sequence[T]):
     def __getitem__(self, index: slice) -> Sequence[T]:
         ...
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: Union[int, slice]) -> Union[T, Sequence[T]]:
         return self._seq[index]
 
     def __iter__(self) -> Iterator[T]:
@@ -44,7 +44,8 @@ class ImmutableList(Sequence[T]):
         return NotImplemented
 
 
-class ImmutableSortedList(ImmutableList, Sequence[T]):
+# TODO: Does this class actually need to inherit from Sequence[T]?
+class ImmutableSortedList(ImmutableList[T]):
     @overload
     def __init__(self, xs: Sequence[CT]):
         ...
@@ -55,6 +56,6 @@ class ImmutableSortedList(ImmutableList, Sequence[T]):
 
     def __init__(self, xs, key=None):
         if key is None:
-            super().__init__(sorted(xs))
+            super().__init__(list(sorted(xs)))
         else:
-            super().__init__(sorted(xs, key=key))
+            super().__init__(list(sorted(xs, key=key)))

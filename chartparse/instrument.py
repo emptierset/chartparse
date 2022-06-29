@@ -5,7 +5,7 @@ import datetime
 import re
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
-from typing import ClassVar, Literal, Optional, Pattern, Union
+from typing import Annotated, ClassVar, Literal, Optional, Pattern, Type, TypeVar, Union
 
 from chartparse.datastructures import ImmutableSortedList
 from chartparse.enums import Difficulty, Instrument, Note
@@ -13,6 +13,8 @@ from chartparse.event import Event
 from chartparse.exceptions import RegexFatalNotMatchError
 from chartparse.track import EventTrack
 from chartparse.util import DictPropertiesEqMixin
+
+InstrumentTrackT = TypeVar("InstrumentTrackT", bound="InstrumentTrack")
 
 
 class InstrumentTrack(EventTrack, DictPropertiesEqMixin):
@@ -53,11 +55,11 @@ class InstrumentTrack(EventTrack, DictPropertiesEqMixin):
 
     @classmethod
     def from_chart_lines(
-        cls,
+        cls: Type[InstrumentTrackT],
         instrument: Instrument,
         difficulty: Difficulty,
         iterator_getter: Callable[[], Iterable[str]],
-    ) -> InstrumentTrack:
+    ) -> InstrumentTrackT:
         """Initializes instance attributes by parsing an iterable of strings.
 
         Args:
@@ -169,37 +171,28 @@ class StarPowerData(DictPropertiesEqMixin):
     is_end_of_phrase: bool
 
 
-SustainListT = list[Optional[int]]
-SustainT = Union[int, SustainListT]
+SustainListT = Annotated[list[Optional[int]], 5]
+"""A list representing the sustain value of each note lane.
+
+If no more than one unique ``int`` appears in the list, it can be collapsed to that ``int``.
+"""
+
+ComplexNoteSustainT = Union[int, SustainListT]
+"""A sustain value that can capture multiple coinciding notes with different sustain values.
+
+If this value is an ``int``, it means that all note lanes at this tick value are sustained for the
+same length of time.
+"""
 
 
-# TODO: Rename to `SustainableEvent`, because it might have a `sustain` value of 0.
-class SustainedEvent(Event):
-    """An :class:`~chartparse.event.Event` with a ``sustain`` value.
-
-    This is typically used only as a base class for more specialized subclasses. It implements an
-    attractive ``__str__`` representation.
-
-    Attributes:
-        sustain: The number of ticks for which this event is sustained. This event does _not_
-            overlap events at ``tick + sustain``; it ends immediately before that tick.
-    """
-
-    def __init__(self, tick: int, sustain: SustainT, timestamp: Optional[datetime.timedelta] = None):
-        super().__init__(tick, timestamp=timestamp)
-        self.sustain = sustain
-
-    def __str__(self) -> str:  # pragma: no cover
-        to_join = [super().__str__()]
-        to_join.append(f": sustain={self.sustain}")
-        return "".join(to_join)
-
-
-class NoteEvent(SustainedEvent):
+class NoteEvent(Event):
     """An event representing all of the notes at a particular tick."""
 
     note: Note
     """The note lane(s) that are active."""
+
+    sustain: ComplexNoteSustainT
+    """Information about this note event's sustain value."""
 
     is_forced: bool
     """Whether the note's HOPO value is manually inverted."""
@@ -227,16 +220,16 @@ class NoteEvent(SustainedEvent):
         self,
         tick: int,
         note: Note,
-        timestamp: datetime.timedelta = None,
-        sustain: SustainT = 0,
+        timestamp: Optional[datetime.timedelta] = None,
+        sustain: ComplexNoteSustainT = 0,
         is_forced: bool = False,
         is_tap: bool = False,
         star_power_data: Optional[StarPowerData] = None,
-    ):
+    ) -> None:
         self._validate_sustain(sustain, note)
-        refined_sustain = self._refine_sustain(sustain)
-        super().__init__(tick, refined_sustain, timestamp=timestamp)
+        super().__init__(tick, timestamp=timestamp)
         self.note = note
+        self.sustain = self._refine_sustain(sustain)
         # TODO: Refactor is_forced to is_hopo. We can calculate whether any given note is a hopo,
         # so a user probably does not need to know whether a note was forced to be a hopo.
         self.is_forced = is_forced
@@ -244,7 +237,7 @@ class NoteEvent(SustainedEvent):
         self.star_power_data = star_power_data
 
     @staticmethod
-    def _validate_sustain(sustain: SustainT, note: Note) -> None:
+    def _validate_sustain(sustain: ComplexNoteSustainT, note: Note) -> None:
         if isinstance(sustain, int):
             NoteEvent._validate_int_sustain(sustain)
         elif isinstance(sustain, list):
@@ -258,7 +251,7 @@ class NoteEvent(SustainedEvent):
             raise ValueError(f"int sustain {sustain} must be positive.")
 
     @staticmethod
-    def _validate_list_sustain(sustain: list, note: Note) -> None:
+    def _validate_list_sustain(sustain: SustainListT, note: Note) -> None:
         if len(sustain) != len(note.value):
             raise ValueError(f"list sustain {sustain} must have length {len(note.value)}")
         for note_lane_value, sustain_lane_value in zip(note.value, sustain):
@@ -271,7 +264,7 @@ class NoteEvent(SustainedEvent):
                 )
 
     @staticmethod
-    def _refine_sustain(sustain: SustainT) -> SustainT:
+    def _refine_sustain(sustain: ComplexNoteSustainT) -> ComplexNoteSustainT:
         if isinstance(sustain, list):
             if all(d is None for d in sustain):
                 return 0
@@ -282,6 +275,7 @@ class NoteEvent(SustainedEvent):
 
     def __str__(self) -> str:  # pragma: no cover
         to_join = [super().__str__()]
+        to_join.append(f": sustain={self.sustain}")
         to_join.append(f": {self.note}")
 
         if self.star_power_data:
@@ -298,10 +292,17 @@ class NoteEvent(SustainedEvent):
         return "".join(to_join)
 
 
-class SpecialEvent(SustainedEvent):
+SpecialEventT = TypeVar("SpecialEventT", bound="SpecialEvent")
+
+
+class SpecialEvent(Event):
     """Provides a regex template for parsing 'S' style chart lines.
 
     This is typically used only as a base class for more specialized subclasses.
+
+    Attributes:
+        sustain: The number of ticks for which this event is sustained. This event does _not_
+            overlap events at ``tick + sustain``; it ends immediately before that tick.
     """
 
     # Match 1: Tick
@@ -311,15 +312,18 @@ class SpecialEvent(SustainedEvent):
     _regex: str
     _regex_prog: Pattern[str]
 
-    def __init__(self, tick: int, sustain: int, timestamp: Optional[datetime.timedelta] = None):
-        super().__init__(tick, sustain, timestamp=timestamp)
+    def __init__(
+        self, tick: int, sustain: int, timestamp: Optional[datetime.timedelta] = None
+    ) -> None:
+        super().__init__(tick, timestamp=timestamp)
+        self.sustain = sustain
 
     @classmethod
-    def from_chart_line(cls, line: str) -> Event:
+    def from_chart_line(cls: Type[SpecialEventT], line: str) -> SpecialEventT:
         """Attempt to obtain an instance of this object from a string.
 
         Args:
-            line (str): A string. Most likely a line from a Moonscraper ``.chart``.
+            line: Most likely a line from a Moonscraper ``.chart``.
 
         Returns:
             An an instance of this object parsed from ``line``.
@@ -333,6 +337,11 @@ class SpecialEvent(SustainedEvent):
             raise RegexFatalNotMatchError(cls._regex, line)
         tick, sustain = int(m.group(1)), int(m.group(2))
         return cls(tick, sustain)
+
+    def __str__(self) -> str:  # pragma: no cover
+        to_join = [super().__str__()]
+        to_join.append(f": sustain={self.sustain}")
+        return "".join(to_join)
 
 
 class StarPowerEvent(SpecialEvent):
