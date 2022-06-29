@@ -4,7 +4,8 @@ from dataclasses import dataclass
 
 from chartparse.datastructures import ImmutableSortedList
 from chartparse.enums import Note
-from chartparse.event import Event, FromChartLineMixin
+from chartparse.event import Event
+from chartparse.exceptions import RegexFatalNotMatchError
 from chartparse.track import EventTrack
 from chartparse.util import DictPropertiesEqMixin
 
@@ -152,8 +153,7 @@ class StarPowerData(DictPropertiesEqMixin):
 
 
 # TODO: Rename to `SustainableEvent`, because it might have a `sustain` value of 0.
-# TODO: Mixin FromChartLineMixin to subclasses that actually use it, since NoteEvent doesn't.
-class SustainedEvent(Event, FromChartLineMixin):
+class SustainedEvent(Event):
     """An :class:`~chartparse.event.Event` with a ``sustain`` value.
 
     This is typically used only as a base class for more specialized subclasses. It implements an
@@ -167,12 +167,6 @@ class SustainedEvent(Event, FromChartLineMixin):
     def __init__(self, tick, sustain, timestamp=None):
         super().__init__(tick, timestamp=timestamp)
         self.sustain = sustain
-
-    @classmethod
-    def from_chart_line(cls, line):
-        event = super().from_chart_line(line)
-        event.sustain = int(event.sustain)
-        return event
 
     def __str__(self):  # pragma: no cover
         to_join = [super().__str__()]
@@ -258,17 +252,6 @@ class NoteEvent(SustainedEvent):
                 return first_non_none_sustain
         return sustain
 
-    def from_chart_line(self):
-        """Not implemented.
-
-        Raises:
-            NotImplementedError: If called.
-        """
-
-        raise NotImplementedError(
-            f"'{type(self).__name__}' cannot be fully created from a single chart line."
-        )
-
     def __str__(self):  # pragma: no cover
         to_join = [super().__str__()]
         to_join.append(f": {self.note}")
@@ -299,6 +282,26 @@ class SpecialEvent(SustainedEvent):
 
     def __init__(self, tick, sustain, timestamp=None):
         super().__init__(tick, sustain, timestamp=timestamp)
+
+    @classmethod
+    def from_chart_line(cls, line):
+        """Attempt to obtain an instance of this object from a string.
+
+        Args:
+            line (str): A string. Most likely a line from a Moonscraper ``.chart``.
+
+        Returns:
+            An an instance of this object parsed from ``line``.
+
+        Raises:
+            RegexFatalNotMatchError: If the mixed-into class' ``_regex`` does not match ``line``.
+        """
+
+        m = cls._regex_prog.match(line)
+        if not m:
+            raise RegexFatalNotMatchError(cls._regex, line)
+        tick, sustain = int(m.group(1)), int(m.group(2))
+        return cls(tick, sustain)
 
 
 class StarPowerEvent(SpecialEvent):

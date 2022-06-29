@@ -1,6 +1,7 @@
 import re
 
-from chartparse.event import Event, FromChartLineMixin
+from chartparse.event import Event
+from chartparse.exceptions import RegexFatalNotMatchError
 from chartparse.track import EventTrack
 from chartparse.util import DictPropertiesEqMixin
 
@@ -56,7 +57,7 @@ class GlobalEventsTrack(EventTrack, DictPropertiesEqMixin):
         return cls(text_events, section_events, lyric_events)
 
 
-class GlobalEvent(Event, FromChartLineMixin):
+class GlobalEvent(Event):
     """An event in a :class:`~chartparse.globalevents.GlobalEventsTrack`.
 
     This is typically used only as a base class for more specialized subclasses. It implements an
@@ -64,7 +65,7 @@ class GlobalEvent(Event, FromChartLineMixin):
     to fill in.
 
     Subclasses should define ``_regex_prog`` and can be instantiated with their ``from_chart_line``
-    method (mixed-in from :class:`~chartparse.event.FromChartLineMixin`).
+    method.
 
     Attributes:
         value (str): The data that this event stores.
@@ -77,6 +78,26 @@ class GlobalEvent(Event, FromChartLineMixin):
     def __init__(self, tick, value, timestamp=None):
         super().__init__(tick, timestamp=timestamp)
         self.value = value
+
+    @classmethod
+    def from_chart_line(cls, line):
+        """Attempt to obtain an instance of this object from a string.
+
+        Args:
+            line (str): A string. Most likely a line from a Moonscraper ``.chart``.
+
+        Returns:
+            An an instance of this object parsed from ``line``.
+
+        Raises:
+            RegexFatalNotMatchError: If the mixed-into class' ``_regex`` does not match ``line``.
+        """
+
+        m = cls._regex_prog.match(line)
+        if not m:
+            raise RegexFatalNotMatchError(cls._regex, line)
+        tick, value = int(m.group(1)), m.group(2)
+        return cls(tick, value)
 
     def __str__(self):  # pragma: no cover
         to_join = [super().__str__()]
