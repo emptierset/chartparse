@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import datetime
-from typing import Any, Optional, Pattern, Protocol, Type, TypeVar
+from typing import Optional, TypeVar
 
 from chartparse.util import DictPropertiesEqMixin, DictReprMixin
 
@@ -19,8 +19,9 @@ class Event(DictPropertiesEqMixin, DictReprMixin):
     tick: int
     """The tick at which this event occurs."""
 
+    # TODO: Make this nonoptional.
     timestamp: Optional[datetime.timedelta]
-    """The timestamp at which this event occurs. Optional as it may need to be calculated later."""
+    """The timestamp when this event occurs. Optional, as it may need to be calculated later."""
 
     def __init__(self, tick: int, timestamp: Optional[datetime.timedelta] = None) -> None:
         self.tick = tick

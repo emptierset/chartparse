@@ -1,14 +1,21 @@
 chartparse package
 ==================
 
-Submodules
-----------
-
 chartparse.chart module
 -----------------------
 
 .. automodule:: chartparse.chart
    :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
+
+chartparse.datastructures module
+--------------------------------
+
+.. automodule:: chartparse.datastructures
+   :members:
+   :inherited-members:
    :undoc-members:
    :show-inheritance:
 
@@ -17,7 +24,7 @@ chartparse.enums module
 
 .. automodule:: chartparse.enums
    :members:
-   :member-order: bysource
+   :inherited-members:
    :undoc-members:
    :show-inheritance:
 
@@ -43,6 +50,16 @@ chartparse.globalevents module
 
 .. automodule:: chartparse.globalevents
    :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
+
+chartparse.hints module
+------------------------------
+
+.. automodule:: chartparse.hints
+   :members:
+   :inherited-members:
    :undoc-members:
    :show-inheritance:
 
@@ -51,6 +68,7 @@ chartparse.instrument module
 
 .. automodule:: chartparse.instrument
    :members:
+   :inherited-members:
    :undoc-members:
    :show-inheritance:
 
@@ -59,15 +77,7 @@ chartparse.metadata module
 
 .. automodule:: chartparse.metadata
    :members:
-   :member-order: bysource
-   :undoc-members:
-   :show-inheritance:
-
-chartparse.playground module
-----------------------------
-
-.. automodule:: chartparse.playground
-   :members:
+   :inherited-members:
    :undoc-members:
    :show-inheritance:
 
@@ -76,6 +86,7 @@ chartparse.sync module
 
 .. automodule:: chartparse.sync
    :members:
+   :inherited-members:
    :undoc-members:
    :show-inheritance:
 
@@ -84,6 +95,7 @@ chartparse.track module
 
 .. automodule:: chartparse.track
    :members:
+   :inherited-members:
    :private-members:
    :undoc-members:
    :show-inheritance:
@@ -93,13 +105,6 @@ chartparse.util module
 
 .. automodule:: chartparse.util
    :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: chartparse
-   :members:
+   :inherited-members:
    :undoc-members:
    :show-inheritance:

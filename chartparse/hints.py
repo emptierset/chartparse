@@ -1,10 +1,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from collections.abc import Sequence
 from typing import Any, Protocol, TypeVar
-
-from typing_extensions import TypeGuard
 
 
 class Comparable(Protocol):
@@ -16,4 +13,6 @@ class Comparable(Protocol):
 
 
 T = TypeVar("T")
-CT = TypeVar("CT", bound=Comparable)
+
+ComparableT = TypeVar("ComparableT", bound=Comparable)
+"""A type for comparable values."""

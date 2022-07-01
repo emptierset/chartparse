@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import datetime
 import re
-from collections.abc import Sequence, Callable, Iterable
-from typing import TypeVar, Type, Pattern, Optional
+from collections.abc import Callable, Iterable, Sequence
+from typing import Optional, Pattern, Type, TypeVar
 
 from chartparse.event import Event
 from chartparse.exceptions import RegexFatalNotMatchError
@@ -17,10 +17,10 @@ class SyncTrack(EventTrack, DictPropertiesEqMixin):
     """All of a :class:`~chartparse.chart.Chart` object's tempo-mapping related events."""
 
     time_signature_events: Sequence[TimeSignatureEvent]
-    """A ``SyncTrack``'s ``TimeSignatureEvent``\\ s"""
+    """A ``SyncTrack``'s ``TimeSignatureEvent``\\ s."""
 
     bpm_events: Sequence[BPMEvent]
-    """A ``SyncTrack``'s ``BPMEvent``\\ s"""
+    """A ``SyncTrack``'s ``BPMEvent``\\ s."""
 
     def __init__(
         self, time_signature_events: Sequence[TimeSignatureEvent], bpm_events: Sequence[BPMEvent]
@@ -47,12 +47,14 @@ class SyncTrack(EventTrack, DictPropertiesEqMixin):
         self.bpm_events = bpm_events
 
     @classmethod
-    def from_chart_lines(cls: Type[SyncTrackT], iterator_getter: Callable[[], Iterable[str]]) -> SyncTrackT:
+    def from_chart_lines(
+        cls: Type[SyncTrackT], iterator_getter: Callable[[], Iterable[str]]
+    ) -> SyncTrackT:
         """Initializes instance attributes by parsing an iterable of strings.
 
         Args:
             iterator_getter: The iterable of strings returned by this is most likely from a
-                Moonscraper ``.chart``. Must be a function so the strings could be iterated over
+                Moonscraper ``.chart``. Must be a function so the strings can be iterated over
                 multiple times, if necessary.
 
         Returns:
@@ -89,7 +91,7 @@ class SyncTrack(EventTrack, DictPropertiesEqMixin):
         for idx in range(start_idx, len(self.bpm_events)):
             is_last_bpm_event = idx == len(self.bpm_events) - 1
             next_bpm_event = self.bpm_events[idx + 1] if not is_last_bpm_event else None
-            if is_last_bpm_event is not None or next_bpm_event.tick > tick:
+            if is_last_bpm_event or (next_bpm_event is not None and next_bpm_event.tick > tick):
                 return idx
         raise ValueError(f"there are no BPMEvents at or after index {start_idx} in bpm_events")
 
@@ -112,8 +114,13 @@ class TimeSignatureEvent(Event):
     _regex: str = r"^\s*?(\d+?) = TS (\d+?)(?: (\d+?))?\s*?$"
     _regex_prog: Pattern[str] = re.compile(_regex)
 
-    def __init__(self, tick: int, upper_numeral: int, lower_numeral: int, timestamp:
-                 Optional[datetime.timedelta] = None):
+    def __init__(
+        self,
+        tick: int,
+        upper_numeral: int,
+        lower_numeral: int,
+        timestamp: Optional[datetime.timedelta] = None,
+    ):
         """Initializes all instance attributes."""
 
         super().__init__(tick, timestamp=timestamp)

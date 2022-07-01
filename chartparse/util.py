@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Sequence
 from enum import Enum
-from typing import Any, Generator, TypeVar
+from typing import Any
 
 from chartparse.hints import T
 
@@ -13,7 +13,7 @@ class AllValuesGettableEnum(Enum):
 
     # TODO: Return an ImmutableList instead. This is an abuse of tuples.
     @classmethod
-    def all_values(cls) -> tuple[Any, ...]:
+    def all_values(cls) -> tuple[T, ...]:
         """Returns a tuple containing all Enum values.
 
         Returns:
@@ -40,13 +40,13 @@ class DictReprMixin(object):
 
 # TODO: Move this to chart.py and make it private.
 def iterate_from_second_elem(xs: Sequence[T]) -> Iterator[T]:
-    """Given an iterable xs, return an iterator that skips xs[0].
+    """Given an iterable ``xs``, return an iterator that skips ``xs[0]``.
 
     Args:
         xs: Any non-exhausted iterable.
 
     Returns:
-        A iterator that iterates over xs, ignoring the first element.
+        A iterator that iterates over ``xs``, ignoring the first element.
     """
     it = iter(xs)
     next(it)

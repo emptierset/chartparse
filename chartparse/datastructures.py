@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterator, Sequence
-from typing import Any, Generic, Optional, TypeVar, Union, overload
+from typing import Union, overload
 
-from chartparse.hints import CT, T
+from chartparse.hints import ComparableT, T
 
 
+# TODO: Document.
 class ImmutableList(Sequence[T]):
+    """A ``list`` equivalent that cannot be mutated."""
+
     def __init__(self, xs: Sequence[T]):
         self._seq = xs
 
@@ -44,14 +47,16 @@ class ImmutableList(Sequence[T]):
         return NotImplemented
 
 
-# TODO: Does this class actually need to inherit from Sequence[T]?
+# TODO: Document.
 class ImmutableSortedList(ImmutableList[T]):
+    """A ``list`` equivalent that cannot be mutated and is sorted during initialization."""
+
     @overload
-    def __init__(self, xs: Sequence[CT]):
+    def __init__(self, xs: Sequence[ComparableT]):
         ...
 
     @overload
-    def __init__(self, xs: Sequence[T], key: Callable[[T], CT]):
+    def __init__(self, xs: Sequence[T], key: Callable[[T], ComparableT]):
         ...
 
     def __init__(self, xs, key=None):

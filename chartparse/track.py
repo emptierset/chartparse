@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable
 
 from chartparse.datastructures import ImmutableSortedList
-from chartparse.event import Event, EventT
+from chartparse.event import EventT
 from chartparse.exceptions import RegexFatalNotMatchError
 
 
