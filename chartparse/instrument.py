@@ -5,7 +5,7 @@ import datetime
 import re
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
-from typing import Annotated, ClassVar, Literal, Optional, Pattern, Type, TypeVar, Union
+from typing import ClassVar, List, Optional, Pattern, Type, TypeVar, Union
 
 from chartparse.datastructures import ImmutableSortedList
 from chartparse.enums import Difficulty, Instrument, Note
@@ -64,7 +64,7 @@ class InstrumentTrack(EventTrack, DictPropertiesEqMixin):
 
         Args:
             iterator_getter: The iterable of strings returned by this strings is most likely from a
-                Moonscraper ``.chart``. Must be a function so the strings could be iterated over
+                Moonscraper ``.chart``. Must be a function so the strings can be iterated over
                 multiple times, if necessary.
 
         Returns:
@@ -171,11 +171,8 @@ class StarPowerData(DictPropertiesEqMixin):
     is_end_of_phrase: bool
 
 
-SustainListT = Annotated[list[Optional[int]], 5]
-"""A list representing the sustain value of each note lane.
-
-If no more than one unique ``int`` appears in the list, it can be collapsed to that ``int``.
-"""
+SustainListT = List[Optional[int]]
+"""A 5-element list representing the sustain value of each note lane."""
 
 ComplexNoteSustainT = Union[int, SustainListT]
 """A sustain value that can capture multiple coinciding notes with different sustain values.
@@ -202,7 +199,7 @@ class NoteEvent(Event):
 
     star_power_data: Optional[StarPowerData]
     """Information associated with star power for this note.
-    
+
     If this is ``None``, then the note is not a star power note.
     """
 

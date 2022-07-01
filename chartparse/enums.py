@@ -34,7 +34,7 @@ class Instrument(AllValuesGettableEnum):
 
 # TODO: Move to instrument.py? <21-06-2022, emptyset> #
 class Note(enum.Enum):
-    """The note(s) to which a :class:`~chartparse.instrument.NoteEvent` corresponds."""
+    """The note lane(s) to which a :class:`~chartparse.instrument.NoteEvent` corresponds."""
 
     P = bytearray((0, 0, 0, 0, 0))
     G = bytearray((1, 0, 0, 0, 0))

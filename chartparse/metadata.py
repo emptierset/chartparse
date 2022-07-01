@@ -46,6 +46,9 @@ class Metadata(DictPropertiesEqMixin):
     ``MusicStream``.
     """
 
+    resolution: int
+    """The number of ticks for which a quarter note lasts."""
+
     # Known fields in the [Song] section and the functions that should be used
     # to process them.
     _field_transformers: ClassVar[dict[str, Callable[[Any], Any]]] = {
@@ -65,8 +68,8 @@ class Metadata(DictPropertiesEqMixin):
         "MusicStream": str,
     }
 
-    _regex: str = r"^\s*?([A-Za-z0-9]+?)\s=\s\"?(.*?)\"?\s*?$"
-    _regex_prog: Pattern[str] = re.compile(_regex)
+    _regex: ClassVar[str] = r"^\s*?([A-Za-z0-9]+?)\s=\s\"?(.*?)\"?\s*?$"
+    _regex_prog: ClassVar[Pattern[str]] = re.compile(_regex)
 
     def __init__(self, injections: dict[str, Any]) -> None:
         """Initializes instance attributes from a dictionary.

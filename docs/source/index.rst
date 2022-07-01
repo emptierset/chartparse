@@ -13,7 +13,6 @@ Welcome to chartparse's documentation!
    intro
    chartparse
    examples
-   modules
 
 Indices and tables
 ==================

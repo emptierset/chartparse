@@ -17,13 +17,13 @@ class GlobalEventsTrack(EventTrack, DictPropertiesEqMixin):
     """A :class:`~chartparse.chart.Chart`'s :class:`~chartparse.globalevents.GlobalEvent`\\ s."""
 
     text_events: Sequence[TextEvent]
-    """A ``GlobalEventTrack``'s ``TextEvent``\\ s"""
+    """A ``GlobalEventTrack``'s ``TextEvent``\\ s."""
 
     section_events: Sequence[SectionEvent]
-    """A ``GlobalEventTrack``'s ``SectionEvent``\\ s"""
+    """A ``GlobalEventTrack``'s ``SectionEvent``\\ s."""
 
     lyric_events: Sequence[LyricEvent]
-    """A ``GlobalEventTrack``'s ``LyricEvent``\\ s"""
+    """A ``GlobalEventTrack``'s ``LyricEvent``\\ s."""
 
     def __init__(
         self,
@@ -45,7 +45,7 @@ class GlobalEventsTrack(EventTrack, DictPropertiesEqMixin):
 
         Args:
             iterator_getter: The iterable of strings returned by this is most likely from a
-                Moonscraper ``.chart``. Must be a function so the strings could be iterated over
+                Moonscraper ``.chart``. Must be a function so the strings can be iterated over
                 multiple times, if necessary.
 
         Returns:

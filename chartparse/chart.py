@@ -4,11 +4,15 @@ import collections
 import datetime
 import itertools
 import re
+import typing
+from collections.abc import Callable, Iterable, Sequence
+from typing import Optional, TextIO
 
 from chartparse.enums import Difficulty, Instrument
+from chartparse.event import Event
 from chartparse.exceptions import RegexFatalNotMatchError
 from chartparse.globalevents import GlobalEventsTrack
-from chartparse.instrument import InstrumentTrack
+from chartparse.instrument import InstrumentTrack, NoteEvent
 from chartparse.metadata import Metadata
 from chartparse.sync import SyncTrack
 from chartparse.util import DictPropertiesEqMixin, iterate_from_second_elem
@@ -38,23 +42,14 @@ class Chart(DictPropertiesEqMixin):
 
     _required_metadata = ("resolution",)
 
-    def __init__(self, metadata, global_events_track, sync_track, instrument_tracks):
-        """Instantiates all instance attributes and populates event timestamps.
-
-        Args:
-            metadata (Metadata): Contains the chart's metadata, such as song title or charter name.
-                Must have a numeric ``resolution`` attribute.
-            global_events_track (GlobalEventsTrack): Contains the chart's
-                :class:`~chartparse.globalevents.TextEvent`,
-                :class:`~chartparse.globalevents.SectionEvent`, and
-                :class:`~chartparse.globalevents.LyricEvent` objects.
-            sync_track (SyncTrack): Contains the chart's sync-related events, including its
-                :class:`~chartparse.sync.TimeSignatureEvent` and :class:`~chartparse.sync.BPMEvent`
-                objects.
-            instrument_tracks (dict[Instrument, dict[Difficulty, InstrumentTrack]]): A nested
-                dictionary containing all of the chart's
-                :class:`~chartparse.instrument.InstrumentTrack` objects.
-        """
+    def __init__(
+        self,
+        metadata: Metadata,
+        global_events_track: GlobalEventsTrack,
+        sync_track: SyncTrack,
+        instrument_tracks: dict[Instrument, dict[Difficulty, InstrumentTrack]],
+    ) -> None:
+        """Instantiates all instance attributes and populates event timestamps."""
 
         if not all(hasattr(metadata, p) for p in self._required_metadata):
             raise ValueError(
@@ -80,20 +75,23 @@ class Chart(DictPropertiesEqMixin):
     _required_sections = ("Song", "SyncTrack")
     _instrument_track_name_to_instrument_difficulty_pair = {
         d + i: (Instrument(i), Difficulty(d))
-        for i, d in itertools.product(Instrument.all_values(), Difficulty.all_values())
+        for i, d in typing.cast(
+            Iterable[tuple[str, str]],
+            itertools.product(Instrument.all_values(), Difficulty.all_values()),
+        )
     }
 
     # TODO: Add from_filepath wrapper that takes a path rather than a file pointer.
     @classmethod
-    def from_file(cls, fp):
+    def from_file(cls, fp: TextIO) -> Chart:
         """Given a file object, parses its contents and returns a new Chart.
 
         Args:
-            fp (file): A file object that allows reading from a .chart file written by Moonscraper.
-                Must have a ``[Song]`` section and a ``[SyncTrack]`` section.
+            fp: A file object that allows reading from a .chart file written by Moonscraper.  Must
+                have a ``[Song]`` section and a ``[SyncTrack]`` section.
 
         Returns:
-            A Chart object, initialized with data parsed from ``fp``.
+            A ``Chart`` object, initialized with data parsed from ``fp``.
         """
         lines = fp.read().splitlines()
         sections = cls._find_sections(lines)
@@ -103,7 +101,9 @@ class Chart(DictPropertiesEqMixin):
                 f"required sections {cls._required_sections}"
             )
 
-        instrument_tracks = collections.defaultdict(dict)
+        instrument_tracks: collections.defaultdict[
+            Instrument, dict[Difficulty, InstrumentTrack]
+        ] = collections.defaultdict(dict)
         for section_name, iterator_getter in sections.items():
             # TODO: Don't hardcode the section names.
             if section_name == "Song":
@@ -127,9 +127,10 @@ class Chart(DictPropertiesEqMixin):
     _section_name_regex = r"^\[(.+?)\]$"
     _section_name_regex_prog = re.compile(_section_name_regex)
 
+    # TODO: Type alias dict[str, Callable[[], Iterable[str]]] to ChartLineGetter
     @classmethod
-    def _find_sections(cls, lines):
-        sections = dict()
+    def _find_sections(cls, lines: Iterable[str]) -> dict[str, Callable[[], Iterable[str]]]:
+        sections: dict[str, Callable[[], Iterable[str]]] = dict()
         curr_section_name = None
         curr_first_line_idx = None
         curr_last_line_idx = None
@@ -156,7 +157,7 @@ class Chart(DictPropertiesEqMixin):
                 curr_last_line_idx = None
         return sections
 
-    def _populate_bpm_event_timestamps(self):
+    def _populate_bpm_event_timestamps(self) -> None:
         self.sync_track.bpm_events[0].timestamp = datetime.timedelta(0)
         for i, cur_event in enumerate(
             iterate_from_second_elem(self.sync_track.bpm_events), start=1
@@ -164,11 +165,16 @@ class Chart(DictPropertiesEqMixin):
             prev_event = self.sync_track.bpm_events[i - 1]
             ticks_since_prev = cur_event.tick - prev_event.tick
             seconds_since_prev = self._seconds_from_ticks_at_bpm(ticks_since_prev, prev_event.bpm)
+            # TODO: Remove this None check once timestamp is no longer optional.
+            if prev_event.timestamp is None:
+                raise ValueError(
+                    f"BPMEvent at index {i-1} has `timestamp` of None, which should be impossible"
+                )
             cur_event.timestamp = prev_event.timestamp + datetime.timedelta(
                 seconds=seconds_since_prev
             )
 
-    def _populate_event_timestamps(self, events):
+    def _populate_event_timestamps(self, events: Iterable[Event]) -> None:
         proximal_bpm_event_idx = 0
         for i, event in enumerate(events):
             timestamp, proximal_bpm_event_idx = self._timestamp_at_tick(
@@ -177,7 +183,9 @@ class Chart(DictPropertiesEqMixin):
             )
             event.timestamp = timestamp
 
-    def _timestamp_at_tick(self, tick, start_bpm_event_index=0):
+    def _timestamp_at_tick(
+        self, tick: int, start_bpm_event_index: int = 0
+    ) -> tuple[datetime.timedelta, int]:
         proximal_bpm_event_idx = self.sync_track.idx_of_proximal_bpm_event(
             tick, start_idx=start_bpm_event_index
         )
@@ -189,10 +197,16 @@ class Chart(DictPropertiesEqMixin):
         timedelta_since_proximal_bpm_event = datetime.timedelta(
             seconds=seconds_since_proximal_bpm_event
         )
+        # TODO: Remove this None check once timestamp is no longer optional.
+        if proximal_bpm_event.timestamp is None:
+            raise ValueError(
+                f"proximal BPMEvent at index {proximal_bpm_event_idx} has `timestamp` of None, "
+                "which should be impossible"
+            )
         timestamp = proximal_bpm_event.timestamp + timedelta_since_proximal_bpm_event
         return timestamp, proximal_bpm_event_idx
 
-    def _seconds_from_ticks_at_bpm(self, ticks, bpm):
+    def _seconds_from_ticks_at_bpm(self, ticks: int, bpm: float) -> float:
         if bpm <= 0:
             raise ValueError(f"bpm {bpm} must be positive")
         ticks_per_minute = bpm * self.metadata.resolution
@@ -204,15 +218,15 @@ class Chart(DictPropertiesEqMixin):
     # notes.
     def notes_per_second(
         self,
-        instrument,
-        difficulty,
-        start_time=None,
-        end_time=None,
-        start_tick=None,
-        end_tick=None,
-        start_seconds=None,
-        end_seconds=None,
-    ):
+        instrument: Instrument,
+        difficulty: Difficulty,
+        start_time: Optional[datetime.timedelta] = None,
+        end_time: Optional[datetime.timedelta] = None,
+        start_tick: Optional[int] = None,
+        end_tick: Optional[int] = None,
+        start_seconds: Optional[float] = None,
+        end_seconds: Optional[float] = None,
+    ) -> float:
         """Returns the average notes per second from the first and last note in the interval.
 
         More specifically, this calculates the number of :class:`~chartparse.instrument.NoteEvent`
@@ -227,20 +241,19 @@ class Chart(DictPropertiesEqMixin):
         end of the track will be treated as the end of the interval.
 
         Args:
-            instrument (Instrument): The instrument for which the
+            instrument: The instrument for which the
                 :class:`~chartparse.instrument.InstrumentTrack` should be looked up.
-            difficulty (Difficulty): The instrument for which the
+            difficulty: The instrument for which the
                 :class:`~chartparse.instrument.InstrumentTrack` should be looked up.
-            start_time (datetime.timedelta, optional): The beginning of the interval.
-            end_time (datetime.timedelta, optional): The end of the interval.
-            start_tick (int, optional): The beginning of the interval.
-            end_tick (int, optional): The end of the interval.
-            start_seconds (int, optional): The beginning of the interval.
-            end_seconds (int, optional): The end of the interval.
+            start_time: The beginning of the interval.
+            end_time: The end of the interval.
+            start_tick: The beginning of the interval.
+            end_tick: The end of the interval.
+            start_seconds: The beginning of the interval.
+            end_seconds: The end of the interval.
 
         Returns:
-            The average notes per second value over the interval formed by the first and last note,
-            as a float.
+            The average notes per second value over the interval formed by the first and last note.
 
         Raises:
             ValueError: If more than one of ``start_time``, ``start_tick``, and ``start_seconds``
@@ -260,23 +273,34 @@ class Chart(DictPropertiesEqMixin):
             )
         all_start_args_none = num_of_start_args_none == len(start_args)
 
-        def event_is_eligible_by_tick(note):
-            lower_bound = start_tick if start_tick is not None else 0
-            upper_bound = end_tick if end_tick is not None else float("inf")
+        def event_is_eligible_by_tick(note: NoteEvent) -> bool:
+            # TODO: Remove this None check once timestamp is no longer optional.
+            if note.timestamp is None:
+                raise ValueError(f"NoteEvent at tick {note.tick} has `timestamp` of None")
+            lower_bound: int = start_tick if start_tick is not None else 0
+            upper_bound: float = end_tick if end_tick is not None else float("inf")
             return lower_bound <= note.tick <= upper_bound
 
-        def event_is_eligible_by_time(note):
-            lower_bound = start_time if start_time is not None else datetime.timedelta(0)
-            upper_bound = end_time if end_time is not None else _max_timedelta
+        def event_is_eligible_by_time(note: NoteEvent) -> bool:
+            # TODO: Remove this None check once timestamp is no longer optional.
+            if note.timestamp is None:
+                raise ValueError(f"NoteEvent at tick {note.tick} has `timestamp` of None")
+            lower_bound: datetime.timedelta = (
+                start_time if start_time is not None else datetime.timedelta(0)
+            )
+            upper_bound: datetime.timedelta = end_time if end_time is not None else _max_timedelta
             return lower_bound <= note.timestamp <= upper_bound
 
-        def event_is_eligible_by_seconds(note):
-            lower_bound = (
+        def event_is_eligible_by_seconds(note: NoteEvent) -> bool:
+            # TODO: Remove this None check once timestamp is no longer optional.
+            if note.timestamp is None:
+                raise ValueError(f"NoteEvent at tick {note.tick} has `timestamp` of None")
+            lower_bound: datetime.timedelta = (
                 datetime.timedelta(seconds=start_seconds)
                 if start_seconds is not None
                 else datetime.timedelta(0)
             )
-            upper_bound = (
+            upper_bound: datetime.timedelta = (
                 datetime.timedelta(seconds=end_seconds)
                 if end_seconds is not None
                 else _max_timedelta
@@ -309,9 +333,16 @@ class Chart(DictPropertiesEqMixin):
 
         return self._notes_per_second_from_note_events(note_events_to_consider)
 
+    # TODO: Rename to _notes_per_second_from_events.
     @staticmethod
-    def _notes_per_second_from_note_events(events):
+    def _notes_per_second_from_note_events(events: Sequence[NoteEvent]) -> float:
         first_event = events[0]
         last_event = events[-1]
+        # TODO: Remove this None check once timestamp is no longer optional.
+        if first_event.timestamp is None:
+            raise ValueError(f"NoteEvent at tick {first_event.tick} has `timestamp` of None")
+        # TODO: Remove this None check once timestamp is no longer optional.
+        if last_event.timestamp is None:
+            raise ValueError(f"NoteEvent at tick {last_event.tick} has `timestamp` of None")
         phrase_duration_seconds = (last_event.timestamp - first_event.timestamp).total_seconds()
         return len(events) / phrase_duration_seconds

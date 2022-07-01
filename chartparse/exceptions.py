@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-from typing import Pattern
-
 
 # TODO: Rename to RegexFatalNotMatchError <22-06-2022, emptyset> #
 class RegexFatalNotMatchError(Exception):
-    """Exception raised when a regex fatally failed to match."""
+    """Raised when a regex fatally failed to match."""
 
     def __init__(self, regex: str, s: str):
         self.regex = regex
