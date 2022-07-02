@@ -238,7 +238,7 @@ class InstrumentTrack(EventTrack, DictPropertiesEqMixin):
             elif note_index == InstrumentTrack._forced_instrument_track_index:
                 tick_to_is_forced[tick] = True
             else:  # pragma: no cover
-                # TODO: Log unhandled instrument track note index.
+                # TODO: [Logging] Log unhandled instrument track note index.
                 pass
 
         events = []
