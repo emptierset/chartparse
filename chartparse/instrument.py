@@ -190,7 +190,7 @@ class InstrumentTrack(EventTrack, DictPropertiesEqMixin):
             An ``InstrumentTrack`` parsed from the strings returned by ``iterator_getter``.
         """
 
-        note_events = cls._parse_note_events_from_iterable(iterator_getter())
+        note_events = cls._parse_note_events_from_chart_lines(iterator_getter())
         star_power_events = cls._parse_events_from_chart_lines(
             iterator_getter(), StarPowerEvent.from_chart_line
         )
@@ -204,9 +204,8 @@ class InstrumentTrack(EventTrack, DictPropertiesEqMixin):
             f"Star power phrase count: {len(self.star_power_events)}"
         )
 
-    # TODO: Rename to _parse_note_events_from_chart_lines.
     @staticmethod
-    def _parse_note_events_from_iterable(
+    def _parse_note_events_from_chart_lines(
         chart_lines: Iterable[str],
     ) -> ImmutableSortedList[NoteEvent]:
         tick_to_note_array: collections.defaultdict[int, bytearray] = collections.defaultdict(
