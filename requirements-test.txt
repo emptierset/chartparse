@@ -10,3 +10,6 @@ codecov
 mypy
 gitchangelog
 mkdocs
+sphinx-toolbox
+sphinx-rtd-theme
+sphinx
