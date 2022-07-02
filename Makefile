@@ -35,8 +35,8 @@ lint:             ## Run pep8, black, mypy linters.
 	# Ignored rules in flake8:
 	# E731 (https://www.flake8rules.com/rules/E731.html):
 	$(ENV_PREFIX)flake8 --extend-ignore=E731 --max-line-length 99 chartparse/ tests/
-	$(ENV_PREFIX)black -l 99 --check chartparse/
-	$(ENV_PREFIX)black -l 99 --check tests/
+	$(ENV_PREFIX)black -l 99 chartparse/
+	$(ENV_PREFIX)black -l 99 tests/
 	$(ENV_PREFIX)mypy --ignore-missing-imports chartparse/
 
 .PHONY: mypy
