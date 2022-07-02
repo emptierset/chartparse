@@ -2,18 +2,18 @@ from __future__ import annotations
 
 import enum
 
+from chartparse.datastructures import ImmutableList
 from chartparse.hints import T
 
 
 class AllValuesGettableEnum(enum.Enum):
     """A wrapper for ``Enum`` that adds a method for returning all enum values."""
 
-    # TODO: Return an ImmutableList instead. This is an abuse of tuples.
     @classmethod
-    def all_values(cls) -> tuple[T, ...]:
-        """Returns a tuple containing all Enum values.
+    def all_values(cls) -> ImmutableList[T]:
+        """Returns all Enum values.
 
         Returns:
-            A tuple containing all Enum values.
+            An :class:`~chartparse.datastructures.ImmutableList` containing all Enum values.
         """
-        return tuple(c.value for c in cls)
+        return ImmutableList([c.value for c in cls])

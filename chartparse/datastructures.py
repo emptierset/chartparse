@@ -10,6 +10,7 @@ from chartparse.hints import ComparableT, T
 class ImmutableList(Sequence[T]):
     """A ``list`` equivalent that cannot be mutated."""
 
+    # TODO: Allow ingesting generators.
     def __init__(self, xs: Sequence[T]):
         self._seq = xs
 
