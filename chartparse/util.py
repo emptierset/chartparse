@@ -1,24 +1,8 @@
 from __future__ import annotations
 
 from collections.abc import Iterator, Sequence
-from enum import Enum
 
 from chartparse.hints import T
-
-
-# TODO: Move to enums.py.
-class AllValuesGettableEnum(Enum):
-    """A wrapper for ``Enum`` that adds a method for returning all enum values."""
-
-    # TODO: Return an ImmutableList instead. This is an abuse of tuples.
-    @classmethod
-    def all_values(cls) -> tuple[T, ...]:
-        """Returns a tuple containing all Enum values.
-
-        Returns:
-            A tuple containing all Enum values.
-        """
-        return tuple(c.value for c in cls)
 
 
 class DictPropertiesEqMixin(object):

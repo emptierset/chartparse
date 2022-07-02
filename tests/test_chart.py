@@ -4,10 +4,9 @@ import pytest
 import unittest.mock
 
 from chartparse.chart import Chart
-from chartparse.enums import Difficulty, Instrument
 from chartparse.exceptions import RegexFatalNotMatchError
 from chartparse.globalevents import GlobalEventsTrack, LyricEvent
-from chartparse.instrument import NoteEvent, InstrumentTrack
+from chartparse.instrument import NoteEvent, InstrumentTrack, Difficulty, Instrument
 from chartparse.metadata import Metadata
 from chartparse.sync import SyncTrack, BPMEvent
 
