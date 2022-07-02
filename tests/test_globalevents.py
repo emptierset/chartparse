@@ -2,7 +2,7 @@ import pytest
 import re
 import unittest.mock
 
-from chartparse.exceptions import RegexFatalNotMatchError
+from chartparse.exceptions import RegexNotMatchError
 from chartparse.globalevents import (
     GlobalEventsTrack,
     GlobalEvent,
@@ -79,7 +79,7 @@ class TestGlobalEvent(object):
         GlobalEvent._regex = self.test_regex
         GlobalEvent._regex_prog = re.compile(GlobalEvent._regex)
 
-        with pytest.raises(RegexFatalNotMatchError):
+        with pytest.raises(RegexNotMatchError):
             _ = GlobalEvent.from_chart_line(invalid_chart_line)
 
 

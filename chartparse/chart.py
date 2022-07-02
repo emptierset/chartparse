@@ -9,7 +9,7 @@ from collections.abc import Callable, Iterable, Iterator, Sequence
 from typing import Optional, TextIO
 
 from chartparse.event import Event
-from chartparse.exceptions import RegexFatalNotMatchError
+from chartparse.exceptions import RegexNotMatchError
 from chartparse.globalevents import GlobalEventsTrack
 from chartparse.hints import T
 from chartparse.instrument import Difficulty, Instrument, InstrumentTrack, NoteEvent
@@ -134,7 +134,7 @@ class Chart(DictPropertiesEqMixin):
             if curr_section_name is None:
                 m = cls._section_name_regex_prog.match(line)
                 if not m:
-                    raise RegexFatalNotMatchError(cls._section_name_regex, line)
+                    raise RegexNotMatchError(cls._section_name_regex, line)
                 curr_section_name = m.group(1)
             elif line == "{":
                 curr_first_line_idx = i + 1

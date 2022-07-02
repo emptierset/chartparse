@@ -11,7 +11,7 @@ from typing import ClassVar, List, Optional, Pattern, Type, TypeVar, Union
 from chartparse.datastructures import ImmutableSortedList
 from chartparse.enums import AllValuesGettableEnum
 from chartparse.event import Event
-from chartparse.exceptions import RegexFatalNotMatchError
+from chartparse.exceptions import RegexNotMatchError
 from chartparse.track import EventTrack
 from chartparse.util import DictPropertiesEqMixin
 
@@ -444,12 +444,12 @@ class SpecialEvent(Event):
             An an instance of this object parsed from ``line``.
 
         Raises:
-            RegexFatalNotMatchError: If the mixed-into class' ``_regex`` does not match ``line``.
+            RegexNotMatchError: If the mixed-into class' ``_regex`` does not match ``line``.
         """
 
         m = cls._regex_prog.match(line)
         if not m:
-            raise RegexFatalNotMatchError(cls._regex, line)
+            raise RegexNotMatchError(cls._regex, line)
         tick, sustain = int(m.group(1)), int(m.group(2))
         return cls(tick, sustain)
 

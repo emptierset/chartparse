@@ -6,7 +6,7 @@ from collections.abc import Callable, Iterable, Sequence
 from typing import ClassVar, Optional, Pattern, Type, TypeVar
 
 from chartparse.event import Event
-from chartparse.exceptions import RegexFatalNotMatchError
+from chartparse.exceptions import RegexNotMatchError
 from chartparse.track import EventTrack, HasSectionNameMixin
 from chartparse.util import DictPropertiesEqMixin
 
@@ -107,12 +107,12 @@ class GlobalEvent(Event):
             An an instance of this object parsed from ``line``.
 
         Raises:
-            RegexFatalNotMatchError: If the mixed-into class' ``_regex`` does not match ``line``.
+            RegexNotMatchError: If the mixed-into class' ``_regex`` does not match ``line``.
         """
 
         m = cls._regex_prog.match(line)
         if not m:
-            raise RegexFatalNotMatchError(cls._regex, line)
+            raise RegexNotMatchError(cls._regex, line)
         tick, value = int(m.group(1)), m.group(2)
         return cls(tick, value)
 

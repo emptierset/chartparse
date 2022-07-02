@@ -6,7 +6,7 @@ from collections.abc import Callable, Iterable, Sequence
 from typing import Optional, Pattern, Type, TypeVar
 
 from chartparse.event import Event
-from chartparse.exceptions import RegexFatalNotMatchError
+from chartparse.exceptions import RegexNotMatchError
 from chartparse.track import EventTrack, HasSectionNameMixin
 from chartparse.util import DictPropertiesEqMixin
 
@@ -142,12 +142,12 @@ class TimeSignatureEvent(Event):
             An an instance of this object parsed from ``line``.
 
         Raises:
-            RegexFatalNotMatchError: If the mixed-into class' ``_regex`` does not match ``line``.
+            RegexNotMatchError: If the mixed-into class' ``_regex`` does not match ``line``.
         """
 
         m = cls._regex_prog.match(line)
         if not m:
-            raise RegexFatalNotMatchError(cls._regex, line)
+            raise RegexNotMatchError(cls._regex, line)
         tick, upper_numeral = int(m.group(1)), int(m.group(2))
         # The lower number is written by Moonscraper as the log2 of the true value.
         lower_numeral = 2 ** int(m.group(3)) if m.group(3) else 4
@@ -190,12 +190,12 @@ class BPMEvent(Event):
             An an instance of this object parsed from ``line``.
 
         Raises:
-            RegexFatalNotMatchError: If the mixed-into class' ``_regex`` does not match ``line``.
+            RegexNotMatchError: If the mixed-into class' ``_regex`` does not match ``line``.
         """
 
         m = cls._regex_prog.match(line)
         if not m:
-            raise RegexFatalNotMatchError(cls._regex, line)
+            raise RegexNotMatchError(cls._regex, line)
         tick, raw_bpm = int(m.group(1)), m.group(2)
         bpm_whole_part_str, bpm_decimal_part_str = raw_bpm[:-3], raw_bpm[-3:]
         bpm_whole_part = int(bpm_whole_part_str) if bpm_whole_part_str != "" else 0

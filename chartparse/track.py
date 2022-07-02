@@ -5,7 +5,7 @@ from typing import ClassVar
 
 from chartparse.datastructures import ImmutableSortedList
 from chartparse.event import EventT
-from chartparse.exceptions import RegexFatalNotMatchError
+from chartparse.exceptions import RegexNotMatchError
 
 
 class EventTrack(object):
@@ -21,7 +21,7 @@ class EventTrack(object):
             chart_lines: An iterable of strings, most likely from a Moonscraper ``.chart``.
             from_chart_line_fn: A function that, when applied to each element of ``chart_lines``,
                 either returns a :class:`~chartparse.event.Event` or raises
-                :class:`~chartparse.exceptions.RegexFatalNotMatchError`.
+                :class:`~chartparse.exceptions.RegexNotMatchError`.
 
         Returns:
             A :class:`~chartparse.datastructures.ImmutableSortedList` of
@@ -33,7 +33,7 @@ class EventTrack(object):
         for line in chart_lines:
             try:
                 event = from_chart_line_fn(line)
-            except RegexFatalNotMatchError:
+            except RegexNotMatchError:
                 continue
             events.append(event)
         return ImmutableSortedList(events, key=lambda e: e.tick)
