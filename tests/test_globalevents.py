@@ -20,7 +20,7 @@ class TestGlobalEventsTrack(object):
 
     def test_from_chart_lines(self, mocker, placeholder_string_iterator_getter):
         mock_parse_events = mocker.patch(
-            "chartparse.globalevents.GlobalEventsTrack._parse_events_from_iterable",
+            "chartparse.globalevents.GlobalEventsTrack._parse_events_from_chart_lines",
             side_effect=[
                 pytest.default_text_event_list,
                 pytest.default_section_event_list,

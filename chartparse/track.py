@@ -11,9 +11,8 @@ from chartparse.exceptions import RegexFatalNotMatchError
 class EventTrack(object):
     """Mixes in a method for parsing ``Event`` objects from chart lines."""
 
-    # TODO: Rename to _parse_events_from_chart_lines. Plural noun is obviously an iterable.
     @staticmethod
-    def _parse_events_from_iterable(
+    def _parse_events_from_chart_lines(
         chart_lines: Iterable[str], from_chart_line_fn: Callable[[str], EventT]
     ) -> ImmutableSortedList[EventT]:
         """Attempt to obtain an ``Event`` from each element of ``chart_lines``.

@@ -28,7 +28,7 @@ class TestSyncTrack(object):
 
     def test_from_chart_lines(self, mocker, placeholder_string_iterator_getter):
         mock_parse_events = mocker.patch(
-            "chartparse.sync.SyncTrack._parse_events_from_iterable",
+            "chartparse.sync.SyncTrack._parse_events_from_chart_lines",
             side_effect=[
                 pytest.default_time_signature_event_list,
                 pytest.default_bpm_event_list,

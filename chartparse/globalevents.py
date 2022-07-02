@@ -54,11 +54,13 @@ class GlobalEventsTrack(EventTrack, HasSectionNameMixin, DictPropertiesEqMixin):
             A ``GlobalEventsTrack`` parsed from the strings returned by ``iterator_getter``.
         """
 
-        text_events = cls._parse_events_from_iterable(iterator_getter(), TextEvent.from_chart_line)
-        section_events = cls._parse_events_from_iterable(
+        text_events = cls._parse_events_from_chart_lines(
+            iterator_getter(), TextEvent.from_chart_line
+        )
+        section_events = cls._parse_events_from_chart_lines(
             iterator_getter(), SectionEvent.from_chart_line
         )
-        lyric_events = cls._parse_events_from_iterable(
+        lyric_events = cls._parse_events_from_chart_lines(
             iterator_getter(), LyricEvent.from_chart_line
         )
         return cls(text_events, section_events, lyric_events)
