@@ -100,7 +100,7 @@ class Metadata(HasSectionNameMixin, DictPropertiesEqMixin):
                 transformed_value = cls._field_transformers[field_name](raw_value)
                 value_to_set = transformed_value
             else:
-                # TODO: Log that transformer couldn't be found.
+                # TODO: [Logging] Log that transformer couldn't be found.
                 value_to_set = raw_value
             pythonic_field_name = inflection.underscore(field_name)
             injections[pythonic_field_name] = value_to_set

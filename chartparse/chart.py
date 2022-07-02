@@ -117,7 +117,7 @@ class Chart(DictPropertiesEqMixin):
                 ]
                 track = InstrumentTrack.from_chart_lines(instrument, difficulty, iterator_getter)
                 instrument_tracks[instrument][difficulty] = track
-            # TODO: Log unhandled sections.
+            # TODO: [Logging] Log unhandled sections.
 
         return cls(metadata, global_events_track, sync_track, instrument_tracks)
 
