@@ -1,4 +1,4 @@
-from chartparse.util import DictPropertiesEqMixin, iterate_from_second_elem
+from chartparse.util import DictPropertiesEqMixin
 
 
 class TestDictPropertiesEqMixin(object):
@@ -34,10 +34,3 @@ class TestDictPropertiesEqMixin(object):
         bar = self.Bar(1, 2)
         assert foo != bar
         assert bar != foo
-
-
-class TestIterateFromSecondElem(object):
-    def test_basic(self):
-        xs = [3, 4, 2, 5]
-        for x1, x2 in zip(iterate_from_second_elem(xs), xs[1:]):
-            assert x1 == x2

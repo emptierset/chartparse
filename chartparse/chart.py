@@ -5,16 +5,17 @@ import datetime
 import itertools
 import re
 import typing
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from typing import Optional, TextIO
 
 from chartparse.event import Event
 from chartparse.exceptions import RegexFatalNotMatchError
 from chartparse.globalevents import GlobalEventsTrack
+from chartparse.hints import T
 from chartparse.instrument import Difficulty, Instrument, InstrumentTrack, NoteEvent
 from chartparse.metadata import Metadata
 from chartparse.sync import SyncTrack
-from chartparse.util import DictPropertiesEqMixin, iterate_from_second_elem
+from chartparse.util import DictPropertiesEqMixin
 
 _max_timedelta = datetime.datetime.max - datetime.datetime.min
 
@@ -155,7 +156,7 @@ class Chart(DictPropertiesEqMixin):
     def _populate_bpm_event_timestamps(self) -> None:
         self.sync_track.bpm_events[0].timestamp = datetime.timedelta(0)
         for i, cur_event in enumerate(
-            iterate_from_second_elem(self.sync_track.bpm_events), start=1
+            _iterate_from_second_elem(self.sync_track.bpm_events), start=1
         ):
             prev_event = self.sync_track.bpm_events[i - 1]
             assert prev_event.timestamp is not None
@@ -321,3 +322,17 @@ class Chart(DictPropertiesEqMixin):
         assert last_event.timestamp is not None
         phrase_duration_seconds = (last_event.timestamp - first_event.timestamp).total_seconds()
         return len(events) / phrase_duration_seconds
+
+
+def _iterate_from_second_elem(xs: Sequence[T]) -> Iterator[T]:
+    """Given an iterable ``xs``, return an iterator that skips ``xs[0]``.
+
+    Args:
+        xs: Any non-exhausted iterable.
+
+    Returns:
+        A iterator that iterates over ``xs``, ignoring the first element.
+    """
+    it = iter(xs)
+    next(it)
+    yield from it
