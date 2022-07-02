@@ -61,8 +61,12 @@ class TestImmutableList(object):
         assert basic_immutable_list != 1
         assert 1 != basic_immutable_list
 
-    def test_eq_(self, basic_immutable_list, basic_list):
-        assert basic_immutable_list == basic_list
+    def test_contains(self, basic_immutable_list, basic_list):
+        for x in basic_list:
+            assert x in basic_immutable_list
+
+    def test_reversed(self, basic_immutable_list, basic_list):
+        assert list(reversed(basic_immutable_list)) == list(reversed(basic_list))
 
 
 class TestImmutableSortedList(object):

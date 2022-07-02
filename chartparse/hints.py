@@ -9,7 +9,7 @@ class Comparable(Protocol):
 
     @abstractmethod
     def __lt__(self, other: Any) -> bool:
-        ...
+        ...  # pragma: no cover
 
 
 T = TypeVar("T")
