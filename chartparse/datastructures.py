@@ -16,11 +16,11 @@ class ImmutableList(Sequence[T]):
 
     @overload
     def __getitem__(self, index: int) -> T:
-        ...
+        ...  # pragma: no cover
 
     @overload
     def __getitem__(self, index: slice) -> Sequence[T]:
-        ...
+        ...  # pragma: no cover
 
     def __getitem__(self, index: Union[int, slice]) -> Union[T, Sequence[T]]:
         return self._seq[index]
@@ -28,8 +28,8 @@ class ImmutableList(Sequence[T]):
     def __iter__(self) -> Iterator[T]:
         return iter(self._seq)
 
-    def __repr__(self) -> str:  # pragma: no cover
-        return repr(self._seq)
+    def __repr__(self) -> str:
+        return repr(self._seq)  # pragma: no cover
 
     def __len__(self) -> int:
         return len(self._seq)
@@ -54,11 +54,11 @@ class ImmutableSortedList(ImmutableList[T]):
 
     @overload
     def __init__(self, xs: Sequence[ComparableT]):
-        ...
+        ...  # pragma: no cover
 
     @overload
     def __init__(self, xs: Sequence[T], key: Callable[[T], ComparableT]):
-        ...
+        ...  # pragma: no cover
 
     def __init__(self, xs, key=None):
         if key is None:
