@@ -126,7 +126,6 @@ class Chart(DictPropertiesEqMixin):
     _section_name_regex = r"^\[(.+?)\]$"
     _section_name_regex_prog = re.compile(_section_name_regex)
 
-    # TODO: Type alias dict[str, Callable[[], Iterable[str]]] to ChartLineGetter
     @classmethod
     def _find_sections(cls, lines: Iterable[str]) -> dict[str, Callable[[], Iterable[str]]]:
         sections: dict[str, Callable[[], Iterable[str]]] = dict()
