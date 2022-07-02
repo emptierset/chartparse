@@ -304,18 +304,17 @@ class Chart(DictPropertiesEqMixin):
             raise ValueError(
                 f"no instrument track for difficulty {difficulty} instrument {instrument}"
             )
-        note_events_to_consider = list(filter(event_is_eligible_fn, track.note_events))
-        if len(note_events_to_consider) < 2:
+        events_to_consider = list(filter(event_is_eligible_fn, track.note_events))
+        if len(events_to_consider) < 2:
             raise ValueError(
                 "cannot determine average notes per second value of phrase with fewer than 2 "
-                f"NoteEvents: {note_events_to_consider}"
+                f"Events: {events_to_consider}"
             )
 
-        return self._notes_per_second_from_note_events(note_events_to_consider)
+        return self._notes_per_second_from_events(events_to_consider)
 
-    # TODO: Rename to _notes_per_second_from_events.
     @staticmethod
-    def _notes_per_second_from_note_events(events: Sequence[NoteEvent]) -> float:
+    def _notes_per_second_from_events(events: Sequence[NoteEvent]) -> float:
         first_event = events[0]
         last_event = events[-1]
         assert first_event.timestamp is not None
