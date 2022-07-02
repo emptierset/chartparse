@@ -105,12 +105,11 @@ class Chart(DictPropertiesEqMixin):
             Instrument, dict[Difficulty, InstrumentTrack]
         ] = collections.defaultdict(dict)
         for section_name, iterator_getter in sections.items():
-            # TODO: Don't hardcode the section names.
-            if section_name == "Song":
+            if section_name == Metadata.section_name:
                 metadata = Metadata.from_chart_lines(iterator_getter())
-            elif section_name == "Events":
+            elif section_name == GlobalEventsTrack.section_name:
                 global_events_track = GlobalEventsTrack.from_chart_lines(iterator_getter)
-            elif section_name == "SyncTrack":
+            elif section_name == SyncTrack.section_name:
                 sync_track = SyncTrack.from_chart_lines(iterator_getter)
             elif section_name in cls._instrument_track_name_to_instrument_difficulty_pair:
                 instrument, difficulty = cls._instrument_track_name_to_instrument_difficulty_pair[

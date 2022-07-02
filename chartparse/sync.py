@@ -7,13 +7,13 @@ from typing import Optional, Pattern, Type, TypeVar
 
 from chartparse.event import Event
 from chartparse.exceptions import RegexFatalNotMatchError
-from chartparse.track import EventTrack
+from chartparse.track import EventTrack, HasSectionNameMixin
 from chartparse.util import DictPropertiesEqMixin
 
 SyncTrackT = TypeVar("SyncTrackT", bound="SyncTrack")
 
 
-class SyncTrack(EventTrack, DictPropertiesEqMixin):
+class SyncTrack(EventTrack, HasSectionNameMixin, DictPropertiesEqMixin):
     """All of a :class:`~chartparse.chart.Chart` object's tempo-mapping related events."""
 
     time_signature_events: Sequence[TimeSignatureEvent]
@@ -21,6 +21,8 @@ class SyncTrack(EventTrack, DictPropertiesEqMixin):
 
     bpm_events: Sequence[BPMEvent]
     """A ``SyncTrack``'s ``BPMEvent``\\ s."""
+
+    section_name = "SyncTrack"
 
     def __init__(
         self, time_signature_events: Sequence[TimeSignatureEvent], bpm_events: Sequence[BPMEvent]

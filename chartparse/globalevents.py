@@ -7,13 +7,13 @@ from typing import ClassVar, Optional, Pattern, Type, TypeVar
 
 from chartparse.event import Event
 from chartparse.exceptions import RegexFatalNotMatchError
-from chartparse.track import EventTrack
+from chartparse.track import EventTrack, HasSectionNameMixin
 from chartparse.util import DictPropertiesEqMixin
 
 GlobalEventsTrackT = TypeVar("GlobalEventsTrackT", bound="GlobalEventsTrack")
 
 
-class GlobalEventsTrack(EventTrack, DictPropertiesEqMixin):
+class GlobalEventsTrack(EventTrack, HasSectionNameMixin, DictPropertiesEqMixin):
     """A :class:`~chartparse.chart.Chart`'s :class:`~chartparse.globalevents.GlobalEvent`\\ s."""
 
     text_events: Sequence[TextEvent]
@@ -24,6 +24,8 @@ class GlobalEventsTrack(EventTrack, DictPropertiesEqMixin):
 
     lyric_events: Sequence[LyricEvent]
     """A ``GlobalEventTrack``'s ``LyricEvent``\\ s."""
+
+    section_name = "Events"
 
     def __init__(
         self,

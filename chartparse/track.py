@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable
+from typing import ClassVar
 
 from chartparse.datastructures import ImmutableSortedList
 from chartparse.event import EventT
@@ -37,3 +38,10 @@ class EventTrack(object):
                 continue
             events.append(event)
         return ImmutableSortedList(events, key=lambda e: e.tick)
+
+
+class HasSectionNameMixin(object):
+    """A part of a ``.chart`` file that has a specific, always-the-same name."""
+
+    section_name: ClassVar[str]
+    """The name of this track's section in a ``.chart`` file."""

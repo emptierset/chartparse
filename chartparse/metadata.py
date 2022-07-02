@@ -7,6 +7,7 @@ from typing import Any, ClassVar, Pattern, Type, TypeVar
 import inflection
 
 from chartparse.exceptions import RegexFatalNotMatchError
+from chartparse.track import HasSectionNameMixin
 from chartparse.util import DictPropertiesEqMixin
 
 MetadataT = TypeVar("MetadataT", bound="Metadata")
@@ -25,7 +26,7 @@ MetadataT = TypeVar("MetadataT", bound="Metadata")
 #     VocalStream = “vocals.ogg”
 #     KeysStream = “keys.ogg”
 #     CrowdStream = “crowd.ogg”
-class Metadata(DictPropertiesEqMixin):
+class Metadata(HasSectionNameMixin, DictPropertiesEqMixin):
     """All of a :class:`~chartparse.chart.Chart` object's metadata.
 
     All attributes are set dynamically, but the following attributes are known and can be handled
@@ -45,6 +46,8 @@ class Metadata(DictPropertiesEqMixin):
     ``MediaType``
     ``MusicStream``.
     """
+
+    section_name = "Song"
 
     resolution: int
     """The number of ticks for which a quarter note lasts."""

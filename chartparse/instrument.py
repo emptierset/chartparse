@@ -26,6 +26,9 @@ class InstrumentTrack(EventTrack, DictPropertiesEqMixin):
     difficulty: Difficulty
     """This track's difficulty setting."""
 
+    section_name: str
+    """The concatenation of this track's difficulty and instrument (in that order)."""
+
     note_events: Sequence[NoteEvent]
     """An (instrument, difficulty) pair's ``NoteEvent`` objects."""
 
@@ -51,6 +54,7 @@ class InstrumentTrack(EventTrack, DictPropertiesEqMixin):
         self.difficulty = difficulty
         self.note_events = note_events
         self.star_power_events = star_power_events
+        self.section_name = difficulty.value + instrument.value
         self._populate_star_power_data()
 
     @classmethod
