@@ -160,13 +160,9 @@ class Chart(DictPropertiesEqMixin):
             iterate_from_second_elem(self.sync_track.bpm_events), start=1
         ):
             prev_event = self.sync_track.bpm_events[i - 1]
+            assert prev_event.timestamp is not None
             ticks_since_prev = cur_event.tick - prev_event.tick
             seconds_since_prev = self._seconds_from_ticks_at_bpm(ticks_since_prev, prev_event.bpm)
-            # TODO: Remove this None check once timestamp is no longer optional.
-            if prev_event.timestamp is None:
-                raise ValueError(
-                    f"BPMEvent at index {i-1} has `timestamp` of None, which should be impossible"
-                )
             cur_event.timestamp = prev_event.timestamp + datetime.timedelta(
                 seconds=seconds_since_prev
             )
@@ -187,6 +183,7 @@ class Chart(DictPropertiesEqMixin):
             tick, start_idx=start_bpm_event_index
         )
         proximal_bpm_event = self.sync_track.bpm_events[proximal_bpm_event_idx]
+        assert proximal_bpm_event.timestamp is not None
         ticks_since_proximal_bpm_event = tick - proximal_bpm_event.tick
         seconds_since_proximal_bpm_event = self._seconds_from_ticks_at_bpm(
             ticks_since_proximal_bpm_event, proximal_bpm_event.bpm
@@ -194,12 +191,6 @@ class Chart(DictPropertiesEqMixin):
         timedelta_since_proximal_bpm_event = datetime.timedelta(
             seconds=seconds_since_proximal_bpm_event
         )
-        # TODO: Remove this None check once timestamp is no longer optional.
-        if proximal_bpm_event.timestamp is None:
-            raise ValueError(
-                f"proximal BPMEvent at index {proximal_bpm_event_idx} has `timestamp` of None, "
-                "which should be impossible"
-            )
         timestamp = proximal_bpm_event.timestamp + timedelta_since_proximal_bpm_event
         return timestamp, proximal_bpm_event_idx
 
@@ -271,17 +262,12 @@ class Chart(DictPropertiesEqMixin):
         all_start_args_none = num_of_start_args_none == len(start_args)
 
         def event_is_eligible_by_tick(note: NoteEvent) -> bool:
-            # TODO: Remove this None check once timestamp is no longer optional.
-            if note.timestamp is None:
-                raise ValueError(f"NoteEvent at tick {note.tick} has `timestamp` of None")
             lower_bound: int = start_tick if start_tick is not None else 0
             upper_bound: float = end_tick if end_tick is not None else float("inf")
             return lower_bound <= note.tick <= upper_bound
 
         def event_is_eligible_by_time(note: NoteEvent) -> bool:
-            # TODO: Remove this None check once timestamp is no longer optional.
-            if note.timestamp is None:
-                raise ValueError(f"NoteEvent at tick {note.tick} has `timestamp` of None")
+            assert note.timestamp is not None
             lower_bound: datetime.timedelta = (
                 start_time if start_time is not None else datetime.timedelta(0)
             )
@@ -289,9 +275,7 @@ class Chart(DictPropertiesEqMixin):
             return lower_bound <= note.timestamp <= upper_bound
 
         def event_is_eligible_by_seconds(note: NoteEvent) -> bool:
-            # TODO: Remove this None check once timestamp is no longer optional.
-            if note.timestamp is None:
-                raise ValueError(f"NoteEvent at tick {note.tick} has `timestamp` of None")
+            assert note.timestamp is not None
             lower_bound: datetime.timedelta = (
                 datetime.timedelta(seconds=start_seconds)
                 if start_seconds is not None
@@ -335,11 +319,7 @@ class Chart(DictPropertiesEqMixin):
     def _notes_per_second_from_note_events(events: Sequence[NoteEvent]) -> float:
         first_event = events[0]
         last_event = events[-1]
-        # TODO: Remove this None check once timestamp is no longer optional.
-        if first_event.timestamp is None:
-            raise ValueError(f"NoteEvent at tick {first_event.tick} has `timestamp` of None")
-        # TODO: Remove this None check once timestamp is no longer optional.
-        if last_event.timestamp is None:
-            raise ValueError(f"NoteEvent at tick {last_event.tick} has `timestamp` of None")
+        assert first_event.timestamp is not None
+        assert last_event.timestamp is not None
         phrase_duration_seconds = (last_event.timestamp - first_event.timestamp).total_seconds()
         return len(events) / phrase_duration_seconds

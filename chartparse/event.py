@@ -18,7 +18,6 @@ class Event(DictPropertiesEqMixin, DictReprMixin):
     tick: int
     """The tick at which this event occurs."""
 
-    # TODO: Make this nonoptional.
     timestamp: Optional[datetime.timedelta]
     """The timestamp when this event occurs. Optional, as it may need to be calculated later."""
 
