@@ -64,6 +64,6 @@ class ImmutableSortedList(ImmutableList[T]):
 
     def __init__(self, xs, key=None):
         if key is None:
-            super().__init__(list(sorted(xs)))
+            super().__init__(sorted(xs))
         else:
-            super().__init__(list(sorted(xs, key=key)))
+            super().__init__(sorted(xs, key=key))
