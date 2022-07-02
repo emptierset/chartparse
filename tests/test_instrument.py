@@ -43,7 +43,7 @@ class TestInstrumentTrack(object):
             return_value=pytest.default_star_power_event_list,
         )
         mock_parse_note_events = mocker.patch(
-            "chartparse.instrument.InstrumentTrack._parse_note_events_from_iterable",
+            "chartparse.instrument.InstrumentTrack._parse_note_events_from_chart_lines",
             return_value=pytest.default_note_event_list,
         )
         init_spy = mocker.spy(InstrumentTrack, "__init__")
