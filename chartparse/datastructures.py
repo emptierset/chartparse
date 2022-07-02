@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Callable, Iterator, Sequence, Iterable
 from typing import Union, overload
 
 from chartparse.hints import ComparableT, T
@@ -10,9 +10,11 @@ from chartparse.hints import ComparableT, T
 class ImmutableList(Sequence[T]):
     """A ``list`` equivalent that cannot be mutated."""
 
-    # TODO: Allow ingesting generators.
-    def __init__(self, xs: Sequence[T]):
-        self._seq = xs
+    def __init__(self, xs: Iterable[T]):
+        if isinstance(xs, Sequence):
+            self._seq = xs
+        else:
+            self._seq = list(xs)
 
     @overload
     def __getitem__(self, index: int) -> T:
@@ -53,11 +55,11 @@ class ImmutableSortedList(ImmutableList[T]):
     """A ``list`` equivalent that cannot be mutated and is sorted during initialization."""
 
     @overload
-    def __init__(self, xs: Sequence[ComparableT]):
+    def __init__(self, xs: Iterable[ComparableT]):
         ...  # pragma: no cover
 
     @overload
-    def __init__(self, xs: Sequence[T], key: Callable[[T], ComparableT]):
+    def __init__(self, xs: Iterable[T], key: Callable[[T], ComparableT]):
         ...  # pragma: no cover
 
     def __init__(self, xs, key=None):

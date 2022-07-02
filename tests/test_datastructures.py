@@ -41,6 +41,9 @@ class TestImmutableList(object):
     def test_init(self, basic_immutable_list, basic_list):
         assert basic_immutable_list._seq == basic_list
 
+        from_iterable = ImmutableList(iter(basic_list))
+        assert from_iterable == basic_list
+
     def test_getitem(self, basic_immutable_list, basic_list):
         assert basic_immutable_list[0] == basic_list[0]
 
