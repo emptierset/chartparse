@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 
-# TODO: Rename to RegexFatalNotMatchError <22-06-2022, Andrew Conant> #
-class RegexFatalNotMatchError(Exception):
+# TODO: Rename to RegexNotMatchError <22-06-2022, Andrew Conant> #
+class RegexNotMatchError(Exception):
     """Raised when a regex fatally failed to match."""
 
     def __init__(self, regex: str, s: str):

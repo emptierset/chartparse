@@ -1,7 +1,7 @@
 import pytest
 import unittest.mock
 
-from chartparse.exceptions import RegexFatalNotMatchError
+from chartparse.exceptions import RegexNotMatchError
 from chartparse.sync import SyncTrack, BPMEvent, TimeSignatureEvent
 
 
@@ -104,7 +104,7 @@ class TestTimeSignatureEvent(object):
         assert event.lower_numeral == pytest.default_lower_time_signature_numeral
 
     def test_from_chart_line_no_match(self, invalid_chart_line):
-        with pytest.raises(RegexFatalNotMatchError):
+        with pytest.raises(RegexNotMatchError):
             _ = TimeSignatureEvent.from_chart_line(invalid_chart_line)
 
 
@@ -119,5 +119,5 @@ class TestBPMEvent(object):
 
     def test_from_chart_line_no_match(self, generate_valid_short_time_signature_line):
         line = generate_valid_short_time_signature_line()
-        with pytest.raises(RegexFatalNotMatchError):
+        with pytest.raises(RegexNotMatchError):
             _ = BPMEvent.from_chart_line(line)

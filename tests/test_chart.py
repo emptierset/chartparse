@@ -4,7 +4,7 @@ import pytest
 import unittest.mock
 
 from chartparse.chart import Chart, _iterate_from_second_elem
-from chartparse.exceptions import RegexFatalNotMatchError
+from chartparse.exceptions import RegexNotMatchError
 from chartparse.globalevents import GlobalEventsTrack, LyricEvent
 from chartparse.instrument import NoteEvent, InstrumentTrack, Difficulty, Instrument
 from chartparse.metadata import Metadata
@@ -202,7 +202,7 @@ class TestFindSections(object):
         ],
     )
     def test_find_sections_raises(self, lines):
-        with pytest.raises(RegexFatalNotMatchError):
+        with pytest.raises(RegexNotMatchError):
             _ = Chart._find_sections(lines)
 
 

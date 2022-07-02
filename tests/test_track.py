@@ -1,6 +1,6 @@
 import pytest
 
-from chartparse.exceptions import RegexFatalNotMatchError
+from chartparse.exceptions import RegexNotMatchError
 
 
 class TestParseEventsFromIterable(object):
@@ -18,7 +18,7 @@ class TestParseEventsFromIterable(object):
         self, bare_event_track, invalid_chart_line, unmatchable_regex
     ):
         def fake_from_chart_line_fn(_):
-            raise RegexFatalNotMatchError(unmatchable_regex, invalid_chart_line)
+            raise RegexNotMatchError(unmatchable_regex, invalid_chart_line)
 
         events = bare_event_track._parse_events_from_chart_lines(
             [invalid_chart_line], fake_from_chart_line_fn

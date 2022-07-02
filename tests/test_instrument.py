@@ -2,7 +2,7 @@ import pytest
 import re
 import unittest.mock
 
-from chartparse.exceptions import RegexFatalNotMatchError
+from chartparse.exceptions import RegexNotMatchError
 from chartparse.instrument import (
     InstrumentTrack,
     StarPowerEvent,
@@ -323,7 +323,7 @@ class TestSpecialEvent(object):
         SpecialEvent._regex = self.test_regex
         SpecialEvent._regex_prog = re.compile(SpecialEvent._regex)
 
-        with pytest.raises(RegexFatalNotMatchError):
+        with pytest.raises(RegexNotMatchError):
             _ = SpecialEvent.from_chart_line(invalid_chart_line)
 
 

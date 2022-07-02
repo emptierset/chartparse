@@ -6,7 +6,7 @@ from typing import Any, ClassVar, Pattern, Type, TypeVar
 
 import inflection
 
-from chartparse.exceptions import RegexFatalNotMatchError
+from chartparse.exceptions import RegexNotMatchError
 from chartparse.track import HasSectionNameMixin
 from chartparse.util import DictPropertiesEqMixin
 
@@ -94,7 +94,7 @@ class Metadata(HasSectionNameMixin, DictPropertiesEqMixin):
         for line in lines:
             m = cls._regex_prog.match(line)
             if not m:
-                raise RegexFatalNotMatchError(cls._regex, line)
+                raise RegexNotMatchError(cls._regex, line)
             field_name, raw_value = m.group(1), m.group(2)
             if field_name in cls._field_transformers:
                 transformed_value = cls._field_transformers[field_name](raw_value)

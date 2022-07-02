@@ -1,6 +1,6 @@
 import pytest
 
-from chartparse.exceptions import RegexFatalNotMatchError
+from chartparse.exceptions import RegexNotMatchError
 from chartparse.metadata import Metadata
 
 
@@ -78,5 +78,5 @@ class TestMetadata(object):
 
     def test_from_chart_lines_no_match(self, invalid_chart_line):
         lines = [invalid_chart_line]
-        with pytest.raises(RegexFatalNotMatchError):
+        with pytest.raises(RegexNotMatchError):
             _ = Metadata.from_chart_lines(lines)
