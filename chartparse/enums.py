@@ -5,16 +5,15 @@ import enum
 from chartparse.util import AllValuesGettableEnum
 
 
-# TODO: Reorder easy->expert.
 # TODO: Move to instrument.py? <21-06-2022, emptyset> #
 @enum.unique
 class Difficulty(AllValuesGettableEnum):
     """An :class:`~chartparse.instrument.InstrumentTrack`'s difficulty setting."""
 
-    EXPERT = "Expert"
-    HARD = "Hard"
-    MEDIUM = "Medium"
     EASY = "Easy"
+    MEDIUM = "Medium"
+    HARD = "Hard"
+    EXPERT = "Expert"
 
 
 # TODO: Move to instrument.py? <21-06-2022, emptyset> #
