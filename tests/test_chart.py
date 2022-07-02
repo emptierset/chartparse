@@ -3,7 +3,7 @@ import pathlib
 import pytest
 import unittest.mock
 
-from chartparse.chart import Chart
+from chartparse.chart import Chart, _iterate_from_second_elem
 from chartparse.exceptions import RegexFatalNotMatchError
 from chartparse.globalevents import GlobalEventsTrack, LyricEvent
 from chartparse.instrument import NoteEvent, InstrumentTrack, Difficulty, Instrument
@@ -532,3 +532,10 @@ class TestNotesPerSecond(object):
                 difficulty,
                 start_tick=0,
             )
+
+
+class TestIterateFromSecondElem(object):
+    def test_basic(self):
+        xs = [3, 4, 2, 5]
+        for x1, x2 in zip(_iterate_from_second_elem(xs), xs[1:]):
+            assert x1 == x2
