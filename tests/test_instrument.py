@@ -2,7 +2,6 @@ import pytest
 import re
 import unittest.mock
 
-from chartparse.enums import Note, NoteTrackIndex
 from chartparse.exceptions import RegexFatalNotMatchError
 from chartparse.instrument import (
     InstrumentTrack,
@@ -10,6 +9,8 @@ from chartparse.instrument import (
     NoteEvent,
     StarPowerData,
     SpecialEvent,
+    Note,
+    NoteTrackIndex,
 )
 
 from tests.conftest import (

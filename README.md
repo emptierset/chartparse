@@ -14,10 +14,10 @@ pip install chartparse
 
 ```py
 from chartparse.chart import Chart
-from chartparse.enums import Instrument, Difficulty
+from chartparse.instrument import Instrument, Difficulty
 
-with open("/path/to/file.chart", "r", encoding="utf-8-sig") as f:
-	c = Chart(f)
+with open("/path/to/file.chart", "r", encoding="utf-8-sig") as fp:
+	c = Chart.from_file(fp)
 
 # the first 7 BPM changes
 c.sync_track.bpm_events[:7]

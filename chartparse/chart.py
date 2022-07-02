@@ -8,11 +8,10 @@ import typing
 from collections.abc import Callable, Iterable, Sequence
 from typing import Optional, TextIO
 
-from chartparse.enums import Difficulty, Instrument
 from chartparse.event import Event
 from chartparse.exceptions import RegexFatalNotMatchError
 from chartparse.globalevents import GlobalEventsTrack
-from chartparse.instrument import InstrumentTrack, NoteEvent
+from chartparse.instrument import Difficulty, Instrument, InstrumentTrack, NoteEvent
 from chartparse.metadata import Metadata
 from chartparse.sync import SyncTrack
 from chartparse.util import DictPropertiesEqMixin, iterate_from_second_elem
