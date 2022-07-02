@@ -10,7 +10,7 @@ class TestParseEventsFromIterable(object):
         def fake_from_chart_line_fn(_):
             return pytest.default_bpm_event
 
-        assert bare_event_track._parse_events_from_iterable(lines, fake_from_chart_line_fn) == [
+        assert bare_event_track._parse_events_from_chart_lines(lines, fake_from_chart_line_fn) == [
             pytest.default_bpm_event
         ]
 
@@ -20,7 +20,7 @@ class TestParseEventsFromIterable(object):
         def fake_from_chart_line_fn(_):
             raise RegexFatalNotMatchError(unmatchable_regex, invalid_chart_line)
 
-        events = bare_event_track._parse_events_from_iterable(
+        events = bare_event_track._parse_events_from_chart_lines(
             [invalid_chart_line], fake_from_chart_line_fn
         )
         assert len(events) == 0

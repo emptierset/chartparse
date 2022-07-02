@@ -63,10 +63,12 @@ class SyncTrack(EventTrack, HasSectionNameMixin, DictPropertiesEqMixin):
             A ``SyncTrack`` parsed from the strings returned by ``iterator_getter``.
         """
 
-        time_signature_events = cls._parse_events_from_iterable(
+        time_signature_events = cls._parse_events_from_chart_lines(
             iterator_getter(), TimeSignatureEvent.from_chart_line
         )
-        bpm_events = cls._parse_events_from_iterable(iterator_getter(), BPMEvent.from_chart_line)
+        bpm_events = cls._parse_events_from_chart_lines(
+            iterator_getter(), BPMEvent.from_chart_line
+        )
         return cls(time_signature_events, bpm_events)
 
     def idx_of_proximal_bpm_event(self, tick: int, start_idx: int = 0) -> int:

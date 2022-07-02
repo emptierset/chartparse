@@ -191,7 +191,7 @@ class InstrumentTrack(EventTrack, DictPropertiesEqMixin):
         """
 
         note_events = cls._parse_note_events_from_iterable(iterator_getter())
-        star_power_events = cls._parse_events_from_iterable(
+        star_power_events = cls._parse_events_from_chart_lines(
             iterator_getter(), StarPowerEvent.from_chart_line
         )
         return cls(instrument, difficulty, note_events, star_power_events)

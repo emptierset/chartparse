@@ -39,7 +39,7 @@ class TestInstrumentTrack(object):
 
     def test_from_chart_lines(self, mocker, placeholder_string_iterator_getter):
         mock_parse_events = mocker.patch(
-            "chartparse.instrument.InstrumentTrack._parse_events_from_iterable",
+            "chartparse.instrument.InstrumentTrack._parse_events_from_chart_lines",
             return_value=pytest.default_star_power_event_list,
         )
         mock_parse_note_events = mocker.patch(
