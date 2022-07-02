@@ -129,6 +129,7 @@ def generate_valid_lyric_event_line_fn(tick=_default_tick, value=_default_lyric_
 
 _default_difficulty = Difficulty.EXPERT
 _default_instrument = Instrument.GUITAR
+_default_section_name = _default_difficulty.value + _default_instrument.value
 _default_sustain = 100  # ticks
 
 _default_note = Note.G
@@ -210,6 +211,7 @@ def pytest_configure():
 
     pytest.default_instrument = _default_instrument
     pytest.default_difficulty = _default_difficulty
+    pytest.default_section_name = _default_section_name
 
     pytest.default_note = _default_note
     pytest.default_note_event_list = _default_note_event_list

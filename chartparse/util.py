@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Sequence
 from enum import Enum
-from typing import Any
 
 from chartparse.hints import T
 

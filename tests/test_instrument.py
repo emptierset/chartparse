@@ -33,6 +33,7 @@ class TestInstrumentTrack(object):
         assert basic_instrument_track.difficulty == pytest.default_difficulty
         assert basic_instrument_track.note_events == pytest.default_note_event_list
         assert basic_instrument_track.star_power_events == pytest.default_star_power_event_list
+        assert basic_instrument_track.section_name == pytest.default_section_name
         mock_populate_star_power_data.assert_called_once()
 
     def test_from_chart_lines(self, mocker, placeholder_string_iterator_getter):
