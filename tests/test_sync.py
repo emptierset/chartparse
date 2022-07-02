@@ -112,6 +112,10 @@ class TestBPMEvent(object):
     def test_init(self, bpm_event):
         assert bpm_event.bpm == pytest.default_bpm
 
+    def test_init_more_than_three_decimal_places_error(self):
+        with pytest.raises(ValueError):
+            _ = BPMEvent(pytest.default_tick, 120.0001)
+
     def test_from_chart_line(self, generate_valid_bpm_line):
         line = generate_valid_bpm_line()
         event = BPMEvent.from_chart_line(line)

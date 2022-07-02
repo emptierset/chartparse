@@ -166,16 +166,21 @@ class BPMEvent(Event):
     """An event representing a BPM (beats per minute) change at a particular tick."""
 
     bpm: float
-    """The beats per minute value. Should not have more than 3 decimal places."""
+    """The beats per minute value. Must not have more than 3 decimal places."""
 
     # Match 1: Tick
     # Match 2: BPM (the last 3 digits are the decimal places)
     _regex: str = r"^\s*?(\d+?) = B (\d+?)\s*?$"
     _regex_prog: Pattern[str] = re.compile(_regex)
 
-    # TODO: Validate that ``bpm`` does not have more than 3 decimal places.
     def __init__(self, tick: int, bpm: float, timestamp: Optional[datetime.timedelta] = None):
-        """Initialize all instance attributes."""
+        """Initialize all instance attributes.
+
+        Raises:
+            ValueError: If ``bpm`` has more than 3 decimal places.
+        """
+        if round(bpm, 3) != bpm:
+            raise ValueError(f"bpm {bpm} must not have more than 3 decimal places.")
         super().__init__(tick, timestamp=timestamp)
         self.bpm = bpm
 
