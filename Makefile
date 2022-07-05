@@ -3,7 +3,7 @@ ENV_PREFIX=$(shell python -c "if __import__('pathlib').Path('.venv/bin/pip').exi
 USING_POETRY=$(shell grep "tool.poetry" pyproject.toml && echo "yes")
 
 .PHONY: help
-help:             ## Show the help.
+help:              ## Show the help.
 	@echo "Usage: make <target>"
 	@echo ""
 	@echo "Targets:"
@@ -11,7 +11,7 @@ help:             ## Show the help.
 
 
 .PHONY: show
-show:             ## Show the current environment.
+show:              ## Show the current environment.
 	@echo "Current environment:"
 	@if [ "$(USING_POETRY)" ]; then poetry env info && exit; fi
 	@echo "Running using $(ENV_PREFIX)"
@@ -19,43 +19,57 @@ show:             ## Show the current environment.
 	@$(ENV_PREFIX)python -m site
 
 .PHONY: install
-install:          ## Install the project in dev mode.
+install:           ## Install the project in dev mode.
 	@if [ "$(USING_POETRY)" ]; then poetry install && exit; fi
 	@echo "Don't forget to run 'make virtualenv' if you got errors."
 	$(ENV_PREFIX)pip install -e .[test]
 
-.PHONY: fmt
-fmt:              ## Format code using black & isort.
-	$(ENV_PREFIX)isort chartparse/
+.PHONY: black
+black:             ## Format code using black.
 	$(ENV_PREFIX)black -l 99 chartparse/
 	$(ENV_PREFIX)black -l 99 tests/
+
+.PHONY: isort
+isort:             ## Format code using isort.
+	$(ENV_PREFIX)isort --line-length 99 chartparse/
+
+.PHONY: fmt
+fmt: isort black   ## Format code using isort and black.
+
+.PHONY: flake
+flake:             ## Run pep8 linter.
+	$(ENV_PREFIX)flake8 --extend-ignore=E731 --max-line-length 99 chartparse/ tests/
 
 .PHONY: lint
-lint:             ## Run pep8, black, mypy linters.
-	# Ignored rules in flake8:
-	# E731 (https://www.flake8rules.com/rules/E731.html):
-	$(ENV_PREFIX)flake8 --extend-ignore=E731 --max-line-length 99 chartparse/ tests/
-	$(ENV_PREFIX)black -l 99 chartparse/
-	$(ENV_PREFIX)black -l 99 tests/
-	$(ENV_PREFIX)mypy --ignore-missing-imports chartparse/
+lint: flake black  ## Run pep8 linter and black.
 
 .PHONY: mypy
-mypy:             ## Run mypy linter.
+mypy:              ## Run mypy type checker.
 	$(ENV_PREFIX)mypy --ignore-missing-imports chartparse/
 
-.PHONY: test
-test: lint        ## Run tests and generate coverage report.
-	$(ENV_PREFIX)pytest -v --cov-config .coveragerc --cov-report term-missing \
+.PHONY: check
+check: lint mypy   ## Run all linters and mypy.
+
+.PHONY: cov
+cov:               ## Run tests.
+	$(ENV_PREFIX)pytest -vv --cov-config .coveragerc --cov-report term-missing \
 			     --cov=chartparse -l --tb=short --maxfail=1 tests/
 	$(ENV_PREFIX)coverage xml
 	$(ENV_PREFIX)coverage html
 
+.PHONY: test
+test:              ## Run tests and generate coverage report.
+	$(ENV_PREFIX)pytest -vv	-l --tb=short --maxfail=1 tests/
+
+.PHONY: proof
+proof: check cov  ## ("Proofread") Run all linters, mypy, and unit tests.
+
 .PHONY: watch
-watch:            ## Run tests on every change.
+watch:             ## Run tests on every change.
 	ls **/**.py | entr $(ENV_PREFIX)pytest -s -vvv -l --tb=long --maxfail=1 tests/
 
 .PHONY: clean
-clean:            ## Clean unused files.
+clean:             ## Clean unused files.
 	@find ./ -name '*.pyc' -exec rm -f {} \;
 	@find ./ -name '__pycache__' -exec rm -rf {} \;
 	@find ./ -name 'Thumbs.db' -exec rm -f {} \;
@@ -70,7 +84,7 @@ clean:            ## Clean unused files.
 	@rm -rf .tox/
 
 .PHONY: virtualenv
-virtualenv:       ## Create a virtual environment.
+virtualenv:        ## Create a virtual environment.
 	@if [ "$(USING_POETRY)" ]; then poetry install && exit; fi
 	@echo "creating virtualenv ..."
 	@rm -rf .venv
@@ -81,7 +95,7 @@ virtualenv:       ## Create a virtual environment.
 	@echo "!!! Please run 'source .venv/bin/activate' to enable the environment !!!"
 
 .PHONY: release
-release:          ## Create a new tag for release.
+release:           ## Create a new tag for release.
 	@echo "WARNING: This operation will create s version tag and push to github"
 	@read -p "Version? (provide the next x.y.z semver) : " TAG
 	@echo "$${TAG}" > chartparse/VERSION
@@ -94,7 +108,7 @@ release:          ## Create a new tag for release.
 	@echo "Github Actions will detect the new tag and release the new version."
 
 .PHONY: switch-to-poetry
-switch-to-poetry: ## Switch to poetry package manager.
+switch-to-poetry:  ## Switch to poetry package manager.
 	@echo "Switching to poetry ..."
 	@if ! poetry --version > /dev/null; then echo 'poetry is required, install from https://python-poetry.org/'; exit 1; fi
 	@rm -rf .venv
@@ -112,7 +126,7 @@ switch-to-poetry: ## Switch to poetry package manager.
 	@echo "Please run 'poetry shell' or 'poetry run chartparse'"
 
 .PHONY: init
-init:             ## Initialize the project based on an application template.
+init:              ## Initialize the project based on an application template.
 	@./.github/init.sh
 
 
