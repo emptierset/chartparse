@@ -322,6 +322,21 @@ class Chart(DictPropertiesEqMixin):
         phrase_duration_seconds = (last_event.timestamp - first_event.timestamp).total_seconds()
         return len(events) / phrase_duration_seconds
 
+    def __str__(self) -> str:  # pragma: no cover
+        items = []
+        if hasattr(self, "metadata"):
+            items.append(f"{self.metadata}")
+        if hasattr(self, "global_events_track"):
+            items.append(f"{self.global_events_track}")
+        if hasattr(self, "sync_track"):
+            items.append(f"{self.sync_track}")
+
+        item_string = ", ".join(items)
+        return f"{type(self).__name__}({item_string})"
+
+    def __repr__(self) -> str:  # pragma: no cover
+        return self.__str__()
+
 
 def _iterate_from_second_elem(xs: Sequence[T]) -> Iterator[T]:
     """Given an iterable ``xs``, return an iterator that skips ``xs[0]``.

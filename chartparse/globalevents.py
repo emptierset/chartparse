@@ -8,12 +8,14 @@ from typing import ClassVar, Optional, Pattern, Type, TypeVar
 from chartparse.event import Event
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.track import EventTrack, HasSectionNameMixin
-from chartparse.util import DictPropertiesEqMixin
+from chartparse.util import DictPropertiesEqMixin, DictReprTruncatedSequencesMixin
 
 GlobalEventsTrackT = TypeVar("GlobalEventsTrackT", bound="GlobalEventsTrack")
 
 
-class GlobalEventsTrack(EventTrack, HasSectionNameMixin, DictPropertiesEqMixin):
+class GlobalEventsTrack(
+    EventTrack, HasSectionNameMixin, DictPropertiesEqMixin, DictReprTruncatedSequencesMixin
+):
     """A :class:`~chartparse.chart.Chart`'s :class:`~chartparse.globalevents.GlobalEvent`\\ s."""
 
     text_events: Sequence[TextEvent]

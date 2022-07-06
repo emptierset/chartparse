@@ -13,7 +13,7 @@ from chartparse.enums import AllValuesGettableEnum
 from chartparse.event import Event
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.track import EventTrack
-from chartparse.util import DictPropertiesEqMixin
+from chartparse.util import DictPropertiesEqMixin, DictReprTruncatedSequencesMixin
 
 InstrumentTrackT = TypeVar("InstrumentTrackT", bound="InstrumentTrack")
 
@@ -132,7 +132,7 @@ class NoteTrackIndex(AllValuesGettableEnum):
     OPEN = 7
 
 
-class InstrumentTrack(EventTrack, DictPropertiesEqMixin):
+class InstrumentTrack(EventTrack, DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     """All of the instrument-related events for one (instrument, difficulty) pair."""
 
     instrument: Instrument
