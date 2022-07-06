@@ -65,37 +65,14 @@ PascalCaseFieldNameT = Literal[
 
 FieldValueT = Union[int, str, "Player2Instrument"]
 
+FieldValueParserT = Callable[[str], FieldValueT]
+
 
 class Player2Instrument(enum.Enum):
     """The instrument type of the co-op guitar chart in Guitar Hero 3."""
 
     BASS = "bass"
     RHYTHM = "rhythm"
-
-
-def _make_field_regex(
-    field_name: PascalCaseFieldNameT, value_regex: str, is_value_quoted: bool
-) -> str:
-    to_join = [rf"^\s*?{field_name} = "]
-    if is_value_quoted:
-        to_join.append(r'"')
-    to_join.append(rf"({value_regex})")
-    if is_value_quoted:
-        to_join.append(r'"')
-    to_join.append(r"\s*?$")
-    return "".join(to_join)
-
-
-def _make_int_field_regex(field_name: PascalCaseFieldNameT) -> str:
-    return _make_field_regex(field_name, r"\d+?", False)
-
-
-def _make_multiword_str_field_regex(field_name: PascalCaseFieldNameT) -> str:
-    return _make_field_regex(field_name, r".+?", True)
-
-
-def _make_quoteless_str_field_regex(field_name: PascalCaseFieldNameT) -> str:
-    return _make_field_regex(field_name, r'[^"]+?', False)
 
 
 class _FieldValuesDict(TypedDict, total=False):
@@ -125,8 +102,6 @@ class _FieldValuesDict(TypedDict, total=False):
     crowd_stream: str
 
 
-# TODO: Automatically map regex_prog to processing_fn if it can be derived.
-# For example, _make_int_field_regex can automagically choose ``int``.
 class _FieldParsingSpec(object):
     """A bundle of data necessary to parse a field from a ``.chart`` file."""
 
@@ -135,12 +110,56 @@ class _FieldParsingSpec(object):
 
     # Cannot actually be annotated as an instance attribute directly due to longstanding mypy bug:
     # https://github.com/python/mypy/issues/708.
-    # processing_fn: Callable[[str], FieldValueT]
+    # processing_fn: FieldValueParserT
 
-    def __init__(self, regex: str, processing_fn: Callable[[str], FieldValueT]) -> None:
+    def __init__(self, regex: str, processing_fn: FieldValueParserT) -> None:
         self.regex = regex
         self.regex_prog = re.compile(self.regex)
         self.processing_fn = processing_fn
+
+    @staticmethod
+    def make_field_regex(
+        field_name: PascalCaseFieldNameT, value_regex: str, is_value_quoted: bool
+    ) -> str:
+        to_join = [rf"^\s*?{field_name} = "]
+        if is_value_quoted:
+            to_join.append(r'"')
+        to_join.append(rf"({value_regex})")
+        if is_value_quoted:
+            to_join.append(r'"')
+        to_join.append(r"\s*?$")
+        return "".join(to_join)
+
+
+class _IntFieldSpec(_FieldParsingSpec):
+    def __init__(self, field_name: PascalCaseFieldNameT) -> None:
+        super().__init__(self.make_int_field_regex(field_name), int)
+
+    @staticmethod
+    def make_int_field_regex(field_name: PascalCaseFieldNameT) -> str:
+        return _FieldParsingSpec.make_field_regex(field_name, r"\d+?", False)
+
+
+class _MultiwordStrFieldSpec(_FieldParsingSpec):
+    def __init__(self, field_name: PascalCaseFieldNameT) -> None:
+        super().__init__(self.make_multiword_str_field_regex(field_name), str)
+
+    @staticmethod
+    def make_multiword_str_field_regex(field_name: PascalCaseFieldNameT) -> str:
+        return _FieldParsingSpec.make_field_regex(field_name, r".+?", True)
+
+
+class _QuotelessStrFieldSpec(_FieldParsingSpec):
+    def __init__(
+        self,
+        field_name: PascalCaseFieldNameT,
+        processing_fn: FieldValueParserT,
+    ) -> None:
+        super().__init__(self.make_quoteless_str_field_regex(field_name), processing_fn)
+
+    @staticmethod
+    def make_quoteless_str_field_regex(field_name: PascalCaseFieldNameT) -> str:
+        return _FieldParsingSpec.make_field_regex(field_name, r'[^"]+?', False)
 
 
 class _FieldParsingSpecDict(TypedDict):
@@ -171,101 +190,30 @@ class _FieldParsingSpecDict(TypedDict):
 
 
 _field_parsing_specs: _FieldParsingSpecDict = {
-    "resolution": _FieldParsingSpec(
-        _make_int_field_regex("Resolution"),
-        int,
-    ),
-    "offset": _FieldParsingSpec(
-        _make_int_field_regex("Offset"),
-        int,
-    ),
-    "player2": _FieldParsingSpec(
-        _make_quoteless_str_field_regex("Player2"), lambda s: Player2Instrument(s)
-    ),
-    "difficulty": _FieldParsingSpec(
-        _make_int_field_regex("Difficulty"),
-        int,
-    ),
-    "preview_start": _FieldParsingSpec(
-        _make_int_field_regex("PreviewStart"),
-        int,
-    ),
-    "preview_end": _FieldParsingSpec(
-        _make_int_field_regex("PreviewEnd"),
-        int,
-    ),
-    "genre": _FieldParsingSpec(
-        _make_multiword_str_field_regex("Genre"),
-        str,
-    ),
-    "media_type": _FieldParsingSpec(
-        _make_multiword_str_field_regex("MediaType"),
-        str,
-    ),
-    "name": _FieldParsingSpec(
-        _make_multiword_str_field_regex("Name"),
-        str,
-    ),
-    "artist": _FieldParsingSpec(
-        _make_multiword_str_field_regex("Artist"),
-        str,
-    ),
-    "charter": _FieldParsingSpec(
-        _make_multiword_str_field_regex("Charter"),
-        str,
-    ),
-    "album": _FieldParsingSpec(
-        _make_multiword_str_field_regex("Album"),
-        str,
-    ),
-    "year": _FieldParsingSpec(
-        _make_multiword_str_field_regex("Year"),
-        str,
-    ),
-    "music_stream": _FieldParsingSpec(
-        _make_multiword_str_field_regex("MusicStream"),
-        str,
-    ),
-    "guitar_stream": _FieldParsingSpec(
-        _make_multiword_str_field_regex("GuitarStream"),
-        str,
-    ),
-    "rhythm_stream": _FieldParsingSpec(
-        _make_multiword_str_field_regex("RhythmStream"),
-        str,
-    ),
-    "bass_stream": _FieldParsingSpec(
-        _make_multiword_str_field_regex("BassStream"),
-        str,
-    ),
-    "drum_stream": _FieldParsingSpec(
-        _make_multiword_str_field_regex("DrumStream"),
-        str,
-    ),
-    "drum2_stream": _FieldParsingSpec(
-        _make_multiword_str_field_regex("Drum2Stream"),
-        str,
-    ),
-    "drum3_stream": _FieldParsingSpec(
-        _make_multiword_str_field_regex("Drum3Stream"),
-        str,
-    ),
-    "drum4_stream": _FieldParsingSpec(
-        _make_multiword_str_field_regex("Drum4Stream"),
-        str,
-    ),
-    "vocal_stream": _FieldParsingSpec(
-        _make_multiword_str_field_regex("VocalStream"),
-        str,
-    ),
-    "keys_stream": _FieldParsingSpec(
-        _make_multiword_str_field_regex("KeysStream"),
-        str,
-    ),
-    "crowd_stream": _FieldParsingSpec(
-        _make_multiword_str_field_regex("CrowdStream"),
-        str,
-    ),
+    "resolution": _IntFieldSpec("Resolution"),
+    "offset": _IntFieldSpec("Offset"),
+    "player2": _QuotelessStrFieldSpec("Player2", processing_fn=lambda s: Player2Instrument(s)),
+    "difficulty": _IntFieldSpec("Difficulty"),
+    "preview_start": _IntFieldSpec("PreviewStart"),
+    "preview_end": _IntFieldSpec("PreviewEnd"),
+    "genre": _MultiwordStrFieldSpec("Genre"),
+    "media_type": _MultiwordStrFieldSpec("MediaType"),
+    "name": _MultiwordStrFieldSpec("Name"),
+    "artist": _MultiwordStrFieldSpec("Artist"),
+    "charter": _MultiwordStrFieldSpec("Charter"),
+    "album": _MultiwordStrFieldSpec("Album"),
+    "year": _MultiwordStrFieldSpec("Year"),
+    "music_stream": _MultiwordStrFieldSpec("MusicStream"),
+    "guitar_stream": _MultiwordStrFieldSpec("GuitarStream"),
+    "rhythm_stream": _MultiwordStrFieldSpec("RhythmStream"),
+    "bass_stream": _MultiwordStrFieldSpec("BassStream"),
+    "drum_stream": _MultiwordStrFieldSpec("DrumStream"),
+    "drum2_stream": _MultiwordStrFieldSpec("Drum2Stream"),
+    "drum3_stream": _MultiwordStrFieldSpec("Drum3Stream"),
+    "drum4_stream": _MultiwordStrFieldSpec("Drum4Stream"),
+    "vocal_stream": _MultiwordStrFieldSpec("VocalStream"),
+    "keys_stream": _MultiwordStrFieldSpec("KeysStream"),
+    "crowd_stream": _MultiwordStrFieldSpec("CrowdStream"),
 }
 
 MetadataT = TypeVar("MetadataT", bound="Metadata")
