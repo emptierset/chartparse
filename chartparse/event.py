@@ -26,7 +26,7 @@ class Event(DictPropertiesEqMixin, DictReprMixin):
         self.timestamp = timestamp
 
     def __str__(self) -> str:  # pragma: no cover
-        to_join = [f"{type(self).__name__: >18}(t@{self.tick:07}"]
+        to_join = [f"{type(self).__name__}(t@{self.tick:07}"]
         if self.timestamp is not None:
             as_str = (
                 str(self.timestamp)
