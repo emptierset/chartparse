@@ -20,6 +20,16 @@ class TestMetadata(object):
         assert basic_metadata.genre == pytest.default_genre
         assert basic_metadata.media_type == pytest.default_media_type
         assert basic_metadata.music_stream == pytest.default_music_stream
+        assert basic_metadata.guitar_stream == pytest.default_guitar_stream
+        assert basic_metadata.rhythm_stream == pytest.default_rhythm_stream
+        assert basic_metadata.bass_stream == pytest.default_bass_stream
+        assert basic_metadata.drum_stream == pytest.default_drum_stream
+        assert basic_metadata.drum2_stream == pytest.default_drum2_stream
+        assert basic_metadata.drum3_stream == pytest.default_drum3_stream
+        assert basic_metadata.drum4_stream == pytest.default_drum4_stream
+        assert basic_metadata.vocal_stream == pytest.default_vocal_stream
+        assert basic_metadata.keys_stream == pytest.default_keys_stream
+        assert basic_metadata.crowd_stream == pytest.default_crowd_stream
 
     def test_from_chart_lines(self):
         lines = [
@@ -37,6 +47,16 @@ class TestMetadata(object):
             f'  Genre = "{pytest.default_genre}"',
             f'  MediaType = "{pytest.default_media_type}"',
             f'  MusicStream = "{pytest.default_music_stream}"',
+            f'  GuitarStream = "{pytest.default_guitar_stream}"',
+            f'  RhythmStream = "{pytest.default_rhythm_stream}"',
+            f'  BassStream = "{pytest.default_bass_stream}"',
+            f'  DrumStream = "{pytest.default_drum_stream}"',
+            f'  Drum2Stream = "{pytest.default_drum2_stream}"',
+            f'  Drum3Stream = "{pytest.default_drum3_stream}"',
+            f'  Drum4Stream = "{pytest.default_drum4_stream}"',
+            f'  VocalStream = "{pytest.default_vocal_stream}"',
+            f'  KeysStream = "{pytest.default_keys_stream}"',
+            f'  CrowdStream = "{pytest.default_crowd_stream}"',
         ]
         metadata = Metadata.from_chart_lines(lambda: iter(lines))
         assert metadata.name == pytest.default_name
@@ -53,6 +73,16 @@ class TestMetadata(object):
         assert metadata.genre == pytest.default_genre
         assert metadata.media_type == pytest.default_media_type
         assert metadata.music_stream == pytest.default_music_stream
+        assert metadata.guitar_stream == pytest.default_guitar_stream
+        assert metadata.rhythm_stream == pytest.default_rhythm_stream
+        assert metadata.bass_stream == pytest.default_bass_stream
+        assert metadata.drum_stream == pytest.default_drum_stream
+        assert metadata.drum2_stream == pytest.default_drum2_stream
+        assert metadata.drum3_stream == pytest.default_drum3_stream
+        assert metadata.drum4_stream == pytest.default_drum4_stream
+        assert metadata.vocal_stream == pytest.default_vocal_stream
+        assert metadata.keys_stream == pytest.default_keys_stream
+        assert metadata.crowd_stream == pytest.default_crowd_stream
 
     def test_from_chart_lines_missing_resolution(self):
         with pytest.raises(MissingRequiredField):

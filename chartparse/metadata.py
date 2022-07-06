@@ -25,6 +25,16 @@ SnakeCaseFieldNameT = Literal[
     "album",
     "year",
     "music_stream",
+    "guitar_stream",
+    "rhythm_stream",
+    "bass_stream",
+    "drum_stream",
+    "drum2_stream",
+    "drum3_stream",
+    "drum4_stream",
+    "vocal_stream",
+    "keys_stream",
+    "crowd_stream",
 ]
 
 PascalCaseFieldNameT = Literal[
@@ -42,6 +52,16 @@ PascalCaseFieldNameT = Literal[
     "Album",
     "Year",
     "MusicStream",
+    "GuitarStream",
+    "RhythmStream",
+    "BassStream",
+    "DrumStream",
+    "Drum2Stream",
+    "Drum3Stream",
+    "Drum4Stream",
+    "VocalStream",
+    "KeysStream",
+    "CrowdStream",
 ]
 
 FieldValueT = Union[int, str, "Player2Instrument"]
@@ -94,8 +114,20 @@ class _FieldValuesDict(TypedDict, total=False):
     album: str
     year: str
     music_stream: str
+    guitar_stream: str
+    rhythm_stream: str
+    bass_stream: str
+    drum_stream: str
+    drum2_stream: str
+    drum3_stream: str
+    drum4_stream: str
+    vocal_stream: str
+    keys_stream: str
+    crowd_stream: str
 
 
+# TODO: Automatically map regex_prog to processing_fn if it can be derived.
+# For example, _make_int_field_regex can automagically choose ``int``.
 @dataclasses.dataclass
 class _FieldParsingSpec(object):
     """A bundle of data necessary to parse a field from a ``.chart`` file.
@@ -127,6 +159,16 @@ class _FieldParsingSpecDict(TypedDict):
     album: _FieldParsingSpec
     year: _FieldParsingSpec
     music_stream: _FieldParsingSpec
+    guitar_stream: _FieldParsingSpec
+    rhythm_stream: _FieldParsingSpec
+    bass_stream: _FieldParsingSpec
+    drum_stream: _FieldParsingSpec
+    drum2_stream: _FieldParsingSpec
+    drum3_stream: _FieldParsingSpec
+    drum4_stream: _FieldParsingSpec
+    vocal_stream: _FieldParsingSpec
+    keys_stream: _FieldParsingSpec
+    crowd_stream: _FieldParsingSpec
 
 
 _field_parsing_specs: _FieldParsingSpecDict = {
@@ -185,23 +227,51 @@ _field_parsing_specs: _FieldParsingSpecDict = {
         _make_multiword_str_field_regex("MusicStream"),
         str,
     ),
+    "guitar_stream": _FieldParsingSpec(
+        _make_multiword_str_field_regex("GuitarStream"),
+        str,
+    ),
+    "rhythm_stream": _FieldParsingSpec(
+        _make_multiword_str_field_regex("RhythmStream"),
+        str,
+    ),
+    "bass_stream": _FieldParsingSpec(
+        _make_multiword_str_field_regex("BassStream"),
+        str,
+    ),
+    "drum_stream": _FieldParsingSpec(
+        _make_multiword_str_field_regex("DrumStream"),
+        str,
+    ),
+    "drum2_stream": _FieldParsingSpec(
+        _make_multiword_str_field_regex("Drum2Stream"),
+        str,
+    ),
+    "drum3_stream": _FieldParsingSpec(
+        _make_multiword_str_field_regex("Drum3Stream"),
+        str,
+    ),
+    "drum4_stream": _FieldParsingSpec(
+        _make_multiword_str_field_regex("Drum4Stream"),
+        str,
+    ),
+    "vocal_stream": _FieldParsingSpec(
+        _make_multiword_str_field_regex("VocalStream"),
+        str,
+    ),
+    "keys_stream": _FieldParsingSpec(
+        _make_multiword_str_field_regex("KeysStream"),
+        str,
+    ),
+    "crowd_stream": _FieldParsingSpec(
+        _make_multiword_str_field_regex("CrowdStream"),
+        str,
+    ),
 }
 
 MetadataT = TypeVar("MetadataT", bound="Metadata")
 
 
-# TODO: Parse multiple audiostreams; Audio streams can include:
-#     MusicStream = "5000 Robots.ogg"
-#     GuitarStream = "guitar.ogg"
-#     RhythmStream = "rhythm.ogg"
-#     BassStream = "bass.ogg"
-#     DrumStream = "drums_1.ogg"
-#     Drum2Stream = "drums_2.ogg"
-#     Drum3Stream = "drums_3.ogg"
-#     Drum4Stream = "drums_4.ogg"
-#     VocalStream = “vocals.ogg”
-#     KeysStream = “keys.ogg”
-#     CrowdStream = “crowd.ogg”
 class Metadata(HasSectionNameMixin, DictPropertiesEqMixin, DictReprMixin):
     """All of a :class:`~chartparse.chart.Chart` object's metadata."""
 
@@ -266,7 +336,37 @@ class Metadata(HasSectionNameMixin, DictPropertiesEqMixin, DictReprMixin):
     """
 
     music_stream: str
-    """The filename of the main music track."""
+    """The filename of the main music audio file."""
+
+    guitar_stream: str
+    """The filename of the guitar audio file."""
+
+    rhythm_stream: str
+    """The filename of the rhythm audio file."""
+
+    bass_stream: str
+    """The filename of the bass audio file."""
+
+    drum_stream: str
+    """The filename of the drum audio file."""
+
+    drum2_stream: str
+    """The filename of the drum2 audio file."""
+
+    drum3_stream: str
+    """The filename of the drum3 audio file."""
+
+    drum4_stream: str
+    """The filename of the drum4 audio file."""
+
+    vocal_stream: str
+    """The filename of the vocal audio file."""
+
+    keys_stream: str
+    """The filename of the keys audio file."""
+
+    crowd_stream: str
+    """The filename of the crowd audio file."""
 
     def __init__(
         self,
@@ -284,6 +384,16 @@ class Metadata(HasSectionNameMixin, DictPropertiesEqMixin, DictReprMixin):
         album: Optional[str] = None,
         year: Optional[str] = None,
         music_stream: Optional[str] = None,
+        guitar_stream: Optional[str] = None,
+        rhythm_stream: Optional[str] = None,
+        bass_stream: Optional[str] = None,
+        drum_stream: Optional[str] = None,
+        drum2_stream: Optional[str] = None,
+        drum3_stream: Optional[str] = None,
+        drum4_stream: Optional[str] = None,
+        vocal_stream: Optional[str] = None,
+        keys_stream: Optional[str] = None,
+        crowd_stream: Optional[str] = None,
     ) -> None:
         """Initializes all instance attributes."""
 
@@ -307,6 +417,26 @@ class Metadata(HasSectionNameMixin, DictPropertiesEqMixin, DictReprMixin):
             self.year = year
         if music_stream is not None:
             self.music_stream = music_stream
+        if guitar_stream is not None:
+            self.guitar_stream = guitar_stream
+        if rhythm_stream is not None:
+            self.rhythm_stream = rhythm_stream
+        if bass_stream is not None:
+            self.bass_stream = bass_stream
+        if drum_stream is not None:
+            self.drum_stream = drum_stream
+        if drum2_stream is not None:
+            self.drum2_stream = drum2_stream
+        if drum3_stream is not None:
+            self.drum3_stream = drum3_stream
+        if drum4_stream is not None:
+            self.drum4_stream = drum4_stream
+        if vocal_stream is not None:
+            self.vocal_stream = vocal_stream
+        if keys_stream is not None:
+            self.keys_stream = keys_stream
+        if crowd_stream is not None:
+            self.crowd_stream = crowd_stream
 
     @classmethod
     def from_chart_lines(
@@ -362,5 +492,15 @@ class Metadata(HasSectionNameMixin, DictPropertiesEqMixin, DictReprMixin):
         maybe_set_kwarg("album")
         maybe_set_kwarg("year")
         maybe_set_kwarg("music_stream")
+        maybe_set_kwarg("guitar_stream")
+        maybe_set_kwarg("rhythm_stream")
+        maybe_set_kwarg("bass_stream")
+        maybe_set_kwarg("drum_stream")
+        maybe_set_kwarg("drum2_stream")
+        maybe_set_kwarg("drum3_stream")
+        maybe_set_kwarg("drum4_stream")
+        maybe_set_kwarg("vocal_stream")
+        maybe_set_kwarg("keys_stream")
+        maybe_set_kwarg("crowd_stream")
 
         return cls(**kwargs)
