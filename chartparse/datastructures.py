@@ -6,7 +6,6 @@ from typing import Union, overload
 from chartparse.hints import ComparableT, T
 
 
-# TODO: Document.
 class ImmutableList(Sequence[T]):
     """A ``list`` equivalent that cannot be mutated."""
 
@@ -52,7 +51,6 @@ class ImmutableList(Sequence[T]):
         return NotImplemented
 
 
-# TODO: Document.
 class ImmutableSortedList(ImmutableList[T]):
     """A ``list`` equivalent that cannot be mutated and is sorted during initialization."""
 
