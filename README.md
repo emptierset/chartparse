@@ -6,9 +6,7 @@
 
 ## Install it from PyPI
 
-```bash
-pip install chartparse
-```
+This package will be uploaded to PyPI Soon™.
 
 ## Usage
 
