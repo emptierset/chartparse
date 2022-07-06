@@ -177,6 +177,16 @@ _default_preview_end_string = str(_default_preview_end)
 _default_genre = "metal"
 _default_media_type = "vinyl"
 _default_music_stream = "song.ogg"
+_default_guitar_stream = "guitar.ogg"
+_default_rhythm_stream = "rhythm.ogg"
+_default_bass_stream = "bass.ogg"
+_default_drum_stream = "drum.ogg"
+_default_drum2_stream = "drum2.ogg"
+_default_drum3_stream = "drum3.ogg"
+_default_drum4_stream = "drum4.ogg"
+_default_vocal_stream = "vocal.ogg"
+_default_keys_stream = "keys.ogg"
+_default_crowd_stream = "crowd.ogg"
 
 
 @pytest.fixture
@@ -218,6 +228,16 @@ def pytest_configure():
     pytest.default_genre = _default_genre
     pytest.default_media_type = _default_media_type
     pytest.default_music_stream = _default_music_stream
+    pytest.default_guitar_stream = _default_guitar_stream
+    pytest.default_rhythm_stream = _default_rhythm_stream
+    pytest.default_bass_stream = _default_bass_stream
+    pytest.default_drum_stream = _default_drum_stream
+    pytest.default_drum2_stream = _default_drum2_stream
+    pytest.default_drum3_stream = _default_drum3_stream
+    pytest.default_drum4_stream = _default_drum4_stream
+    pytest.default_vocal_stream = _default_vocal_stream
+    pytest.default_keys_stream = _default_keys_stream
+    pytest.default_crowd_stream = _default_crowd_stream
 
     pytest.default_bpm = _default_bpm
     pytest.default_bpm_event = _default_bpm_event
@@ -382,6 +402,16 @@ def basic_metadata():
         _default_album,
         _default_year,
         _default_music_stream,
+        _default_guitar_stream,
+        _default_rhythm_stream,
+        _default_bass_stream,
+        _default_drum_stream,
+        _default_drum2_stream,
+        _default_drum3_stream,
+        _default_drum4_stream,
+        _default_vocal_stream,
+        _default_keys_stream,
+        _default_crowd_stream,
     )
 
 
