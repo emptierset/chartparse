@@ -6,6 +6,7 @@ import itertools
 import re
 import typing
 from collections.abc import Callable, Iterable, Iterator, Sequence
+from pathlib import Path
 from typing import Optional, TextIO
 
 from chartparse.event import Event
@@ -73,7 +74,20 @@ class Chart(DictPropertiesEqMixin):
         )
     }
 
-    # TODO: Add from_filepath wrapper that takes a path rather than a file pointer.
+    @classmethod
+    def from_filepath(cls, path: Path) -> Chart:
+        """Given a path, parses the contents of its file and returns a new Chart.
+
+        Args:
+            path: A ``Path`` object that points to a ``.chart`` file written by Moonscraper. Must
+                have a ``[Song]`` section and a ``[SyncTrack]`` section.
+
+        Returns:
+            A ``Chart`` object, initialized with data parsed from ``path``.
+        """
+        with open(path, "r", encoding="utf-8-sig") as f:
+            return Chart.from_file(f)
+
     @classmethod
     def from_file(cls, fp: TextIO) -> Chart:
         """Given a file object, parses its contents and returns a new Chart.
@@ -314,6 +328,7 @@ class Chart(DictPropertiesEqMixin):
         phrase_duration_seconds = (last_event.timestamp - first_event.timestamp).total_seconds()
         return len(events) / phrase_duration_seconds
 
+    # TODO: Print info about instrument tracks.
     def __str__(self) -> str:  # pragma: no cover
         items = []
         if hasattr(self, "metadata"):
