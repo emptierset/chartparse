@@ -55,7 +55,7 @@ class TestChartInit(object):
         )
 
 
-class TestChartFromFile(object):
+class TestChartAlternateInitializers(object):
     def test_basic(
         self,
         mocker,
@@ -86,6 +86,7 @@ class TestChartFromFile(object):
         )
         with open(_valid_chart_filepath, "r", encoding="utf-8-sig") as f:
             assert Chart.from_file(f) == basic_chart
+        assert Chart.from_filepath(_valid_chart_filepath) == basic_chart
 
     @pytest.mark.parametrize(
         "path",
