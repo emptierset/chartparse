@@ -40,8 +40,6 @@ class Chart(DictPropertiesEqMixin):
     instrument_tracks: dict[Instrument, dict[Difficulty, InstrumentTrack]]
     """Contains all of the chart's :class:`~chartparse.instrument.InstrumentTrack` objects."""
 
-    _required_metadata = ("resolution",)
-
     def __init__(
         self,
         metadata: Metadata,
@@ -50,12 +48,6 @@ class Chart(DictPropertiesEqMixin):
         instrument_tracks: dict[Instrument, dict[Difficulty, InstrumentTrack]],
     ) -> None:
         """Instantiates all instance attributes and populates event timestamps."""
-
-        if not all(hasattr(metadata, p) for p in self._required_metadata):
-            raise ValueError(
-                f"metadata list {list(metadata.__dict__.keys())} does not "
-                f"contain all required metadata {self._required_metadata}"
-            )
 
         self.metadata = metadata
         self.global_events_track = global_events_track
@@ -106,7 +98,7 @@ class Chart(DictPropertiesEqMixin):
         ] = collections.defaultdict(dict)
         for section_name, iterator_getter in sections.items():
             if section_name == Metadata.section_name:
-                metadata = Metadata.from_chart_lines(iterator_getter())
+                metadata = Metadata.from_chart_lines(iterator_getter)
             elif section_name == GlobalEventsTrack.section_name:
                 global_events_track = GlobalEventsTrack.from_chart_lines(iterator_getter)
             elif section_name == SyncTrack.section_name:

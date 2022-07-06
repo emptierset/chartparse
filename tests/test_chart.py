@@ -15,7 +15,6 @@ _directory_of_this_file = pathlib.Path(__file__).parent.resolve()
 _chart_directory_filepath = _directory_of_this_file / "data"
 _valid_chart_filepath = _chart_directory_filepath / "test.chart"
 _missing_metadata_chart_filepath = _chart_directory_filepath / "missing_metadata.chart"
-_missing_resolution_chart_filepath = _chart_directory_filepath / "missing_resolution.chart"
 _missing_sync_track_chart_filepath = _chart_directory_filepath / "missing_sync_track.chart"
 
 
@@ -54,20 +53,6 @@ class TestChartInit(object):
             ],
             any_order=True,
         )
-
-    @pytest.mark.parametrize(
-        "metadata",
-        [
-            pytest.param(Metadata(dict()), id="missing_resolution"),
-        ],
-    )
-    def test_missing_required_metadata(
-        self, metadata, basic_global_events_track, basic_sync_track, basic_instrument_tracks
-    ):
-        with pytest.raises(ValueError):
-            _ = Chart(
-                metadata, basic_global_events_track, basic_sync_track, basic_instrument_tracks
-            )
 
 
 class TestChartFromFile(object):
@@ -234,14 +219,18 @@ class TestPopulateEventTimestamps(object):
             ),
         ],
     )
-    def test_populate_bpm_event_timestamps(self, mocker, bpm_events, want_timestamps, bare_chart):
-        bare_chart.metadata = Metadata({"resolution": 100})
+    def test_populate_bpm_event_timestamps(
+        self, mocker, bpm_events, want_timestamps, bare_chart, bare_metadata
+    ):
+        bare_metadata.resolution = 100
+        bare_chart.metadata = bare_metadata
         bare_chart.sync_track = SyncTrack(pytest.default_time_signature_event_list, bpm_events)
         bare_chart._populate_bpm_event_timestamps()
         assert_event_timestamps(bare_chart.sync_track.bpm_events, want_timestamps)
 
-    def test_populate_event_timestamps(self, bare_chart):
-        bare_chart.metadata = Metadata({"resolution": 100})
+    def test_populate_event_timestamps(self, bare_chart, bare_metadata):
+        bare_metadata.resolution = 100
+        bare_chart.metadata = bare_metadata
         bare_chart.sync_track = SyncTrack(
             pytest.default_time_signature_event_list, self.test_bpm_events
         )
@@ -288,12 +277,14 @@ class TestTimestampAtTick(object):
     def test_basic(
         self,
         bare_chart,
+        bare_metadata,
         resolution,
         tick,
         want_timestamp,
         want_proximal_bpm_event_idx,
     ):
-        bare_chart.metadata = Metadata({"resolution": resolution})
+        bare_metadata.resolution = resolution
+        bare_chart.metadata = bare_metadata
         bare_chart.sync_track = SyncTrack(
             pytest.default_time_signature_event_list, self.test_bpm_events
         )
@@ -314,8 +305,9 @@ class TestSecondsFromTicksAtBPM(object):
             pytest.param(200, 100, 60, 0.5),
         ],
     )
-    def test_basic(self, bare_chart, ticks, bpm, resolution, want):
-        bare_chart.metadata = Metadata({"resolution": resolution})
+    def test_basic(self, bare_chart, bare_metadata, ticks, bpm, resolution, want):
+        bare_metadata.resolution = resolution
+        bare_chart.metadata = bare_metadata
         assert bare_chart._seconds_from_ticks_at_bpm(ticks, bpm) == want
 
     @pytest.mark.parametrize(

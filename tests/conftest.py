@@ -22,7 +22,7 @@ from chartparse.instrument import (
     Difficulty,
     Note,
 )
-from chartparse.metadata import Metadata
+from chartparse.metadata import Metadata, Player2Instrument
 from chartparse.sync import SyncTrack, BPMEvent, TimeSignatureEvent
 from chartparse.track import EventTrack
 
@@ -157,23 +157,26 @@ _default_note_event_list = [_default_note_event]
 _default_star_power_event = StarPowerEvent(_default_tick, _default_sustain)
 _default_star_power_event_list = [_default_star_power_event]
 
-_default_metadata_fields = {
-    "name": "Song Name",
-    "artist": "Artist Name",
-    "charter": "Charter Name",
-    "album": "Album Name",
-    "year": "1999",
-    "offset": 0,
-    "resolution": 1,
-    "player2": "bass",
-    "difficulty": 2,
-    "preview_start": 3,
-    "preview_end": 4,
-    "genre": "rock",
-    "media_type": "cd",
-    "music_stream": "song.ogg",
-    "unknown_property": "unknown value",
-}
+_default_name = "Song Name"
+_default_artist = "Artist Name"
+_default_charter = "Charter Name"
+_default_album = "Album Name"
+_default_year = "1999"
+_default_offset = 0
+_default_offset_string = str(_default_offset)
+_default_resolution = 1
+_default_resolution_string = str(_default_resolution)
+_default_player2 = Player2Instrument.BASS
+_default_player2_string = _default_player2.value
+_default_intensity = 2
+_default_intensity_string = str(_default_intensity)
+_default_preview_start = 3
+_default_preview_start_string = str(_default_preview_start)
+_default_preview_end = 4
+_default_preview_end_string = str(_default_preview_end)
+_default_genre = "metal"
+_default_media_type = "vinyl"
+_default_music_stream = "song.ogg"
 
 
 @pytest.fixture
@@ -194,6 +197,27 @@ def pytest_configure():
     pytest.default_sustain = _default_sustain
 
     pytest.default_timestamp = _default_timestamp
+
+    pytest.default_name = _default_name
+    pytest.default_artist = _default_artist
+    pytest.default_charter = _default_charter
+    pytest.default_album = _default_album
+    pytest.default_year = _default_year
+    pytest.default_offset = _default_offset
+    pytest.default_offset_string = _default_offset_string
+    pytest.default_resolution = _default_resolution
+    pytest.default_resolution_string = _default_resolution_string
+    pytest.default_player2 = _default_player2
+    pytest.default_player2_string = _default_player2_string
+    pytest.default_intensity = _default_intensity
+    pytest.default_intensity_string = _default_intensity_string
+    pytest.default_preview_start = _default_preview_start
+    pytest.default_preview_start_string = _default_preview_start_string
+    pytest.default_preview_end = _default_preview_end
+    pytest.default_preview_end_string = _default_preview_end_string
+    pytest.default_genre = _default_genre
+    pytest.default_media_type = _default_media_type
+    pytest.default_music_stream = _default_music_stream
 
     pytest.default_bpm = _default_bpm
     pytest.default_bpm_event = _default_bpm_event
@@ -337,8 +361,28 @@ def note_lines():  # pragma: no cover
 
 
 @pytest.fixture
+def bare_metadata():
+    return Metadata.__new__(Metadata)
+
+
+@pytest.fixture
 def basic_metadata():
-    return Metadata(_default_metadata_fields)
+    return Metadata(
+        _default_resolution,
+        _default_offset,
+        _default_player2,
+        _default_intensity,
+        _default_preview_start,
+        _default_preview_end,
+        _default_genre,
+        _default_media_type,
+        _default_name,
+        _default_artist,
+        _default_charter,
+        _default_album,
+        _default_year,
+        _default_music_stream,
+    )
 
 
 @pytest.fixture

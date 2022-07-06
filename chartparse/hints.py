@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import Any, Protocol, TypeVar
+from typing import Any, Protocol, TypeVar, runtime_checkable
 
 
+@runtime_checkable
 class Comparable(Protocol):
     """Protocol for annotating comparable types."""
 
