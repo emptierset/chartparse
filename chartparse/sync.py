@@ -8,12 +8,14 @@ from typing import Optional, Pattern, Type, TypeVar
 from chartparse.event import Event
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.track import EventTrack, HasSectionNameMixin
-from chartparse.util import DictPropertiesEqMixin
+from chartparse.util import DictPropertiesEqMixin, DictReprTruncatedSequencesMixin
 
 SyncTrackT = TypeVar("SyncTrackT", bound="SyncTrack")
 
 
-class SyncTrack(EventTrack, HasSectionNameMixin, DictPropertiesEqMixin):
+class SyncTrack(
+    EventTrack, HasSectionNameMixin, DictPropertiesEqMixin, DictReprTruncatedSequencesMixin
+):
     """All of a :class:`~chartparse.chart.Chart` object's tempo-mapping related events."""
 
     time_signature_events: Sequence[TimeSignatureEvent]
