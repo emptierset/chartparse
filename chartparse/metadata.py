@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import dataclasses
 import enum
 import re
 from collections.abc import Callable, Iterable
@@ -128,20 +127,20 @@ class _FieldValuesDict(TypedDict, total=False):
 
 # TODO: Automatically map regex_prog to processing_fn if it can be derived.
 # For example, _make_int_field_regex can automagically choose ``int``.
-@dataclasses.dataclass
 class _FieldParsingSpec(object):
-    """A bundle of data necessary to parse a field from a ``.chart`` file.
-
-    This is a dataclass because it allows us to evade this mypy bug:
-    https://github.com/python/mypy/issues/708
-    """
+    """A bundle of data necessary to parse a field from a ``.chart`` file."""
 
     regex: str
-    regex_prog: Pattern[str] = dataclasses.field(init=False)
-    processing_fn: Callable[[str], FieldValueT]
+    regex_prog: Pattern[str]
 
-    def __post_init__(self) -> None:
+    # Cannot actually be annotated as an instance attribute directly due to longstanding mypy bug:
+    # https://github.com/python/mypy/issues/708.
+    # processing_fn: Callable[[str], FieldValueT]
+
+    def __init__(self, regex: str, processing_fn: Callable[[str], FieldValueT]) -> None:
+        self.regex = regex
         self.regex_prog = re.compile(self.regex)
+        self.processing_fn = processing_fn
 
 
 class _FieldParsingSpecDict(TypedDict):
