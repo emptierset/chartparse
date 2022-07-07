@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import enum
 from collections.abc import Sequence
+
+from chartparse.datastructures import ImmutableList
+from chartparse.hints import T
 
 
 class DictPropertiesEqMixin(object):
@@ -34,3 +38,16 @@ class DictReprTruncatedSequencesMixin(object):
 
         item_string = ", ".join(items)
         return f"{type(self).__name__}({item_string})"
+
+
+class AllValuesGettableEnum(enum.Enum):
+    """A wrapper for ``Enum`` that adds a method for returning all enum values."""
+
+    @classmethod
+    def all_values(cls) -> ImmutableList[T]:
+        """Returns all Enum values.
+
+        Returns:
+            An :class:`~chartparse.datastructures.ImmutableList` containing all Enum values.
+        """
+        return ImmutableList([c.value for c in cls])

@@ -11,12 +11,15 @@ from typing import ClassVar, List, Optional, Pattern, Type, TypeVar, Union
 
 import chartparse.tick
 from chartparse.datastructures import ImmutableSortedList
-from chartparse.enums import AllValuesGettableEnum
 from chartparse.event import Event
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.tick import NoteDuration
 from chartparse.track import EventTrack
-from chartparse.util import DictPropertiesEqMixin, DictReprTruncatedSequencesMixin
+from chartparse.util import (
+    AllValuesGettableEnum,
+    DictPropertiesEqMixin,
+    DictReprTruncatedSequencesMixin,
+)
 
 InstrumentTrackT = TypeVar("InstrumentTrackT", bound="InstrumentTrack")
 
