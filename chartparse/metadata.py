@@ -68,7 +68,7 @@ FieldValueT = Union[int, str, "Player2Instrument"]
 FieldValueParserT = Callable[[str], FieldValueT]
 
 
-# TODO: unique decorator.
+@enum.unique
 class Player2Instrument(enum.Enum):
     """The instrument type of the co-op guitar chart in Guitar Hero 3."""
 
