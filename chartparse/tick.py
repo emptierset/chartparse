@@ -4,8 +4,8 @@ from enum import Enum
 class NoteDuration(Enum):
     """The note durations supported by Moonscraper.
 
-    The enum values are the number of that type of note in
-    :attr:`~chartparse.metadata.Metadata.resolution` ticks.
+    The enum values are the number of that type of note in a number of ticks equal to
+    :attr:`~chartparse.metadata.Metadata.resolution`.
     """
 
     WHOLE = 2 ** (-2)
@@ -40,17 +40,6 @@ class NoteDuration(Enum):
     HUNDRED_TWENTY_EIGHTH_TRIPLET = HUNDRED_NINETY_SECOND
     TWO_HUNDRED_FIFTH_SIXTH_TRIPLET = THREE_HUNDRED_EIGHTY_FOURTH
     FIVE_HUNDRED_TWELFTH_TRIPLET = SEVEN_HUNDRED_SIXTY_EIGHTH
-
-    SEMIBREVE = WHOLE
-    MINIM = HALF
-    CROTCHET = QUARTER
-    QUAVER = EIGHTH
-    SEMIQUAVER = SIXTEENTH
-    DEMISEMIQUAVER = THIRTY_SECOND
-    HEMIDEMISEMIQUAVER = SIXTY_FOURTH
-    SEMIHEMIDEMISEMIQUAVER = HUNDRED_TWENTY_EIGHTH
-    DEMISEMIHEMIDEMISEMIQUAVER = TWO_HUNDRED_FIFTH_SIXTH
-    HEMIDEMISEMIHEMIDEMISEMIQUAVER = FIVE_HUNDRED_TWELFTH
 
 
 def calculate_ticks_between_notes(resolution: int, note_duration: NoteDuration) -> int:
