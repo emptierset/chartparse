@@ -164,7 +164,7 @@ _default_album = "Album Name"
 _default_year = "1999"
 _default_offset = 0
 _default_offset_string = str(_default_offset)
-_default_resolution = 1
+_default_resolution = 192
 _default_resolution_string = str(_default_resolution)
 _default_player2 = Player2Instrument.BASS
 _default_player2_string = _default_player2.value
@@ -291,6 +291,7 @@ def event():
     return Event(_default_tick)
 
 
+# TODO: Reorder fixtures sensibly.
 @pytest.fixture
 def bare_special_event():
     return SpecialEvent.__new__(SpecialEvent)

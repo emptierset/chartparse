@@ -6,6 +6,7 @@ from chartparse.datastructures import ImmutableList
 from chartparse.hints import T
 
 
+# TODO: Move to util.py.
 class AllValuesGettableEnum(enum.Enum):
     """A wrapper for ``Enum`` that adds a method for returning all enum values."""
 

@@ -6,12 +6,15 @@ import enum
 import re
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
+from enum import Enum
 from typing import ClassVar, List, Optional, Pattern, Type, TypeVar, Union
 
+import chartparse.tick
 from chartparse.datastructures import ImmutableSortedList
 from chartparse.enums import AllValuesGettableEnum
 from chartparse.event import Event
 from chartparse.exceptions import RegexNotMatchError
+from chartparse.tick import NoteDuration
 from chartparse.track import EventTrack
 from chartparse.util import DictPropertiesEqMixin, DictReprTruncatedSequencesMixin
 
@@ -42,7 +45,7 @@ class Instrument(AllValuesGettableEnum):
     GHL_BASS = "GHLBass"  # Bass (Guitar Hero: Live)
 
 
-class Note(enum.Enum):
+class Note(Enum):
     """The note lane(s) to which a :class:`~chartparse.instrument.NoteEvent` corresponds."""
 
     P = bytearray((0, 0, 0, 0, 0))
@@ -110,6 +113,11 @@ class Note(enum.Enum):
     BLUE = bytearray((0, 0, 0, 1, 0))
     BLUE_ORANGE = bytearray((0, 0, 0, 1, 1))
     ORANGE = bytearray((0, 0, 0, 0, 1))
+
+    def is_chord(self):
+        """Returns whether this ``Note`` has multiple active lanes."""
+
+        return sum(self.value) > 1
 
 
 class NoteTrackIndex(AllValuesGettableEnum):
@@ -300,8 +308,27 @@ same length of time.
 """
 
 
+@enum.unique
+class HOPOState(Enum):
+    """The manner in which a :class:`~chartparse.instrument.NoteEvent` can/must be hit."""
+
+    STRUM = 0
+    HOPO = 1
+    TAP = 2
+
+
 class NoteEvent(Event):
-    """An event representing all of the notes at a particular tick."""
+    """An event representing all of the notes at a particular tick.
+
+    A note event's ``str`` representation looks like this::
+
+        NoteEvent(t@0000816 0:00:02.093750): sustain=0: Note.Y [flags=H]
+
+    This event occurs at tick 816 and timestamp 0:00:02.093750. It is not sustained. It is yellow.
+    It is a HOPO. Other valid flags are include ``F`` (for "forced"), ``T`` (for "tap"), and ``S``
+    (for "strum").
+
+    """
 
     note: Note
     """The note lane(s) that are active."""
@@ -310,10 +337,25 @@ class NoteEvent(Event):
     """Information about this note event's sustain value."""
 
     is_forced: bool
-    """Whether the note's HOPO value is manually inverted."""
+    """Whether the note's HOPO value is manually inverted.
+
+    As a user, this value is most likely irrelevant to you. See
+    :attr:`~chartparse.instrument.NoteEvent.hopo_state`.
+    """
 
     is_tap: bool
-    """Whether the note is a tap note."""
+    """Whether the note is a tap note.
+
+    As a user, this value is most likely irrelevant to you. See
+    :attr:`~chartparse.instrument.NoteEvent.hopo_state`.
+    """
+
+    # TODO: Figure out a way for ``hopo_state`` to not be Optional.
+    hopo_state: Optional[HOPOState]
+    """Whether the note is a strum, a HOPO, or a tap note.
+
+    Optional, as it may need to be calculated later.
+    """
 
     star_power_data: Optional[StarPowerData]
     """Information associated with star power for this note.
@@ -345,8 +387,6 @@ class NoteEvent(Event):
         super().__init__(tick, timestamp=timestamp)
         self.note = note
         self.sustain = self._refine_sustain(sustain)
-        # TODO: Refactor is_forced to is_hopo. We can calculate whether any given note is a hopo,
-        # so a user probably does not need to know whether a note was forced to be a hopo.
         self.is_forced = is_forced
         self.is_tap = is_tap
         self.star_power_data = star_power_data
@@ -388,6 +428,36 @@ class NoteEvent(Event):
                 return first_non_none_sustain
         return sustain
 
+    def _populate_hopo_state(self, resolution: int, previous: Union[NoteEvent, None]) -> None:
+        if self.is_tap:
+            self.hopo_state = HOPOState.TAP
+            return
+
+        # The Moonscraper UI does not allow the first note to be forced, so it must be a strum if
+        # it is not a tap.
+        if previous is None:
+            self.hopo_state = HOPOState.STRUM
+            return
+
+        eighth_triplet_tick_boundary = chartparse.tick.calculate_ticks_between_notes(
+            resolution, NoteDuration.EIGHTH_TRIPLET
+        )
+        ticks_since_previous = self.tick - previous.tick
+        previous_is_within_eighth_triplet = ticks_since_previous <= eighth_triplet_tick_boundary
+        previous_note_is_different = self.note != previous.note
+        should_be_hopo = (
+            previous_is_within_eighth_triplet
+            and previous_note_is_different
+            and not self.note.is_chord()
+        )
+
+        if should_be_hopo != self.is_forced:
+            self.hopo_state = HOPOState.HOPO
+            return
+        else:
+            self.hopo_state = HOPOState.STRUM
+            return
+
     def __str__(self) -> str:  # pragma: no cover
         to_join = [super().__str__()]
         to_join.append(f": sustain={self.sustain}")
@@ -397,10 +467,18 @@ class NoteEvent(Event):
             to_join.append("*")
 
         flags = []
-        if self.is_forced:
-            flags.append("F")
-        if self.is_tap:
-            flags.append("T")
+        if self.hopo_state is not None:
+            if self.hopo_state == HOPOState.TAP:
+                flags.append("T")
+            elif self.hopo_state == HOPOState.HOPO:
+                flags.append("H")
+            elif self.hopo_state == HOPOState.STRUM:
+                flags.append("S")
+        else:
+            if self.is_forced:
+                flags.append("F")
+            if self.is_tap:
+                flags.append("T")
         if flags:
             to_join.extend([" [flags=", "".join(flags), "]"])
 
