@@ -19,15 +19,6 @@ chartparse.datastructures module
    :undoc-members:
    :show-inheritance:
 
-chartparse.enums module
------------------------
-
-.. automodule:: chartparse.enums
-   :members:
-   :inherited-members:
-   :undoc-members:
-   :show-inheritance:
-
 chartparse.event module
 -----------------------
 
@@ -85,6 +76,15 @@ chartparse.sync module
 ----------------------
 
 .. automodule:: chartparse.sync
+   :members:
+   :inherited-members:
+   :undoc-members:
+   :show-inheritance:
+
+chartparse.tick module
+-----------------------
+
+.. automodule:: chartparse.tick
    :members:
    :inherited-members:
    :undoc-members:
