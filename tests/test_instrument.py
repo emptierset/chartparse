@@ -2,16 +2,19 @@ import pytest
 import re
 import unittest.mock
 
+import chartparse.tick
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.instrument import (
     InstrumentTrack,
     StarPowerEvent,
     NoteEvent,
     StarPowerData,
+    HOPOState,
     SpecialEvent,
     Note,
     NoteTrackIndex,
 )
+from chartparse.tick import NoteDuration
 
 from tests.conftest import (
     generate_valid_note_line_fn,
@@ -293,6 +296,147 @@ class TestNoteEvent(object):
     )
     def test_refine_sustain(self, sustain, want):
         assert NoteEvent._refine_sustain(sustain) == want
+
+    @pytest.mark.parametrize(
+        "current,previous,want",
+        [
+            pytest.param(
+                NoteEvent(0, Note.G, is_tap=True, is_forced=True),
+                None,
+                HOPOState.TAP,
+                id="tap_notes_are_taps",
+            ),
+            pytest.param(
+                NoteEvent(0, Note.G),
+                None,
+                HOPOState.STRUM,
+                id="first_note_is_strum",
+            ),
+            pytest.param(
+                NoteEvent(
+                    chartparse.tick.calculate_ticks_between_notes(
+                        pytest.default_resolution,
+                        NoteDuration.SIXTEENTH,
+                    ),
+                    Note.R,
+                ),
+                NoteEvent(0, Note.G),
+                HOPOState.HOPO,
+                id="16th_notes_are_hopos",
+            ),
+            pytest.param(
+                NoteEvent(
+                    chartparse.tick.calculate_ticks_between_notes(
+                        pytest.default_resolution,
+                        NoteDuration.TWELFTH,
+                    ),
+                    Note.R,
+                ),
+                NoteEvent(0, Note.G),
+                HOPOState.HOPO,
+                id="12th_notes_are_hopos",
+            ),
+            pytest.param(
+                NoteEvent(
+                    chartparse.tick.calculate_ticks_between_notes(
+                        pytest.default_resolution,
+                        NoteDuration.EIGHTH,
+                    ),
+                    Note.R,
+                ),
+                NoteEvent(0, Note.G),
+                HOPOState.STRUM,
+                id="8th_notes_are_strums",
+            ),
+            pytest.param(
+                NoteEvent(
+                    chartparse.tick.calculate_ticks_between_notes(
+                        pytest.default_resolution,
+                        NoteDuration.SIXTEENTH,
+                    ),
+                    Note.G,
+                ),
+                NoteEvent(0, Note.G),
+                HOPOState.STRUM,
+                id="consecutive_16th_notes_are_strums",
+            ),
+            pytest.param(
+                NoteEvent(
+                    chartparse.tick.calculate_ticks_between_notes(
+                        pytest.default_resolution,
+                        NoteDuration.TWELFTH,
+                    ),
+                    Note.G,
+                ),
+                NoteEvent(0, Note.G),
+                HOPOState.STRUM,
+                id="consecutive_12th_notes_are_strums",
+            ),
+            pytest.param(
+                NoteEvent(
+                    chartparse.tick.calculate_ticks_between_notes(
+                        pytest.default_resolution,
+                        NoteDuration.EIGHTH,
+                    ),
+                    Note.G,
+                ),
+                NoteEvent(0, Note.G),
+                HOPOState.STRUM,
+                id="consecutive_8th_notes_are_strums",
+            ),
+            pytest.param(
+                NoteEvent(
+                    chartparse.tick.calculate_ticks_between_notes(
+                        pytest.default_resolution,
+                        NoteDuration.TWELFTH,
+                    ),
+                    Note.G,
+                ),
+                NoteEvent(0, Note.RY),
+                HOPOState.HOPO,
+                id="pull_off_from_chord_is_hopo",
+            ),
+            pytest.param(
+                NoteEvent(
+                    chartparse.tick.calculate_ticks_between_notes(
+                        pytest.default_resolution,
+                        NoteDuration.TWELFTH,
+                    ),
+                    Note.RY,
+                ),
+                NoteEvent(0, Note.G),
+                HOPOState.STRUM,
+                id="hammer_on_to_chord_is_not_hopo",
+            ),
+            pytest.param(
+                NoteEvent(
+                    chartparse.tick.calculate_ticks_between_notes(
+                        pytest.default_resolution,
+                        NoteDuration.TWELFTH,
+                    ),
+                    Note.OPEN,
+                ),
+                NoteEvent(0, Note.G),
+                HOPOState.HOPO,
+                id="hammer_on_to_open_is_hopo",
+            ),
+            pytest.param(
+                NoteEvent(
+                    chartparse.tick.calculate_ticks_between_notes(
+                        pytest.default_resolution,
+                        NoteDuration.TWELFTH,
+                    ),
+                    Note.G,
+                ),
+                NoteEvent(0, Note.OPEN),
+                HOPOState.HOPO,
+                id="pull_off_to_open_is_hopo",
+            ),
+        ],
+    )
+    def test_populate_hopo_state(self, current, previous, want):
+        current._populate_hopo_state(pytest.default_resolution, previous)
+        assert current.hopo_state == want
 
 
 class TestSpecialEvent(object):

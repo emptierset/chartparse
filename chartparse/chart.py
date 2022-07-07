@@ -1,3 +1,5 @@
+# TODO: Add module docstrings everywhere.
+
 from __future__ import annotations
 
 import collections
@@ -48,7 +50,7 @@ class Chart(DictPropertiesEqMixin):
         sync_track: SyncTrack,
         instrument_tracks: dict[Instrument, dict[Difficulty, InstrumentTrack]],
     ) -> None:
-        """Instantiates all instance attributes and populates event timestamps."""
+        """Instantiates all instance attributes and populates timestamps & note HOPO states."""
 
         self.metadata = metadata
         self.global_events_track = global_events_track
@@ -64,6 +66,7 @@ class Chart(DictPropertiesEqMixin):
             for difficulty, track in difficulties.items():
                 self._populate_event_timestamps(track.note_events)
                 self._populate_event_timestamps(track.star_power_events)
+                self._populate_note_event_hopo_states(track.note_events)
 
     _required_sections = ("Song", "SyncTrack")
     _instrument_track_name_to_instrument_difficulty_pair = {
@@ -180,6 +183,14 @@ class Chart(DictPropertiesEqMixin):
                 start_bpm_event_index=proximal_bpm_event_idx,
             )
             event.timestamp = timestamp
+
+    def _populate_note_event_hopo_states(self, events: Sequence[NoteEvent]) -> None:
+        if not events:
+            return
+
+        for i, cur_event in enumerate(events):
+            previous_event = events[i - 1] if i > 0 else None
+            cur_event._populate_hopo_state(self.metadata.resolution, previous_event)
 
     def _timestamp_at_tick(
         self, tick: int, start_bpm_event_index: int = 0

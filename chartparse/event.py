@@ -18,8 +18,12 @@ class Event(DictPropertiesEqMixin, DictReprMixin):
     tick: int
     """The tick at which this event occurs."""
 
+    # TODO: Figure out a way for ``timestamp`` to not be Optional.
     timestamp: Optional[datetime.timedelta]
-    """The timestamp when this event occurs. Optional, as it may need to be calculated later."""
+    """The timestamp when this event occurs.
+
+    Optional, as it may need to be calculated later.
+    """
 
     def __init__(self, tick: int, timestamp: Optional[datetime.timedelta] = None) -> None:
         self.tick = tick

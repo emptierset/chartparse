@@ -6,7 +6,7 @@ import unittest.mock
 from chartparse.chart import Chart, _iterate_from_second_elem
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.globalevents import GlobalEventsTrack, LyricEvent
-from chartparse.instrument import NoteEvent, InstrumentTrack, Difficulty, Instrument
+from chartparse.instrument import NoteEvent, InstrumentTrack, Difficulty, Instrument, Note
 from chartparse.metadata import Metadata
 from chartparse.sync import SyncTrack, BPMEvent
 
@@ -32,6 +32,9 @@ class TestChartInit(object):
             Chart, "_populate_bpm_event_timestamps"
         )
         mock_populate_event_timestamps = mocker.patch.object(Chart, "_populate_event_timestamps")
+        mock_populate_event_hopo_states = mocker.patch.object(
+            Chart, "_populate_note_event_hopo_states"
+        )
         c = Chart(
             basic_metadata, basic_global_events_track, basic_sync_track, basic_instrument_tracks
         )
@@ -53,6 +56,7 @@ class TestChartInit(object):
             ],
             any_order=True,
         )
+        mock_populate_event_hopo_states.assert_called_once_with(basic_instrument_track.note_events)
 
 
 class TestChartAlternateInitializers(object):
@@ -258,6 +262,34 @@ class TestPopulateEventTimestamps(object):
         )
 
 
+class TestPopulateNoteEventHOPOStates(object):
+    def test_basic(self, mocker, bare_chart, bare_metadata):
+        note_event1 = NoteEvent(0, Note.G)
+        note_event2 = NoteEvent(pytest.default_resolution, Note.R)
+        note_event3 = NoteEvent(pytest.default_resolution + pytest.default_resolution * 2, Note.Y)
+        note_events = [note_event1, note_event2, note_event3]
+        # TODO: Make it simpler to create a bare chart with a resolution.
+        bare_metadata.resolution = pytest.default_resolution
+        bare_chart.metadata = bare_metadata
+
+        mock_populate_hopo_state1 = mocker.patch.object(note_event1, "_populate_hopo_state")
+        mock_populate_hopo_state2 = mocker.patch.object(note_event2, "_populate_hopo_state")
+        mock_populate_hopo_state3 = mocker.patch.object(note_event3, "_populate_hopo_state")
+
+        bare_chart._populate_note_event_hopo_states(note_events)
+
+        mock_populate_hopo_state1.assert_called_once_with(pytest.default_resolution, None)
+        mock_populate_hopo_state2.assert_called_once_with(pytest.default_resolution, note_event1)
+        mock_populate_hopo_state3.assert_called_once_with(pytest.default_resolution, note_event2)
+
+    def test_empty(self, bare_chart, bare_metadata):
+        bare_metadata.resolution = pytest.default_resolution
+        bare_chart.metadata = bare_metadata
+        note_events = []
+        bare_chart._populate_note_event_hopo_states(note_events)
+        assert not note_events
+
+
 class TestTimestampAtTick(object):
     test_bpm_events = [
         BPMEvent(0, 60.000),
@@ -267,6 +299,8 @@ class TestTimestampAtTick(object):
     ]
 
     @pytest.mark.parametrize(
+        # TODO: Move test_bpm_events to be a parameter. This might mutate the list, screwing up
+        # the case where there are multiple test cases.
         "resolution,tick,want_timestamp,want_proximal_bpm_event_idx",
         [
             pytest.param(100, 100, datetime.timedelta(seconds=1), 1),
