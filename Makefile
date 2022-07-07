@@ -24,8 +24,8 @@ install:           ## Install the project in dev mode.
 	@echo "Don't forget to run 'make virtualenv' if you got errors."
 	$(ENV_PREFIX)pip install -e .[test]
 
-.PHONY: docs
-docs:              ## Clean generated docs and compile fresh ones.
+.PHONY: doc
+doc:              ## Clean generated docs and compile fresh ones.
 	$(MAKE) -C docs/ clean
 	$(MAKE) -C docs/ html
 
