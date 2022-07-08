@@ -434,9 +434,9 @@ class TestNoteEvent(object):
             ),
         ],
     )
-    def test_populate_hopo_state(self, current, previous, want):
-        current._populate_hopo_state(pytest.default_resolution, previous)
-        assert current.hopo_state == want
+    def test_compute_hopo_state(self, current, previous, want):
+        state = NoteEvent._compute_hopo_state(pytest.default_resolution, current, previous)
+        assert state == want
 
 
 class TestSpecialEvent(object):
