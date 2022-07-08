@@ -209,10 +209,11 @@ class InstrumentTrack(EventTrack, DictPropertiesEqMixin, DictReprTruncatedSequen
 
     def __str__(self) -> str:  # pragma: no cover
         return (
-            f"Instrument: {self.instrument}\n"
-            f"Difficulty: {self.difficulty}\n"
-            f"Note count: {len(self.note_events)}\n"
-            f"Star power phrase count: {len(self.star_power_events)}"
+            f"{type(self).__name__}"
+            f"(instrument: {self.instrument}, "
+            f"difficulty: {self.difficulty}, "
+            f"len(note_events): {len(self.note_events)}, "
+            f"len(star_power_events): {len(self.star_power_events)})"
         )
 
     @staticmethod
