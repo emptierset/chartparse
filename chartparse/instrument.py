@@ -341,20 +341,6 @@ class NoteEvent(Event):
     sustain: ComplexNoteSustainT
     """Information about this note event's sustain value."""
 
-    is_forced: bool
-    """Whether the note's HOPO value is manually inverted.
-
-    As a user, this value is most likely irrelevant to you. See
-    :attr:`~chartparse.instrument.NoteEvent.hopo_state`.
-    """
-
-    is_tap: bool
-    """Whether the note is a tap note.
-
-    As a user, this value is most likely irrelevant to you. See
-    :attr:`~chartparse.instrument.NoteEvent.hopo_state`.
-    """
-
     # TODO: Figure out a way for ``hopo_state`` to not be Optional.
     hopo_state: Optional[HOPOState]
     """Whether the note is a strum, a HOPO, or a tap note.
@@ -367,6 +353,10 @@ class NoteEvent(Event):
 
     If this is ``None``, then the note is not a star power note.
     """
+
+    _is_forced: bool
+
+    _is_tap: bool
 
     # This regex matches a single "N" line within a instrument track section,
     # but this class should be used to represent all of the notes at a
@@ -392,8 +382,8 @@ class NoteEvent(Event):
         super().__init__(tick, timestamp=timestamp)
         self.note = note
         self.sustain = self._refine_sustain(sustain)
-        self.is_forced = is_forced
-        self.is_tap = is_tap
+        self._is_forced = is_forced
+        self._is_tap = is_tap
         self.star_power_data = star_power_data
 
     @staticmethod
@@ -434,7 +424,7 @@ class NoteEvent(Event):
         return sustain
 
     def _populate_hopo_state(self, resolution: int, previous: Union[NoteEvent, None]) -> None:
-        if self.is_tap:
+        if self._is_tap:
             self.hopo_state = HOPOState.TAP
             return
 
@@ -456,7 +446,7 @@ class NoteEvent(Event):
             and not self.note.is_chord()
         )
 
-        if should_be_hopo != self.is_forced:
+        if should_be_hopo != self._is_forced:
             self.hopo_state = HOPOState.HOPO
             return
         else:
@@ -480,12 +470,12 @@ class NoteEvent(Event):
             elif self.hopo_state == HOPOState.STRUM:
                 flags.append("S")
         else:
-            if self.is_forced:
+            if self._is_forced:
                 flags.append("F")
-            if self.is_tap:
+            if self._is_tap:
                 flags.append("T")
         if flags:
-            to_join.extend([" [flags=", "".join(flags), "]"])
+            to_join.extend([" [hopo_state=", "".join(flags), "]"])
 
         return "".join(to_join)
 
