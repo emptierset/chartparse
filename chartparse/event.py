@@ -8,6 +8,7 @@ from chartparse.util import DictPropertiesEqMixin, DictReprMixin
 EventT = TypeVar("EventT", bound="Event")
 
 
+# TODO: Should this be an abstract base class?
 class Event(DictPropertiesEqMixin, DictReprMixin):
     """An event that occurs at a specific tick in an :class:`~chartparse.track.EventTrack`.
 
@@ -29,6 +30,8 @@ class Event(DictPropertiesEqMixin, DictReprMixin):
         self.tick = tick
         self.timestamp = timestamp
 
+    # TODO: Figure out a way for the final closing parenthesis to wrap _around_ any additional info
+    # added by subclass __str__ implementations.
     def __str__(self) -> str:  # pragma: no cover
         to_join = [f"{type(self).__name__}(t@{self.tick:07}"]
         if self.timestamp is not None:
