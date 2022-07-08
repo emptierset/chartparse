@@ -424,34 +424,36 @@ class NoteEvent(Event):
         return sustain
 
     def _populate_hopo_state(self, resolution: int, previous: Union[NoteEvent, None]) -> None:
-        if self._is_tap:
-            self.hopo_state = HOPOState.TAP
-            return
+        self.hopo_state = self._compute_hopo_state(resolution, self, previous)
+
+    @staticmethod
+    def _compute_hopo_state(
+        resolution: int, current: NoteEvent, previous: Union[NoteEvent, None]
+    ) -> HOPOState:
+        if current._is_tap:
+            return HOPOState.TAP
 
         # The Moonscraper UI does not allow the first note to be forced, so it must be a strum if
         # it is not a tap.
         if previous is None:
-            self.hopo_state = HOPOState.STRUM
-            return
+            return HOPOState.STRUM
 
         eighth_triplet_tick_boundary = chartparse.tick.calculate_ticks_between_notes(
             resolution, NoteDuration.EIGHTH_TRIPLET
         )
-        ticks_since_previous = self.tick - previous.tick
+        ticks_since_previous = current.tick - previous.tick
         previous_is_within_eighth_triplet = ticks_since_previous <= eighth_triplet_tick_boundary
-        previous_note_is_different = self.note != previous.note
+        previous_note_is_different = current.note != previous.note
         should_be_hopo = (
             previous_is_within_eighth_triplet
             and previous_note_is_different
-            and not self.note.is_chord()
+            and not current.note.is_chord()
         )
 
-        if should_be_hopo != self._is_forced:
-            self.hopo_state = HOPOState.HOPO
-            return
+        if should_be_hopo != current._is_forced:
+            return HOPOState.HOPO
         else:
-            self.hopo_state = HOPOState.STRUM
-            return
+            return HOPOState.STRUM
 
     def __str__(self) -> str:  # pragma: no cover
         to_join = [super().__str__()]
