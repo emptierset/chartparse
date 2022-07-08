@@ -10,9 +10,7 @@ Welcome to chartparse's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   intro
    chartparse
-   examples
 
 Indices and tables
 ==================
