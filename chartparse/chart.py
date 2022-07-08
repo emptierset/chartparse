@@ -339,7 +339,6 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         phrase_duration_seconds = (last_event.timestamp - first_event.timestamp).total_seconds()
         return len(events) / phrase_duration_seconds
 
-    # TODO: Print info about instrument tracks.
     def __str__(self) -> str:  # pragma: no cover
         items = []
         if hasattr(self, "metadata"):
@@ -348,9 +347,13 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             items.append(f"{self.global_events_track}")
         if hasattr(self, "sync_track"):
             items.append(f"{self.sync_track}")
+        if hasattr(self, "instrument_tracks"):
+            for _, difficulty_dict in self.instrument_tracks.items():
+                for _, track in difficulty_dict.items():
+                    items.append(f"{track}")
 
-        item_string = ", ".join(items)
-        return f"{type(self).__name__}({item_string})"
+        item_string = ",\n  ".join(items)
+        return f"{type(self).__name__}(\n  {item_string})"
 
 
 def _iterate_from_second_elem(xs: Sequence[T]) -> Iterator[T]:
