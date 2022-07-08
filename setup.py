@@ -32,7 +32,7 @@ def read_requirements(path):
 setup(
     name="chartparse",
     version=read("chartparse", "VERSION"),
-    description="Awesome chartparse created by AWConant",
+    description="A library for parsing Guitar Hero .chart files.",
     url="https://github.com/AWConant/chartparse/",
     long_description=read("README.md"),
     long_description_content_type="text/markdown",
