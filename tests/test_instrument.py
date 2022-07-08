@@ -257,8 +257,8 @@ class TestNoteEvent(object):
     def test_init(self, note_event_with_all_optionals_set):
         assert note_event_with_all_optionals_set.note == pytest.default_note
         assert note_event_with_all_optionals_set.sustain == pytest.default_sustain
-        assert note_event_with_all_optionals_set.is_forced is True
-        assert note_event_with_all_optionals_set.is_tap is True
+        assert note_event_with_all_optionals_set._is_forced is True
+        assert note_event_with_all_optionals_set._is_tap is True
 
     def test_validate_sustain(self):
         NoteEvent._validate_sustain(0, Note.G)
