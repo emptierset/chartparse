@@ -120,7 +120,7 @@ class GlobalEvent(Event):
 
     def __str__(self) -> str:  # pragma: no cover
         to_join = [super().__str__()]
-        to_join.append(f": {self.value}")
+        to_join.append(f': "{self.value}"')
         return "".join(to_join)
 
 
