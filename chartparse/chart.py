@@ -18,12 +18,12 @@ from chartparse.hints import T
 from chartparse.instrument import Difficulty, Instrument, InstrumentTrack, NoteEvent
 from chartparse.metadata import Metadata
 from chartparse.sync import SyncTrack
-from chartparse.util import DictPropertiesEqMixin
+from chartparse.util import DictPropertiesEqMixin, DictReprTruncatedSequencesMixin
 
 _max_timedelta = datetime.datetime.max - datetime.datetime.min
 
 
-class Chart(DictPropertiesEqMixin):
+class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     """A Clone Hero / Moonscraper chart and its relevant gameplay data.
 
     While it is possible to create this with its initializer, as a user, you will most likely have
@@ -351,9 +351,6 @@ class Chart(DictPropertiesEqMixin):
 
         item_string = ", ".join(items)
         return f"{type(self).__name__}({item_string})"
-
-    def __repr__(self) -> str:  # pragma: no cover
-        return self.__str__()
 
 
 def _iterate_from_second_elem(xs: Sequence[T]) -> Iterator[T]:
