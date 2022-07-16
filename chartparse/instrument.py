@@ -320,13 +320,18 @@ class StarPowerData(DictPropertiesEqMixin):
 
 
 SustainListT = List[Optional[int]]
-"""A 5-element list representing the sustain value of each note lane."""
+"""A 5-element list representing the sustain value of each note lane for nonuniform sustains.
+
+An element is ``None`` if and only if the corresponding note lane is inactive. If an element is
+``0``, then there must be at least one other non-``0``, non-``None`` element; this is because that
+``0`` element represents an unsustained note in unison with a sustained note.
+"""
 
 ComplexNoteSustainT = Union[int, SustainListT]
 """A sustain value that can capture multiple coinciding notes with different sustain values.
 
-If this value is an ``int``, it means that all note lanes at this tick value are sustained for the
-same length of time.
+If this value is an ``int``, it means that all active note lanes at this tick value are sustained
+for the same number of ticks. If this value is ``0``, then none of the note lanes are active.
 """
 
 
@@ -363,7 +368,7 @@ class NoteEvent(Event):
     hopo_state: HOPOState
     """Whether the note is a strum, a HOPO, or a tap note.
 
-    This is not set in ``__init__``; it must be set via ``NoteEvent._populate_hopo_state.
+    This is not set in ``__init__``; it must be set via ``NoteEvent._populate_hopo_state``.
     """
 
     star_power_data: Optional[StarPowerData]
@@ -431,13 +436,10 @@ class NoteEvent(Event):
                     "values for exactly the active note lanes."
                 )
 
-    # TODO: None and 0 are equivalent values for a SustainListT element, but None is not a valid
-    # value for a ComplexNoteSustainT. We should instead change SustainListT to be list[int] and
-    # simply use 0 when the note is unsustained.
     @staticmethod
     def _refine_sustain(sustain: ComplexNoteSustainT) -> ComplexNoteSustainT:
         if isinstance(sustain, list):
-            if all(d is None for d in sustain):
+            if all(d is None or d == 0 for d in sustain):
                 return 0
             first_non_none_sustain = next(d for d in sustain if d is not None)
             if all(d is None or d == first_non_none_sustain for d in sustain):

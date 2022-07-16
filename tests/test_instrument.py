@@ -287,6 +287,8 @@ class TestNoteEvent(object):
         "sustain, want",
         [
             pytest.param([None, None, None, None, None], 0, id="all_none"),
+            pytest.param([0, 0, 0, 0, 0], 0, id="all_zero"),
+            pytest.param([0, 0, None, None, None], 0, id="all_none_or_zero"),
             pytest.param([100, None, None, 100, None], 100, id="all_the_same"),
             pytest.param(100, 100, id="int_pass_through"),
             pytest.param(
