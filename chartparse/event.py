@@ -15,7 +15,6 @@ from chartparse.util import DictPropertiesEqMixin, DictReprMixin
 EventT = TypeVar("EventT", bound="Event")
 
 
-# TODO: Should this be an abstract base class?
 class Event(DictPropertiesEqMixin, DictReprMixin):
     """An event that occurs at a specific tick in an :class:`~chartparse.track.EventTrack`.
 
