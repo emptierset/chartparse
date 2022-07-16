@@ -31,6 +31,11 @@ doc:              ## Clean generated docs and compile fresh ones.
 
 .PHONY: black
 black:             ## Format code using black.
+	$(ENV_PREFIX)black -l 99 chartparse/
+	$(ENV_PREFIX)black -l 99 tests/
+
+.PHONY: blackcheck
+blackcheck:        ## Check code format using black.
 	$(ENV_PREFIX)black -l 99 chartparse/ --check
 	$(ENV_PREFIX)black -l 99 tests/ --check
 
@@ -46,7 +51,7 @@ flake:             ## Run pep8 linter.
 	$(ENV_PREFIX)flake8 --extend-ignore=E731 --max-line-length 99 chartparse/ tests/
 
 .PHONY: lint
-lint: flake black  ## Run pep8 linter and black.
+lint: flake blackcheck  ## Run pep8 linter and black.
 
 .PHONY: mypy
 mypy:              ## Run mypy type checker.
