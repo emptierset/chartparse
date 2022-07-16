@@ -408,16 +408,25 @@ class TestNotesPerSecond(object):
                 datetime.timedelta(seconds=1),
                 datetime.timedelta(seconds=3),
                 3 / 2,
+                id="boundaries_included",
             ),
             pytest.param(
                 datetime.timedelta(seconds=2),
                 datetime.timedelta(seconds=3),
                 2,
+                id="filtered_too_early_note",
             ),
             pytest.param(
+                datetime.timedelta(seconds=1),
                 datetime.timedelta(seconds=2),
+                2,
+                id="filtered_too_late_note",
+            ),
+            pytest.param(
+                datetime.timedelta(seconds=0),
                 datetime.timedelta(seconds=4),
-                1,
+                3 / 4,
+                id="wider_interval_than_notes",
             ),
         ],
     )
