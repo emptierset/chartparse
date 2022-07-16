@@ -73,14 +73,14 @@ cov:               ## Run tests and produce coverage reports if successful.
 
 .PHONY: test
 test:              ## Run tests and generate coverage report.
-	$(ENV_PREFIX)pytest -vv	-l --tb=short --maxfail=1 tests/
+	$(ENV_PREFIX)pytest -vv	-l --tb=short tests/
 
 .PHONY: proof
 proof: check cov  ## ("Proofread") Run all linters, mypy, and unit tests.
 
 .PHONY: watch
 watch:             ## Run tests on every change.
-	ls **/**.py | entr $(ENV_PREFIX)pytest -s -vvv -l --tb=long --maxfail=1 tests/
+	ls **/**.py | entr $(ENV_PREFIX)pytest -s -vvv -l --tb=long tests/
 
 .PHONY: clean
 clean:             ## Clean unused files.
