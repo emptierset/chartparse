@@ -358,11 +358,12 @@ class NoteEvent(Event):
     sustain: ComplexNoteSustainT
     """Information about this note event's sustain value."""
 
-    # TODO: Figure out a way for ``hopo_state`` to not be Optional.
-    hopo_state: Optional[HOPOState]
+    # TODO: Figure out how to accurately represent it in the type system that this is set later.
+    # Might involve wrapping ``NoteEvent`` in a subclass that has ``hopo_state``.
+    hopo_state: HOPOState
     """Whether the note is a strum, a HOPO, or a tap note.
 
-    Optional, as it may need to be calculated later.
+    This is not set in ``__init__``; it must be set via ``NoteEvent._populate_hopo_state.
     """
 
     star_power_data: Optional[StarPowerData]

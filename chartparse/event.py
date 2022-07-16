@@ -26,22 +26,26 @@ class Event(DictPropertiesEqMixin, DictReprMixin):
     tick: int
     """The tick at which this event occurs."""
 
-    # TODO: Figure out a way for ``timestamp`` to not be Optional.
-    timestamp: Optional[datetime.timedelta]
+    # TODO: Figure out how to accurately represent it in the type system that this is set later.
+    # Might involve wrapping ``Event`` in a subclass that has ``timestamp``.
+    timestamp: datetime.timedelta
     """The timestamp when this event occurs.
 
-    Optional, as it may need to be calculated later.
+    This is not set in ``__init__``; it must be set manually, most likely via
+    :meth:`~chartparse.chart._populate_event_timestamps` or
+    :meth:`~chartparse.chart._populate_bpm_event_timestamps`.
     """
 
     def __init__(self, tick: int, timestamp: Optional[datetime.timedelta] = None) -> None:
         self.tick = tick
-        self.timestamp = timestamp
+        if timestamp is not None:
+            self.timestamp = timestamp
 
     # TODO: Figure out a way for the final closing parenthesis to wrap _around_ any additional info
     # added by subclass __str__ implementations.
     def __str__(self) -> str:  # pragma: no cover
         to_join = [f"{type(self).__name__}(t@{self.tick:07}"]
-        if self.timestamp is not None:
+        if hasattr(self, "timestamp"):
             as_str = (
                 str(self.timestamp)
                 if self.timestamp.total_seconds() > 0
