@@ -101,7 +101,7 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         with open(path, "r", encoding="utf-8-sig") as f:
             return Chart.from_file(f)
 
-    _required_sections: Final[list[str]] = ["Song", "SyncTrack"]
+    _required_sections: Final[list[str]] = [Metadata.section_name, SyncTrack.section_name]
 
     _instrument_track_name_to_instrument_difficulty_pair: Final[
         dict[str, tuple[Instrument, Difficulty]]
