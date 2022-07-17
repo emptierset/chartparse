@@ -14,10 +14,9 @@ import enum
 import re
 import typing
 from collections.abc import Callable, Iterable
-from typing import Literal, Optional, Pattern, Type, TypedDict, TypeVar, Union
+from typing import Final, Literal, Optional, Pattern, Type, TypedDict, TypeVar, Union
 
 from chartparse.exceptions import MissingRequiredField, RegexNotMatchError, raise_
-from chartparse.track import HasSectionNameMixin
 from chartparse.util import DictPropertiesEqMixin, DictReprMixin
 
 SnakeCaseFieldNameT = Literal[
@@ -235,37 +234,38 @@ MetadataT = TypeVar("MetadataT", bound="Metadata")
 
 
 @typing.final
-class Metadata(HasSectionNameMixin, DictPropertiesEqMixin, DictReprMixin):
+class Metadata(DictPropertiesEqMixin, DictReprMixin):
     """All of a :class:`~chartparse.chart.Chart` object's metadata."""
 
-    section_name = "Song"
+    section_name: Final[str] = "Song"
+    """The name of this track's section in a ``.chart`` file."""
 
-    resolution: int
+    resolution: Final[int]
     """The number of ticks for which a quarter note lasts."""
 
-    offset: int
+    offset: Final[int]
     """The number of seconds in time before tick 0 is reached.
 
     This is a legacy field and should most likely be ignored.
     """
 
-    player2: Player2Instrument
+    player2: Final[Player2Instrument]
     """The instrument type of the co-op guitar chart in Guitar Hero 3."""
 
-    difficulty: int
+    difficulty: Final[int]
     """The perceived difficulty to play the chart.
 
     This is often referred to as "intensity".
     """
 
-    preview_start: int
+    preview_start: Final[int]
     """The number of seconds into the song at which the song preview should start.
 
     Might not actually be seconds. Typically, ``preview_start_time`` in ``song.ini`` is respected
     for Clone Hero instead.
     """
 
-    preview_end: int
+    preview_end: Final[int]
     """The number of seconds into the song at which the song preview should end.
 
     Might not actually be seconds. Clone Hero just plays a preview of a particular length starting
@@ -273,62 +273,62 @@ class Metadata(HasSectionNameMixin, DictPropertiesEqMixin, DictReprMixin):
     Guitar Hero.
     """
 
-    genre: str
+    genre: Final[str]
     """The genre of the chart's song."""
 
-    media_type: str
+    media_type: Final[str]
     """The type of media from which the chart's song originates."""
 
-    name: str
+    name: Final[str]
     """The name of the chart's song."""
 
-    artist: str
+    artist: Final[str]
     """The name of the chart's song's artist."""
 
-    charter: str
+    charter: Final[str]
     """The user who made this chart."""
 
-    album: str
+    album: Final[str]
     """The name of the chart's song's album."""
 
-    year: str
+    year: Final[str]
     """The year the chart's song came out.
 
     This is formatted as, e.g. ", 2018" because it saved time when importing into GHTCP (Guitar
     Hero Three Control Panel).
     """
 
-    music_stream: str
+    music_stream: Final[str]
     """The filename of the main music audio file."""
 
-    guitar_stream: str
+    guitar_stream: Final[str]
     """The filename of the guitar audio file."""
 
-    rhythm_stream: str
+    rhythm_stream: Final[str]
     """The filename of the rhythm audio file."""
 
-    bass_stream: str
+    bass_stream: Final[str]
     """The filename of the bass audio file."""
 
-    drum_stream: str
+    drum_stream: Final[str]
     """The filename of the drum audio file."""
 
-    drum2_stream: str
+    drum2_stream: Final[str]
     """The filename of the drum2 audio file."""
 
-    drum3_stream: str
+    drum3_stream: Final[str]
     """The filename of the drum3 audio file."""
 
-    drum4_stream: str
+    drum4_stream: Final[str]
     """The filename of the drum4 audio file."""
 
-    vocal_stream: str
+    vocal_stream: Final[str]
     """The filename of the vocal audio file."""
 
-    keys_stream: str
+    keys_stream: Final[str]
     """The filename of the keys audio file."""
 
-    crowd_stream: str
+    crowd_stream: Final[str]
     """The filename of the crowd audio file."""
 
     def __init__(

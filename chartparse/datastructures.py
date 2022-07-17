@@ -26,6 +26,8 @@ class ImmutableList(Sequence[T]):
     .. automethod:: __eq__
     """
 
+    # This is conceptually Final, but annotating it as such causes a mypy error due to the type
+    # variable.
     _seq: Sequence[T]
 
     def __init__(self, xs: Iterable[T]):

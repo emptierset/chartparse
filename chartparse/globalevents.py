@@ -14,32 +14,31 @@ import datetime
 import re
 import typing
 from collections.abc import Callable, Iterable, Sequence
-from typing import ClassVar, Optional, Pattern, Type, TypeVar
+from typing import ClassVar, Final, Optional, Pattern, Type, TypeVar
 
 from chartparse.event import Event
 from chartparse.exceptions import RegexNotMatchError
-from chartparse.track import EventTrack, HasSectionNameMixin
+from chartparse.track import EventTrack
 from chartparse.util import DictPropertiesEqMixin, DictReprTruncatedSequencesMixin
 
 GlobalEventsTrackT = TypeVar("GlobalEventsTrackT", bound="GlobalEventsTrack")
 
 
 @typing.final
-class GlobalEventsTrack(
-    EventTrack, HasSectionNameMixin, DictPropertiesEqMixin, DictReprTruncatedSequencesMixin
-):
+class GlobalEventsTrack(EventTrack, DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     """A :class:`~chartparse.chart.Chart`'s :class:`~chartparse.globalevents.GlobalEvent`\\ s."""
 
-    text_events: Sequence[TextEvent]
+    text_events: Final[Sequence[TextEvent]]
     """A ``GlobalEventTrack``'s ``TextEvent``\\ s."""
 
-    section_events: Sequence[SectionEvent]
+    section_events: Final[Sequence[SectionEvent]]
     """A ``GlobalEventTrack``'s ``SectionEvent``\\ s."""
 
-    lyric_events: Sequence[LyricEvent]
+    lyric_events: Final[Sequence[LyricEvent]]
     """A ``GlobalEventTrack``'s ``LyricEvent``\\ s."""
 
-    section_name = "Events"
+    section_name: Final[str] = "Events"
+    """The name of this track's section in a ``.chart`` file."""
 
     def __init__(
         self,
@@ -94,7 +93,7 @@ class GlobalEvent(Event):
     method.
     """
 
-    value: str
+    value: Final[str]
     """The data that this event stores."""
 
     _regex: ClassVar[str]
@@ -102,7 +101,7 @@ class GlobalEvent(Event):
 
     # Match 1: Tick
     # Match 2: Event value (to be added by subclass via template hole)
-    _regex_template: ClassVar[str] = r"^\s*?(\d+?) = E \"{}\"\s*?$"
+    _regex_template: Final[str] = r"^\s*?(\d+?) = E \"{}\"\s*?$"
 
     def __init__(
         self, tick: int, value: str, timestamp: Optional[datetime.timedelta] = None

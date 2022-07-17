@@ -18,7 +18,7 @@ import typing
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 from enum import Enum
-from typing import ClassVar, List, Optional, Pattern, Type, TypeVar, Union
+from typing import Final, List, Optional, Pattern, Type, TypeVar, Union
 
 import chartparse.tick
 from chartparse.datastructures import ImmutableSortedList
@@ -162,19 +162,19 @@ class NoteTrackIndex(AllValuesGettableEnum):
 class InstrumentTrack(EventTrack, DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     """All of the instrument-related events for one (instrument, difficulty) pair."""
 
-    instrument: Instrument
+    instrument: Final[Instrument]
     """The instrument to which this track corresponds."""
 
-    difficulty: Difficulty
+    difficulty: Final[Difficulty]
     """This track's difficulty setting."""
 
-    section_name: str
+    section_name: Final[str]
     """The concatenation of this track's difficulty and instrument (in that order)."""
 
-    note_events: Sequence[NoteEvent]
+    note_events: Final[Sequence[NoteEvent]]
     """An (instrument, difficulty) pair's ``NoteEvent`` objects."""
 
-    star_power_events: Sequence[StarPowerEvent]
+    star_power_events: Final[Sequence[StarPowerEvent]]
     """An (instrument, difficulty) pair's ``StarPowerEvent`` objects."""
 
     _last_note_timestamp: datetime.timedelta
@@ -183,6 +183,8 @@ class InstrumentTrack(EventTrack, DictPropertiesEqMixin, DictReprTruncatedSequen
 
     If that event has no :attr:`~chartparse.instrument.NoteEvent.sustain` value, then this is just
     the timestamp of that :class:`~chartparse.instrument.NoteEvent`.
+
+    This is not set in ``__init__``; it must be set via ``Chart._populate_last_note_timestamp``.
     """
 
     _min_note_instrument_track_index = 0
@@ -322,6 +324,8 @@ class InstrumentTrack(EventTrack, DictPropertiesEqMixin, DictReprTruncatedSequen
 class StarPowerData(DictPropertiesEqMixin):
     """Star power related info for a :class:`~chartparse.instrument.NoteEvent`."""
 
+    # These are conceptually Final, but annotating them as such confuses mypy into thinking these
+    # should be ClassVar.
     star_power_event_idx: int
     is_end_of_phrase: bool
 
@@ -366,10 +370,10 @@ class NoteEvent(Event):
 
     """
 
-    note: Note
+    note: Final[Note]
     """The note lane(s) that are active."""
 
-    sustain: ComplexNoteSustainT
+    sustain: Final[ComplexNoteSustainT]
     """Information about this note event's sustain value."""
 
     # TODO: Figure out how to accurately represent it in the type system that this is set later.
@@ -386,9 +390,9 @@ class NoteEvent(Event):
     If this is ``None``, then the note is not a star power note.
     """
 
-    _is_forced: bool
+    _is_forced: Final[bool]
 
-    _is_tap: bool
+    _is_tap: Final[bool]
 
     # This regex matches a single "N" line within a instrument track section,
     # but this class should be used to represent all of the notes at a
@@ -397,8 +401,8 @@ class NoteEvent(Event):
     # Match 1: Tick
     # Match 2: Note index
     # Match 3: Sustain (ticks)
-    _regex: str = r"^\s*?(\d+?) = N ([0-7]) (\d+?)\s*?$"
-    _regex_prog: Pattern[str] = re.compile(_regex)
+    _regex: Final[str] = r"^\s*?(\d+?) = N ([0-7]) (\d+?)\s*?$"
+    _regex_prog: Final[Pattern[str]] = re.compile(_regex)
 
     def __init__(
         self,
@@ -542,8 +546,9 @@ class SpecialEvent(Event):
 
     # Match 1: Tick
     # Match 2: Sustain (ticks)
-    _regex_template: ClassVar[str] = r"^\s*?(\d+?) = S {} (\d+?)\s*?$"
+    _regex_template: Final[str] = r"^\s*?(\d+?) = S {} (\d+?)\s*?$"
 
+    # These should be set by a subclass.
     _regex: str
     _regex_prog: Pattern[str]
 

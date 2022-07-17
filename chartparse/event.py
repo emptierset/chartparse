@@ -8,7 +8,7 @@
 from __future__ import annotations
 
 import datetime
-from typing import Optional, TypeVar
+from typing import Final, Optional, TypeVar
 
 from chartparse.util import DictPropertiesEqMixin, DictReprMixin
 
@@ -22,7 +22,7 @@ class Event(DictPropertiesEqMixin, DictReprMixin):
     attractive ``__str__`` representation.
     """
 
-    tick: int
+    tick: Final[int]
     """The tick at which this event occurs."""
 
     # TODO: Figure out how to accurately represent it in the type system that this is set later.

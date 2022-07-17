@@ -25,7 +25,7 @@ import re
 import typing
 from collections.abc import Callable, Iterable, Iterator, Sequence
 from pathlib import Path
-from typing import Optional, TextIO
+from typing import Final, Optional, TextIO
 
 from chartparse.event import Event
 from chartparse.exceptions import RegexNotMatchError
@@ -49,16 +49,16 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     a ``Chart`` from a file, you should instead use :meth:`~chartparse.chart.Chart.from_file`.
     """
 
-    metadata: Metadata
+    metadata: Final[Metadata]
     """The chart's metadata, such as song title or charter name."""
 
-    global_events_track: GlobalEventsTrack
+    global_events_track: Final[GlobalEventsTrack]
     """Contains the chart's :class:`~chartparse.globalevents.GlobalEvent` objects"""
 
-    sync_track: SyncTrack
+    sync_track: Final[SyncTrack]
     """Contains the chart's sync-related events."""
 
-    instrument_tracks: dict[Instrument, dict[Difficulty, InstrumentTrack]]
+    instrument_tracks: Final[dict[Instrument, dict[Difficulty, InstrumentTrack]]]
     """Contains all of the chart's :class:`~chartparse.instrument.InstrumentTrack` objects."""
 
     def __init__(
@@ -87,15 +87,6 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
                 self._populate_note_event_hopo_states(track.note_events)
                 self._populate_last_note_timestamp(track)
 
-    _required_sections = ("Song", "SyncTrack")
-    _instrument_track_name_to_instrument_difficulty_pair = {
-        d + i: (Instrument(i), Difficulty(d))
-        for i, d in typing.cast(
-            Iterable[tuple[str, str]],
-            itertools.product(Instrument.all_values(), Difficulty.all_values()),
-        )
-    }
-
     @classmethod
     def from_filepath(cls, path: Path) -> Chart:
         """Given a path, parses the contents of its file and returns a new Chart.
@@ -109,6 +100,18 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         """
         with open(path, "r", encoding="utf-8-sig") as f:
             return Chart.from_file(f)
+
+    _required_sections: Final[list[str]] = ["Song", "SyncTrack"]
+
+    _instrument_track_name_to_instrument_difficulty_pair: Final[
+        dict[str, tuple[Instrument, Difficulty]]
+    ] = {
+        d + i: (Instrument(i), Difficulty(d))
+        for i, d in typing.cast(
+            Iterable[tuple[str, str]],
+            itertools.product(Instrument.all_values(), Difficulty.all_values()),
+        )
+    }
 
     @classmethod
     def from_file(cls, fp: TextIO) -> Chart:

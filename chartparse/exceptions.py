@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import typing
 from collections.abc import Collection
-from typing import Union
+from typing import Final, Union
 
 
 def raise_(ex: Exception) -> None:
@@ -25,8 +25,8 @@ def raise_(ex: Exception) -> None:
 class MissingRequiredField(Exception):
     """Raised when a required :class:`~chartparse.metadata.Metadata` could not be parsed."""
 
-    field_name: str
-    message: str
+    field_name: Final[str]
+    message: Final[str]
 
     def __init__(self, field_name: str) -> None:
         self.field_name = field_name
@@ -38,8 +38,8 @@ class MissingRequiredField(Exception):
 class RegexNotMatchError(Exception):
     """Raised when a regex failed to match."""
 
-    regex: str
-    message: str
+    regex: Final[str]
+    message: Final[str]
 
     @typing.overload
     def __init__(self, regex: str) -> None:
@@ -54,11 +54,12 @@ class RegexNotMatchError(Exception):
         ...  # pragma: no cover
 
     def __init__(self, regex: str, s: Union[None, str, Collection[str]] = None) -> None:
-        self.regex = regex
         if s is None:
-            self.message = f"regex '{regex}' failed to match"
+            message = f"regex '{regex}' failed to match"
         elif isinstance(s, str):
-            self.message = f"string '{s}' failed to match regex '{regex}'"
+            message = f"string '{s}' failed to match regex '{regex}'"
         else:
-            self.message = f"none of {len(s)} strings matched regex '{regex}'"
-        super().__init__(self.message)
+            message = f"none of {len(s)} strings matched regex '{regex}'"
+        super().__init__(message)
+        self.regex = regex
+        self.message = message

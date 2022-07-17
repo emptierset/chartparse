@@ -14,29 +14,28 @@ import datetime
 import re
 import typing
 from collections.abc import Callable, Iterable, Sequence
-from typing import Optional, Pattern, Type, TypeVar
+from typing import Final, Optional, Pattern, Type, TypeVar
 
 from chartparse.event import Event
 from chartparse.exceptions import RegexNotMatchError
-from chartparse.track import EventTrack, HasSectionNameMixin
+from chartparse.track import EventTrack
 from chartparse.util import DictPropertiesEqMixin, DictReprTruncatedSequencesMixin
 
 SyncTrackT = TypeVar("SyncTrackT", bound="SyncTrack")
 
 
 @typing.final
-class SyncTrack(
-    EventTrack, HasSectionNameMixin, DictPropertiesEqMixin, DictReprTruncatedSequencesMixin
-):
+class SyncTrack(EventTrack, DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     """All of a :class:`~chartparse.chart.Chart` object's tempo-mapping related events."""
 
-    time_signature_events: Sequence[TimeSignatureEvent]
+    time_signature_events: Final[Sequence[TimeSignatureEvent]]
     """A ``SyncTrack``'s ``TimeSignatureEvent``\\ s."""
 
-    bpm_events: Sequence[BPMEvent]
+    bpm_events: Final[Sequence[BPMEvent]]
     """A ``SyncTrack``'s ``BPMEvent``\\ s."""
 
-    section_name = "SyncTrack"
+    section_name: Final[str] = "SyncTrack"
+    """The name of this track's section in a ``.chart`` file."""
 
     def __init__(
         self, time_signature_events: Sequence[TimeSignatureEvent], bpm_events: Sequence[BPMEvent]
@@ -121,17 +120,17 @@ TimeSignatureEventT = TypeVar("TimeSignatureEventT", bound="TimeSignatureEvent")
 class TimeSignatureEvent(Event):
     """An event representing a time signature change at a particular tick."""
 
-    upper_numeral: int
+    upper_numeral: Final[int]
     """The number indicating how many beats constitute a bar."""
 
-    lower_numeral: int
+    lower_numeral: Final[int]
     """The number indicating the note value that represents one beat."""
 
     # Match 1: Tick
     # Match 2: Upper numeral
     # Match 3: Lower numeral (optional; assumed to be 4 if absent)
-    _regex: str = r"^\s*?(\d+?) = TS (\d+?)(?: (\d+?))?\s*?$"
-    _regex_prog: Pattern[str] = re.compile(_regex)
+    _regex: Final[str] = r"^\s*?(\d+?) = TS (\d+?)(?: (\d+?))?\s*?$"
+    _regex_prog: Final[Pattern[str]] = re.compile(_regex)
 
     def __init__(
         self,
@@ -181,13 +180,13 @@ BPMEventT = TypeVar("BPMEventT", bound="BPMEvent")
 class BPMEvent(Event):
     """An event representing a BPM (beats per minute) change at a particular tick."""
 
-    bpm: float
+    bpm: Final[float]
     """The beats per minute value. Must not have more than 3 decimal places."""
 
     # Match 1: Tick
     # Match 2: BPM (the last 3 digits are the decimal places)
-    _regex: str = r"^\s*?(\d+?) = B (\d+?)\s*?$"
-    _regex_prog: Pattern[str] = re.compile(_regex)
+    _regex: Final[str] = r"^\s*?(\d+?) = B (\d+?)\s*?$"
+    _regex_prog: Final[Pattern[str]] = re.compile(_regex)
 
     def __init__(self, tick: int, bpm: float, timestamp: Optional[datetime.timedelta] = None):
         """Initialize all instance attributes.
