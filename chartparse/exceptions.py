@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import typing
 from collections.abc import Collection
-from typing import Union, overload
+from typing import Union
 
 
 def raise_(ex: Exception) -> None:
@@ -41,15 +41,15 @@ class RegexNotMatchError(Exception):
     regex: str
     message: str
 
-    @overload
+    @typing.overload
     def __init__(self, regex: str) -> None:
         ...  # pragma: no cover
 
-    @overload
+    @typing.overload
     def __init__(self, regex: str, s: str) -> None:
         ...  # pragma: no cover
 
-    @overload
+    @typing.overload
     def __init__(self, regex: str, s: Collection[str]) -> None:
         ...  # pragma: no cover
 

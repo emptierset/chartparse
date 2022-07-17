@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import typing
 from collections.abc import Callable, Iterable, Iterator, Sequence
-from typing import Union, overload
+from typing import Union
 
 from chartparse.hints import ComparableT, T
 
@@ -34,11 +34,11 @@ class ImmutableList(Sequence[T]):
         else:
             self._seq = list(xs)
 
-    @overload
+    @typing.overload
     def __getitem__(self, index: int) -> T:
         ...  # pragma: no cover
 
-    @overload
+    @typing.overload
     def __getitem__(self, index: slice) -> Sequence[T]:
         ...  # pragma: no cover
 
@@ -72,11 +72,11 @@ class ImmutableList(Sequence[T]):
 class ImmutableSortedList(ImmutableList[T]):
     """A ``list`` equivalent that cannot be mutated and is sorted during initialization."""
 
-    @overload
+    @typing.overload
     def __init__(self, xs: Iterable[ComparableT]) -> None:
         ...  # pragma: no cover
 
-    @overload
+    @typing.overload
     def __init__(self, xs: Iterable[T], key: Callable[[T], ComparableT]) -> None:
         ...  # pragma: no cover
 
