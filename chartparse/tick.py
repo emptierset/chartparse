@@ -5,9 +5,11 @@
 
 """
 
+import typing
 from enum import Enum
 
 
+@typing.final
 class NoteDuration(Enum):
     """The note durations supported by Moonscraper.
 

@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import datetime
 import re
+import typing
 from collections.abc import Callable, Iterable, Sequence
 from typing import ClassVar, Optional, Pattern, Type, TypeVar
 
@@ -23,6 +24,7 @@ from chartparse.util import DictPropertiesEqMixin, DictReprTruncatedSequencesMix
 GlobalEventsTrackT = TypeVar("GlobalEventsTrackT", bound="GlobalEventsTrack")
 
 
+@typing.final
 class GlobalEventsTrack(
     EventTrack, HasSectionNameMixin, DictPropertiesEqMixin, DictReprTruncatedSequencesMixin
 ):
@@ -134,6 +136,7 @@ class GlobalEvent(Event):
         return "".join(to_join)
 
 
+@typing.final
 class TextEvent(GlobalEvent):
     """A :class:`~chartparse.globalevents.GlobalEvent` that stores freeform text event data."""
 
@@ -141,6 +144,7 @@ class TextEvent(GlobalEvent):
     _regex_prog = re.compile(_regex)
 
 
+@typing.final
 class SectionEvent(GlobalEvent):
     """A :class:`~chartparse.globalevents.GlobalEvent` that signifies a new section.
 
@@ -151,6 +155,7 @@ class SectionEvent(GlobalEvent):
     _regex_prog = re.compile(_regex)
 
 
+@typing.final
 class LyricEvent(GlobalEvent):
     """A :class:`~chartparse.globalevents.GlobalEvent` that signifies a new section.
 

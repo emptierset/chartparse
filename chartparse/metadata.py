@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import enum
 import re
+import typing
 from collections.abc import Callable, Iterable
 from typing import Literal, Optional, Pattern, Type, TypedDict, TypeVar, Union
 
@@ -142,6 +143,7 @@ class _FieldParsingSpec(object):
         return "".join(to_join)
 
 
+@typing.final
 class _IntFieldSpec(_FieldParsingSpec):
     def __init__(self, field_name: PascalCaseFieldNameT) -> None:
         super().__init__(self.make_int_field_regex(field_name), int)
@@ -151,6 +153,7 @@ class _IntFieldSpec(_FieldParsingSpec):
         return _FieldParsingSpec.make_field_regex(field_name, r"\d+?", False)
 
 
+@typing.final
 class _MultiwordStrFieldSpec(_FieldParsingSpec):
     def __init__(self, field_name: PascalCaseFieldNameT) -> None:
         super().__init__(self.make_multiword_str_field_regex(field_name), str)
@@ -160,6 +163,7 @@ class _MultiwordStrFieldSpec(_FieldParsingSpec):
         return _FieldParsingSpec.make_field_regex(field_name, r".+?", True)
 
 
+@typing.final
 class _QuotelessStrFieldSpec(_FieldParsingSpec):
     def __init__(
         self,
@@ -230,6 +234,7 @@ _field_parsing_specs: _FieldParsingSpecDict = {
 MetadataT = TypeVar("MetadataT", bound="Metadata")
 
 
+@typing.final
 class Metadata(HasSectionNameMixin, DictPropertiesEqMixin, DictReprMixin):
     """All of a :class:`~chartparse.chart.Chart` object's metadata."""
 

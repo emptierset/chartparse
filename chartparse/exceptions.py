@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import typing
 from collections.abc import Collection
 from typing import Union, overload
 
@@ -20,6 +21,7 @@ def raise_(ex: Exception) -> None:
     raise ex
 
 
+@typing.final
 class MissingRequiredField(Exception):
     """Raised when a required :class:`~chartparse.metadata.Metadata` could not be parsed."""
 
@@ -32,6 +34,7 @@ class MissingRequiredField(Exception):
         super().__init__(self.message)
 
 
+@typing.final
 class RegexNotMatchError(Exception):
     """Raised when a regex failed to match."""
 

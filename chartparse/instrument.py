@@ -14,6 +14,7 @@ import collections
 import datetime
 import enum
 import re
+import typing
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 from enum import Enum
@@ -34,6 +35,7 @@ from chartparse.util import (
 InstrumentTrackT = TypeVar("InstrumentTrackT", bound="InstrumentTrack")
 
 
+@typing.final
 @enum.unique
 class Difficulty(AllValuesGettableEnum):
     """An :class:`~chartparse.instrument.InstrumentTrack`'s difficulty setting."""
@@ -44,6 +46,7 @@ class Difficulty(AllValuesGettableEnum):
     EXPERT = "Expert"
 
 
+@typing.final
 @enum.unique
 class Instrument(AllValuesGettableEnum):
     """The instrument to which a :class:`~chartparse.instrument.InstrumentTrack` corresponds."""
@@ -58,6 +61,7 @@ class Instrument(AllValuesGettableEnum):
     GHL_BASS = "GHLBass"  # Bass (Guitar Hero: Live)
 
 
+@typing.final
 class Note(Enum):
     """The note lane(s) to which a :class:`~chartparse.instrument.NoteEvent` corresponds."""
 
@@ -133,6 +137,7 @@ class Note(Enum):
         return sum(self.value) > 1
 
 
+@typing.final
 class NoteTrackIndex(AllValuesGettableEnum):
     """The integer in a line in a Moonscraper ``.chart`` file's instrument track."""
 
@@ -153,6 +158,7 @@ class NoteTrackIndex(AllValuesGettableEnum):
     OPEN = 7
 
 
+@typing.final
 class InstrumentTrack(EventTrack, DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     """All of the instrument-related events for one (instrument, difficulty) pair."""
 
@@ -311,6 +317,7 @@ class InstrumentTrack(EventTrack, DictPropertiesEqMixin, DictReprTruncatedSequen
             )
 
 
+@typing.final
 @dataclass
 class StarPowerData(DictPropertiesEqMixin):
     """Star power related info for a :class:`~chartparse.instrument.NoteEvent`."""
@@ -335,6 +342,7 @@ for the same number of ticks. If this value is ``0``, then none of the note lane
 """
 
 
+@typing.final
 @enum.unique
 class HOPOState(Enum):
     """The manner in which a :class:`~chartparse.instrument.NoteEvent` can/must be hit."""
@@ -344,6 +352,7 @@ class HOPOState(Enum):
     TAP = 2
 
 
+@typing.final
 class NoteEvent(Event):
     """An event representing all of the notes at a particular tick.
 
@@ -570,6 +579,7 @@ class SpecialEvent(Event):
         return "".join(to_join)
 
 
+@typing.final
 class StarPowerEvent(SpecialEvent):
     """An event representing star power starting at some tick and lasting for some duration."""
 

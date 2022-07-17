@@ -40,6 +40,7 @@ _zero_timedelta = datetime.timedelta(0)
 _max_timedelta = datetime.datetime.max - datetime.datetime.min
 
 
+@typing.final
 class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     """A Clone Hero / Moonscraper chart and its relevant gameplay data.
 

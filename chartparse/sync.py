@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import datetime
 import re
+import typing
 from collections.abc import Callable, Iterable, Sequence
 from typing import Optional, Pattern, Type, TypeVar
 
@@ -23,6 +24,7 @@ from chartparse.util import DictPropertiesEqMixin, DictReprTruncatedSequencesMix
 SyncTrackT = TypeVar("SyncTrackT", bound="SyncTrack")
 
 
+@typing.final
 class SyncTrack(
     EventTrack, HasSectionNameMixin, DictPropertiesEqMixin, DictReprTruncatedSequencesMixin
 ):
@@ -115,6 +117,7 @@ class SyncTrack(
 TimeSignatureEventT = TypeVar("TimeSignatureEventT", bound="TimeSignatureEvent")
 
 
+@typing.final
 class TimeSignatureEvent(Event):
     """An event representing a time signature change at a particular tick."""
 
@@ -174,6 +177,7 @@ class TimeSignatureEvent(Event):
 BPMEventT = TypeVar("BPMEventT", bound="BPMEvent")
 
 
+@typing.final
 class BPMEvent(Event):
     """An event representing a BPM (beats per minute) change at a particular tick."""
 

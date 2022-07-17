@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import typing
 from collections.abc import Callable, Iterable, Iterator, Sequence
 from typing import Union, overload
 
@@ -67,6 +68,7 @@ class ImmutableList(Sequence[T]):
         return NotImplemented
 
 
+@typing.final
 class ImmutableSortedList(ImmutableList[T]):
     """A ``list`` equivalent that cannot be mutated and is sorted during initialization."""
 
