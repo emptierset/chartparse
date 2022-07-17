@@ -27,6 +27,7 @@ from collections.abc import Callable, Iterable, Iterator, Sequence
 from pathlib import Path
 from typing import Final, Optional, TextIO
 
+import chartparse.tick
 from chartparse.event import Event
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.globalevents import GlobalEventsTrack
@@ -132,23 +133,22 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
                 f"required sections {cls._required_sections}"
             )
 
+        metadata = Metadata.from_chart_lines(sections[Metadata.section_name])
+        sync_track = SyncTrack.from_chart_lines(sections[SyncTrack.section_name])
+
         instrument_tracks: collections.defaultdict[
             Instrument, dict[Difficulty, InstrumentTrack]
         ] = collections.defaultdict(dict)
         for section_name, iterator_getter in sections.items():
-            if section_name == Metadata.section_name:
-                metadata = Metadata.from_chart_lines(iterator_getter)
-            elif section_name == GlobalEventsTrack.section_name:
+            if section_name == GlobalEventsTrack.section_name:
                 global_events_track = GlobalEventsTrack.from_chart_lines(iterator_getter)
-            elif section_name == SyncTrack.section_name:
-                sync_track = SyncTrack.from_chart_lines(iterator_getter)
             elif section_name in cls._instrument_track_name_to_instrument_difficulty_pair:
                 instrument, difficulty = cls._instrument_track_name_to_instrument_difficulty_pair[
                     section_name
                 ]
                 track = InstrumentTrack.from_chart_lines(instrument, difficulty, iterator_getter)
                 instrument_tracks[instrument][difficulty] = track
-            # TODO: [Logging] Log unhandled sections.
+            # TODO: [Logging] Log unhandled sections that also aren't in cls._required_sections.
 
         return cls(metadata, global_events_track, sync_track, instrument_tracks)
 
@@ -240,12 +240,7 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         return timestamp, proximal_bpm_event_idx
 
     def _seconds_from_ticks_at_bpm(self, ticks: int, bpm: float) -> float:
-        if bpm <= 0:
-            raise ValueError(f"bpm {bpm} must be positive")
-        ticks_per_minute = bpm * self.metadata.resolution
-        ticks_per_second = ticks_per_minute / 60
-        seconds_per_tick = 1 / ticks_per_second
-        return ticks * seconds_per_tick
+        return chartparse.tick.seconds_from_ticks_at_bpm(ticks, bpm, self.metadata.resolution)
 
     def notes_per_second(
         self,

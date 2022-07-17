@@ -362,31 +362,14 @@ class TestTimestampAtTick(object):
 
 
 class TestSecondsFromTicksAtBPM(object):
-    @pytest.mark.parametrize(
-        "resolution,ticks,bpm,want",
-        [
-            pytest.param(100, 100, 60, 1),
-            pytest.param(100, 100, 120, 0.5),
-            pytest.param(100, 200, 120, 1),
-            pytest.param(100, 400, 200, 1.2),
-            pytest.param(200, 100, 60, 0.5),
-        ],
-    )
-    def test_basic(self, bare_chart, bare_metadata, ticks, bpm, resolution, want):
-        bare_metadata.resolution = resolution
+    def test_basic(self, mocker, bare_chart, bare_metadata):
+        bare_metadata.resolution = pytest.default_resolution
         bare_chart.metadata = bare_metadata
-        assert bare_chart._seconds_from_ticks_at_bpm(ticks, bpm) == want
-
-    @pytest.mark.parametrize(
-        "ticks,bpm,resolution",
-        [
-            pytest.param(100, -1, 192, id="negative_bpm"),
-            pytest.param(100, 0, 192, id="zero_bpm"),
-        ],
-    )
-    def test_error(self, bare_chart, ticks, bpm, resolution):
-        with pytest.raises(ValueError):
-            _ = bare_chart._seconds_from_ticks_at_bpm(ticks, bpm)
+        mock = mocker.patch("chartparse.tick.seconds_from_ticks_at_bpm")
+        _ = bare_chart._seconds_from_ticks_at_bpm(pytest.default_tick, pytest.default_bpm)
+        mock.assert_called_once_with(
+            pytest.default_tick, pytest.default_bpm, pytest.default_resolution
+        )
 
 
 class TestNotesPerSecond(object):

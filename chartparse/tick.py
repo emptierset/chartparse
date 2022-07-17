@@ -66,3 +66,25 @@ def calculate_ticks_between_notes(resolution: int, note_duration: NoteDuration) 
 
     """
     return round(resolution / note_duration.value)
+
+
+# TODO: Create a PositiveNumber class.
+def seconds_from_ticks_at_bpm(ticks: int, bpm: float, resolution: int) -> float:
+    """Returns the number of seconds that elapse over a number of ticks at a particular tempo.
+
+    Args:
+        ticks: The number of ticks for which the duration should be calculated.
+        bpm: The tempo.
+        resolution: The number of ticks in a quarter note.
+
+    Returns: The number of seconds that elapse over ``ticks`` ticks at tempo ``bpm`` and resolution
+    ``resolution``.
+    """
+    if bpm <= 0:
+        raise ValueError(f"bpm {bpm} must be positive")
+    if resolution <= 0:
+        raise ValueError(f"resolution {resolution} must be positive")
+    ticks_per_minute = bpm * resolution
+    ticks_per_second = ticks_per_minute / 60
+    seconds_per_tick = 1 / ticks_per_second
+    return ticks * seconds_per_tick
