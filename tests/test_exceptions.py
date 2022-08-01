@@ -1,6 +1,6 @@
 import pytest
 
-from chartparse.exceptions import MissingRequiredField, RegexNotMatchError, raise_
+from chartparse.exceptions import MissingRequiredField, RegexNotMatchError, ProgrammerError, raise_
 
 
 class TestRaise(object):
@@ -34,3 +34,9 @@ class TestRegexNotMatchError(object):
         e = RegexNotMatchError(r"\d+", ["foo", "bar"])
         assert e.regex == r"\d+"
         assert e.message == r"none of 2 strings matched regex '\d+'"
+
+
+class TestProgrammerError(object):
+    def test_basic(self):
+        e = ProgrammerError()
+        assert e.message == ProgrammerError.message

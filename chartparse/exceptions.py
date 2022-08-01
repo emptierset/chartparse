@@ -63,3 +63,16 @@ class RegexNotMatchError(Exception):
         super().__init__(message)
         self.regex = regex
         self.message = message
+
+
+@typing.final
+class ProgrammerError(Exception):
+    """Raised in branches that should be unreachable.
+
+    Oftentimes, these branches must exist to satisfy mypy.
+    """
+
+    message: Final[str] = "should be impossible"
+
+    def __init__(self) -> None:
+        super().__init__(self.message)
