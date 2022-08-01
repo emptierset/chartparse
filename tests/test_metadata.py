@@ -4,8 +4,8 @@ from chartparse.exceptions import MissingRequiredField
 from chartparse.metadata import Metadata
 
 
-class TestMetadata(object):
-    def test_init(self, basic_metadata):
+class TestInit(object):
+    def test_basic(self, basic_metadata):
         assert basic_metadata.name == pytest.default_name
         assert basic_metadata.artist == pytest.default_artist
         assert basic_metadata.charter == pytest.default_charter
@@ -31,7 +31,9 @@ class TestMetadata(object):
         assert basic_metadata.keys_stream == pytest.default_keys_stream
         assert basic_metadata.crowd_stream == pytest.default_crowd_stream
 
-    def test_from_chart_lines(self):
+
+class TestFromChartLines(object):
+    def test_basic(self):
         lines = [
             f'  Name = "{pytest.default_name}"',
             f'  Artist = "{pytest.default_artist}"',
@@ -84,6 +86,6 @@ class TestMetadata(object):
         assert metadata.keys_stream == pytest.default_keys_stream
         assert metadata.crowd_stream == pytest.default_crowd_stream
 
-    def test_from_chart_lines_missing_resolution(self):
+    def test_missing_resolution(self):
         with pytest.raises(MissingRequiredField):
             _ = Metadata.from_chart_lines(lambda: iter([]))

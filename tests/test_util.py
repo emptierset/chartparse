@@ -18,23 +18,24 @@ class TestDictPropertiesEqMixin(object):
             self.x = x
             self.y = y
 
-    def test_eq(self):
-        foo1 = self.Foo(1, 2)
-        foo2 = self.Foo(1, 2)
-        foo3 = self.Foo(1, 3)
-        baz = self.Baz(1, 2)
-        assert foo1 == foo2
-        assert foo2 == foo1
-        assert foo1 != foo3
-        assert foo3 != foo1
-        assert foo1 == baz
-        assert baz == foo1
+    class TestEq(object):
+        def test_basic(self):
+            foo1 = TestDictPropertiesEqMixin.Foo(1, 2)
+            foo2 = TestDictPropertiesEqMixin.Foo(1, 2)
+            foo3 = TestDictPropertiesEqMixin.Foo(1, 3)
+            baz = TestDictPropertiesEqMixin.Baz(1, 2)
+            assert foo1 == foo2
+            assert foo2 == foo1
+            assert foo1 != foo3
+            assert foo3 != foo1
+            assert foo1 == baz
+            assert baz == foo1
 
-    def test_eq_unimplemented(self):
-        foo = self.Foo(1, 2)
-        bar = self.Bar(1, 2)
-        assert foo != bar
-        assert bar != foo
+        def test_unimplemented(self):
+            foo = TestDictPropertiesEqMixin.Foo(1, 2)
+            bar = TestDictPropertiesEqMixin.Bar(1, 2)
+            assert foo != bar
+            assert bar != foo
 
 
 class TestAllValuesGettableEnum(object):
@@ -48,8 +49,11 @@ class TestAllValuesGettableEnum(object):
         TWO = 2
         TOO = 2
 
-    def test_all_values(self):
-        assert self.TrinketEnum.all_values() == ImmutableList([1, 2])
+    class TestAllValues(object):
+        def test_basic(self):
+            assert TestAllValuesGettableEnum.TrinketEnum.all_values() == ImmutableList([1, 2])
 
-    def test_all_values_does_not_get_aliases(self):
-        assert self.TrinketEnumWithAlias.all_values() == ImmutableList([1, 2])
+        def test_does_not_get_aliases(self):
+            assert TestAllValuesGettableEnum.TrinketEnumWithAlias.all_values() == ImmutableList(
+                [1, 2]
+            )

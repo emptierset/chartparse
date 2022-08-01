@@ -73,9 +73,12 @@ class TestImmutableList(object):
 
 
 class TestImmutableSortedList(object):
-    def test_init(self, basic_list):
-        assert ImmutableSortedList(basic_list) == sorted(basic_list)
+    class TestInit(object):
+        def test_basic(self, basic_list):
+            assert ImmutableSortedList(basic_list) == sorted(basic_list)
 
-    def test_init_with_key(self, basic_tuple_list):
-        key = lambda x: x[1]
-        assert ImmutableSortedList(basic_tuple_list, key=key) == sorted(basic_tuple_list, key=key)
+        def test_with_key(self, basic_tuple_list):
+            key = lambda x: x[1]
+            assert ImmutableSortedList(basic_tuple_list, key=key) == sorted(
+                basic_tuple_list, key=key
+            )
