@@ -18,11 +18,7 @@ from chartparse.tick import NoteDuration
 
 from tests.helpers.lines import generate_note as generate_note_line
 from tests.helpers.lines import generate_star_power as generate_star_power_line
-
-
-StarPowerEventWithDefaults = lambda tick, sustain: StarPowerEvent(
-    tick, pytest.default_timestamp, sustain
-)
+from tests.helpers.constructors import StarPowerEventWithDefaults
 
 
 class TestInstrumentTrack(object):
@@ -177,7 +173,7 @@ class TestInstrumentTrack(object):
                 pytest.param(
                     [generate_star_power_line(0, 100)],
                     [],
-                    [StarPowerEventWithDefaults(0, 100)],
+                    [StarPowerEventWithDefaults(tick=0, sustain=100)],
                     id="single_star_power_phrase",
                 ),
                 pytest.param(
@@ -220,8 +216,8 @@ class TestInstrumentTrack(object):
                         NoteEvent(2300, pytest.default_timestamp, Note.OPEN),
                     ],
                     [
-                        StarPowerEventWithDefaults(0, 100),
-                        StarPowerEventWithDefaults(2000, 80),
+                        StarPowerEventWithDefaults(tick=0, sustain=100),
+                        StarPowerEventWithDefaults(tick=2000, sustain=80),
                     ],
                     id="everything_together",
                 ),
@@ -254,8 +250,8 @@ class TestInstrumentTrack(object):
                         NoteEvent(2075, pytest.default_timestamp, Note.YB),
                     ],
                     [
-                        StarPowerEventWithDefaults(0, 100),
-                        StarPowerEventWithDefaults(2000, 80),
+                        StarPowerEventWithDefaults(tick=0, sustain=100),
+                        StarPowerEventWithDefaults(tick=2000, sustain=80),
                     ],
                     [
                         NoteEvent(
