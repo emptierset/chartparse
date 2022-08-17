@@ -18,7 +18,7 @@ from chartparse.tick import NoteDuration
 
 from tests.helpers.lines import generate_note as generate_note_line
 from tests.helpers.lines import generate_star_power as generate_star_power_line
-from tests.helpers.constructors import StarPowerEventWithDefaults
+from tests.helpers.constructors import StarPowerEventWithDefaults, NoteEventWithDefaults
 
 
 class TestInstrumentTrack(object):
@@ -84,38 +84,37 @@ class TestInstrumentTrack(object):
                 pytest.param([pytest.invalid_chart_line], [], [], id="skip_invalid_line"),
                 pytest.param(
                     [generate_note_line(0, NoteTrackIndex.OPEN.value)],
-                    # TODO: Create helper NoteEventWithDefaults.
-                    [NoteEvent(0, pytest.default_timestamp, Note.OPEN)],
+                    [NoteEventWithDefaults(tick=0, note=Note.OPEN)],
                     [],
                     id="open_note",
                 ),
                 pytest.param(
                     [generate_note_line(0, NoteTrackIndex.G.value)],
-                    [NoteEvent(0, pytest.default_timestamp, Note.G)],
+                    [NoteEventWithDefaults(tick=0, note=Note.G)],
                     [],
                     id="green_note",
                 ),
                 pytest.param(
                     [generate_note_line(0, NoteTrackIndex.R.value)],
-                    [NoteEvent(0, pytest.default_timestamp, Note.R)],
+                    [NoteEventWithDefaults(tick=0, note=Note.R)],
                     [],
                     id="red_note",
                 ),
                 pytest.param(
                     [generate_note_line(0, NoteTrackIndex.Y.value)],
-                    [NoteEvent(0, pytest.default_timestamp, Note.Y)],
+                    [NoteEventWithDefaults(tick=0, note=Note.Y)],
                     [],
                     id="yellow_note",
                 ),
                 pytest.param(
                     [generate_note_line(0, NoteTrackIndex.B.value)],
-                    [NoteEvent(0, pytest.default_timestamp, Note.B)],
+                    [NoteEventWithDefaults(tick=0, note=Note.B)],
                     [],
                     id="blue_note",
                 ),
                 pytest.param(
                     [generate_note_line(0, NoteTrackIndex.O.value)],
-                    [NoteEvent(0, pytest.default_timestamp, Note.O)],
+                    [NoteEventWithDefaults(tick=0, note=Note.O)],
                     [],
                     id="orange_note",
                 ),
@@ -124,7 +123,7 @@ class TestInstrumentTrack(object):
                         generate_note_line(0, NoteTrackIndex.G.value),
                         generate_note_line(0, NoteTrackIndex.TAP.value),
                     ],
-                    [NoteEvent(0, pytest.default_timestamp, Note.G, is_tap=True)],
+                    [NoteEventWithDefaults(tick=0, note=Note.G, is_tap=True)],
                     [],
                     id="tap_green_note",
                 ),
@@ -133,7 +132,7 @@ class TestInstrumentTrack(object):
                         generate_note_line(0, NoteTrackIndex.G.value),
                         generate_note_line(0, NoteTrackIndex.FORCED.value),
                     ],
-                    [NoteEvent(0, pytest.default_timestamp, Note.G, is_forced=True)],
+                    [NoteEventWithDefaults(tick=0, note=Note.G, is_forced=True)],
                     [],
                     id="forced_green_note",
                 ),
@@ -141,7 +140,7 @@ class TestInstrumentTrack(object):
                     [
                         generate_note_line(0, NoteTrackIndex.G.value, sustain=100),
                     ],
-                    [NoteEvent(0, pytest.default_timestamp, Note.G, sustain=100)],
+                    [NoteEventWithDefaults(tick=0, note=Note.G, sustain=100)],
                     [],
                     id="green_with_sustain",
                 ),
@@ -150,7 +149,7 @@ class TestInstrumentTrack(object):
                         generate_note_line(0, NoteTrackIndex.G.value),
                         generate_note_line(0, NoteTrackIndex.R.value),
                     ],
-                    [NoteEvent(0, pytest.default_timestamp, Note.GR)],
+                    [NoteEventWithDefaults(tick=0, note=Note.GR)],
                     [],
                     id="chord",
                 ),
@@ -160,10 +159,9 @@ class TestInstrumentTrack(object):
                         generate_note_line(0, NoteTrackIndex.R.value),
                     ],
                     [
-                        NoteEvent(
-                            0,
-                            pytest.default_timestamp,
-                            Note.GR,
+                        NoteEventWithDefaults(
+                            tick=0,
+                            note=Note.GR,
                             sustain=[100, 0, None, None, None],
                         )
                     ],
@@ -191,29 +189,26 @@ class TestInstrumentTrack(object):
                         generate_note_line(2300, NoteTrackIndex.OPEN.value),
                     ],
                     [
-                        NoteEvent(
-                            0,
-                            pytest.default_timestamp,
-                            Note.G,
+                        NoteEventWithDefaults(
+                            tick=0,
+                            note=Note.G,
                             sustain=100,
                             star_power_data=StarPowerData(0, True),
                         ),
-                        NoteEvent(
-                            2000,
-                            pytest.default_timestamp,
-                            Note.R,
+                        NoteEventWithDefaults(
+                            tick=2000,
+                            note=Note.R,
                             sustain=50,
                             star_power_data=StarPowerData(1, False),
                         ),
-                        NoteEvent(
-                            2075,
-                            pytest.default_timestamp,
-                            Note.YB,
+                        NoteEventWithDefaults(
+                            tick=2075,
+                            note=Note.YB,
                             star_power_data=StarPowerData(1, True),
                         ),
-                        NoteEvent(2100, pytest.default_timestamp, Note.O, is_forced=True),
-                        NoteEvent(2200, pytest.default_timestamp, Note.B, is_tap=True),
-                        NoteEvent(2300, pytest.default_timestamp, Note.OPEN),
+                        NoteEventWithDefaults(tick=2100, note=Note.O, is_forced=True),
+                        NoteEventWithDefaults(tick=2200, note=Note.B, is_tap=True),
+                        NoteEventWithDefaults(tick=2300, note=Note.OPEN),
                     ],
                     [
                         StarPowerEventWithDefaults(tick=0, sustain=100),
@@ -245,33 +240,30 @@ class TestInstrumentTrack(object):
             [
                 pytest.param(
                     [
-                        NoteEvent(0, pytest.default_timestamp, Note.G, sustain=100),
-                        NoteEvent(2000, pytest.default_timestamp, Note.R, sustain=50),
-                        NoteEvent(2075, pytest.default_timestamp, Note.YB),
+                        NoteEventWithDefaults(tick=0, note=Note.G, sustain=100),
+                        NoteEventWithDefaults(tick=2000, note=Note.R, sustain=50),
+                        NoteEventWithDefaults(tick=2075, note=Note.YB),
                     ],
                     [
                         StarPowerEventWithDefaults(tick=0, sustain=100),
                         StarPowerEventWithDefaults(tick=2000, sustain=80),
                     ],
                     [
-                        NoteEvent(
-                            0,
-                            pytest.default_timestamp,
-                            Note.G,
+                        NoteEventWithDefaults(
+                            tick=0,
+                            note=Note.G,
                             sustain=100,
                             star_power_data=StarPowerData(0, True),
                         ),
-                        NoteEvent(
-                            2000,
-                            pytest.default_timestamp,
-                            Note.R,
+                        NoteEventWithDefaults(
+                            tick=2000,
+                            note=Note.R,
                             sustain=50,
                             star_power_data=StarPowerData(1, False),
                         ),
-                        NoteEvent(
-                            2075,
-                            pytest.default_timestamp,
-                            Note.YB,
+                        NoteEventWithDefaults(
+                            tick=2075,
+                            note=Note.YB,
                             star_power_data=StarPowerData(1, True),
                         ),
                     ],
@@ -294,14 +286,7 @@ class TestNoteEvent(object):
             mock_refine_sustain = mocker.patch.object(
                 NoteEvent, "_refine_sustain", return_value=pytest.default_sustain
             )
-            got = NoteEvent(
-                pytest.default_tick,
-                pytest.default_timestamp,
-                pytest.default_note,
-                sustain=pytest.default_sustain,
-                is_forced=True,
-                is_tap=True,
-            )
+            got = NoteEventWithDefaults(is_forced=True, is_tap=True)
             mock_validate_sustain.assert_called_once_with(
                 pytest.default_sustain, pytest.default_note
             )
@@ -369,144 +354,134 @@ class TestNoteEvent(object):
             "current,previous,want",
             [
                 pytest.param(
-                    NoteEvent(0, pytest.default_timestamp, Note.G, is_tap=True, is_forced=True),
+                    NoteEventWithDefaults(tick=0, note=Note.G, is_tap=True, is_forced=True),
                     None,
                     HOPOState.TAP,
                     id="tap_notes_are_taps",
                 ),
                 pytest.param(
-                    NoteEvent(0, pytest.default_timestamp, Note.G),
+                    NoteEventWithDefaults(tick=0, note=Note.G),
                     None,
                     HOPOState.STRUM,
                     id="first_note_is_strum",
                 ),
                 pytest.param(
-                    NoteEvent(
-                        chartparse.tick.calculate_ticks_between_notes(
+                    NoteEventWithDefaults(
+                        tick=chartparse.tick.calculate_ticks_between_notes(
                             pytest.default_resolution,
                             NoteDuration.SIXTEENTH,
                         ),
-                        pytest.default_timestamp,
-                        Note.R,
+                        note=Note.R,
                     ),
-                    NoteEvent(0, pytest.default_timestamp, Note.G),
+                    NoteEventWithDefaults(tick=0, note=Note.G),
                     HOPOState.HOPO,
                     id="16th_notes_are_hopos",
                 ),
                 pytest.param(
-                    NoteEvent(
-                        chartparse.tick.calculate_ticks_between_notes(
+                    NoteEventWithDefaults(
+                        tick=chartparse.tick.calculate_ticks_between_notes(
                             pytest.default_resolution,
                             NoteDuration.TWELFTH,
                         ),
-                        pytest.default_timestamp,
-                        Note.R,
+                        note=Note.R,
                     ),
-                    NoteEvent(0, pytest.default_timestamp, Note.G),
+                    NoteEventWithDefaults(tick=0, note=Note.G),
                     HOPOState.HOPO,
                     id="12th_notes_are_hopos",
                 ),
                 pytest.param(
-                    NoteEvent(
-                        chartparse.tick.calculate_ticks_between_notes(
+                    NoteEventWithDefaults(
+                        tick=chartparse.tick.calculate_ticks_between_notes(
                             pytest.default_resolution,
                             NoteDuration.EIGHTH,
                         ),
-                        pytest.default_timestamp,
-                        Note.R,
+                        note=Note.R,
                     ),
-                    NoteEvent(0, pytest.default_timestamp, Note.G),
+                    NoteEventWithDefaults(tick=0, note=Note.G),
                     HOPOState.STRUM,
                     id="8th_notes_are_strums",
                 ),
                 pytest.param(
-                    NoteEvent(
-                        chartparse.tick.calculate_ticks_between_notes(
+                    NoteEventWithDefaults(
+                        tick=chartparse.tick.calculate_ticks_between_notes(
                             pytest.default_resolution,
                             NoteDuration.SIXTEENTH,
                         ),
-                        pytest.default_timestamp,
-                        Note.G,
+                        note=Note.G,
                     ),
-                    NoteEvent(0, pytest.default_timestamp, Note.G),
+                    NoteEventWithDefaults(tick=0, note=Note.G),
                     HOPOState.STRUM,
                     id="consecutive_16th_notes_are_strums",
                 ),
                 pytest.param(
-                    NoteEvent(
-                        chartparse.tick.calculate_ticks_between_notes(
+                    NoteEventWithDefaults(
+                        tick=chartparse.tick.calculate_ticks_between_notes(
                             pytest.default_resolution,
                             NoteDuration.TWELFTH,
                         ),
-                        pytest.default_timestamp,
-                        Note.G,
+                        note=Note.G,
                     ),
-                    NoteEvent(0, pytest.default_timestamp, Note.G),
+                    NoteEventWithDefaults(tick=0, note=Note.G),
                     HOPOState.STRUM,
                     id="consecutive_12th_notes_are_strums",
                 ),
                 pytest.param(
-                    NoteEvent(
-                        chartparse.tick.calculate_ticks_between_notes(
+                    NoteEventWithDefaults(
+                        tick=chartparse.tick.calculate_ticks_between_notes(
                             pytest.default_resolution,
                             NoteDuration.EIGHTH,
                         ),
-                        pytest.default_timestamp,
-                        Note.G,
+                        note=Note.G,
                     ),
-                    NoteEvent(0, pytest.default_timestamp, Note.G),
+                    NoteEventWithDefaults(tick=0, note=Note.G),
                     HOPOState.STRUM,
                     id="consecutive_8th_notes_are_strums",
                 ),
                 pytest.param(
-                    NoteEvent(
-                        chartparse.tick.calculate_ticks_between_notes(
+                    NoteEventWithDefaults(
+                        tick=chartparse.tick.calculate_ticks_between_notes(
                             pytest.default_resolution,
                             NoteDuration.TWELFTH,
                         ),
-                        pytest.default_timestamp,
-                        Note.G,
+                        note=Note.G,
                     ),
-                    NoteEvent(0, pytest.default_timestamp, Note.RY),
+                    NoteEventWithDefaults(tick=0, note=Note.RY),
                     HOPOState.HOPO,
                     id="pull_off_from_chord_is_hopo",
                 ),
                 pytest.param(
-                    NoteEvent(
-                        chartparse.tick.calculate_ticks_between_notes(
+                    NoteEventWithDefaults(
+                        tick=chartparse.tick.calculate_ticks_between_notes(
                             pytest.default_resolution,
                             NoteDuration.TWELFTH,
                         ),
-                        pytest.default_timestamp,
-                        Note.RY,
+                        note=Note.RY,
                     ),
-                    NoteEvent(0, pytest.default_timestamp, Note.G),
+                    NoteEventWithDefaults(tick=0, note=Note.G),
                     HOPOState.STRUM,
                     id="hammer_on_to_chord_is_not_hopo",
                 ),
                 pytest.param(
-                    NoteEvent(
-                        chartparse.tick.calculate_ticks_between_notes(
+                    NoteEventWithDefaults(
+                        tick=chartparse.tick.calculate_ticks_between_notes(
                             pytest.default_resolution,
                             NoteDuration.TWELFTH,
                         ),
-                        pytest.default_timestamp,
-                        Note.OPEN,
+                        note=Note.OPEN,
                     ),
-                    NoteEvent(0, pytest.default_timestamp, Note.G),
+                    NoteEventWithDefaults(tick=0, note=Note.G),
                     HOPOState.HOPO,
                     id="hammer_on_to_open_is_hopo",
                 ),
                 pytest.param(
-                    NoteEvent(
-                        chartparse.tick.calculate_ticks_between_notes(
+                    NoteEventWithDefaults(
+                        tick=chartparse.tick.calculate_ticks_between_notes(
                             pytest.default_resolution,
                             NoteDuration.TWELFTH,
                         ),
-                        pytest.default_timestamp,
-                        Note.G,
+                        note=Note.G,
                     ),
-                    NoteEvent(0, pytest.default_timestamp, Note.OPEN),
+                    NoteEventWithDefaults(tick=0, note=Note.OPEN),
                     HOPOState.HOPO,
                     id="pull_off_to_open_is_hopo",
                 ),
