@@ -142,7 +142,7 @@ def generate_valid_lyric_event_line_fn(tick=_default_tick, value=_default_lyric_
 _default_difficulty = Difficulty.EXPERT
 _default_instrument = Instrument.GUITAR
 _default_section_name = _default_difficulty.value + _default_instrument.value
-_default_sustain = 100  # ticks
+_default_sustain = 0  # ticks
 
 _default_note = Note.G
 _default_note_instrument_track_index = InstrumentTrack._min_note_instrument_track_index
