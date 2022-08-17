@@ -1,12 +1,43 @@
+import datetime
 import pytest
 
 from chartparse.event import Event
 
 
 class TestEvent(object):
-    def test_init(self, tick_having_event):
-        assert tick_having_event.tick == pytest.default_tick
+    class TestInit(object):
+        def test_basic(self, tick_having_event):
+            assert tick_having_event.tick == pytest.default_tick
 
-    def test_init_with_timestamp(self):
-        e = Event(pytest.default_tick, pytest.default_timestamp)
-        assert e.timestamp == pytest.default_timestamp
+    class TestCalculateTimestamp(object):
+        nonzero_timedelta = datetime.timedelta(1)
+        nonzero_int = 1
+
+        def test_early_return(self, minimal_timestamp_getter):
+            got_timestamp, got_proximal_bpm_event_idx = Event.calculate_timestamp(
+                pytest.default_tick, None, minimal_timestamp_getter, pytest.default_resolution
+            )
+            assert got_timestamp == datetime.timedelta(0)
+            assert got_proximal_bpm_event_idx == 0
+
+        @pytest.mark.parametrize(
+            "prev_event_proximal_bpm_event_idx,want_called_start_bpm_event_index",
+            [(None, 0), (1, 1)],
+        )
+        def test_callback(
+            self, mocker, prev_event_proximal_bpm_event_idx, want_called_start_bpm_event_index
+        ):
+            prev_event = Event(
+                pytest.default_tick,
+                pytest.default_timestamp,
+                proximal_bpm_event_idx=prev_event_proximal_bpm_event_idx,
+            )
+            stub = mocker.stub(name="timestamp_getter")
+            Event.calculate_timestamp(
+                pytest.default_tick, prev_event, stub, pytest.default_resolution
+            )
+            stub.assert_called_once_with(
+                pytest.default_tick,
+                pytest.default_resolution,
+                start_bpm_event_index=want_called_start_bpm_event_index,
+            )

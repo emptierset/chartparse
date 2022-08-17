@@ -28,7 +28,6 @@ from pathlib import Path
 from typing import Final, Optional, TextIO
 
 import chartparse.tick
-from chartparse.event import Event
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.globalevents import GlobalEventsTrack
 from chartparse.hints import T
@@ -76,15 +75,8 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         self.sync_track = sync_track
         self.instrument_tracks = instrument_tracks
 
-        self._populate_bpm_event_timestamps()
-        self._populate_event_timestamps(self.sync_track.time_signature_events)
-        self._populate_event_timestamps(self.global_events_track.text_events)
-        self._populate_event_timestamps(self.global_events_track.section_events)
-        self._populate_event_timestamps(self.global_events_track.lyric_events)
         for instrument, difficulties in self.instrument_tracks.items():
             for difficulty, track in difficulties.items():
-                self._populate_event_timestamps(track.note_events)
-                self._populate_event_timestamps(track.star_power_events)
                 self._populate_note_event_hopo_states(track.note_events)
                 self._populate_last_note_timestamp(track)
 
@@ -104,16 +96,8 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
     _required_sections: Final[list[str]] = [Metadata.section_name, SyncTrack.section_name]
 
-    _instrument_track_name_to_instrument_difficulty_pair: Final[
-        dict[str, tuple[Instrument, Difficulty]]
-    ] = {
-        d + i: (Instrument(i), Difficulty(d))
-        for i, d in typing.cast(
-            Iterable[tuple[str, str]],
-            itertools.product(Instrument.all_values(), Difficulty.all_values()),
-        )
-    }
-
+    # TODO: Validate that all events are in strictly increasing or non-decreasing (depending on the
+    # track) tick order.
     @classmethod
     def from_file(cls, fp: TextIO) -> Chart:
         """Given a file object, parses its contents and returns a new Chart.
@@ -134,19 +118,39 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             )
 
         metadata = Metadata.from_chart_lines(sections[Metadata.section_name])
-        sync_track = SyncTrack.from_chart_lines(sections[SyncTrack.section_name])
+        sync_track = SyncTrack.from_chart_lines(
+            sections[SyncTrack.section_name], metadata.resolution
+        )
+
+        instrument_track_name_to_instrument_difficulty_pair: dict[
+            str, tuple[Instrument, Difficulty]
+        ] = {
+            d + i: (Instrument(i), Difficulty(d))
+            for i, d in typing.cast(
+                Iterable[tuple[str, str]],
+                itertools.product(Instrument.all_values(), Difficulty.all_values()),
+            )
+        }
 
         instrument_tracks: collections.defaultdict[
             Instrument, dict[Difficulty, InstrumentTrack]
         ] = collections.defaultdict(dict)
         for section_name, iterator_getter in sections.items():
             if section_name == GlobalEventsTrack.section_name:
-                global_events_track = GlobalEventsTrack.from_chart_lines(iterator_getter)
-            elif section_name in cls._instrument_track_name_to_instrument_difficulty_pair:
-                instrument, difficulty = cls._instrument_track_name_to_instrument_difficulty_pair[
+                global_events_track = GlobalEventsTrack.from_chart_lines(
+                    iterator_getter, sync_track.timestamp_at_tick, metadata.resolution
+                )
+            elif section_name in instrument_track_name_to_instrument_difficulty_pair:
+                instrument, difficulty = instrument_track_name_to_instrument_difficulty_pair[
                     section_name
                 ]
-                track = InstrumentTrack.from_chart_lines(instrument, difficulty, iterator_getter)
+                track = InstrumentTrack.from_chart_lines(
+                    instrument,
+                    difficulty,
+                    iterator_getter,
+                    sync_track.timestamp_at_tick,
+                    metadata.resolution,
+                )
                 instrument_tracks[instrument][difficulty] = track
             # TODO: [Logging] Log unhandled sections that also aren't in cls._required_sections.
 
@@ -184,34 +188,14 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
                 curr_last_line_idx = None
         return sections
 
-    def _populate_bpm_event_timestamps(self) -> None:
-        self.sync_track.bpm_events[0].timestamp = _zero_timedelta
-        for i, cur_event in enumerate(
-            _iterate_from_second_elem(self.sync_track.bpm_events), start=1
-        ):
-            prev_event = self.sync_track.bpm_events[i - 1]
-            assert prev_event.timestamp is not None
-            ticks_since_prev = cur_event.tick - prev_event.tick
-            seconds_since_prev = self._seconds_from_ticks_at_bpm(ticks_since_prev, prev_event.bpm)
-            cur_event.timestamp = prev_event.timestamp + datetime.timedelta(
-                seconds=seconds_since_prev
-            )
-
-    def _populate_event_timestamps(self, events: Iterable[Event]) -> None:
-        proximal_bpm_event_idx = 0
-        for i, event in enumerate(events):
-            timestamp, proximal_bpm_event_idx = self._timestamp_at_tick(
-                event.tick,
-                start_bpm_event_index=proximal_bpm_event_idx,
-            )
-            event.timestamp = timestamp
-
     def _populate_last_note_timestamp(self, track: InstrumentTrack) -> None:
         if len(track.note_events) == 0:
             return
         last_event = track.note_events[-1]
         last_tick = last_event.tick + last_event.longest_sustain
-        track._last_note_timestamp, _ = self._timestamp_at_tick(last_tick)
+        track._last_note_timestamp, _ = self.sync_track.timestamp_at_tick(
+            last_tick, self.metadata.resolution
+        )
 
     def _populate_note_event_hopo_states(self, events: Sequence[NoteEvent]) -> None:
         if not events:
@@ -220,24 +204,6 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         for i, cur_event in enumerate(events):
             previous_event = events[i - 1] if i > 0 else None
             cur_event._populate_hopo_state(self.metadata.resolution, previous_event)
-
-    def _timestamp_at_tick(
-        self, tick: int, start_bpm_event_index: int = 0
-    ) -> tuple[datetime.timedelta, int]:
-        proximal_bpm_event_idx = self.sync_track.idx_of_proximal_bpm_event(
-            tick, start_idx=start_bpm_event_index
-        )
-        proximal_bpm_event = self.sync_track.bpm_events[proximal_bpm_event_idx]
-        assert proximal_bpm_event.timestamp is not None
-        ticks_since_proximal_bpm_event = tick - proximal_bpm_event.tick
-        seconds_since_proximal_bpm_event = self._seconds_from_ticks_at_bpm(
-            ticks_since_proximal_bpm_event, proximal_bpm_event.bpm
-        )
-        timedelta_since_proximal_bpm_event = datetime.timedelta(
-            seconds=seconds_since_proximal_bpm_event
-        )
-        timestamp = proximal_bpm_event.timestamp + timedelta_since_proximal_bpm_event
-        return timestamp, proximal_bpm_event_idx
 
     def _seconds_from_ticks_at_bpm(self, ticks: int, bpm: float) -> float:
         return chartparse.tick.seconds_from_ticks_at_bpm(ticks, bpm, self.metadata.resolution)
@@ -308,12 +274,12 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         all_start_args_none = num_of_start_args_none == len(start_args)
         if (start_tick is not None) or all_start_args_none:
             lower_bound = (
-                self._timestamp_at_tick(start_tick)[0]
+                self.sync_track.timestamp_at_tick(start_tick, self.metadata.resolution)[0]
                 if start_tick is not None
                 else _zero_timedelta
             )
             upper_bound = (
-                self._timestamp_at_tick(end_tick)[0]
+                self.sync_track.timestamp_at_tick(end_tick, self.metadata.resolution)[0]
                 if end_tick is not None
                 else track._last_note_timestamp
             )

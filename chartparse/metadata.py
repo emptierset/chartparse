@@ -1,6 +1,6 @@
 """For representing a chart's metadata, such as musical artist.
 
-You will rarely need to create any of this module's objects manually; please instead create a
+You should not need to create any of this module's objects manually; please instead create a
 :class:`~chartparse.chart.Chart` and inspect its attributes via that object.
 
 .. _Google Python Style Guide:

@@ -1,6 +1,6 @@
 """For representing the data related to lyrics, sections, and more.
 
-You will rarely need to create any of this module's objects manually; please instead create a
+You should not need to create any of this module's objects manually; please instead create a
 :class:`~chartparse.chart.Chart` and inspect its attributes via that object.
 
 .. _Google Python Style Guide:
@@ -16,16 +16,17 @@ import typing
 from collections.abc import Callable, Iterable, Sequence
 from typing import ClassVar, Final, Optional, Pattern, Type, TypeVar
 
-from chartparse.event import Event
+import chartparse.track
+from chartparse.datastructures import ImmutableSortedList
+from chartparse.event import Event, TimestampGetterT
 from chartparse.exceptions import RegexNotMatchError
-from chartparse.track import EventTrack
 from chartparse.util import DictPropertiesEqMixin, DictReprTruncatedSequencesMixin
 
 GlobalEventsTrackT = TypeVar("GlobalEventsTrackT", bound="GlobalEventsTrack")
 
 
 @typing.final
-class GlobalEventsTrack(EventTrack, DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
+class GlobalEventsTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     """A :class:`~chartparse.chart.Chart`'s :class:`~chartparse.globalevents.GlobalEvent`\\ s."""
 
     text_events: Final[Sequence[TextEvent]]
@@ -54,7 +55,10 @@ class GlobalEventsTrack(EventTrack, DictPropertiesEqMixin, DictReprTruncatedSequ
 
     @classmethod
     def from_chart_lines(
-        cls: Type[GlobalEventsTrackT], iterator_getter: Callable[[], Iterable[str]]
+        cls: Type[GlobalEventsTrackT],
+        iterator_getter: Callable[[], Iterable[str]],
+        timestamp_getter: TimestampGetterT,
+        resolution: int,
     ) -> GlobalEventsTrackT:
         """Initializes instance attributes by parsing an iterable of strings.
 
@@ -62,19 +66,37 @@ class GlobalEventsTrack(EventTrack, DictPropertiesEqMixin, DictReprTruncatedSequ
             iterator_getter: The iterable of strings returned by this is most likely from a
                 Moonscraper ``.chart``. Must be a function so the strings can be iterated over
                 multiple times, if necessary.
+            timestamp_getter: A callable that can be used to obtain a timestamp at a given tick and
+                resolution.
+            resolution: The resolution of the chart.
 
         Returns:
             A ``GlobalEventsTrack`` parsed from the strings returned by ``iterator_getter``.
         """
 
-        text_events = cls._parse_events_from_chart_lines(
-            iterator_getter(), TextEvent.from_chart_line
+        text_events: ImmutableSortedList[
+            TextEvent
+        ] = chartparse.track.parse_events_from_chart_lines(
+            resolution,
+            iterator_getter(),
+            TextEvent.from_chart_line,
+            timestamp_getter,
         )
-        section_events = cls._parse_events_from_chart_lines(
-            iterator_getter(), SectionEvent.from_chart_line
+        section_events: ImmutableSortedList[
+            SectionEvent
+        ] = chartparse.track.parse_events_from_chart_lines(
+            resolution,
+            iterator_getter(),
+            SectionEvent.from_chart_line,
+            timestamp_getter,
         )
-        lyric_events = cls._parse_events_from_chart_lines(
-            iterator_getter(), LyricEvent.from_chart_line
+        lyric_events: ImmutableSortedList[
+            LyricEvent
+        ] = chartparse.track.parse_events_from_chart_lines(
+            resolution,
+            iterator_getter(),
+            LyricEvent.from_chart_line,
+            timestamp_getter,
         )
         return cls(text_events, section_events, lyric_events)
 
@@ -104,17 +126,31 @@ class GlobalEvent(Event):
     _regex_template: Final[str] = r"^\s*?(\d+?) = E \"{}\"\s*?$"
 
     def __init__(
-        self, tick: int, value: str, timestamp: Optional[datetime.timedelta] = None
+        self,
+        tick: int,
+        value: str,
+        timestamp: datetime.timedelta,
+        proximal_bpm_event_idx: Optional[int] = None,
     ) -> None:
-        super().__init__(tick, timestamp=timestamp)
+        super().__init__(tick, timestamp, proximal_bpm_event_idx=proximal_bpm_event_idx)
         self.value = value
 
     @classmethod
-    def from_chart_line(cls: Type[GlobalEventT], line: str) -> GlobalEventT:
+    def from_chart_line(
+        cls: Type[GlobalEventT],
+        line: str,
+        prev_event: Optional[GlobalEventT],
+        timestamp_getter: TimestampGetterT,
+        resolution: int,
+    ) -> GlobalEventT:
         """Attempt to obtain an instance of this object from a string.
 
         Args:
             line: Most likely a line from a Moonscraper ``.chart``.
+            prev_event: The event
+            timestamp_getter: A callable that can be used to obtain a timestamp at a given tick and
+                resolution.
+            resolution: The resolution of the chart.
 
         Returns:
             An an instance of this object parsed from ``line``.
@@ -127,7 +163,10 @@ class GlobalEvent(Event):
         if not m:
             raise RegexNotMatchError(cls._regex, line)
         tick, value = int(m.group(1)), m.group(2)
-        return cls(tick, value)
+        timestamp, proximal_bpm_event_idx = cls.calculate_timestamp(
+            tick, prev_event, timestamp_getter, resolution
+        )
+        return cls(tick, value, timestamp, proximal_bpm_event_idx=proximal_bpm_event_idx)
 
     def __str__(self) -> str:  # pragma: no cover
         to_join = [super().__str__()]

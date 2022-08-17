@@ -8,15 +8,22 @@
 from __future__ import annotations
 
 import datetime
-from typing import Final, Optional, TypeVar
+from typing import Final, Optional, Protocol, TypeVar
 
 from chartparse.util import DictPropertiesEqMixin, DictReprMixin
 
 EventT = TypeVar("EventT", bound="Event")
 
 
+class TimestampGetterT(Protocol):
+    def __call__(
+        self, tick: int, resolution: int, start_bpm_event_index: int = ...
+    ) -> tuple[datetime.timedelta, int]:
+        ...  # pragma: no cover
+
+
 class Event(DictPropertiesEqMixin, DictReprMixin):
-    """An event that occurs at a specific tick in an :class:`~chartparse.track.EventTrack`.
+    """An event that occurs at a tick and timestamp in an :class:`~chartparse.track.EventTrack`.
 
     This is typically used only as a base class for more specialized subclasses. It implements an
     attractive ``__str__`` representation.
@@ -25,31 +32,46 @@ class Event(DictPropertiesEqMixin, DictReprMixin):
     tick: Final[int]
     """The tick at which this event occurs."""
 
-    # TODO: Figure out how to accurately represent it in the type system that this is set later.
-    # Might involve wrapping ``Event`` in a subclass that has ``timestamp``.
-    timestamp: datetime.timedelta
-    """The timestamp when this event occurs.
+    timestamp: Final[datetime.timedelta]
+    """The timestamp when this event occurs."""
 
-    This is not set in ``__init__``; it must be set manually, most likely via
-    :meth:`~chartparse.chart._populate_event_timestamps` or
-    :meth:`~chartparse.chart._populate_bpm_event_timestamps`.
-    """
+    _proximal_bpm_event_index: Optional[int]
 
-    def __init__(self, tick: int, timestamp: Optional[datetime.timedelta] = None) -> None:
+    def __init__(
+        self,
+        tick: int,
+        timestamp: datetime.timedelta,
+        proximal_bpm_event_idx: Optional[int] = None,
+    ) -> None:
         self.tick = tick
-        if timestamp is not None:
-            self.timestamp = timestamp
+        self.timestamp = timestamp
+        self._proximal_bpm_event_index = proximal_bpm_event_idx
+
+    # TODO: Should this really be a staticmethod?
+    @staticmethod
+    def calculate_timestamp(
+        tick: int,
+        prev_event: Optional[EventT],
+        timestamp_getter: TimestampGetterT,
+        resolution: int,
+    ) -> tuple[datetime.timedelta, int]:
+        if prev_event is None:
+            return datetime.timedelta(0), 0
+        start_bpm_event_index = (
+            prev_event._proximal_bpm_event_index
+            if prev_event._proximal_bpm_event_index is not None
+            else 0
+        )
+        return timestamp_getter(tick, resolution, start_bpm_event_index=start_bpm_event_index)
 
     # TODO: Figure out a way for the final closing parenthesis to wrap _around_ any additional info
     # added by subclass __str__ implementations.
     def __str__(self) -> str:  # pragma: no cover
-        to_join = [f"{type(self).__name__}(t@{self.tick:07}"]
-        if hasattr(self, "timestamp"):
-            as_str = (
-                str(self.timestamp)
-                if self.timestamp.total_seconds() > 0
-                else f"{self.timestamp}.000000"
-            )
-            to_join.append(f" {as_str}")
-        to_join.append(")")
+        to_join = [f"{type(self).__name__}(t@{self.tick:07})"]
+        as_str = (
+            str(self.timestamp)
+            if self.timestamp.total_seconds() > 0
+            else f"{self.timestamp}.000000"
+        )
+        to_join.append(f": {as_str}")
         return "".join(to_join)

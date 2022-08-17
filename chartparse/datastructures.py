@@ -70,6 +70,7 @@ class ImmutableList(Sequence[T]):
         return NotImplemented
 
 
+# TODO: Allow binary searching.
 @typing.final
 class ImmutableSortedList(ImmutableList[T]):
     """A ``list`` equivalent that cannot be mutated and is sorted during initialization."""

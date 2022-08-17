@@ -1,5 +1,10 @@
 from __future__ import annotations
 
+import sys
+import os
+
+sys.path.append(os.path.join(os.path.dirname(__file__), "helpers"))
+
 import datetime
 import math
 import pytest
@@ -24,7 +29,6 @@ from chartparse.instrument import (
 )
 from chartparse.metadata import Metadata, Player2Instrument
 from chartparse.sync import SyncTrack, BPMEvent, TimeSignatureEvent
-from chartparse.track import EventTrack
 
 _invalid_chart_line = "this_line_is_invalid"
 
@@ -35,8 +39,7 @@ _default_tick = 0
 _default_timestamp = datetime.timedelta(0)
 
 _default_bpm = 120.000
-_default_bpm_event = BPMEvent(_default_tick, _default_bpm)
-_noninitial_bpm_event = BPMEvent(1, _default_bpm)
+_default_bpm_event = BPMEvent(_default_tick, _default_bpm, _default_timestamp)
 _default_bpm_event_list = [_default_bpm_event]
 
 
@@ -45,6 +48,11 @@ _default_bpm_event_list = [_default_bpm_event]
 @pytest.fixture
 def generate_valid_bpm_line():
     return generate_valid_bpm_line_fn
+
+
+@pytest.fixture
+def valid_bpm_line_tick_1():
+    return generate_valid_bpm_line_fn(tick=1)
 
 
 def generate_valid_bpm_line_fn(tick=_default_tick, bpm=_default_bpm):
@@ -57,10 +65,10 @@ def generate_valid_bpm_line_fn(tick=_default_tick, bpm=_default_bpm):
 _default_upper_time_signature_numeral = 4
 _default_lower_time_signature_numeral = 8
 _default_time_signature_event = TimeSignatureEvent(
-    _default_tick, _default_upper_time_signature_numeral, _default_lower_time_signature_numeral
-)
-_noninitial_time_signature_event = TimeSignatureEvent(
-    1, _default_upper_time_signature_numeral, _default_lower_time_signature_numeral
+    _default_tick,
+    _default_upper_time_signature_numeral,
+    _default_lower_time_signature_numeral,
+    _default_timestamp,
 )
 _default_time_signature_event_list = [_default_time_signature_event]
 
@@ -93,9 +101,11 @@ _default_global_event_value = "default_global_event_value"
 _default_text_event_value = "default_text_event_value"
 _default_section_event_value = "default_section_event_value"
 _default_lyric_event_value = "default_lyric_event_value"
-_default_text_event = TextEvent(_default_tick, _default_text_event_value)
-_default_section_event = SectionEvent(_default_tick, _default_section_event_value)
-_default_lyric_event = LyricEvent(_default_tick, _default_lyric_event_value)
+_default_text_event = TextEvent(_default_tick, _default_text_event_value, _default_timestamp)
+_default_section_event = SectionEvent(
+    _default_tick, _default_section_event_value, _default_timestamp
+)
+_default_lyric_event = LyricEvent(_default_tick, _default_lyric_event_value, _default_timestamp)
 # TODO: Rename all `events_list` and `event_list` names to `events`.
 _default_text_events_list = [_default_text_event]
 _default_section_events_list = [_default_section_event]
@@ -150,11 +160,11 @@ def generate_valid_note_line_fn(
 
 
 _default_note_line = generate_valid_note_line_fn()
-_default_note_event = NoteEvent(_default_tick, _default_note)
+_default_note_event = NoteEvent(_default_tick, _default_note, _default_timestamp)
 _default_note_event_list = [_default_note_event]
 
 
-_default_star_power_event = StarPowerEvent(_default_tick, _default_sustain)
+_default_star_power_event = StarPowerEvent(_default_tick, _default_sustain, _default_timestamp)
 _default_star_power_event_list = [_default_star_power_event]
 
 _default_name = "Song Name"
@@ -188,6 +198,9 @@ _default_vocal_stream = "vocal.ogg"
 _default_keys_stream = "keys.ogg"
 _default_crowd_stream = "crowd.ogg"
 
+# https://stackoverflow.com/a/1845097
+_unmatchable_regex = r"(?!x)x"
+
 
 @pytest.fixture
 def generate_valid_star_power_line():
@@ -199,6 +212,8 @@ def generate_valid_star_power_line_fn(tick=_default_tick, sustain=_default_susta
 
 
 def pytest_configure():
+    # TODO: Have these all be under an object at ``pytest.defaults``. e.g.
+    # ``pytest.defaults.resolution``.
     pytest.invalid_chart_line = _invalid_chart_line
 
     pytest.default_filepath = _default_filepath
@@ -245,12 +260,16 @@ def pytest_configure():
 
     pytest.default_upper_time_signature_numeral = _default_upper_time_signature_numeral
     pytest.default_lower_time_signature_numeral = _default_lower_time_signature_numeral
+    pytest.default_time_signature_event = _default_time_signature_event
     pytest.default_time_signature_event_list = _default_time_signature_event_list
 
     pytest.default_global_event_value = _default_global_event_value
     pytest.default_text_event_value = _default_text_event_value
     pytest.default_section_event_value = _default_section_event_value
     pytest.default_lyric_event_value = _default_lyric_event_value
+    pytest.default_text_event = _default_text_event
+    pytest.default_section_event = _default_section_event
+    pytest.default_lyric_event = _default_lyric_event
     pytest.default_text_event_list = _default_text_events_list
     pytest.default_section_event_list = _default_section_events_list
     pytest.default_lyric_event_list = _default_lyric_events_list
@@ -260,9 +279,13 @@ def pytest_configure():
     pytest.default_section_name = _default_section_name
 
     pytest.default_note = _default_note
+    pytest.default_note_event = _default_note_event
     pytest.default_note_event_list = _default_note_event_list
 
+    pytest.default_star_power_event = _default_star_power_event
     pytest.default_star_power_event_list = _default_star_power_event_list
+
+    pytest.unmatchable_regex = _unmatchable_regex
 
 
 @pytest.fixture
@@ -276,19 +299,23 @@ def invalid_chart_line():
 
 
 @pytest.fixture
-def placeholder_string_iterator_getter(invalid_chart_line):
+def minimal_timestamp_getter():
+    return lambda x, y: (datetime.timedelta(0), 0)
+
+
+@pytest.fixture
+def minimal_string_iterator_getter(invalid_chart_line):
     return lambda: [invalid_chart_line]
 
 
 @pytest.fixture
 def unmatchable_regex():
-    # https://stackoverflow.com/a/1845097
-    return r"(?!x)x"
+    return _unmatchable_regex
 
 
 @pytest.fixture
-def event():
-    return Event(_default_tick)
+def default_event():
+    return Event(_default_tick, _default_timestamp)
 
 
 @pytest.fixture
@@ -303,23 +330,13 @@ def bare_special_event():
 
 
 @pytest.fixture
-def time_signature_event():
+def default_time_signature_event():
     return _default_time_signature_event
 
 
 @pytest.fixture
-def noninitial_time_signature_event():
-    return _noninitial_time_signature_event
-
-
-@pytest.fixture
-def bpm_event():
+def default_bpm_event():
     return _default_bpm_event
-
-
-@pytest.fixture
-def noninitial_bpm_event():
-    return _noninitial_bpm_event
 
 
 @pytest.fixture
@@ -328,67 +345,63 @@ def bare_global_event():
 
 
 @pytest.fixture
-def text_event():
+def default_text_event():
     return _default_text_event
 
 
 @pytest.fixture
-def section_event():
+def default_section_event():
     return _default_section_event
 
 
 @pytest.fixture
-def lyric_event():
+def default_lyric_event():
     return _default_lyric_event
 
 
-# TODO: ... why does coverage care about this fixture?
 @pytest.fixture
-def note_event():  # pragma: no cover
+def default_note_event():
     return _default_note_event
 
 
 @pytest.fixture
-def note_event_with_all_optionals_set():
-    return NoteEvent(
-        _default_tick, _default_note, sustain=_default_sustain, is_forced=True, is_tap=True
-    )
-
-
-@pytest.fixture
-def star_power_event():
+def default_star_power_event():
     return _default_star_power_event
 
 
 @pytest.fixture(
     params=[
         # Base events
-        "event",
+        "default_event",
         # Sync events
-        "time_signature_event",
-        "bpm_event",
+        "default_time_signature_event",
+        "default_bpm_event",
         # Global events
-        "text_event",
-        "section_event",
-        "lyric_event",
+        "default_text_event",
+        "default_section_event",
+        "default_lyric_event",
         # Instrument events
-        "note_event",
-        "star_power_event",
+        "default_note_event",
+        "default_star_power_event",
     ]
 )
 def tick_having_event(request):
     return request.getfixturevalue(request.param)
 
 
-# TODO: ... why does coverage care about this fixture?
 @pytest.fixture
-def note_lines():  # pragma: no cover
+def note_lines():
     return [_default_note_line]
 
 
 @pytest.fixture
 def bare_metadata():
     return Metadata.__new__(Metadata)
+
+
+@pytest.fixture
+def minimal_metadata():
+    return Metadata(_default_resolution)
 
 
 @pytest.fixture
@@ -422,8 +435,16 @@ def basic_metadata():
 
 
 @pytest.fixture
-def bare_event_track():
-    return EventTrack.__new__(EventTrack)
+def bare_global_events_track():
+    return GlobalEventsTrack.__new__(GlobalEventsTrack)
+
+
+@pytest.fixture
+def minimal_global_events_track(bare_global_events_track):
+    bare_global_events_track.text_events = []
+    bare_global_events_track.section_events = []
+    bare_global_events_track.lyric_events = []
+    return bare_global_events_track
 
 
 @pytest.fixture
@@ -439,6 +460,13 @@ def bare_sync_track():
 
 
 @pytest.fixture
+def minimal_sync_track(bare_sync_track):
+    bare_sync_track.time_signature_events = []
+    bare_sync_track.bpm_events = []
+    return bare_sync_track
+
+
+@pytest.fixture
 def basic_sync_track():
     return SyncTrack(_default_time_signature_event_list, _default_bpm_event_list)
 
@@ -446,6 +474,16 @@ def basic_sync_track():
 @pytest.fixture
 def bare_instrument_track():
     return InstrumentTrack.__new__(InstrumentTrack)
+
+
+@pytest.fixture
+def minimal_instrument_track(bare_instrument_track):
+    bare_instrument_track.instrument = pytest.default_instrument
+    bare_instrument_track.difficulty = pytest.default_difficulty
+    bare_instrument_track.section_name = "ExpertSingle"
+    bare_instrument_track.note_events = []
+    bare_instrument_track.star_power_events = []
+    return bare_instrument_track
 
 
 @pytest.fixture
@@ -466,6 +504,25 @@ def basic_instrument_tracks(basic_instrument_track):
 @pytest.fixture
 def bare_chart():
     return Chart.__new__(Chart)
+
+
+@pytest.fixture
+def minimal_chart(
+    bare_chart,
+    minimal_metadata,
+    minimal_instrument_track,
+    minimal_sync_track,
+    minimal_global_events_track,
+):
+    bare_chart.metadata = minimal_metadata
+    bare_chart.sync_track = minimal_sync_track
+    bare_chart.global_events_track = minimal_global_events_track
+    bare_chart.instrument_tracks = {
+        pytest.default_instrument: {
+            pytest.default_difficulty: minimal_instrument_track,
+        }
+    }
+    return bare_chart
 
 
 @pytest.fixture

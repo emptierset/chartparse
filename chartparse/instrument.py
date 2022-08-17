@@ -1,6 +1,6 @@
 """For representing the data related to a single (instrument, difficulty) pair.
 
-You will rarely need to create any of this module's objects manually; please instead create a
+You should not need to create any of this module's objects manually; please instead create a
 :class:`~chartparse.chart.Chart` and inspect its attributes via that object.
 
 .. _Google Python Style Guide:
@@ -21,11 +21,11 @@ from enum import Enum
 from typing import Final, List, Optional, Pattern, Type, TypeVar, Union
 
 import chartparse.tick
+import chartparse.track
 from chartparse.datastructures import ImmutableSortedList
-from chartparse.event import Event
+from chartparse.event import Event, TimestampGetterT
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.tick import NoteDuration
-from chartparse.track import EventTrack
 from chartparse.util import (
     AllValuesGettableEnum,
     DictPropertiesEqMixin,
@@ -38,7 +38,11 @@ InstrumentTrackT = TypeVar("InstrumentTrackT", bound="InstrumentTrack")
 @typing.final
 @enum.unique
 class Difficulty(AllValuesGettableEnum):
-    """An :class:`~chartparse.instrument.InstrumentTrack`'s difficulty setting."""
+    """An :class:`~chartparse.instrument.InstrumentTrack`'s difficulty setting.
+
+    Note that this is distinct from the numeric representation of the difficulty of playing a
+    chart. That number is referred to as "intensity".
+    """
 
     EASY = "Easy"
     MEDIUM = "Medium"
@@ -159,7 +163,7 @@ class NoteTrackIndex(AllValuesGettableEnum):
 
 
 @typing.final
-class InstrumentTrack(EventTrack, DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
+class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     """All of the instrument-related events for one (instrument, difficulty) pair."""
 
     instrument: Final[Instrument]
@@ -215,21 +219,35 @@ class InstrumentTrack(EventTrack, DictPropertiesEqMixin, DictReprTruncatedSequen
         instrument: Instrument,
         difficulty: Difficulty,
         iterator_getter: Callable[[], Iterable[str]],
+        timestamp_getter: TimestampGetterT,
+        resolution: int,
     ) -> InstrumentTrackT:
         """Initializes instance attributes by parsing an iterable of strings.
 
         Args:
+            instrument: The instrument to which this track corresponds.
+            difficulty: This track's difficulty setting.
             iterator_getter: The iterable of strings returned by this strings is most likely from a
                 Moonscraper ``.chart``. Must be a function so the strings can be iterated over
                 multiple times, if necessary.
+            timestamp_getter: A callable that can be used to obtain a timestamp at a given tick and
+                resolution.
+            resolution: The resolution of the chart.
 
         Returns:
             An ``InstrumentTrack`` parsed from the strings returned by ``iterator_getter``.
         """
 
-        note_events = cls._parse_note_events_from_chart_lines(iterator_getter())
-        star_power_events = cls._parse_events_from_chart_lines(
-            iterator_getter(), StarPowerEvent.from_chart_line
+        note_events = cls._parse_note_events_from_chart_lines(
+            iterator_getter(), timestamp_getter, resolution
+        )
+        star_power_events: ImmutableSortedList[
+            StarPowerEvent
+        ] = chartparse.track.parse_events_from_chart_lines(
+            resolution,
+            iterator_getter(),
+            StarPowerEvent.from_chart_line,
+            timestamp_getter,
         )
         return cls(instrument, difficulty, note_events, star_power_events)
 
@@ -245,6 +263,8 @@ class InstrumentTrack(EventTrack, DictPropertiesEqMixin, DictReprTruncatedSequen
     @staticmethod
     def _parse_note_events_from_chart_lines(
         chart_lines: Iterable[str],
+        timestamp_getter: TimestampGetterT,
+        resolution: int,
     ) -> ImmutableSortedList[NoteEvent]:
         tick_to_note_array: collections.defaultdict[int, bytearray] = collections.defaultdict(
             lambda: bytearray(5)
@@ -282,9 +302,11 @@ class InstrumentTrack(EventTrack, DictPropertiesEqMixin, DictReprTruncatedSequen
         events = []
         for tick in tick_to_note_array.keys():
             note = Note(tick_to_note_array[tick])
+            timestamp, _ = timestamp_getter(tick, resolution)
             event = NoteEvent(
                 tick,
                 note,
+                timestamp,
                 sustain=tick_to_sustain_list[tick],
                 is_forced=tick_to_is_forced[tick],
                 is_tap=tick_to_is_tap[tick],
@@ -298,24 +320,26 @@ class InstrumentTrack(EventTrack, DictPropertiesEqMixin, DictReprTruncatedSequen
         note_idx_to_star_power_idx = dict()
         note_idx = 0
         for star_power_idx, star_power_event in enumerate(self.star_power_events):
-            start_tick = star_power_event.tick
-            end_tick = start_tick + star_power_event.sustain
+            star_power_start_tick = star_power_event.tick
+            star_power_end_tick = star_power_start_tick + star_power_event.sustain
 
-            # Seek until the first note after this star power phrase.
-            while note_idx < num_notes and self.note_events[note_idx].tick < end_tick:
+            # Seek the first note after this star power phrase.
+            while note_idx < num_notes:
                 note = self.note_events[note_idx]
-                if start_tick <= note.tick:
+                if note.tick >= star_power_end_tick:
+                    break
+                if star_power_start_tick <= note.tick:
                     note_idx_to_star_power_idx[note_idx] = star_power_idx
                 note_idx += 1
 
         for note_idx, note_event in enumerate(self.note_events):
-            current_star_power_idx = note_idx_to_star_power_idx.get(note_idx, None)
-            if current_star_power_idx is None:
+            star_power_index_of_note = note_idx_to_star_power_idx.get(note_idx, None)
+            if star_power_index_of_note is None:
                 continue
             next_star_power_idx = note_idx_to_star_power_idx.get(note_idx + 1, None)
-            current_note_is_end_of_phrase = current_star_power_idx != next_star_power_idx
+            note_is_end_of_phrase = star_power_index_of_note != next_star_power_idx
             note_event.star_power_data = StarPowerData(
-                current_star_power_idx, current_note_is_end_of_phrase
+                star_power_index_of_note, note_is_end_of_phrase
             )
 
 
@@ -365,8 +389,7 @@ class NoteEvent(Event):
         NoteEvent(t@0000816 0:00:02.093750): sustain=0: Note.Y [flags=H]
 
     This event occurs at tick 816 and timestamp 0:00:02.093750. It is not sustained. It is yellow.
-    It is a HOPO. Other valid flags are include ``F`` (for "forced"), ``T`` (for "tap"), and ``S``
-    (for "strum").
+    It is a HOPO. Other valid flags are ``T`` (for "tap") and ``S`` (for "strum").
 
     """
 
@@ -408,14 +431,14 @@ class NoteEvent(Event):
         self,
         tick: int,
         note: Note,
-        timestamp: Optional[datetime.timedelta] = None,
+        timestamp: datetime.timedelta,
         sustain: ComplexNoteSustainT = 0,
         is_forced: bool = False,
         is_tap: bool = False,
         star_power_data: Optional[StarPowerData] = None,
     ) -> None:
         self._validate_sustain(sustain, note)
-        super().__init__(tick, timestamp=timestamp)
+        super().__init__(tick, timestamp)
         self.note = note
         self.sustain = self._refine_sustain(sustain)
         self._is_forced = is_forced
@@ -459,12 +482,12 @@ class NoteEvent(Event):
                 return first_non_none_sustain
         return sustain
 
-    def _populate_hopo_state(self, resolution: int, previous: Union[NoteEvent, None]) -> None:
+    def _populate_hopo_state(self, resolution: int, previous: Optional[NoteEvent]) -> None:
         self.hopo_state = self._compute_hopo_state(resolution, self, previous)
 
     @staticmethod
     def _compute_hopo_state(
-        resolution: int, current: NoteEvent, previous: Union[NoteEvent, None]
+        resolution: int, current: NoteEvent, previous: Optional[NoteEvent]
     ) -> HOPOState:
         if current._is_tap:
             return HOPOState.TAP
@@ -553,17 +576,32 @@ class SpecialEvent(Event):
     _regex_prog: Pattern[str]
 
     def __init__(
-        self, tick: int, sustain: int, timestamp: Optional[datetime.timedelta] = None
+        self,
+        tick: int,
+        sustain: int,
+        timestamp: datetime.timedelta,
+        proximal_bpm_event_idx: Optional[int] = None,
     ) -> None:
-        super().__init__(tick, timestamp=timestamp)
+        super().__init__(tick, timestamp)
         self.sustain = sustain
 
     @classmethod
-    def from_chart_line(cls: Type[SpecialEventT], line: str) -> SpecialEventT:
+    def from_chart_line(
+        cls: Type[SpecialEventT],
+        line: str,
+        prev_event: Optional[SpecialEventT],
+        timestamp_getter: TimestampGetterT,
+        resolution: int,
+    ) -> SpecialEventT:
         """Attempt to obtain an instance of this object from a string.
 
         Args:
             line: Most likely a line from a Moonscraper ``.chart``.
+            prev_event: The ``SpecialEvent`` with the greatest ``tick`` value less than that of
+                this event. If this is ``None``, then this must be the first ``SpecialEvent``.
+            timestamp_getter: A callable that can be used to obtain a timestamp at a given tick and
+                resolution.
+            resolution: The resolution of the chart.
 
         Returns:
             An an instance of this object parsed from ``line``.
@@ -576,7 +614,10 @@ class SpecialEvent(Event):
         if not m:
             raise RegexNotMatchError(cls._regex, line)
         tick, sustain = int(m.group(1)), int(m.group(2))
-        return cls(tick, sustain)
+        timestamp, proximal_bpm_event_idx = cls.calculate_timestamp(
+            tick, prev_event, timestamp_getter, resolution
+        )
+        return cls(tick, sustain, timestamp, proximal_bpm_event_idx=proximal_bpm_event_idx)
 
     def __str__(self) -> str:  # pragma: no cover
         to_join = [super().__str__()]

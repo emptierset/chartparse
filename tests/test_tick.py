@@ -42,10 +42,11 @@ class TestSecondsFromTicksAtBPM(object):
     @pytest.mark.parametrize(
         "ticks,bpm,resolution",
         [
-            pytest.param(pytest.default_tick, -1, 192, id="negative_bpm"),
-            pytest.param(pytest.default_tick, 0, 192, id="zero_bpm"),
-            pytest.param(pytest.default_tick, 120.000, -1, id="negative_resolution"),
-            pytest.param(pytest.default_tick, 120.000, 0, id="zero_resolution"),
+            pytest.param(-1, 120.000, 192, id="negative_ticks"),
+            pytest.param(0, -1, 192, id="negative_bpm"),
+            pytest.param(0, 0, 192, id="zero_bpm"),
+            pytest.param(0, 120.000, -1, id="negative_resolution"),
+            pytest.param(0, 120.000, 0, id="zero_resolution"),
         ],
     )
     def test_error(self, ticks, bpm, resolution):
