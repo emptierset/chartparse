@@ -128,8 +128,8 @@ class GlobalEvent(Event):
     def __init__(
         self,
         tick: int,
-        value: str,
         timestamp: datetime.timedelta,
+        value: str,
         proximal_bpm_event_idx: Optional[int] = None,
     ) -> None:
         super().__init__(tick, timestamp, proximal_bpm_event_idx=proximal_bpm_event_idx)
@@ -166,7 +166,7 @@ class GlobalEvent(Event):
         timestamp, proximal_bpm_event_idx = cls.calculate_timestamp(
             tick, prev_event, timestamp_getter, resolution
         )
-        return cls(tick, value, timestamp, proximal_bpm_event_idx=proximal_bpm_event_idx)
+        return cls(tick, timestamp, value, proximal_bpm_event_idx=proximal_bpm_event_idx)
 
     def __str__(self) -> str:  # pragma: no cover
         to_join = [super().__str__()]

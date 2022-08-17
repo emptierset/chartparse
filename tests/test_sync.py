@@ -26,9 +26,9 @@ class TestSyncTrack(object):
         def test_missing_first_time_signature_event(self):
             noninitial_time_signature_event = TimeSignatureEvent(
                 1,
+                datetime.timedelta(seconds=1),
                 pytest.default_upper_time_signature_numeral,
                 pytest.default_lower_time_signature_numeral,
-                datetime.timedelta(seconds=1),
             )
             with pytest.raises(ValueError):
                 _ = SyncTrack([noninitial_time_signature_event], pytest.default_bpm_event_list)
@@ -38,7 +38,7 @@ class TestSyncTrack(object):
                 _ = SyncTrack(pytest.default_time_signature_event_list, [])
 
         def test_missing_first_bpm_event(self):
-            noninitial_bpm_event = BPMEvent(1, pytest.default_bpm, datetime.timedelta(seconds=1))
+            noninitial_bpm_event = BPMEvent(1, datetime.timedelta(seconds=1), pytest.default_bpm)
             with pytest.raises(ValueError):
                 _ = SyncTrack(pytest.default_time_signature_event_list, [noninitial_bpm_event])
 
@@ -112,7 +112,7 @@ class TestSyncTrack(object):
 
     class TestIdxOfProximalBPMEvent(object):
         BPMEventFromTick = lambda tick: BPMEvent(
-            tick, pytest.default_bpm, pytest.default_timestamp
+            tick, pytest.default_timestamp, pytest.default_bpm
         )
 
         @pytest.mark.parametrize(
@@ -219,7 +219,7 @@ class TestBPMEvent(object):
 
         def test_more_than_three_decimal_places_error(self):
             with pytest.raises(ValueError):
-                _ = BPMEvent(pytest.default_tick, 120.0001, pytest.default_timestamp)
+                _ = BPMEvent(pytest.default_tick, pytest.default_timestamp, 120.0001)
 
     class TestFromChartLine(object):
         @pytest.mark.parametrize(
@@ -256,7 +256,7 @@ class TestBPMEvent(object):
                 prev_event = None
             else:
                 prev_event = BPMEvent(
-                    prev_event_tick, pytest.default_bpm, pytest.default_timestamp
+                    prev_event_tick, pytest.default_timestamp, pytest.default_bpm
                 )
 
             current_line = generate_bpm_line(current_event_tick, pytest.default_bpm)

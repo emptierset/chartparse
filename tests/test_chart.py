@@ -188,12 +188,12 @@ class TestChart(object):
 
     class TestPopulateNoteEventHOPOStates(object):
         def test_basic(self, mocker, minimal_chart):
-            note_event1 = NoteEvent(0, Note.G, pytest.default_timestamp)
-            note_event2 = NoteEvent(pytest.default_resolution, Note.R, pytest.default_timestamp)
+            note_event1 = NoteEvent(0, pytest.default_timestamp, Note.G)
+            note_event2 = NoteEvent(pytest.default_resolution, pytest.default_timestamp, Note.R)
             note_event3 = NoteEvent(
                 pytest.default_resolution + pytest.default_resolution * 2,
-                Note.Y,
                 pytest.default_timestamp,
+                Note.Y,
             )
             note_events = [note_event1, note_event2, note_event3]
 
@@ -221,18 +221,18 @@ class TestChart(object):
             "note_events,want",
             [
                 pytest.param(
-                    [NoteEvent(1, pytest.default_note, pytest.default_timestamp)],
+                    [NoteEvent(1, pytest.default_timestamp, pytest.default_note)],
                     (1, pytest.default_resolution),
                 ),
                 pytest.param(
                     [
-                        NoteEvent(1, pytest.default_note, pytest.default_timestamp),
-                        NoteEvent(2, pytest.default_note, pytest.default_timestamp),
+                        NoteEvent(1, pytest.default_timestamp, pytest.default_note),
+                        NoteEvent(2, pytest.default_timestamp, pytest.default_note),
                     ],
                     (2, pytest.default_resolution),
                 ),
                 pytest.param(
-                    [NoteEvent(1, pytest.default_note, pytest.default_timestamp, sustain=100)],
+                    [NoteEvent(1, pytest.default_timestamp, pytest.default_note, sustain=100)],
                     (101, pytest.default_resolution),
                 ),
             ],
@@ -268,12 +268,12 @@ class TestChart(object):
             )
 
     class TestNotesPerSecond(object):
-        note_event1 = NoteEvent(pytest.default_resolution, Note.GRY, datetime.timedelta(seconds=1))
+        note_event1 = NoteEvent(pytest.default_resolution, datetime.timedelta(seconds=1), Note.GRY)
         note_event2 = NoteEvent(
-            pytest.default_resolution * 2, Note.RYB, datetime.timedelta(seconds=2)
+            pytest.default_resolution * 2, datetime.timedelta(seconds=2), Note.RYB
         )
         note_event3 = NoteEvent(
-            pytest.default_resolution * 3, Note.YBO, datetime.timedelta(seconds=3)
+            pytest.default_resolution * 3, datetime.timedelta(seconds=3), Note.YBO
         )
         test_notes_per_second_note_events = [note_event1, note_event2, note_event3]
 

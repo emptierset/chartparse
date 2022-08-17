@@ -305,8 +305,8 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             timestamp, _ = timestamp_getter(tick, resolution)
             event = NoteEvent(
                 tick,
-                note,
                 timestamp,
+                note,
                 sustain=tick_to_sustain_list[tick],
                 is_forced=tick_to_is_forced[tick],
                 is_tap=tick_to_is_tap[tick],
@@ -430,8 +430,8 @@ class NoteEvent(Event):
     def __init__(
         self,
         tick: int,
-        note: Note,
         timestamp: datetime.timedelta,
+        note: Note,
         sustain: ComplexNoteSustainT = 0,
         is_forced: bool = False,
         is_tap: bool = False,
@@ -578,8 +578,8 @@ class SpecialEvent(Event):
     def __init__(
         self,
         tick: int,
-        sustain: int,
         timestamp: datetime.timedelta,
+        sustain: int,
         proximal_bpm_event_idx: Optional[int] = None,
     ) -> None:
         super().__init__(tick, timestamp)
@@ -617,7 +617,7 @@ class SpecialEvent(Event):
         timestamp, proximal_bpm_event_idx = cls.calculate_timestamp(
             tick, prev_event, timestamp_getter, resolution
         )
-        return cls(tick, sustain, timestamp, proximal_bpm_event_idx=proximal_bpm_event_idx)
+        return cls(tick, timestamp, sustain, proximal_bpm_event_idx=proximal_bpm_event_idx)
 
     def __str__(self) -> str:  # pragma: no cover
         to_join = [super().__str__()]

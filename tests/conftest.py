@@ -39,7 +39,7 @@ _default_tick = 0
 _default_timestamp = datetime.timedelta(0)
 
 _default_bpm = 120.000
-_default_bpm_event = BPMEvent(_default_tick, _default_bpm, _default_timestamp)
+_default_bpm_event = BPMEvent(_default_tick, _default_timestamp, _default_bpm)
 _default_bpm_event_list = [_default_bpm_event]
 
 
@@ -66,9 +66,9 @@ _default_upper_time_signature_numeral = 4
 _default_lower_time_signature_numeral = 8
 _default_time_signature_event = TimeSignatureEvent(
     _default_tick,
+    _default_timestamp,
     _default_upper_time_signature_numeral,
     _default_lower_time_signature_numeral,
-    _default_timestamp,
 )
 _default_time_signature_event_list = [_default_time_signature_event]
 
@@ -160,11 +160,11 @@ def generate_valid_note_line_fn(
 
 
 _default_note_line = generate_valid_note_line_fn()
-_default_note_event = NoteEvent(_default_tick, _default_note, _default_timestamp)
+_default_note_event = NoteEvent(_default_tick, _default_timestamp, _default_note)
 _default_note_event_list = [_default_note_event]
 
 
-_default_star_power_event = StarPowerEvent(_default_tick, _default_sustain, _default_timestamp)
+_default_star_power_event = StarPowerEvent(_default_tick, _default_timestamp, _default_sustain)
 _default_star_power_event_list = [_default_star_power_event]
 
 _default_name = "Song Name"

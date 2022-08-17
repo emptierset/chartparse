@@ -185,9 +185,9 @@ class TimeSignatureEvent(Event):
     def __init__(
         self,
         tick: int,
+        timestamp: datetime.timedelta,
         upper_numeral: int,
         lower_numeral: int,
-        timestamp: datetime.timedelta,
         proximal_bpm_event_idx: Optional[int] = None,
     ):
         """Initializes all instance attributes."""
@@ -233,9 +233,9 @@ class TimeSignatureEvent(Event):
         )
         return cls(
             tick,
+            timestamp,
             upper_numeral,
             lower_numeral,
-            timestamp,
             proximal_bpm_event_idx=proximal_bpm_event_idx,
         )
 
@@ -260,8 +260,7 @@ class BPMEvent(Event):
     _regex: Final[str] = r"^\s*?(\d+?) = B (\d+?)\s*?$"
     _regex_prog: Final[Pattern[str]] = re.compile(_regex)
 
-    # TODO: Rearrange timestamp to be immediately after `tick` for all Event subclasses.
-    def __init__(self, tick: int, bpm: float, timestamp: datetime.timedelta):
+    def __init__(self, tick: int, timestamp: datetime.timedelta, bpm: float):
         """Initialize all instance attributes.
 
         Raises:
@@ -326,7 +325,7 @@ class BPMEvent(Event):
             return timestamp, 0
 
         timestamp, _ = cls.calculate_timestamp(tick, prev_event, timestamp_getter, resolution)
-        return cls(tick, bpm, timestamp)
+        return cls(tick, timestamp, bpm)
 
     def __str__(self) -> str:  # pragma: no cover
         to_join = [super().__str__()]

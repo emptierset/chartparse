@@ -69,7 +69,7 @@ class TestGlobalEvent(object):
     class TestInit(object):
         def test_basic(self):
             event = GlobalEvent(
-                pytest.default_tick, pytest.default_global_event_value, pytest.default_timestamp
+                pytest.default_tick, pytest.default_timestamp, pytest.default_global_event_value
             )
             assert event.value == pytest.default_global_event_value
 
