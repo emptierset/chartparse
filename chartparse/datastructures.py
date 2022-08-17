@@ -70,21 +70,23 @@ class ImmutableList(Sequence[T]):
         return NotImplemented
 
 
-# TODO: Allow binary searching.
+# TODO: Allow binary searching?
 @typing.final
 class ImmutableSortedList(ImmutableList[T]):
     """A ``list`` equivalent that cannot be mutated and is sorted during initialization."""
 
     @typing.overload
-    def __init__(self, xs: Iterable[ComparableT]) -> None:
+    def __init__(self, xs: Iterable[ComparableT], *, already_sorted: bool = False) -> None:
         ...  # pragma: no cover
 
     @typing.overload
-    def __init__(self, xs: Iterable[T], key: Callable[[T], ComparableT]) -> None:
+    def __init__(self, xs: Iterable[T], *, key: Callable[[T], ComparableT]) -> None:
         ...  # pragma: no cover
 
-    def __init__(self, xs, key=None) -> None:
-        if key is None:
+    def __init__(self, xs, *, key=None, already_sorted=False) -> None:
+        if already_sorted:
+            super().__init__(xs)
+        elif key is None:
             super().__init__(sorted(xs))
         elif key is not None:
             super().__init__(sorted(xs, key=key))

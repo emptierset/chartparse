@@ -4,7 +4,13 @@ from chartparse.datastructures import ImmutableList, ImmutableSortedList
 
 
 _default_list = [3, 2, 1]
+_default_sorted_list = [1, 2, 3]
 _default_tuple_list = [(1, 3), (2, 2), (3, 1)]
+
+
+@pytest.fixture
+def basic_sorted_list():
+    return _default_sorted_list
 
 
 @pytest.fixture
@@ -81,4 +87,9 @@ class TestImmutableSortedList(object):
             key = lambda x: x[1]
             assert ImmutableSortedList(basic_tuple_list, key=key) == sorted(
                 basic_tuple_list, key=key
+            )
+
+        def test_already_sorted(self, basic_sorted_list):
+            assert ImmutableSortedList(basic_sorted_list, already_sorted=True) == sorted(
+                basic_sorted_list
             )
