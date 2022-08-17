@@ -300,7 +300,10 @@ def invalid_chart_line():
 
 @pytest.fixture
 def minimal_timestamp_getter():
-    return lambda x, y: (datetime.timedelta(0), 0)
+    def f(resolution, tick, start_bpm_event_index=0):
+        return (datetime.timedelta(0), 0)
+
+    return f
 
 
 @pytest.fixture

@@ -218,15 +218,14 @@ class TestInstrumentTrack(object):
                 ),
             ],
         )
-        def test_integration(self, mocker, lines, want_note_events, want_star_power_events):
-            timestamp_getter_mock = mocker.Mock(return_value=(pytest.default_timestamp, 0))
-
-            lines_iterator_getter = lambda: iter(lines)
+        def test_integration(
+            self, mocker, lines, want_note_events, want_star_power_events, minimal_timestamp_getter
+        ):
             instrument_track = InstrumentTrack.from_chart_lines(
                 pytest.default_instrument,
                 pytest.default_difficulty,
-                lines_iterator_getter,
-                timestamp_getter_mock,
+                lambda: iter(lines),
+                minimal_timestamp_getter,
                 pytest.default_resolution,
             )
             assert instrument_track.instrument == pytest.default_instrument
