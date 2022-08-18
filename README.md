@@ -18,13 +18,13 @@ from chartparse.instrument import Instrument, Difficulty
 
 c = Chart.from_filepath("/path/to/file.chart")
 
-# the first 7 BPM changes
+# the first 7 BPM changes (including the initial one)
 c.sync_track.bpm_events[:7]
 
-# the first 8 time signature changes
+# the first 8 time signature changes (including the initial one)
 c.sync_track.time_signature_events[:8]
 
-expert_guitar = c.instrument_tracks[Instrument.GUITAR][Difficulty.EXPERT]
+expert_guitar = c[Instrument.GUITAR][Difficulty.EXPERT]
 
 # the first 10 notes of the expert guitar chart
 expert_guitar.note_events[:10]
