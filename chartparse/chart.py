@@ -137,7 +137,7 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         for section_name, iterator_getter in sections.items():
             if section_name == GlobalEventsTrack.section_name:
                 global_events_track = GlobalEventsTrack.from_chart_lines(
-                    iterator_getter, sync_track.timestamp_at_tick, metadata.resolution
+                    iterator_getter, sync_track
                 )
             elif section_name in instrument_track_name_to_instrument_difficulty_pair:
                 instrument, difficulty = instrument_track_name_to_instrument_difficulty_pair[
@@ -147,8 +147,7 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
                     instrument,
                     difficulty,
                     iterator_getter,
-                    sync_track.timestamp_at_tick,
-                    metadata.resolution,
+                    sync_track,
                 )
                 instrument_tracks[instrument][difficulty] = track
             # TODO: [Logging] Log unhandled sections that also aren't in cls._required_sections.
@@ -192,9 +191,7 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             return
         last_event = track.note_events[-1]
         last_tick = last_event.tick + last_event.longest_sustain
-        track._last_note_timestamp, _ = self.sync_track.timestamp_at_tick(
-            last_tick, self.metadata.resolution
-        )
+        track._last_note_timestamp, _ = self.sync_track.timestamp_at_tick(last_tick)
 
     def _populate_note_event_hopo_states(self, events: Sequence[NoteEvent]) -> None:
         if not events:

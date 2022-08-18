@@ -28,6 +28,7 @@ class TestInstrumentTrack(object):
                 InstrumentTrack, "_populate_star_power_data"
             )
             _ = InstrumentTrack(
+                pytest.defaults.resolution,
                 pytest.defaults.instrument,
                 pytest.defaults.difficulty,
                 pytest.defaults.note_events,
@@ -40,8 +41,27 @@ class TestInstrumentTrack(object):
             assert default_instrument_track.section_name == pytest.defaults.section_name
             mock_populate_star_power_data.assert_called_once()
 
+        def test_non_positive_resolution(self):
+            with pytest.raises(ValueError):
+                # TODO: Add InstrumentTrackWithDefaults (and other tracks)
+                _ = InstrumentTrack(
+                    0,
+                    pytest.defaults.instrument,
+                    pytest.defaults.difficulty,
+                    pytest.defaults.note_events,
+                    pytest.defaults.star_power_events,
+                )
+            with pytest.raises(ValueError):
+                _ = InstrumentTrack(
+                    -1,
+                    pytest.defaults.instrument,
+                    pytest.defaults.difficulty,
+                    pytest.defaults.note_events,
+                    pytest.defaults.star_power_events,
+                )
+
     class TestFromChartLines(object):
-        def test_basic(self, mocker, minimal_string_iterator_getter, minimal_timestamp_getter):
+        def test_basic(self, mocker, minimal_string_iterator_getter, minimal_tatter):
             mock_parse_note_events = mocker.patch.object(
                 InstrumentTrack,
                 "_parse_note_events_from_chart_lines",
@@ -51,27 +71,22 @@ class TestInstrumentTrack(object):
                 "chartparse.track.parse_events_from_chart_lines",
                 return_value=pytest.defaults.star_power_events,
             )
-            mock_init = mocker.spy(InstrumentTrack, "__init__")
+            spy_init = mocker.spy(InstrumentTrack, "__init__")
             _ = InstrumentTrack.from_chart_lines(
                 pytest.defaults.instrument,
                 pytest.defaults.difficulty,
                 minimal_string_iterator_getter,
-                minimal_timestamp_getter,
-                pytest.defaults.resolution,
+                minimal_tatter,
             )
             mock_parse_note_events.assert_called_once_with(
-                minimal_string_iterator_getter(),
-                minimal_timestamp_getter,
-                pytest.defaults.resolution,
+                minimal_string_iterator_getter(), minimal_tatter
             )
             mock_parse_events.assert_called_once_with(
-                pytest.defaults.resolution,
-                minimal_string_iterator_getter(),
-                StarPowerEvent.from_chart_line,
-                minimal_timestamp_getter,
+                minimal_string_iterator_getter(), StarPowerEvent.from_chart_line, minimal_tatter
             )
-            mock_init.assert_called_once_with(
-                unittest.mock.ANY,
+            spy_init.assert_called_once_with(
+                unittest.mock.ANY,  # ignore self
+                pytest.defaults.resolution,
                 pytest.defaults.instrument,
                 pytest.defaults.difficulty,
                 pytest.defaults.note_events,
@@ -219,14 +234,13 @@ class TestInstrumentTrack(object):
             ],
         )
         def test_integration(
-            self, mocker, lines, want_note_events, want_star_power_events, minimal_timestamp_getter
+            self, mocker, lines, want_note_events, want_star_power_events, minimal_tatter
         ):
             got = InstrumentTrack.from_chart_lines(
                 pytest.defaults.instrument,
                 pytest.defaults.difficulty,
                 lambda: iter(lines),
-                minimal_timestamp_getter,
-                pytest.defaults.resolution,
+                minimal_tatter,
             )
             assert got.instrument == pytest.defaults.instrument
             assert got.difficulty == pytest.defaults.difficulty
@@ -526,25 +540,18 @@ class TestSpecialEvent(object):
             del SpecialEvent._regex
             del SpecialEvent._regex_prog
 
-        def test_basic(self, mocker, minimal_timestamp_getter):
+        def test_basic(self, mocker, minimal_tatter):
             line = f"T {pytest.defaults.tick} V {pytest.defaults.sustain}"
             spy_calculate_timestamp = mocker.spy(SpecialEvent, "calculate_timestamp")
-            got = SpecialEvent.from_chart_line(
-                line, None, minimal_timestamp_getter, pytest.defaults.resolution
-            )
+            got = SpecialEvent.from_chart_line(line, None, minimal_tatter)
             spy_calculate_timestamp.assert_called_once_with(
-                pytest.defaults.tick, None, minimal_timestamp_getter, pytest.defaults.resolution
+                pytest.defaults.tick, None, minimal_tatter
             )
             assert got.sustain == pytest.defaults.sustain
 
-        def test_no_match(self, invalid_chart_line, minimal_timestamp_getter):
+        def test_no_match(self, invalid_chart_line, minimal_tatter):
             with pytest.raises(RegexNotMatchError):
-                _ = SpecialEvent.from_chart_line(
-                    invalid_chart_line,
-                    None,
-                    minimal_timestamp_getter,
-                    pytest.defaults.resolution,
-                )
+                _ = SpecialEvent.from_chart_line(invalid_chart_line, None, minimal_tatter)
 
 
 # TODO: Test regex?

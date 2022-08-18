@@ -19,19 +19,19 @@ from typing import Final, Optional, Pattern, Type, TypeVar
 import chartparse.tick
 import chartparse.track
 from chartparse.datastructures import ImmutableSortedList
-from chartparse.event import Event, TimestampGetterT
+from chartparse.event import Event, TimestampAtTickSupporter
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.util import DictPropertiesEqMixin, DictReprTruncatedSequencesMixin
 
 SyncTrackT = TypeVar("SyncTrackT", bound="SyncTrack")
 
 
-# TODO: Given that timestamps are tied to events at time of construction now, a SyncTrack (and all
-# tracks, for that matter) has a particular resolution baked into it. Resolution should become an
-# instance attribute and it should be removed from all function params.
 @typing.final
 class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     """All of a :class:`~chartparse.chart.Chart` object's tempo-mapping related events."""
+
+    resolution: Final[int]
+    """The number of ticks for which a quarter note lasts."""
 
     time_signature_events: Final[Sequence[TimeSignatureEvent]]
     """A ``SyncTrack``'s ``TimeSignatureEvent``\\ s."""
@@ -43,7 +43,10 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     """The name of this track's section in a ``.chart`` file."""
 
     def __init__(
-        self, time_signature_events: Sequence[TimeSignatureEvent], bpm_events: Sequence[BPMEvent]
+        self,
+        resolution: int,
+        time_signature_events: Sequence[TimeSignatureEvent],
+        bpm_events: Sequence[BPMEvent],
     ):
         """Instantiates and validates all instance attributes.
 
@@ -51,7 +54,8 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             ValueError: If ``time_signature_events`` or ``bpm_events`` is empty, or if either of
                 their first elements has a ``tick`` value of ``0``.
         """
-
+        if resolution <= 0:
+            raise ValueError(f"resolution ({resolution}) must be positive")
         if not time_signature_events:
             raise ValueError("time_signature_events must not be empty")
         if time_signature_events[0].tick != 0:
@@ -63,6 +67,7 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         if bpm_events[0].tick != 0:
             raise ValueError(f"first BPMEvent {bpm_events[0]} must have tick 0")
 
+        self.resolution = resolution
         self.time_signature_events = time_signature_events
         self.bpm_events = bpm_events
 
@@ -79,41 +84,47 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             iterator_getter: The iterable of strings returned by this is most likely from a
                 Moonscraper ``.chart``. Must be a function so the strings can be iterated over
                 multiple times, if necessary.
-            resolution: The resolution of the chart.
+            resolution: The number of ticks in a quarter note.
 
         Returns:
             A ``SyncTrack`` parsed from the strings returned by ``iterator_getter``.
         """
 
         bpm_events: ImmutableSortedList[BPMEvent] = chartparse.track.parse_events_from_chart_lines(
-            resolution, iterator_getter(), BPMEvent.from_chart_line
+            iterator_getter(), BPMEvent.from_chart_line, resolution
         )
 
-        def timestamp_at_tick(
-            tick: int, resolution: int, start_bpm_event_index: int = 0
-        ) -> tuple[datetime.timedelta, int]:
-            return cls._timestamp_at_tick(
-                bpm_events, tick, resolution, start_bpm_event_index
-            )  # pragma: no cover
+        class TimestampAtTicker(object):
+            resolution: Final[int]
+
+            def __init__(self, resolution: int):
+                self.resolution = resolution
+
+            def timestamp_at_tick(
+                self, tick: int, start_bpm_event_index: int = 0
+            ) -> tuple[datetime.timedelta, int]:
+                return cls._timestamp_at_tick(
+                    bpm_events, tick, self.resolution, start_bpm_event_index
+                )  # pragma: no cover
+
+        tatter = TimestampAtTicker(resolution)
 
         time_signature_events: ImmutableSortedList[
             TimeSignatureEvent
         ] = chartparse.track.parse_events_from_chart_lines(
-            resolution,
             iterator_getter(),
             TimeSignatureEvent.from_chart_line,
-            timestamp_at_tick,
+            tatter,
         )
-        return cls(time_signature_events, bpm_events)
+        return cls(resolution, time_signature_events, bpm_events)
 
     def timestamp_at_tick(
-        self, tick: int, resolution: int, start_bpm_event_index: int = 0
+        self, tick: int, start_bpm_event_index: int = 0
     ) -> tuple[datetime.timedelta, int]:
-        """Returns the timestamp at the input tick and resolution.
+        """Returns the timestamp at the input tick.
 
         Args:
             tick: The tick at which the timestamp should be calculated.
-            resolution: The resolution of the chart.
 
         Kwargs:
             start_bpm_event_index: An optional optimizing input that allows this function to start
@@ -125,7 +136,9 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             input tick. This index can be passed to successive calls to this function via
             ``start_bpm_event_index`` as an optimization.
         """
-        return self._timestamp_at_tick(self.bpm_events, tick, resolution, start_bpm_event_index)
+        return self._timestamp_at_tick(
+            self.bpm_events, tick, self.resolution, start_bpm_event_index
+        )
 
     @staticmethod
     def _timestamp_at_tick(
@@ -201,8 +214,7 @@ class TimeSignatureEvent(Event):
         cls: Type[TimeSignatureEventT],
         line: str,
         prev_event: Optional[TimeSignatureEventT],
-        timestamp_getter: TimestampGetterT,
-        resolution: int,
+        tatter: TimestampAtTickSupporter,
     ) -> TimeSignatureEventT:
         """Attempt to obtain an instance of this object from a string.
 
@@ -211,9 +223,7 @@ class TimeSignatureEvent(Event):
             prev_event: The ``TimeSignatureEvent`` with the greatest ``tick`` value less than that
                 of this event. If this is ``None``, then this must be the first
                 ``TimeSignatureEvent``.
-            timestamp_getter: A callable that can be used to obtain a timestamp at a given tick and
-                resolution.
-            resolution: The resolution of the chart.
+            tatter: An object that can be used to get a timestamp at a particular tick.
 
         Returns:
             An an instance of this object parsed from ``line``.
@@ -228,9 +238,7 @@ class TimeSignatureEvent(Event):
         tick, upper_numeral = int(m.group(1)), int(m.group(2))
         # The lower number is written by Moonscraper as the log2 of the true value.
         lower_numeral = 2 ** int(m.group(3)) if m.group(3) else cls._default_lower_numeral
-        timestamp, proximal_bpm_event_idx = cls.calculate_timestamp(
-            tick, prev_event, timestamp_getter, resolution
-        )
+        timestamp, proximal_bpm_event_idx = cls.calculate_timestamp(tick, prev_event, tatter)
         return cls(
             tick,
             timestamp,
@@ -283,7 +291,7 @@ class BPMEvent(Event):
             line: Most likely a line from a Moonscraper ``.chart``.
             prev_event: The ``BPMEvent`` with the greatest ``tick`` value less than that of this
                 event. If this is ``None``, then this must be the first ``BPMEvent``.
-            resolution: The resolution of the chart.
+            resolution: The number of ticks in a quarter note.
 
         Returns:
             An an instance of this object parsed from ``line``.
@@ -305,26 +313,33 @@ class BPMEvent(Event):
         bpm_decimal_part = int(bpm_decimal_part_str) / 1000
         bpm = bpm_whole_part + bpm_decimal_part
 
-        def timestamp_getter(
-            tick: int, resolution: int, start_bpm_event_index: int = 0
-        ) -> tuple[datetime.timedelta, int]:
-            # Because this will be used by Event.calculate_timestamp, it will only be
-            # called if prev_event has been None-checked.
-            assert prev_event is not None
-            if tick <= prev_event.tick:
-                raise ValueError(
-                    f"{cls.__name__} at tick {tick} does not occur after previous {cls.__name__} "
-                    f"at tick {prev_event.tick}; tick values of {cls.__name__} must be strictly "
-                    "increasing."
-                )
-            ticks_since_prev = tick - prev_event.tick
-            seconds_since_prev = chartparse.tick.seconds_from_ticks_at_bpm(
-                ticks_since_prev, prev_event.bpm, resolution
-            )
-            timestamp = prev_event.timestamp + datetime.timedelta(seconds=seconds_since_prev)
-            return timestamp, 0
+        class TimestampAtTicker(object):
+            resolution: Final[int]
 
-        timestamp, _ = cls.calculate_timestamp(tick, prev_event, timestamp_getter, resolution)
+            def __init__(self, resolution: int):
+                self.resolution = resolution
+
+            def timestamp_at_tick(
+                self, tick: int, start_bpm_event_index: int = 0
+            ) -> tuple[datetime.timedelta, int]:
+                # Because this will be used by Event.calculate_timestamp, it will only be
+                # called if prev_event has been None-checked.
+                assert prev_event is not None
+                if tick <= prev_event.tick:
+                    raise ValueError(
+                        f"{cls.__name__} at tick {tick} does not occur after previous "
+                        f"{cls.__name__} at tick {prev_event.tick}; tick values of "
+                        f"{cls.__name__} must be strictly increasing."
+                    )
+                ticks_since_prev = tick - prev_event.tick
+                seconds_since_prev = chartparse.tick.seconds_from_ticks_at_bpm(
+                    ticks_since_prev, prev_event.bpm, self.resolution
+                )
+                timestamp = prev_event.timestamp + datetime.timedelta(seconds=seconds_since_prev)
+                return timestamp, 0
+
+        tatter = TimestampAtTicker(resolution)
+        timestamp, _ = cls.calculate_timestamp(tick, prev_event, tatter)
         return cls(tick, timestamp, bpm)
 
     def __str__(self) -> str:  # pragma: no cover

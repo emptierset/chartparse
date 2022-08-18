@@ -13,9 +13,9 @@ class TestEvent(object):
         nonzero_timedelta = datetime.timedelta(1)
         nonzero_int = 1
 
-        def test_early_return(self, minimal_timestamp_getter):
+        def test_early_return(self, minimal_tatter):
             got_timestamp, got_proximal_bpm_event_idx = Event.calculate_timestamp(
-                pytest.defaults.tick, None, minimal_timestamp_getter, pytest.defaults.resolution
+                pytest.defaults.tick, None, minimal_tatter
             )
             assert got_timestamp == datetime.timedelta(0)
             assert got_proximal_bpm_event_idx == 0
@@ -25,19 +25,20 @@ class TestEvent(object):
             [(None, 0), (1, 1)],
         )
         def test_callback(
-            self, mocker, prev_event_proximal_bpm_event_idx, want_called_start_bpm_event_index
+            self,
+            mocker,
+            minimal_tatter,
+            prev_event_proximal_bpm_event_idx,
+            want_called_start_bpm_event_index,
         ):
             prev_event = Event(
                 pytest.defaults.tick,
                 pytest.defaults.timestamp,
                 proximal_bpm_event_idx=prev_event_proximal_bpm_event_idx,
             )
-            stub = mocker.stub(name="timestamp_getter")
-            Event.calculate_timestamp(
-                pytest.defaults.tick, prev_event, stub, pytest.defaults.resolution
-            )
-            stub.assert_called_once_with(
+            spy_timestamp_at_tick = mocker.spy(minimal_tatter, "timestamp_at_tick")
+            Event.calculate_timestamp(pytest.defaults.tick, prev_event, minimal_tatter)
+            spy_timestamp_at_tick.assert_called_once_with(
                 pytest.defaults.tick,
-                pytest.defaults.resolution,
                 start_bpm_event_index=want_called_start_bpm_event_index,
             )

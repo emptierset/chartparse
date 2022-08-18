@@ -205,11 +205,17 @@ def invalid_chart_line():
 
 
 @pytest.fixture
-def minimal_timestamp_getter():
-    def f(resolution, tick, start_bpm_event_index=0):
-        return (datetime.timedelta(0), 0)
+def minimal_tatter():
+    class FakeTimestampAtTicker(object):
+        resolution: int
 
-    return f
+        def __init__(self, resolution: int):
+            self.resolution = resolution
+
+        def timestamp_at_tick(self, tick, start_bpm_event_index=0):
+            return (datetime.timedelta(0), 0)
+
+    return FakeTimestampAtTicker(_default_resolution)
 
 
 @pytest.fixture
@@ -348,7 +354,9 @@ def minimal_global_events_track(bare_global_events_track):
 
 @pytest.fixture
 def default_global_events_track():
-    return GlobalEventsTrack(_default_text_events, _default_section_events, _default_lyric_events)
+    return GlobalEventsTrack(
+        _default_resolution, _default_text_events, _default_section_events, _default_lyric_events
+    )
 
 
 @pytest.fixture
@@ -365,7 +373,7 @@ def minimal_sync_track(bare_sync_track):
 
 @pytest.fixture
 def default_sync_track():
-    return SyncTrack(_default_time_signature_events, _default_bpm_events)
+    return SyncTrack(_default_resolution, _default_time_signature_events, _default_bpm_events)
 
 
 @pytest.fixture
@@ -386,6 +394,7 @@ def minimal_instrument_track(bare_instrument_track):
 @pytest.fixture
 def default_instrument_track():
     return InstrumentTrack(
+        _default_resolution,
         _default_instrument,
         _default_difficulty,
         _default_note_events,

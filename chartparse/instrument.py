@@ -23,7 +23,7 @@ from typing import Final, List, Optional, Pattern, Type, TypeVar, Union
 import chartparse.tick
 import chartparse.track
 from chartparse.datastructures import ImmutableSortedList
-from chartparse.event import Event, TimestampGetterT
+from chartparse.event import Event, TimestampAtTickSupporter
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.tick import NoteDuration
 from chartparse.util import (
@@ -166,6 +166,9 @@ class NoteTrackIndex(AllValuesGettableEnum):
 class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     """All of the instrument-related events for one (instrument, difficulty) pair."""
 
+    resolution: Final[int]
+    """The number of ticks for which a quarter note lasts."""
+
     instrument: Final[Instrument]
     """The instrument to which this track corresponds."""
 
@@ -199,13 +202,17 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
     def __init__(
         self,
+        resolution: int,
         instrument: Instrument,
         difficulty: Difficulty,
         note_events: Sequence[NoteEvent],
         star_power_events: Sequence[StarPowerEvent],
     ) -> None:
         """Instantiates all instance attributes."""
+        if resolution <= 0:
+            raise ValueError(f"resolution ({resolution}) must be positive")
 
+        self.resolution = resolution
         self.instrument = instrument
         self.difficulty = difficulty
         self.note_events = note_events
@@ -219,8 +226,7 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         instrument: Instrument,
         difficulty: Difficulty,
         iterator_getter: Callable[[], Iterable[str]],
-        timestamp_getter: TimestampGetterT,
-        resolution: int,
+        tatter: TimestampAtTickSupporter,
     ) -> InstrumentTrackT:
         """Initializes instance attributes by parsing an iterable of strings.
 
@@ -230,26 +236,21 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             iterator_getter: The iterable of strings returned by this strings is most likely from a
                 Moonscraper ``.chart``. Must be a function so the strings can be iterated over
                 multiple times, if necessary.
-            timestamp_getter: A callable that can be used to obtain a timestamp at a given tick and
-                resolution.
-            resolution: The resolution of the chart.
+            tatter: An object that can be used to get a timestamp at a particular tick.
 
         Returns:
             An ``InstrumentTrack`` parsed from the strings returned by ``iterator_getter``.
         """
 
-        note_events = cls._parse_note_events_from_chart_lines(
-            iterator_getter(), timestamp_getter, resolution
-        )
+        note_events = cls._parse_note_events_from_chart_lines(iterator_getter(), tatter)
         star_power_events: ImmutableSortedList[
             StarPowerEvent
         ] = chartparse.track.parse_events_from_chart_lines(
-            resolution,
             iterator_getter(),
             StarPowerEvent.from_chart_line,
-            timestamp_getter,
+            tatter,
         )
-        return cls(instrument, difficulty, note_events, star_power_events)
+        return cls(tatter.resolution, instrument, difficulty, note_events, star_power_events)
 
     def __str__(self) -> str:  # pragma: no cover
         return (
@@ -263,8 +264,7 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     @staticmethod
     def _parse_note_events_from_chart_lines(
         chart_lines: Iterable[str],
-        timestamp_getter: TimestampGetterT,
-        resolution: int,
+        tatter: TimestampAtTickSupporter,
     ) -> ImmutableSortedList[NoteEvent]:
         tick_to_note_array: collections.defaultdict[int, bytearray] = collections.defaultdict(
             lambda: bytearray(5)
@@ -302,7 +302,7 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         events = []
         for tick in tick_to_note_array.keys():
             note = Note(tick_to_note_array[tick])
-            timestamp, _ = timestamp_getter(tick, resolution)
+            timestamp, _ = tatter.timestamp_at_tick(tick)
             event = NoteEvent(
                 tick,
                 timestamp,
@@ -590,8 +590,7 @@ class SpecialEvent(Event):
         cls: Type[SpecialEventT],
         line: str,
         prev_event: Optional[SpecialEventT],
-        timestamp_getter: TimestampGetterT,
-        resolution: int,
+        tatter: TimestampAtTickSupporter,
     ) -> SpecialEventT:
         """Attempt to obtain an instance of this object from a string.
 
@@ -599,9 +598,7 @@ class SpecialEvent(Event):
             line: Most likely a line from a Moonscraper ``.chart``.
             prev_event: The ``SpecialEvent`` with the greatest ``tick`` value less than that of
                 this event. If this is ``None``, then this must be the first ``SpecialEvent``.
-            timestamp_getter: A callable that can be used to obtain a timestamp at a given tick and
-                resolution.
-            resolution: The resolution of the chart.
+            tatter: An object that can be used to get a timestamp at a particular tick.
 
         Returns:
             An an instance of this object parsed from ``line``.
@@ -614,9 +611,7 @@ class SpecialEvent(Event):
         if not m:
             raise RegexNotMatchError(cls._regex, line)
         tick, sustain = int(m.group(1)), int(m.group(2))
-        timestamp, proximal_bpm_event_idx = cls.calculate_timestamp(
-            tick, prev_event, timestamp_getter, resolution
-        )
+        timestamp, proximal_bpm_event_idx = cls.calculate_timestamp(tick, prev_event, tatter)
         return cls(tick, timestamp, sustain, proximal_bpm_event_idx=proximal_bpm_event_idx)
 
     def __str__(self) -> str:  # pragma: no cover

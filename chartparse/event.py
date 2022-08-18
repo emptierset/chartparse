@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import datetime
+import typing
 from typing import Final, Optional, Protocol, TypeVar
 
 from chartparse.util import DictPropertiesEqMixin, DictReprMixin
@@ -15,9 +16,12 @@ from chartparse.util import DictPropertiesEqMixin, DictReprMixin
 EventT = TypeVar("EventT", bound="Event")
 
 
-class TimestampGetterT(Protocol):
-    def __call__(
-        self, tick: int, resolution: int, start_bpm_event_index: int = ...
+@typing.runtime_checkable
+class TimestampAtTickSupporter(Protocol):
+    resolution: int
+
+    def timestamp_at_tick(
+        self, tick: int, start_bpm_event_index: int = ...
     ) -> tuple[datetime.timedelta, int]:
         ...  # pragma: no cover
 
@@ -52,8 +56,7 @@ class Event(DictPropertiesEqMixin, DictReprMixin):
     def calculate_timestamp(
         tick: int,
         prev_event: Optional[EventT],
-        timestamp_getter: TimestampGetterT,
-        resolution: int,
+        tatter: TimestampAtTickSupporter,
     ) -> tuple[datetime.timedelta, int]:
         if prev_event is None:
             return datetime.timedelta(0), 0
@@ -62,7 +65,7 @@ class Event(DictPropertiesEqMixin, DictReprMixin):
             if prev_event._proximal_bpm_event_index is not None
             else 0
         )
-        return timestamp_getter(tick, resolution, start_bpm_event_index=start_bpm_event_index)
+        return tatter.timestamp_at_tick(tick, start_bpm_event_index=start_bpm_event_index)
 
     # TODO: Figure out a way for the final closing parenthesis to wrap _around_ any additional info
     # added by subclass __str__ implementations.

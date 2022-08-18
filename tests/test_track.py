@@ -6,7 +6,7 @@ from chartparse.track import parse_events_from_chart_lines
 
 class TestParseEventsFromChartLines(object):
     @pytest.mark.parametrize(
-        "from_chart_line_return_value,from_chart_line_side_effect,include_timestamp_getter,want",
+        "from_chart_line_return_value,from_chart_line_side_effect,include_tatter,want",
         [
             pytest.param(
                 pytest.defaults.time_signature_event,
@@ -27,7 +27,14 @@ class TestParseEventsFromChartLines(object):
                 RegexNotMatchError(pytest.unmatchable_regex, pytest.invalid_chart_line),
                 True,
                 [],
-                id="regex_no_match_ignored",
+                id="event_regex_no_match_ignored",
+            ),
+            pytest.param(
+                None,
+                RegexNotMatchError(pytest.unmatchable_regex, pytest.invalid_chart_line),
+                False,
+                [],
+                id="bpm_event_regex_no_match_ignored",
             ),
         ],
     )
@@ -35,10 +42,10 @@ class TestParseEventsFromChartLines(object):
         self,
         mocker,
         invalid_chart_line,
-        minimal_timestamp_getter,
+        minimal_tatter,
         from_chart_line_return_value,
         from_chart_line_side_effect,
-        include_timestamp_getter,
+        include_tatter,
         want,
     ):
         from_chart_line_fn_mock = mocker.Mock(
@@ -46,12 +53,13 @@ class TestParseEventsFromChartLines(object):
         )
 
         args = [
-            pytest.defaults.resolution,
             [invalid_chart_line],
             from_chart_line_fn_mock,
         ]
-        if include_timestamp_getter:
-            args.append(minimal_timestamp_getter)
+        if include_tatter:
+            args.append(minimal_tatter)
+        else:
+            args.append(pytest.defaults.resolution)
 
         got = parse_events_from_chart_lines(*args)
         assert got == want

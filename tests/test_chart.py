@@ -53,6 +53,7 @@ class TestChart(object):
             mock_populate_last_note_timestamp.assert_called_once_with(default_instrument_track)
 
     class TestFromFileAndFilepath(object):
+        # TODO: Rename all test_basic to test.
         def test_basic(
             self,
             mocker,
@@ -221,34 +222,37 @@ class TestChart(object):
 
     class TestPopulateLastNoteTimestamp(object):
         @pytest.mark.parametrize(
-            "note_events,want",
+            "note_events,want_timestamp_at_tick_arg",
             [
                 pytest.param(
                     [NoteEventWithDefaults(tick=1)],
-                    (1, pytest.defaults.resolution),
+                    1,
+                    id="one_event",
                 ),
                 pytest.param(
                     [
                         NoteEventWithDefaults(tick=1),
                         NoteEventWithDefaults(tick=2),
                     ],
-                    (2, pytest.defaults.resolution),
+                    2,
+                    id="two_events",
                 ),
                 pytest.param(
                     [NoteEventWithDefaults(tick=1, sustain=100)],
-                    (101, pytest.defaults.resolution),
+                    101,
+                    id="event_with_sustain",
                 ),
             ],
         )
-        def test_basic(self, mocker, minimal_chart, note_events, want):
-            mock = mocker.patch.object(
+        def test_basic(self, mocker, minimal_chart, note_events, want_timestamp_at_tick_arg):
+            mock_timestamp_at_tick = mocker.patch.object(
                 minimal_chart.sync_track, "timestamp_at_tick", return_value=(None, None)
             )
             # TODO: Make it simpler to fetch the only instrument track when there is only one.
             track = minimal_chart[pytest.defaults.instrument][pytest.defaults.difficulty]
             track.note_events = note_events
             minimal_chart._populate_last_note_timestamp(track)
-            mock.assert_called_once_with(*want)
+            mock_timestamp_at_tick.assert_called_once_with(want_timestamp_at_tick_arg)
 
         def test_empty(self, mocker, minimal_chart):
             mock = mocker.patch.object(

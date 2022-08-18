@@ -18,7 +18,7 @@ from typing import ClassVar, Final, Optional, Pattern, Type, TypeVar
 
 import chartparse.track
 from chartparse.datastructures import ImmutableSortedList
-from chartparse.event import Event, TimestampGetterT
+from chartparse.event import Event, TimestampAtTickSupporter
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.util import DictPropertiesEqMixin, DictReprTruncatedSequencesMixin
 
@@ -28,6 +28,9 @@ GlobalEventsTrackT = TypeVar("GlobalEventsTrackT", bound="GlobalEventsTrack")
 @typing.final
 class GlobalEventsTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     """A :class:`~chartparse.chart.Chart`'s :class:`~chartparse.globalevents.GlobalEvent`\\ s."""
+
+    resolution: Final[int]
+    """The number of ticks for which a quarter note lasts."""
 
     text_events: Final[Sequence[TextEvent]]
     """A ``GlobalEventTrack``'s ``TextEvent``\\ s."""
@@ -43,12 +46,17 @@ class GlobalEventsTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
     def __init__(
         self,
+        resolution: int,
         text_events: Sequence[TextEvent],
         section_events: Sequence[SectionEvent],
         lyric_events: Sequence[LyricEvent],
     ) -> None:
         """Instantiates all instance attributes."""
 
+        if resolution <= 0:
+            raise ValueError(f"resolution ({resolution}) must be positive")
+
+        self.resolution = resolution
         self.text_events = text_events
         self.section_events = section_events
         self.lyric_events = lyric_events
@@ -57,8 +65,7 @@ class GlobalEventsTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     def from_chart_lines(
         cls: Type[GlobalEventsTrackT],
         iterator_getter: Callable[[], Iterable[str]],
-        timestamp_getter: TimestampGetterT,
-        resolution: int,
+        tatter: TimestampAtTickSupporter,
     ) -> GlobalEventsTrackT:
         """Initializes instance attributes by parsing an iterable of strings.
 
@@ -66,9 +73,7 @@ class GlobalEventsTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             iterator_getter: The iterable of strings returned by this is most likely from a
                 Moonscraper ``.chart``. Must be a function so the strings can be iterated over
                 multiple times, if necessary.
-            timestamp_getter: A callable that can be used to obtain a timestamp at a given tick and
-                resolution.
-            resolution: The resolution of the chart.
+            tatter: An object that can be used to get a timestamp at a particular tick.
 
         Returns:
             A ``GlobalEventsTrack`` parsed from the strings returned by ``iterator_getter``.
@@ -77,28 +82,25 @@ class GlobalEventsTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         text_events: ImmutableSortedList[
             TextEvent
         ] = chartparse.track.parse_events_from_chart_lines(
-            resolution,
             iterator_getter(),
             TextEvent.from_chart_line,
-            timestamp_getter,
+            tatter,
         )
         section_events: ImmutableSortedList[
             SectionEvent
         ] = chartparse.track.parse_events_from_chart_lines(
-            resolution,
             iterator_getter(),
             SectionEvent.from_chart_line,
-            timestamp_getter,
+            tatter,
         )
         lyric_events: ImmutableSortedList[
             LyricEvent
         ] = chartparse.track.parse_events_from_chart_lines(
-            resolution,
             iterator_getter(),
             LyricEvent.from_chart_line,
-            timestamp_getter,
+            tatter,
         )
-        return cls(text_events, section_events, lyric_events)
+        return cls(tatter.resolution, text_events, section_events, lyric_events)
 
 
 GlobalEventT = TypeVar("GlobalEventT", bound="GlobalEvent")
@@ -140,17 +142,14 @@ class GlobalEvent(Event):
         cls: Type[GlobalEventT],
         line: str,
         prev_event: Optional[GlobalEventT],
-        timestamp_getter: TimestampGetterT,
-        resolution: int,
+        tatter: TimestampAtTickSupporter,
     ) -> GlobalEventT:
         """Attempt to obtain an instance of this object from a string.
 
         Args:
             line: Most likely a line from a Moonscraper ``.chart``.
             prev_event: The event
-            timestamp_getter: A callable that can be used to obtain a timestamp at a given tick and
-                resolution.
-            resolution: The resolution of the chart.
+            tatter: An object that can be used to get a timestamp at a particular tick.
 
         Returns:
             An an instance of this object parsed from ``line``.
@@ -163,9 +162,7 @@ class GlobalEvent(Event):
         if not m:
             raise RegexNotMatchError(cls._regex, line)
         tick, value = int(m.group(1)), m.group(2)
-        timestamp, proximal_bpm_event_idx = cls.calculate_timestamp(
-            tick, prev_event, timestamp_getter, resolution
-        )
+        timestamp, proximal_bpm_event_idx = cls.calculate_timestamp(tick, prev_event, tatter)
         return cls(tick, timestamp, value, proximal_bpm_event_idx=proximal_bpm_event_idx)
 
     def __str__(self) -> str:  # pragma: no cover
