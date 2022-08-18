@@ -2,7 +2,7 @@ import pytest
 
 from chartparse.globalevents import GlobalEvent
 from chartparse.instrument import StarPowerEvent, NoteEvent
-from chartparse.sync import TimeSignatureEvent
+from chartparse.sync import TimeSignatureEvent, BPMEvent
 
 
 def StarPowerEventWithDefaults(
@@ -61,3 +61,12 @@ def TimeSignatureEventWithDefaults(
         lower_numeral,
         proximal_bpm_event_idx=proximal_bpm_event_idx,
     )
+
+
+def BPMEventWithDefaults(
+    *,
+    tick=pytest.default_tick,
+    timestamp=pytest.default_timestamp,
+    bpm=pytest.default_bpm,
+):
+    return BPMEvent(tick, timestamp, bpm)

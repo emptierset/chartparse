@@ -8,7 +8,7 @@ from chartparse.sync import SyncTrack, BPMEvent, TimeSignatureEvent
 
 from tests.helpers.lines import generate_bpm as generate_bpm_line
 from tests.helpers.lines import generate_time_signature as generate_time_signature_line
-from tests.helpers.constructors import TimeSignatureEventWithDefaults
+from tests.helpers.constructors import TimeSignatureEventWithDefaults, BPMEventWithDefaults
 
 
 class TestSyncTrack(object):
@@ -37,7 +37,9 @@ class TestSyncTrack(object):
                 _ = SyncTrack(pytest.default_time_signature_event_list, [])
 
         def test_missing_first_bpm_event(self):
-            noninitial_bpm_event = BPMEvent(1, datetime.timedelta(seconds=1), pytest.default_bpm)
+            noninitial_bpm_event = BPMEventWithDefaults(
+                tick=1, timestamp=datetime.timedelta(seconds=1)
+            )
             with pytest.raises(ValueError):
                 _ = SyncTrack(pytest.default_time_signature_event_list, [noninitial_bpm_event])
 
@@ -110,27 +112,43 @@ class TestSyncTrack(object):
             assert got_proximal_bpm_event_idx == want_proximal_bpm_event_idx
 
     class TestIdxOfProximalBPMEvent(object):
-        BPMEventFromTick = lambda tick: BPMEvent(
-            tick, pytest.default_timestamp, pytest.default_bpm
-        )
-
         @pytest.mark.parametrize(
             "tick,start_idx,bpm_events,want,expectation",
             [
                 pytest.param(
-                    1, 0, [BPMEventFromTick(0), BPMEventFromTick(2)], 0, does_not_raise()
+                    1,
+                    0,
+                    [BPMEventWithDefaults(tick=0), BPMEventWithDefaults(tick=2)],
+                    0,
+                    does_not_raise(),
                 ),
                 pytest.param(
-                    2, 0, [BPMEventFromTick(0), BPMEventFromTick(2)], 1, does_not_raise()
+                    2,
+                    0,
+                    [BPMEventWithDefaults(tick=0), BPMEventWithDefaults(tick=2)],
+                    1,
+                    does_not_raise(),
                 ),
                 pytest.param(
-                    2, 1, [BPMEventFromTick(0), BPMEventFromTick(2)], 1, does_not_raise()
+                    2,
+                    1,
+                    [BPMEventWithDefaults(tick=0), BPMEventWithDefaults(tick=2)],
+                    1,
+                    does_not_raise(),
                 ),
                 pytest.param(
-                    3, 0, [BPMEventFromTick(0), BPMEventFromTick(2)], 1, does_not_raise()
+                    3,
+                    0,
+                    [BPMEventWithDefaults(tick=0), BPMEventWithDefaults(tick=2)],
+                    1,
+                    does_not_raise(),
                 ),
                 pytest.param(
-                    3, 1, [BPMEventFromTick(0), BPMEventFromTick(2)], 1, does_not_raise()
+                    3,
+                    1,
+                    [BPMEventWithDefaults(tick=0), BPMEventWithDefaults(tick=2)],
+                    1,
+                    does_not_raise(),
                 ),
                 pytest.param(
                     pytest.default_tick, 0, [], unittest.mock.ANY, pytest.raises(ValueError)
@@ -138,7 +156,7 @@ class TestSyncTrack(object):
                 pytest.param(
                     pytest.default_tick,
                     1,
-                    [BPMEventFromTick(0)],
+                    [BPMEventWithDefaults(tick=0)],
                     unittest.mock.ANY,
                     pytest.raises(ValueError),
                 ),
@@ -213,7 +231,7 @@ class TestBPMEvent(object):
 
         def test_more_than_three_decimal_places_error(self):
             with pytest.raises(ValueError):
-                _ = BPMEvent(pytest.default_tick, pytest.default_timestamp, 120.0001)
+                _ = BPMEventWithDefaults(bpm=120.0001)
 
     class TestFromChartLine(object):
         @pytest.mark.parametrize(
@@ -246,12 +264,9 @@ class TestBPMEvent(object):
             ],
         )
         def test_basic(self, mocker, prev_event_tick, current_event_tick, expectation):
-            if prev_event_tick is None:
-                prev_event = None
-            else:
-                prev_event = BPMEvent(
-                    prev_event_tick, pytest.default_timestamp, pytest.default_bpm
-                )
+            prev_event = (
+                BPMEventWithDefaults(tick=prev_event_tick) if prev_event_tick is not None else None
+            )
 
             current_line = generate_bpm_line(current_event_tick, pytest.default_bpm)
             spy_calculate_timestamp = mocker.spy(BPMEvent, "calculate_timestamp")
