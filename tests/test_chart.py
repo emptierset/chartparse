@@ -268,7 +268,9 @@ class TestChart(object):
             )
 
     class TestNotesPerSecond(object):
-        note_event1 = NoteEvent(pytest.defaults.resolution, datetime.timedelta(seconds=1), Note.GRY)
+        note_event1 = NoteEvent(
+            pytest.defaults.resolution, datetime.timedelta(seconds=1), Note.GRY
+        )
         note_event2 = NoteEvent(
             pytest.defaults.resolution * 2, datetime.timedelta(seconds=2), Note.RYB
         )

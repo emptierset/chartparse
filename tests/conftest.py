@@ -295,11 +295,6 @@ def pytest_configure():
 
 
 @pytest.fixture
-def mock_open_empty_string(mocker):
-    mocker.patch("builtins.open", mocker.mock_open(read_data=""))
-
-
-@pytest.fixture
 def invalid_chart_line():
     return _invalid_chart_line
 
@@ -315,11 +310,6 @@ def minimal_timestamp_getter():
 @pytest.fixture
 def minimal_string_iterator_getter(invalid_chart_line):
     return lambda: [invalid_chart_line]
-
-
-@pytest.fixture
-def unmatchable_regex():
-    return _unmatchable_regex
 
 
 @pytest.fixture
@@ -396,11 +386,6 @@ def default_star_power_event():
 )
 def tick_having_event(request):
     return request.getfixturevalue(request.param)
-
-
-@pytest.fixture
-def note_lines():
-    return [_default_note_line]
 
 
 @pytest.fixture
