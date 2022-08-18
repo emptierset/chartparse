@@ -5,6 +5,7 @@ import os
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "helpers"))
 
+import dataclasses
 import datetime
 import math
 import pytest
@@ -211,81 +212,86 @@ def generate_valid_star_power_line_fn(tick=_default_tick, sustain=_default_susta
     return f"  {tick} = S 2 {sustain}"
 
 
+def dataclass_list_field(xs):
+    return dataclasses.field(default_factory=lambda: list(xs))
+
+
+@dataclasses.dataclass
+class Defaults(object):
+    filepath: ... = _default_filepath
+
+    tick: ... = _default_tick
+    sustain: ... = _default_sustain
+
+    timestamp: ... = _default_timestamp
+
+    name: ... = _default_name
+    artist: ... = _default_artist
+    charter: ... = _default_charter
+    album: ... = _default_album
+    year: ... = _default_year
+    offset: ... = _default_offset
+    offset_string: ... = _default_offset_string
+    resolution: ... = _default_resolution
+    resolution_string: ... = _default_resolution_string
+    player2: ... = _default_player2
+    player2_string: ... = _default_player2_string
+    intensity: ... = _default_intensity
+    intensity_string: ... = _default_intensity_string
+    preview_start: ... = _default_preview_start
+    preview_start_string: ... = _default_preview_start_string
+    preview_end: ... = _default_preview_end
+    preview_end_string: ... = _default_preview_end_string
+    genre: ... = _default_genre
+    media_type: ... = _default_media_type
+    music_stream: ... = _default_music_stream
+    guitar_stream: ... = _default_guitar_stream
+    rhythm_stream: ... = _default_rhythm_stream
+    bass_stream: ... = _default_bass_stream
+    drum_stream: ... = _default_drum_stream
+    drum2_stream: ... = _default_drum2_stream
+    drum3_stream: ... = _default_drum3_stream
+    drum4_stream: ... = _default_drum4_stream
+    vocal_stream: ... = _default_vocal_stream
+    keys_stream: ... = _default_keys_stream
+    crowd_stream: ... = _default_crowd_stream
+
+    bpm: ... = _default_bpm
+    bpm_event: ... = _default_bpm_event
+    bpm_event_list: ... = dataclass_list_field(_default_bpm_event_list)
+
+    upper_time_signature_numeral: ... = _default_upper_time_signature_numeral
+    lower_time_signature_numeral: ... = _default_lower_time_signature_numeral
+    time_signature_event: ... = _default_time_signature_event
+    time_signature_event_list: ... = dataclass_list_field(_default_time_signature_event_list)
+
+    global_event_value: ... = _default_global_event_value
+    text_event_value: ... = _default_text_event_value
+    section_event_value: ... = _default_section_event_value
+    lyric_event_value: ... = _default_lyric_event_value
+    text_event: ... = _default_text_event
+    section_event: ... = _default_section_event
+    lyric_event: ... = _default_lyric_event
+    text_event_list: ... = dataclass_list_field(_default_text_events_list)
+    section_event_list: ... = dataclass_list_field(_default_section_events_list)
+    lyric_event_list: ... = dataclass_list_field(_default_lyric_events_list)
+
+    instrument: ... = _default_instrument
+    difficulty: ... = _default_difficulty
+    section_name: ... = _default_section_name
+
+    note: ... = _default_note
+    note_event: ... = _default_note_event
+    note_event_list: ... = dataclass_list_field(_default_note_event_list)
+
+    star_power_event: ... = _default_star_power_event
+    star_power_event_list: ... = dataclass_list_field(_default_star_power_event_list)
+
+
 def pytest_configure():
-    # TODO: Have these all be under an object at ``pytest.defaults``. e.g.
-    # ``pytest.defaults.resolution``.
     pytest.invalid_chart_line = _invalid_chart_line
-
-    pytest.default_filepath = _default_filepath
-
-    pytest.default_tick = _default_tick
-    pytest.default_sustain = _default_sustain
-
-    pytest.default_timestamp = _default_timestamp
-
-    pytest.default_name = _default_name
-    pytest.default_artist = _default_artist
-    pytest.default_charter = _default_charter
-    pytest.default_album = _default_album
-    pytest.default_year = _default_year
-    pytest.default_offset = _default_offset
-    pytest.default_offset_string = _default_offset_string
-    pytest.default_resolution = _default_resolution
-    pytest.default_resolution_string = _default_resolution_string
-    pytest.default_player2 = _default_player2
-    pytest.default_player2_string = _default_player2_string
-    pytest.default_intensity = _default_intensity
-    pytest.default_intensity_string = _default_intensity_string
-    pytest.default_preview_start = _default_preview_start
-    pytest.default_preview_start_string = _default_preview_start_string
-    pytest.default_preview_end = _default_preview_end
-    pytest.default_preview_end_string = _default_preview_end_string
-    pytest.default_genre = _default_genre
-    pytest.default_media_type = _default_media_type
-    pytest.default_music_stream = _default_music_stream
-    pytest.default_guitar_stream = _default_guitar_stream
-    pytest.default_rhythm_stream = _default_rhythm_stream
-    pytest.default_bass_stream = _default_bass_stream
-    pytest.default_drum_stream = _default_drum_stream
-    pytest.default_drum2_stream = _default_drum2_stream
-    pytest.default_drum3_stream = _default_drum3_stream
-    pytest.default_drum4_stream = _default_drum4_stream
-    pytest.default_vocal_stream = _default_vocal_stream
-    pytest.default_keys_stream = _default_keys_stream
-    pytest.default_crowd_stream = _default_crowd_stream
-
-    pytest.default_bpm = _default_bpm
-    pytest.default_bpm_event = _default_bpm_event
-    pytest.default_bpm_event_list = _default_bpm_event_list
-
-    pytest.default_upper_time_signature_numeral = _default_upper_time_signature_numeral
-    pytest.default_lower_time_signature_numeral = _default_lower_time_signature_numeral
-    pytest.default_time_signature_event = _default_time_signature_event
-    pytest.default_time_signature_event_list = _default_time_signature_event_list
-
-    pytest.default_global_event_value = _default_global_event_value
-    pytest.default_text_event_value = _default_text_event_value
-    pytest.default_section_event_value = _default_section_event_value
-    pytest.default_lyric_event_value = _default_lyric_event_value
-    pytest.default_text_event = _default_text_event
-    pytest.default_section_event = _default_section_event
-    pytest.default_lyric_event = _default_lyric_event
-    pytest.default_text_event_list = _default_text_events_list
-    pytest.default_section_event_list = _default_section_events_list
-    pytest.default_lyric_event_list = _default_lyric_events_list
-
-    pytest.default_instrument = _default_instrument
-    pytest.default_difficulty = _default_difficulty
-    pytest.default_section_name = _default_section_name
-
-    pytest.default_note = _default_note
-    pytest.default_note_event = _default_note_event
-    pytest.default_note_event_list = _default_note_event_list
-
-    pytest.default_star_power_event = _default_star_power_event
-    pytest.default_star_power_event_list = _default_star_power_event_list
-
     pytest.unmatchable_regex = _unmatchable_regex
+    pytest.defaults = Defaults()
 
 
 @pytest.fixture
@@ -481,8 +487,8 @@ def bare_instrument_track():
 
 @pytest.fixture
 def minimal_instrument_track(bare_instrument_track):
-    bare_instrument_track.instrument = pytest.default_instrument
-    bare_instrument_track.difficulty = pytest.default_difficulty
+    bare_instrument_track.instrument = _default_instrument
+    bare_instrument_track.difficulty = _default_difficulty
     bare_instrument_track.section_name = "ExpertSingle"
     bare_instrument_track.note_events = []
     bare_instrument_track.star_power_events = []
@@ -521,8 +527,8 @@ def minimal_chart(
     bare_chart.sync_track = minimal_sync_track
     bare_chart.global_events_track = minimal_global_events_track
     bare_chart.instrument_tracks = {
-        pytest.default_instrument: {
-            pytest.default_difficulty: minimal_instrument_track,
+        _default_instrument: {
+            _default_difficulty: minimal_instrument_track,
         }
     }
     return bare_chart

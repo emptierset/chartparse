@@ -15,14 +15,14 @@ class TestSyncTrack(object):
     class TestInit(object):
         def test_basic(self):
             got = SyncTrack(
-                pytest.default_time_signature_event_list, pytest.default_bpm_event_list
+                pytest.defaults.time_signature_event_list, pytest.defaults.bpm_event_list
             )
-            assert got.time_signature_events == pytest.default_time_signature_event_list
-            assert got.bpm_events == pytest.default_bpm_event_list
+            assert got.time_signature_events == pytest.defaults.time_signature_event_list
+            assert got.bpm_events == pytest.defaults.bpm_event_list
 
         def test_empty_time_signature_events(self):
             with pytest.raises(ValueError):
-                _ = SyncTrack([], pytest.default_bpm_event_list)
+                _ = SyncTrack([], pytest.defaults.bpm_event_list)
 
         def test_missing_first_time_signature_event(self):
             noninitial_time_signature_event = TimeSignatureEventWithDefaults(
@@ -30,41 +30,41 @@ class TestSyncTrack(object):
                 timestamp=datetime.timedelta(seconds=1),
             )
             with pytest.raises(ValueError):
-                _ = SyncTrack([noninitial_time_signature_event], pytest.default_bpm_event_list)
+                _ = SyncTrack([noninitial_time_signature_event], pytest.defaults.bpm_event_list)
 
         def test_empty_bpm_events(self):
             with pytest.raises(ValueError):
-                _ = SyncTrack(pytest.default_time_signature_event_list, [])
+                _ = SyncTrack(pytest.defaults.time_signature_event_list, [])
 
         def test_missing_first_bpm_event(self):
             noninitial_bpm_event = BPMEventWithDefaults(
                 tick=1, timestamp=datetime.timedelta(seconds=1)
             )
             with pytest.raises(ValueError):
-                _ = SyncTrack(pytest.default_time_signature_event_list, [noninitial_bpm_event])
+                _ = SyncTrack(pytest.defaults.time_signature_event_list, [noninitial_bpm_event])
 
     class TestFromChartLines(object):
         def test_basic(self, mocker, minimal_string_iterator_getter):
             mock_parse_events = mocker.patch(
                 "chartparse.track.parse_events_from_chart_lines",
                 side_effect=[
-                    pytest.default_bpm_event_list,
-                    pytest.default_time_signature_event_list,
+                    pytest.defaults.bpm_event_list,
+                    pytest.defaults.time_signature_event_list,
                 ],
             )
             spy_init = mocker.spy(SyncTrack, "__init__")
             _ = SyncTrack.from_chart_lines(
-                minimal_string_iterator_getter, pytest.default_resolution
+                minimal_string_iterator_getter, pytest.defaults.resolution
             )
             mock_parse_events.assert_has_calls(
                 [
                     unittest.mock.call(
-                        pytest.default_resolution,
+                        pytest.defaults.resolution,
                         minimal_string_iterator_getter(),
                         BPMEvent.from_chart_line,
                     ),
                     unittest.mock.call(
-                        pytest.default_resolution,
+                        pytest.defaults.resolution,
                         minimal_string_iterator_getter(),
                         TimeSignatureEvent.from_chart_line,
                         unittest.mock.ANY,
@@ -73,19 +73,19 @@ class TestSyncTrack(object):
             )
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,
-                pytest.default_time_signature_event_list,
-                pytest.default_bpm_event_list,
+                pytest.defaults.time_signature_event_list,
+                pytest.defaults.bpm_event_list,
             )
 
     class TestTimestampAtTick(object):
         def test_wrapper(self, mocker, bare_sync_track):
-            bare_sync_track.bpm_events = pytest.default_bpm_event_list
+            bare_sync_track.bpm_events = pytest.defaults.bpm_event_list
             mock = mocker.patch.object(bare_sync_track, "_timestamp_at_tick")
             _ = bare_sync_track.timestamp_at_tick(
-                pytest.default_tick, pytest.default_resolution, start_bpm_event_index=0
+                pytest.defaults.tick, pytest.defaults.resolution, start_bpm_event_index=0
             )
             mock.assert_called_once_with(
-                pytest.default_bpm_event_list, pytest.default_tick, pytest.default_resolution, 0
+                pytest.defaults.bpm_event_list, pytest.defaults.tick, pytest.defaults.resolution, 0
             )
 
         event0 = BPMEvent.from_chart_line(generate_bpm_line(0, 60.000), None, 100)
@@ -151,10 +151,10 @@ class TestSyncTrack(object):
                     does_not_raise(),
                 ),
                 pytest.param(
-                    pytest.default_tick, 0, [], unittest.mock.ANY, pytest.raises(ValueError)
+                    pytest.defaults.tick, 0, [], unittest.mock.ANY, pytest.raises(ValueError)
                 ),
                 pytest.param(
-                    pytest.default_tick,
+                    pytest.defaults.tick,
                     1,
                     [BPMEventWithDefaults(tick=0)],
                     unittest.mock.ANY,
@@ -174,45 +174,45 @@ class TestTimeSignatureEvent(object):
     class TestInit(object):
         def test_basic(self):
             event = TimeSignatureEventWithDefaults()
-            assert event.upper_numeral == pytest.default_upper_time_signature_numeral
-            assert event.lower_numeral == pytest.default_lower_time_signature_numeral
+            assert event.upper_numeral == pytest.defaults.upper_time_signature_numeral
+            assert event.lower_numeral == pytest.defaults.lower_time_signature_numeral
 
     class TestFromChartLine(object):
         def test_shortform(self, mocker, minimal_timestamp_getter):
             spy_calculate_timestamp = mocker.spy(TimeSignatureEvent, "calculate_timestamp")
             line = generate_time_signature_line(
-                pytest.default_tick, pytest.default_upper_time_signature_numeral
+                pytest.defaults.tick, pytest.defaults.upper_time_signature_numeral
             )
             event = TimeSignatureEvent.from_chart_line(
                 line,
                 None,
                 minimal_timestamp_getter,
-                pytest.default_resolution,
+                pytest.defaults.resolution,
             )
             spy_calculate_timestamp.assert_called_once_with(
-                pytest.default_tick, None, minimal_timestamp_getter, pytest.default_resolution
+                pytest.defaults.tick, None, minimal_timestamp_getter, pytest.defaults.resolution
             )
-            assert event.upper_numeral == pytest.default_upper_time_signature_numeral
+            assert event.upper_numeral == pytest.defaults.upper_time_signature_numeral
             assert event.lower_numeral == TimeSignatureEvent._default_lower_numeral
 
         def test_longform(self, mocker, minimal_timestamp_getter):
             spy_calculate_timestamp = mocker.spy(TimeSignatureEvent, "calculate_timestamp")
             line = generate_time_signature_line(
-                pytest.default_tick,
-                pytest.default_upper_time_signature_numeral,
-                pytest.default_lower_time_signature_numeral,
+                pytest.defaults.tick,
+                pytest.defaults.upper_time_signature_numeral,
+                pytest.defaults.lower_time_signature_numeral,
             )
             event = TimeSignatureEvent.from_chart_line(
                 line,
                 None,
                 minimal_timestamp_getter,
-                pytest.default_resolution,
+                pytest.defaults.resolution,
             )
             spy_calculate_timestamp.assert_called_once_with(
-                pytest.default_tick, None, minimal_timestamp_getter, pytest.default_resolution
+                pytest.defaults.tick, None, minimal_timestamp_getter, pytest.defaults.resolution
             )
-            assert event.upper_numeral == pytest.default_upper_time_signature_numeral
-            assert event.lower_numeral == pytest.default_lower_time_signature_numeral
+            assert event.upper_numeral == pytest.defaults.upper_time_signature_numeral
+            assert event.lower_numeral == pytest.defaults.lower_time_signature_numeral
 
         def test_no_match(self, invalid_chart_line, minimal_timestamp_getter):
             with pytest.raises(RegexNotMatchError):
@@ -220,14 +220,14 @@ class TestTimeSignatureEvent(object):
                     invalid_chart_line,
                     None,
                     minimal_timestamp_getter,
-                    pytest.default_resolution,
+                    pytest.defaults.resolution,
                 )
 
 
 class TestBPMEvent(object):
     class TestInit(object):
         def test_basic(self, default_bpm_event):
-            assert default_bpm_event.bpm == pytest.default_bpm
+            assert default_bpm_event.bpm == pytest.defaults.bpm
 
         def test_more_than_three_decimal_places_error(self):
             with pytest.raises(ValueError):
@@ -239,25 +239,25 @@ class TestBPMEvent(object):
             [
                 pytest.param(
                     None,
-                    pytest.default_tick,
+                    pytest.defaults.tick,
                     does_not_raise(),
                     id="None prev event",
                 ),
                 pytest.param(
-                    pytest.default_tick,
-                    pytest.default_tick + 1,
+                    pytest.defaults.tick,
+                    pytest.defaults.tick + 1,
                     does_not_raise(),
                     id="Present prev event",
                 ),
                 pytest.param(
-                    pytest.default_tick + 1,
-                    pytest.default_tick,
+                    pytest.defaults.tick + 1,
+                    pytest.defaults.tick,
                     pytest.raises(ValueError),
                     id="Prev event after current",
                 ),
                 pytest.param(
-                    pytest.default_tick,
-                    pytest.default_tick,
+                    pytest.defaults.tick,
+                    pytest.defaults.tick,
                     pytest.raises(ValueError),
                     id="Prev event equal to current",
                 ),
@@ -268,22 +268,22 @@ class TestBPMEvent(object):
                 BPMEventWithDefaults(tick=prev_event_tick) if prev_event_tick is not None else None
             )
 
-            current_line = generate_bpm_line(current_event_tick, pytest.default_bpm)
+            current_line = generate_bpm_line(current_event_tick, pytest.defaults.bpm)
             spy_calculate_timestamp = mocker.spy(BPMEvent, "calculate_timestamp")
             with expectation:
                 current_event = BPMEvent.from_chart_line(
-                    current_line, prev_event, pytest.default_resolution
+                    current_line, prev_event, pytest.defaults.resolution
                 )
-                assert current_event.bpm == pytest.default_bpm
+                assert current_event.bpm == pytest.defaults.bpm
             # Use ANY to match the function defined within ``from_chart_line``.
             spy_calculate_timestamp.assert_called_once_with(
                 current_event_tick,
                 prev_event,
                 unittest.mock.ANY,
-                pytest.default_resolution,
+                pytest.defaults.resolution,
             )
 
         def test_no_match(self, generate_valid_short_time_signature_line):
             line = generate_valid_short_time_signature_line()
             with pytest.raises(RegexNotMatchError):
-                _ = BPMEvent.from_chart_line(line, None, pytest.default_resolution)
+                _ = BPMEvent.from_chart_line(line, None, pytest.defaults.resolution)

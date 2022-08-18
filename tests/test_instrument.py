@@ -28,16 +28,16 @@ class TestInstrumentTrack(object):
                 InstrumentTrack, "_populate_star_power_data"
             )
             _ = InstrumentTrack(
-                pytest.default_instrument,
-                pytest.default_difficulty,
-                pytest.default_note_event_list,
-                pytest.default_star_power_event_list,
+                pytest.defaults.instrument,
+                pytest.defaults.difficulty,
+                pytest.defaults.note_event_list,
+                pytest.defaults.star_power_event_list,
             )
-            assert basic_instrument_track.instrument == pytest.default_instrument
-            assert basic_instrument_track.difficulty == pytest.default_difficulty
-            assert basic_instrument_track.note_events == pytest.default_note_event_list
-            assert basic_instrument_track.star_power_events == pytest.default_star_power_event_list
-            assert basic_instrument_track.section_name == pytest.default_section_name
+            assert basic_instrument_track.instrument == pytest.defaults.instrument
+            assert basic_instrument_track.difficulty == pytest.defaults.difficulty
+            assert basic_instrument_track.note_events == pytest.defaults.note_event_list
+            assert basic_instrument_track.star_power_events == pytest.defaults.star_power_event_list
+            assert basic_instrument_track.section_name == pytest.defaults.section_name
             mock_populate_star_power_data.assert_called_once()
 
     class TestFromChartLines(object):
@@ -45,37 +45,37 @@ class TestInstrumentTrack(object):
             mock_parse_note_events = mocker.patch.object(
                 InstrumentTrack,
                 "_parse_note_events_from_chart_lines",
-                return_value=pytest.default_note_event_list,
+                return_value=pytest.defaults.note_event_list,
             )
             mock_parse_events = mocker.patch(
                 "chartparse.track.parse_events_from_chart_lines",
-                return_value=pytest.default_star_power_event_list,
+                return_value=pytest.defaults.star_power_event_list,
             )
             mock_init = mocker.spy(InstrumentTrack, "__init__")
             _ = InstrumentTrack.from_chart_lines(
-                pytest.default_instrument,
-                pytest.default_difficulty,
+                pytest.defaults.instrument,
+                pytest.defaults.difficulty,
                 minimal_string_iterator_getter,
                 minimal_timestamp_getter,
-                pytest.default_resolution,
+                pytest.defaults.resolution,
             )
             mock_parse_note_events.assert_called_once_with(
                 minimal_string_iterator_getter(),
                 minimal_timestamp_getter,
-                pytest.default_resolution,
+                pytest.defaults.resolution,
             )
             mock_parse_events.assert_called_once_with(
-                pytest.default_resolution,
+                pytest.defaults.resolution,
                 minimal_string_iterator_getter(),
                 StarPowerEvent.from_chart_line,
                 minimal_timestamp_getter,
             )
             mock_init.assert_called_once_with(
                 unittest.mock.ANY,
-                pytest.default_instrument,
-                pytest.default_difficulty,
-                pytest.default_note_event_list,
-                pytest.default_star_power_event_list,
+                pytest.defaults.instrument,
+                pytest.defaults.difficulty,
+                pytest.defaults.note_event_list,
+                pytest.defaults.star_power_event_list,
             )
 
         @pytest.mark.parametrize(
@@ -222,14 +222,14 @@ class TestInstrumentTrack(object):
             self, mocker, lines, want_note_events, want_star_power_events, minimal_timestamp_getter
         ):
             instrument_track = InstrumentTrack.from_chart_lines(
-                pytest.default_instrument,
-                pytest.default_difficulty,
+                pytest.defaults.instrument,
+                pytest.defaults.difficulty,
                 lambda: iter(lines),
                 minimal_timestamp_getter,
-                pytest.default_resolution,
+                pytest.defaults.resolution,
             )
-            assert instrument_track.instrument == pytest.default_instrument
-            assert instrument_track.difficulty == pytest.default_difficulty
+            assert instrument_track.instrument == pytest.defaults.instrument
+            assert instrument_track.difficulty == pytest.defaults.difficulty
             assert instrument_track.note_events == want_note_events
             assert instrument_track.star_power_events == want_star_power_events
 
@@ -283,15 +283,15 @@ class TestNoteEvent(object):
         def test_basic(self, mocker):
             mock_validate_sustain = mocker.patch.object(NoteEvent, "_validate_sustain")
             mock_refine_sustain = mocker.patch.object(
-                NoteEvent, "_refine_sustain", return_value=pytest.default_sustain
+                NoteEvent, "_refine_sustain", return_value=pytest.defaults.sustain
             )
             got = NoteEventWithDefaults(is_forced=True, is_tap=True)
             mock_validate_sustain.assert_called_once_with(
-                pytest.default_sustain, pytest.default_note
+                pytest.defaults.sustain, pytest.defaults.note
             )
-            mock_refine_sustain.assert_called_once_with(pytest.default_sustain)
-            assert got.note == pytest.default_note
-            assert got.sustain == pytest.default_sustain
+            mock_refine_sustain.assert_called_once_with(pytest.defaults.sustain)
+            assert got.note == pytest.defaults.note
+            assert got.sustain == pytest.defaults.sustain
             assert got._is_forced is True
             assert got._is_tap is True
 
@@ -299,18 +299,18 @@ class TestNoteEvent(object):
         def test_int(self, mocker):
             sustain = 0
             mock = mocker.patch.object(NoteEvent, "_validate_int_sustain")
-            NoteEvent._validate_sustain(sustain, pytest.default_note)
+            NoteEvent._validate_sustain(sustain, pytest.defaults.note)
             mock.assert_called_once_with(sustain)
 
         def test_list(self, mocker):
             sustain = [100, None, None, None, None]
             mock = mocker.patch.object(NoteEvent, "_validate_list_sustain")
-            NoteEvent._validate_sustain(sustain, pytest.default_note)
-            mock.assert_called_once_with(sustain, pytest.default_note)
+            NoteEvent._validate_sustain(sustain, pytest.defaults.note)
+            mock.assert_called_once_with(sustain, pytest.defaults.note)
 
         def test_unhandled_type(self, mocker):
             with pytest.raises(TypeError):
-                NoteEvent._validate_sustain((100, None, None, None, None), pytest.default_note)
+                NoteEvent._validate_sustain((100, None, None, None, None), pytest.defaults.note)
 
     class TestValidateIntSustain(object):
         def test_negative(self):
@@ -322,7 +322,7 @@ class TestNoteEvent(object):
             "sustain, note",
             [
                 pytest.param(
-                    [None, None, None, None], pytest.default_note, id="incorrect_length_list"
+                    [None, None, None, None], pytest.defaults.note, id="incorrect_length_list"
                 ),
                 pytest.param([100, 100, None, None, None], Note.G, id="mismatched_set_lanes"),
             ],
@@ -367,7 +367,7 @@ class TestNoteEvent(object):
                 pytest.param(
                     NoteEventWithDefaults(
                         tick=chartparse.tick.calculate_ticks_between_notes(
-                            pytest.default_resolution,
+                            pytest.defaults.resolution,
                             NoteDuration.SIXTEENTH,
                         ),
                         note=Note.R,
@@ -379,7 +379,7 @@ class TestNoteEvent(object):
                 pytest.param(
                     NoteEventWithDefaults(
                         tick=chartparse.tick.calculate_ticks_between_notes(
-                            pytest.default_resolution,
+                            pytest.defaults.resolution,
                             NoteDuration.TWELFTH,
                         ),
                         note=Note.R,
@@ -391,7 +391,7 @@ class TestNoteEvent(object):
                 pytest.param(
                     NoteEventWithDefaults(
                         tick=chartparse.tick.calculate_ticks_between_notes(
-                            pytest.default_resolution,
+                            pytest.defaults.resolution,
                             NoteDuration.EIGHTH,
                         ),
                         note=Note.R,
@@ -403,7 +403,7 @@ class TestNoteEvent(object):
                 pytest.param(
                     NoteEventWithDefaults(
                         tick=chartparse.tick.calculate_ticks_between_notes(
-                            pytest.default_resolution,
+                            pytest.defaults.resolution,
                             NoteDuration.SIXTEENTH,
                         ),
                         note=Note.G,
@@ -415,7 +415,7 @@ class TestNoteEvent(object):
                 pytest.param(
                     NoteEventWithDefaults(
                         tick=chartparse.tick.calculate_ticks_between_notes(
-                            pytest.default_resolution,
+                            pytest.defaults.resolution,
                             NoteDuration.TWELFTH,
                         ),
                         note=Note.G,
@@ -427,7 +427,7 @@ class TestNoteEvent(object):
                 pytest.param(
                     NoteEventWithDefaults(
                         tick=chartparse.tick.calculate_ticks_between_notes(
-                            pytest.default_resolution,
+                            pytest.defaults.resolution,
                             NoteDuration.EIGHTH,
                         ),
                         note=Note.G,
@@ -439,7 +439,7 @@ class TestNoteEvent(object):
                 pytest.param(
                     NoteEventWithDefaults(
                         tick=chartparse.tick.calculate_ticks_between_notes(
-                            pytest.default_resolution,
+                            pytest.defaults.resolution,
                             NoteDuration.TWELFTH,
                         ),
                         note=Note.G,
@@ -451,7 +451,7 @@ class TestNoteEvent(object):
                 pytest.param(
                     NoteEventWithDefaults(
                         tick=chartparse.tick.calculate_ticks_between_notes(
-                            pytest.default_resolution,
+                            pytest.defaults.resolution,
                             NoteDuration.TWELFTH,
                         ),
                         note=Note.RY,
@@ -463,7 +463,7 @@ class TestNoteEvent(object):
                 pytest.param(
                     NoteEventWithDefaults(
                         tick=chartparse.tick.calculate_ticks_between_notes(
-                            pytest.default_resolution,
+                            pytest.defaults.resolution,
                             NoteDuration.TWELFTH,
                         ),
                         note=Note.OPEN,
@@ -475,7 +475,7 @@ class TestNoteEvent(object):
                 pytest.param(
                     NoteEventWithDefaults(
                         tick=chartparse.tick.calculate_ticks_between_notes(
-                            pytest.default_resolution,
+                            pytest.defaults.resolution,
                             NoteDuration.TWELFTH,
                         ),
                         note=Note.G,
@@ -487,7 +487,7 @@ class TestNoteEvent(object):
             ],
         )
         def test_basic(self, current, previous, want):
-            state = NoteEvent._compute_hopo_state(pytest.default_resolution, current, previous)
+            state = NoteEvent._compute_hopo_state(pytest.defaults.resolution, current, previous)
             assert state == want
 
     class TestLongestSustain(object):
@@ -511,7 +511,7 @@ class TestNoteEvent(object):
 class TestSpecialEvent(object):
     class TestInit(object):
         def test_basic(self, default_star_power_event):
-            assert default_star_power_event.sustain == pytest.default_sustain
+            assert default_star_power_event.sustain == pytest.defaults.sustain
 
     class TestFromChartLine(object):
         test_regex = r"^T (\d+?) V (.*?)$"
@@ -525,15 +525,15 @@ class TestSpecialEvent(object):
             del SpecialEvent._regex_prog
 
         def test_basic(self, mocker, minimal_timestamp_getter):
-            line = f"T {pytest.default_tick} V {pytest.default_sustain}"
+            line = f"T {pytest.defaults.tick} V {pytest.defaults.sustain}"
             spy_calculate_timestamp = mocker.spy(SpecialEvent, "calculate_timestamp")
             got = SpecialEvent.from_chart_line(
-                line, None, minimal_timestamp_getter, pytest.default_resolution
+                line, None, minimal_timestamp_getter, pytest.defaults.resolution
             )
             spy_calculate_timestamp.assert_called_once_with(
-                pytest.default_tick, None, minimal_timestamp_getter, pytest.default_resolution
+                pytest.defaults.tick, None, minimal_timestamp_getter, pytest.defaults.resolution
             )
-            assert got.sustain == pytest.default_sustain
+            assert got.sustain == pytest.defaults.sustain
 
         def test_no_match(self, invalid_chart_line, minimal_timestamp_getter):
             with pytest.raises(RegexNotMatchError):
@@ -541,7 +541,7 @@ class TestSpecialEvent(object):
                     invalid_chart_line,
                     None,
                     minimal_timestamp_getter,
-                    pytest.default_resolution,
+                    pytest.defaults.resolution,
                 )
 
 

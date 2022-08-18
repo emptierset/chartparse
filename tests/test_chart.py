@@ -188,11 +188,11 @@ class TestChart(object):
 
     class TestPopulateNoteEventHOPOStates(object):
         def test_basic(self, mocker, minimal_chart):
-            note_event1 = NoteEvent(0, pytest.default_timestamp, Note.G)
-            note_event2 = NoteEvent(pytest.default_resolution, pytest.default_timestamp, Note.R)
+            note_event1 = NoteEvent(0, pytest.defaults.timestamp, Note.G)
+            note_event2 = NoteEvent(pytest.defaults.resolution, pytest.defaults.timestamp, Note.R)
             note_event3 = NoteEvent(
-                pytest.default_resolution + pytest.default_resolution * 2,
-                pytest.default_timestamp,
+                pytest.defaults.resolution + pytest.defaults.resolution * 2,
+                pytest.defaults.timestamp,
                 Note.Y,
             )
             note_events = [note_event1, note_event2, note_event3]
@@ -203,12 +203,12 @@ class TestChart(object):
 
             minimal_chart._populate_note_event_hopo_states(note_events)
 
-            mock_populate_hopo_state1.assert_called_once_with(pytest.default_resolution, None)
+            mock_populate_hopo_state1.assert_called_once_with(pytest.defaults.resolution, None)
             mock_populate_hopo_state2.assert_called_once_with(
-                pytest.default_resolution, note_event1
+                pytest.defaults.resolution, note_event1
             )
             mock_populate_hopo_state3.assert_called_once_with(
-                pytest.default_resolution, note_event2
+                pytest.defaults.resolution, note_event2
             )
 
         def test_empty(self, minimal_chart):
@@ -221,19 +221,19 @@ class TestChart(object):
             "note_events,want",
             [
                 pytest.param(
-                    [NoteEvent(1, pytest.default_timestamp, pytest.default_note)],
-                    (1, pytest.default_resolution),
+                    [NoteEvent(1, pytest.defaults.timestamp, pytest.defaults.note)],
+                    (1, pytest.defaults.resolution),
                 ),
                 pytest.param(
                     [
-                        NoteEvent(1, pytest.default_timestamp, pytest.default_note),
-                        NoteEvent(2, pytest.default_timestamp, pytest.default_note),
+                        NoteEvent(1, pytest.defaults.timestamp, pytest.defaults.note),
+                        NoteEvent(2, pytest.defaults.timestamp, pytest.defaults.note),
                     ],
-                    (2, pytest.default_resolution),
+                    (2, pytest.defaults.resolution),
                 ),
                 pytest.param(
-                    [NoteEvent(1, pytest.default_timestamp, pytest.default_note, sustain=100)],
-                    (101, pytest.default_resolution),
+                    [NoteEvent(1, pytest.defaults.timestamp, pytest.defaults.note, sustain=100)],
+                    (101, pytest.defaults.resolution),
                 ),
             ],
         )
@@ -242,8 +242,8 @@ class TestChart(object):
                 minimal_chart.sync_track, "timestamp_at_tick", return_value=(None, None)
             )
             # TODO: Make it simpler to fetch the only instrument track when there is only one.
-            instrument_track = minimal_chart.instrument_tracks[pytest.default_instrument][
-                pytest.default_difficulty
+            instrument_track = minimal_chart.instrument_tracks[pytest.defaults.instrument][
+                pytest.defaults.difficulty
             ]
             instrument_track.note_events = note_events
             minimal_chart._populate_last_note_timestamp(instrument_track)
@@ -253,8 +253,8 @@ class TestChart(object):
             mock = mocker.patch.object(
                 minimal_chart.sync_track, "timestamp_at_tick", return_value=(None, None)
             )
-            instrument_track = minimal_chart.instrument_tracks[pytest.default_instrument][
-                pytest.default_difficulty
+            instrument_track = minimal_chart.instrument_tracks[pytest.defaults.instrument][
+                pytest.defaults.difficulty
             ]
             minimal_chart._populate_last_note_timestamp(instrument_track)
             mock.assert_not_called()
@@ -262,18 +262,18 @@ class TestChart(object):
     class TestSecondsFromTicksAtBPM(object):
         def test_basic(self, mocker, minimal_chart):
             mock = mocker.patch("chartparse.tick.seconds_from_ticks_at_bpm")
-            _ = minimal_chart._seconds_from_ticks_at_bpm(pytest.default_tick, pytest.default_bpm)
+            _ = minimal_chart._seconds_from_ticks_at_bpm(pytest.defaults.tick, pytest.defaults.bpm)
             mock.assert_called_once_with(
-                pytest.default_tick, pytest.default_bpm, pytest.default_resolution
+                pytest.defaults.tick, pytest.defaults.bpm, pytest.defaults.resolution
             )
 
     class TestNotesPerSecond(object):
-        note_event1 = NoteEvent(pytest.default_resolution, datetime.timedelta(seconds=1), Note.GRY)
+        note_event1 = NoteEvent(pytest.defaults.resolution, datetime.timedelta(seconds=1), Note.GRY)
         note_event2 = NoteEvent(
-            pytest.default_resolution * 2, datetime.timedelta(seconds=2), Note.RYB
+            pytest.defaults.resolution * 2, datetime.timedelta(seconds=2), Note.RYB
         )
         note_event3 = NoteEvent(
-            pytest.default_resolution * 3, datetime.timedelta(seconds=3), Note.YBO
+            pytest.defaults.resolution * 3, datetime.timedelta(seconds=3), Note.YBO
         )
         test_notes_per_second_note_events = [note_event1, note_event2, note_event3]
 
@@ -339,13 +339,13 @@ class TestChart(object):
         def test_with_ticks(
             self, mocker, minimal_chart, start_tick, end_tick, want_lower_bound, want_upper_bound
         ):
-            instrument_track = minimal_chart.instrument_tracks[pytest.default_instrument][
-                pytest.default_difficulty
+            instrument_track = minimal_chart.instrument_tracks[pytest.defaults.instrument][
+                pytest.defaults.difficulty
             ]
             instrument_track._last_note_timestamp = _max_timedelta
             minimal_chart.instrument_tracks = {
-                pytest.default_instrument: {
-                    pytest.default_difficulty: instrument_track,
+                pytest.defaults.instrument: {
+                    pytest.defaults.difficulty: instrument_track,
                 }
             }
 
@@ -362,8 +362,8 @@ class TestChart(object):
             )
             spy = mocker.spy(minimal_chart, "_notes_per_second")
             _ = minimal_chart.notes_per_second(
-                pytest.default_instrument,
-                pytest.default_difficulty,
+                pytest.defaults.instrument,
+                pytest.defaults.difficulty,
                 start_tick=start_tick,
                 end_tick=end_tick,
             )
@@ -391,14 +391,14 @@ class TestChart(object):
         def test_with_time(
             self, mocker, minimal_chart, start_time, end_time, want_lower_bound, want_upper_bound
         ):
-            instrument_track = minimal_chart.instrument_tracks[pytest.default_instrument][
-                pytest.default_difficulty
+            instrument_track = minimal_chart.instrument_tracks[pytest.defaults.instrument][
+                pytest.defaults.difficulty
             ]
             instrument_track._last_note_timestamp = _max_timedelta
             spy = mocker.spy(minimal_chart, "_notes_per_second")
             _ = minimal_chart.notes_per_second(
-                pytest.default_instrument,
-                pytest.default_difficulty,
+                pytest.defaults.instrument,
+                pytest.defaults.difficulty,
                 start_time=start_time,
                 end_time=end_time,
             )
@@ -432,14 +432,14 @@ class TestChart(object):
             want_lower_bound,
             want_upper_bound,
         ):
-            instrument_track = minimal_chart.instrument_tracks[pytest.default_instrument][
-                pytest.default_difficulty
+            instrument_track = minimal_chart.instrument_tracks[pytest.defaults.instrument][
+                pytest.defaults.difficulty
             ]
             instrument_track._last_note_timestamp = _max_timedelta
             spy = mocker.spy(minimal_chart, "_notes_per_second")
             _ = minimal_chart.notes_per_second(
-                pytest.default_instrument,
-                pytest.default_difficulty,
+                pytest.defaults.instrument,
+                pytest.defaults.difficulty,
                 start_seconds=start_seconds,
                 end_seconds=end_seconds,
             )
@@ -457,8 +457,8 @@ class TestChart(object):
         def test_too_many_start_args(self, bare_chart, start_time, start_tick, start_seconds):
             with pytest.raises(ValueError):
                 _ = bare_chart.notes_per_second(
-                    pytest.default_instrument,
-                    pytest.default_difficulty,
+                    pytest.defaults.instrument,
+                    pytest.defaults.difficulty,
                     start_time=start_time,
                     start_tick=start_tick,
                     start_seconds=start_seconds,

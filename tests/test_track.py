@@ -9,17 +9,17 @@ class TestParseEventsFromChartLines(object):
         "from_chart_line_return_value,from_chart_line_side_effect,include_timestamp_getter,want",
         [
             pytest.param(
-                pytest.default_time_signature_event,
+                pytest.defaults.time_signature_event,
                 None,
                 True,
-                [pytest.default_time_signature_event],
+                [pytest.defaults.time_signature_event],
                 id="with_timestamp_getter",
             ),
             pytest.param(
-                pytest.default_bpm_event,
+                pytest.defaults.bpm_event,
                 None,
                 False,
-                [pytest.default_bpm_event],
+                [pytest.defaults.bpm_event],
                 id="without_timestamp_getter",
             ),
             pytest.param(
@@ -46,7 +46,7 @@ class TestParseEventsFromChartLines(object):
         )
 
         args = [
-            pytest.default_resolution,
+            pytest.defaults.resolution,
             [invalid_chart_line],
             from_chart_line_fn_mock,
         ]

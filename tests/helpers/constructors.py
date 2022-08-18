@@ -7,9 +7,9 @@ from chartparse.sync import TimeSignatureEvent, BPMEvent
 
 def StarPowerEventWithDefaults(
     *,
-    tick=pytest.default_tick,
-    timestamp=pytest.default_timestamp,
-    sustain=pytest.default_sustain,
+    tick=pytest.defaults.tick,
+    timestamp=pytest.defaults.timestamp,
+    sustain=pytest.defaults.sustain,
     proximal_bpm_event_idx=None,
 ):
     return StarPowerEvent(tick, timestamp, sustain, proximal_bpm_event_idx=proximal_bpm_event_idx)
@@ -17,10 +17,10 @@ def StarPowerEventWithDefaults(
 
 def NoteEventWithDefaults(
     *,
-    tick=pytest.default_tick,
-    timestamp=pytest.default_timestamp,
-    note=pytest.default_note,
-    sustain=pytest.default_sustain,
+    tick=pytest.defaults.tick,
+    timestamp=pytest.defaults.timestamp,
+    note=pytest.defaults.note,
+    sustain=pytest.defaults.sustain,
     is_forced=False,
     is_tap=False,
     star_power_data=None,
@@ -38,9 +38,9 @@ def NoteEventWithDefaults(
 
 def GlobalEventWithDefaults(
     *,
-    tick=pytest.default_tick,
-    timestamp=pytest.default_timestamp,
-    value=pytest.default_global_event_value,
+    tick=pytest.defaults.tick,
+    timestamp=pytest.defaults.timestamp,
+    value=pytest.defaults.global_event_value,
     proximal_bpm_event_idx=None,
 ):
     return GlobalEvent(tick, timestamp, value, proximal_bpm_event_idx=proximal_bpm_event_idx)
@@ -48,10 +48,10 @@ def GlobalEventWithDefaults(
 
 def TimeSignatureEventWithDefaults(
     *,
-    tick=pytest.default_tick,
-    timestamp=pytest.default_timestamp,
-    upper_numeral=pytest.default_upper_time_signature_numeral,
-    lower_numeral=pytest.default_lower_time_signature_numeral,
+    tick=pytest.defaults.tick,
+    timestamp=pytest.defaults.timestamp,
+    upper_numeral=pytest.defaults.upper_time_signature_numeral,
+    lower_numeral=pytest.defaults.lower_time_signature_numeral,
     proximal_bpm_event_idx=None,
 ):
     return TimeSignatureEvent(
@@ -65,8 +65,8 @@ def TimeSignatureEventWithDefaults(
 
 def BPMEventWithDefaults(
     *,
-    tick=pytest.default_tick,
-    timestamp=pytest.default_timestamp,
-    bpm=pytest.default_bpm,
+    tick=pytest.defaults.tick,
+    timestamp=pytest.defaults.timestamp,
+    bpm=pytest.defaults.bpm,
 ):
     return BPMEvent(tick, timestamp, bpm)
