@@ -2,11 +2,6 @@
 /data/
 /chartparse/playground.py
 
-# linting
-.flake8
-
-
-
 # Vim
 .*.sw?
 
