@@ -40,7 +40,7 @@ _default_timestamp = datetime.timedelta(0)
 
 _default_bpm = 120.000
 _default_bpm_event = BPMEvent(_default_tick, _default_timestamp, _default_bpm)
-_default_bpm_event_list = [_default_bpm_event]
+_default_bpm_events = [_default_bpm_event]
 
 _default_upper_time_signature_numeral = 4
 _default_lower_time_signature_numeral = 8
@@ -50,7 +50,7 @@ _default_time_signature_event = TimeSignatureEvent(
     _default_upper_time_signature_numeral,
     _default_lower_time_signature_numeral,
 )
-_default_time_signature_event_list = [_default_time_signature_event]
+_default_time_signature_events = [_default_time_signature_event]
 
 _default_global_event_value = "default_global_event_value"
 _default_text_event_value = "default_text_event_value"
@@ -61,10 +61,9 @@ _default_section_event = SectionEvent(
     _default_tick, _default_section_event_value, _default_timestamp
 )
 _default_lyric_event = LyricEvent(_default_tick, _default_lyric_event_value, _default_timestamp)
-# TODO: Rename all `events_list` and `event_list` names to `events`.
-_default_text_events_list = [_default_text_event]
-_default_section_events_list = [_default_section_event]
-_default_lyric_events_list = [_default_lyric_event]
+_default_text_events = [_default_text_event]
+_default_section_events = [_default_section_event]
+_default_lyric_events = [_default_lyric_event]
 
 
 _default_difficulty = Difficulty.EXPERT
@@ -77,11 +76,11 @@ _default_note_instrument_track_index = InstrumentTrack._min_note_instrument_trac
 
 
 _default_note_event = NoteEvent(_default_tick, _default_timestamp, _default_note)
-_default_note_event_list = [_default_note_event]
+_default_note_events = [_default_note_event]
 
 
 _default_star_power_event = StarPowerEvent(_default_tick, _default_timestamp, _default_sustain)
-_default_star_power_event_list = [_default_star_power_event]
+_default_star_power_events = [_default_star_power_event]
 
 _default_name = "Song Name"
 _default_artist = "Artist Name"
@@ -164,12 +163,12 @@ class Defaults(object):
 
     bpm: ... = _default_bpm
     bpm_event: ... = _default_bpm_event
-    bpm_event_list: ... = dataclass_list_field(_default_bpm_event_list)
+    bpm_events: ... = dataclass_list_field(_default_bpm_events)
 
     upper_time_signature_numeral: ... = _default_upper_time_signature_numeral
     lower_time_signature_numeral: ... = _default_lower_time_signature_numeral
     time_signature_event: ... = _default_time_signature_event
-    time_signature_event_list: ... = dataclass_list_field(_default_time_signature_event_list)
+    time_signature_events: ... = dataclass_list_field(_default_time_signature_events)
 
     global_event_value: ... = _default_global_event_value
     text_event_value: ... = _default_text_event_value
@@ -178,9 +177,9 @@ class Defaults(object):
     text_event: ... = _default_text_event
     section_event: ... = _default_section_event
     lyric_event: ... = _default_lyric_event
-    text_event_list: ... = dataclass_list_field(_default_text_events_list)
-    section_event_list: ... = dataclass_list_field(_default_section_events_list)
-    lyric_event_list: ... = dataclass_list_field(_default_lyric_events_list)
+    text_events: ... = dataclass_list_field(_default_text_events)
+    section_events: ... = dataclass_list_field(_default_section_events)
+    lyric_events: ... = dataclass_list_field(_default_lyric_events)
 
     instrument: ... = _default_instrument
     difficulty: ... = _default_difficulty
@@ -188,10 +187,10 @@ class Defaults(object):
 
     note: ... = _default_note
     note_event: ... = _default_note_event
-    note_event_list: ... = dataclass_list_field(_default_note_event_list)
+    note_events: ... = dataclass_list_field(_default_note_events)
 
     star_power_event: ... = _default_star_power_event
-    star_power_event_list: ... = dataclass_list_field(_default_star_power_event_list)
+    star_power_events: ... = dataclass_list_field(_default_star_power_events)
 
 
 def pytest_configure():
@@ -349,9 +348,7 @@ def minimal_global_events_track(bare_global_events_track):
 
 @pytest.fixture
 def default_global_events_track():
-    return GlobalEventsTrack(
-        _default_text_events_list, _default_section_events_list, _default_lyric_events_list
-    )
+    return GlobalEventsTrack(_default_text_events, _default_section_events, _default_lyric_events)
 
 
 @pytest.fixture
@@ -368,7 +365,7 @@ def minimal_sync_track(bare_sync_track):
 
 @pytest.fixture
 def default_sync_track():
-    return SyncTrack(_default_time_signature_event_list, _default_bpm_event_list)
+    return SyncTrack(_default_time_signature_events, _default_bpm_events)
 
 
 @pytest.fixture
@@ -391,8 +388,8 @@ def default_instrument_track():
     return InstrumentTrack(
         _default_instrument,
         _default_difficulty,
-        _default_note_event_list,
-        _default_star_power_event_list,
+        _default_note_events,
+        _default_star_power_events,
     )
 
 

@@ -16,9 +16,9 @@ from tests.helpers.constructors import GlobalEventWithDefaults
 
 class TestGlobalEventsTrack(object):
     def test_init(self, default_global_events_track):
-        assert default_global_events_track.text_events == pytest.defaults.text_event_list
-        assert default_global_events_track.section_events == pytest.defaults.section_event_list
-        assert default_global_events_track.lyric_events == pytest.defaults.lyric_event_list
+        assert default_global_events_track.text_events == pytest.defaults.text_events
+        assert default_global_events_track.section_events == pytest.defaults.section_events
+        assert default_global_events_track.lyric_events == pytest.defaults.lyric_events
 
     def test_from_chart_lines(
         self, mocker, minimal_string_iterator_getter, minimal_timestamp_getter
@@ -26,9 +26,9 @@ class TestGlobalEventsTrack(object):
         mock_parse_events = mocker.patch(
             "chartparse.track.parse_events_from_chart_lines",
             side_effect=[
-                pytest.defaults.text_event_list,
-                pytest.defaults.section_event_list,
-                pytest.defaults.lyric_event_list,
+                pytest.defaults.text_events,
+                pytest.defaults.section_events,
+                pytest.defaults.lyric_events,
             ],
         )
         spy_init = mocker.spy(GlobalEventsTrack, "__init__")
@@ -61,9 +61,9 @@ class TestGlobalEventsTrack(object):
         )
         spy_init.assert_called_once_with(
             unittest.mock.ANY,
-            pytest.defaults.text_event_list,
-            pytest.defaults.section_event_list,
-            pytest.defaults.lyric_event_list,
+            pytest.defaults.text_events,
+            pytest.defaults.section_events,
+            pytest.defaults.lyric_events,
         )
 
 

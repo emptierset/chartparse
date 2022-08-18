@@ -30,15 +30,13 @@ class TestInstrumentTrack(object):
             _ = InstrumentTrack(
                 pytest.defaults.instrument,
                 pytest.defaults.difficulty,
-                pytest.defaults.note_event_list,
-                pytest.defaults.star_power_event_list,
+                pytest.defaults.note_events,
+                pytest.defaults.star_power_events,
             )
             assert default_instrument_track.instrument == pytest.defaults.instrument
             assert default_instrument_track.difficulty == pytest.defaults.difficulty
-            assert default_instrument_track.note_events == pytest.defaults.note_event_list
-            assert (
-                default_instrument_track.star_power_events == pytest.defaults.star_power_event_list
-            )
+            assert default_instrument_track.note_events == pytest.defaults.note_events
+            assert default_instrument_track.star_power_events == pytest.defaults.star_power_events
             assert default_instrument_track.section_name == pytest.defaults.section_name
             mock_populate_star_power_data.assert_called_once()
 
@@ -47,11 +45,11 @@ class TestInstrumentTrack(object):
             mock_parse_note_events = mocker.patch.object(
                 InstrumentTrack,
                 "_parse_note_events_from_chart_lines",
-                return_value=pytest.defaults.note_event_list,
+                return_value=pytest.defaults.note_events,
             )
             mock_parse_events = mocker.patch(
                 "chartparse.track.parse_events_from_chart_lines",
-                return_value=pytest.defaults.star_power_event_list,
+                return_value=pytest.defaults.star_power_events,
             )
             mock_init = mocker.spy(InstrumentTrack, "__init__")
             _ = InstrumentTrack.from_chart_lines(
@@ -76,8 +74,8 @@ class TestInstrumentTrack(object):
                 unittest.mock.ANY,
                 pytest.defaults.instrument,
                 pytest.defaults.difficulty,
-                pytest.defaults.note_event_list,
-                pytest.defaults.star_power_event_list,
+                pytest.defaults.note_events,
+                pytest.defaults.star_power_events,
             )
 
         @pytest.mark.parametrize(

@@ -14,15 +14,13 @@ from tests.helpers.constructors import TimeSignatureEventWithDefaults, BPMEventW
 class TestSyncTrack(object):
     class TestInit(object):
         def test_basic(self):
-            got = SyncTrack(
-                pytest.defaults.time_signature_event_list, pytest.defaults.bpm_event_list
-            )
-            assert got.time_signature_events == pytest.defaults.time_signature_event_list
-            assert got.bpm_events == pytest.defaults.bpm_event_list
+            got = SyncTrack(pytest.defaults.time_signature_events, pytest.defaults.bpm_events)
+            assert got.time_signature_events == pytest.defaults.time_signature_events
+            assert got.bpm_events == pytest.defaults.bpm_events
 
         def test_empty_time_signature_events(self):
             with pytest.raises(ValueError):
-                _ = SyncTrack([], pytest.defaults.bpm_event_list)
+                _ = SyncTrack([], pytest.defaults.bpm_events)
 
         def test_missing_first_time_signature_event(self):
             noninitial_time_signature_event = TimeSignatureEventWithDefaults(
@@ -30,26 +28,26 @@ class TestSyncTrack(object):
                 timestamp=datetime.timedelta(seconds=1),
             )
             with pytest.raises(ValueError):
-                _ = SyncTrack([noninitial_time_signature_event], pytest.defaults.bpm_event_list)
+                _ = SyncTrack([noninitial_time_signature_event], pytest.defaults.bpm_events)
 
         def test_empty_bpm_events(self):
             with pytest.raises(ValueError):
-                _ = SyncTrack(pytest.defaults.time_signature_event_list, [])
+                _ = SyncTrack(pytest.defaults.time_signature_events, [])
 
         def test_missing_first_bpm_event(self):
             noninitial_bpm_event = BPMEventWithDefaults(
                 tick=1, timestamp=datetime.timedelta(seconds=1)
             )
             with pytest.raises(ValueError):
-                _ = SyncTrack(pytest.defaults.time_signature_event_list, [noninitial_bpm_event])
+                _ = SyncTrack(pytest.defaults.time_signature_events, [noninitial_bpm_event])
 
     class TestFromChartLines(object):
         def test_basic(self, mocker, minimal_string_iterator_getter):
             mock_parse_events = mocker.patch(
                 "chartparse.track.parse_events_from_chart_lines",
                 side_effect=[
-                    pytest.defaults.bpm_event_list,
-                    pytest.defaults.time_signature_event_list,
+                    pytest.defaults.bpm_events,
+                    pytest.defaults.time_signature_events,
                 ],
             )
             spy_init = mocker.spy(SyncTrack, "__init__")
@@ -73,19 +71,19 @@ class TestSyncTrack(object):
             )
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,
-                pytest.defaults.time_signature_event_list,
-                pytest.defaults.bpm_event_list,
+                pytest.defaults.time_signature_events,
+                pytest.defaults.bpm_events,
             )
 
     class TestTimestampAtTick(object):
         def test_wrapper(self, mocker, bare_sync_track):
-            bare_sync_track.bpm_events = pytest.defaults.bpm_event_list
+            bare_sync_track.bpm_events = pytest.defaults.bpm_events
             mock = mocker.patch.object(bare_sync_track, "_timestamp_at_tick")
             _ = bare_sync_track.timestamp_at_tick(
                 pytest.defaults.tick, pytest.defaults.resolution, start_bpm_event_index=0
             )
             mock.assert_called_once_with(
-                pytest.defaults.bpm_event_list, pytest.defaults.tick, pytest.defaults.resolution, 0
+                pytest.defaults.bpm_events, pytest.defaults.tick, pytest.defaults.resolution, 0
             )
 
         event0 = BPMEvent.from_chart_line(generate_bpm_line(0, 60.000), None, 100)
