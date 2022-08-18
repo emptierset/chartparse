@@ -283,7 +283,8 @@ class TestBPMEvent(object):
                 pytest.defaults.resolution,
             )
 
-        def test_no_match(self, generate_valid_short_time_signature_line):
-            line = generate_valid_short_time_signature_line()
+        def test_no_match(self):
             with pytest.raises(RegexNotMatchError):
-                _ = BPMEvent.from_chart_line(line, None, pytest.defaults.resolution)
+                _ = BPMEvent.from_chart_line(
+                    pytest.invalid_chart_line, None, pytest.defaults.resolution
+                )

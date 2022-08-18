@@ -7,7 +7,6 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "helpers"))
 
 import dataclasses
 import datetime
-import math
 import pytest
 
 from chartparse.chart import Chart
@@ -43,26 +42,6 @@ _default_bpm = 120.000
 _default_bpm_event = BPMEvent(_default_tick, _default_timestamp, _default_bpm)
 _default_bpm_event_list = [_default_bpm_event]
 
-
-# TODO: Put all line generation logic in some pytest_plugin module; see stackoverflow below:
-# https://stackoverflow.com/questions/27064004/splitting-a-conftest-py-file-into-several-smaller-conftest-like-parts
-@pytest.fixture
-def generate_valid_bpm_line():
-    return generate_valid_bpm_line_fn
-
-
-@pytest.fixture
-def valid_bpm_line_tick_1():
-    return generate_valid_bpm_line_fn(tick=1)
-
-
-def generate_valid_bpm_line_fn(tick=_default_tick, bpm=_default_bpm):
-    bpm_sans_decimal_point = int(bpm * 1000)
-    if bpm_sans_decimal_point != bpm * 1000:
-        raise ValueError(f"bpm {bpm} has more than 3 decimal places")
-    return f"  {tick} = B {bpm_sans_decimal_point}"
-
-
 _default_upper_time_signature_numeral = 4
 _default_lower_time_signature_numeral = 8
 _default_time_signature_event = TimeSignatureEvent(
@@ -72,31 +51,6 @@ _default_time_signature_event = TimeSignatureEvent(
     _default_lower_time_signature_numeral,
 )
 _default_time_signature_event_list = [_default_time_signature_event]
-
-
-@pytest.fixture
-def generate_valid_long_time_signature_line():
-    def generate_valid_long_time_signature_line_fn():
-        return generate_valid_time_signature_line_fn(
-            lower_numeral=_default_lower_time_signature_numeral
-        )
-
-    return generate_valid_long_time_signature_line_fn
-
-
-@pytest.fixture
-def generate_valid_short_time_signature_line():
-    return generate_valid_time_signature_line_fn
-
-
-def generate_valid_time_signature_line_fn(
-    tick=_default_tick, upper_numeral=_default_upper_time_signature_numeral, lower_numeral=None
-):
-    if lower_numeral:
-        return f"  {tick} = TS {upper_numeral} {int(math.log(lower_numeral, 2))}"
-    else:
-        return f"  {tick} = TS {upper_numeral}"
-
 
 _default_global_event_value = "default_global_event_value"
 _default_text_event_value = "default_text_event_value"
@@ -113,33 +67,6 @@ _default_section_events_list = [_default_section_event]
 _default_lyric_events_list = [_default_lyric_event]
 
 
-@pytest.fixture
-def generate_valid_text_event_line():
-    return generate_valid_text_event_line_fn
-
-
-def generate_valid_text_event_line_fn(tick=_default_tick, value=_default_text_event_value):
-    return f'  {tick} = E "{value}"'
-
-
-@pytest.fixture
-def generate_valid_section_event_line():
-    return generate_valid_section_event_line_fn
-
-
-def generate_valid_section_event_line_fn(tick=_default_tick, value=_default_section_event_value):
-    return f'  {tick} = E "section {value}"'
-
-
-@pytest.fixture
-def generate_valid_lyric_event_line():
-    return generate_valid_lyric_event_line_fn
-
-
-def generate_valid_lyric_event_line_fn(tick=_default_tick, value=_default_lyric_event_value):
-    return f'  {tick} = E "lyric {value}"'
-
-
 _default_difficulty = Difficulty.EXPERT
 _default_instrument = Instrument.GUITAR
 _default_section_name = _default_difficulty.value + _default_instrument.value
@@ -149,18 +76,6 @@ _default_note = Note.G
 _default_note_instrument_track_index = InstrumentTrack._min_note_instrument_track_index
 
 
-@pytest.fixture
-def generate_valid_note_line():
-    return generate_valid_note_line_fn
-
-
-def generate_valid_note_line_fn(
-    tick=_default_tick, note=_default_note_instrument_track_index, sustain=0
-):
-    return f"  {tick} = N {note} {sustain}"
-
-
-_default_note_line = generate_valid_note_line_fn()
 _default_note_event = NoteEvent(_default_tick, _default_timestamp, _default_note)
 _default_note_event_list = [_default_note_event]
 
@@ -201,15 +116,6 @@ _default_crowd_stream = "crowd.ogg"
 
 # https://stackoverflow.com/a/1845097
 _unmatchable_regex = r"(?!x)x"
-
-
-@pytest.fixture
-def generate_valid_star_power_line():
-    return generate_valid_star_power_line_fn
-
-
-def generate_valid_star_power_line_fn(tick=_default_tick, sustain=_default_sustain):
-    return f"  {tick} = S 2 {sustain}"
 
 
 def dataclass_list_field(xs):
