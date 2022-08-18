@@ -8,6 +8,7 @@ from chartparse.sync import SyncTrack, BPMEvent, TimeSignatureEvent
 
 from tests.helpers.lines import generate_bpm as generate_bpm_line
 from tests.helpers.lines import generate_time_signature as generate_time_signature_line
+from tests.helpers.constructors import TimeSignatureEventWithDefaults
 
 
 class TestSyncTrack(object):
@@ -24,11 +25,9 @@ class TestSyncTrack(object):
                 _ = SyncTrack([], pytest.default_bpm_event_list)
 
         def test_missing_first_time_signature_event(self):
-            noninitial_time_signature_event = TimeSignatureEvent(
-                1,
-                datetime.timedelta(seconds=1),
-                pytest.default_upper_time_signature_numeral,
-                pytest.default_lower_time_signature_numeral,
+            noninitial_time_signature_event = TimeSignatureEventWithDefaults(
+                tick=1,
+                timestamp=datetime.timedelta(seconds=1),
             )
             with pytest.raises(ValueError):
                 _ = SyncTrack([noninitial_time_signature_event], pytest.default_bpm_event_list)
@@ -155,15 +154,10 @@ class TestSyncTrack(object):
 
 class TestTimeSignatureEvent(object):
     class TestInit(object):
-        def test_basic(self, default_time_signature_event):
-            assert (
-                default_time_signature_event.upper_numeral
-                == pytest.default_upper_time_signature_numeral
-            )
-            assert (
-                default_time_signature_event.lower_numeral
-                == pytest.default_lower_time_signature_numeral
-            )
+        def test_basic(self):
+            event = TimeSignatureEventWithDefaults()
+            assert event.upper_numeral == pytest.default_upper_time_signature_numeral
+            assert event.lower_numeral == pytest.default_lower_time_signature_numeral
 
     class TestFromChartLine(object):
         def test_shortform(self, mocker, minimal_timestamp_getter):

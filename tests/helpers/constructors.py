@@ -2,6 +2,7 @@ import pytest
 
 from chartparse.globalevents import GlobalEvent
 from chartparse.instrument import StarPowerEvent, NoteEvent
+from chartparse.sync import TimeSignatureEvent
 
 
 def StarPowerEventWithDefaults(
@@ -43,3 +44,20 @@ def GlobalEventWithDefaults(
     proximal_bpm_event_idx=None,
 ):
     return GlobalEvent(tick, timestamp, value, proximal_bpm_event_idx=proximal_bpm_event_idx)
+
+
+def TimeSignatureEventWithDefaults(
+    *,
+    tick=pytest.default_tick,
+    timestamp=pytest.default_timestamp,
+    upper_numeral=pytest.default_upper_time_signature_numeral,
+    lower_numeral=pytest.default_lower_time_signature_numeral,
+    proximal_bpm_event_idx=None,
+):
+    return TimeSignatureEvent(
+        tick,
+        timestamp,
+        upper_numeral,
+        lower_numeral,
+        proximal_bpm_event_idx=proximal_bpm_event_idx,
+    )
