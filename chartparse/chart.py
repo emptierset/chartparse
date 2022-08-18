@@ -333,6 +333,9 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         item_string = ",\n  ".join(items)
         return f"{type(self).__name__}(\n  {item_string})"
 
+    def __getitem__(self, instrument: Instrument) -> dict[Difficulty, InstrumentTrack]:
+        return self.instrument_tracks[instrument]
+
 
 def _iterate_from_second_elem(xs: Sequence[T]) -> Iterator[T]:
     """Given an iterable ``xs``, return an iterator that skips ``xs[0]``.

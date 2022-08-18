@@ -245,21 +245,17 @@ class TestChart(object):
                 minimal_chart.sync_track, "timestamp_at_tick", return_value=(None, None)
             )
             # TODO: Make it simpler to fetch the only instrument track when there is only one.
-            instrument_track = minimal_chart.instrument_tracks[pytest.defaults.instrument][
-                pytest.defaults.difficulty
-            ]
-            instrument_track.note_events = note_events
-            minimal_chart._populate_last_note_timestamp(instrument_track)
+            track = minimal_chart[pytest.defaults.instrument][pytest.defaults.difficulty]
+            track.note_events = note_events
+            minimal_chart._populate_last_note_timestamp(track)
             mock.assert_called_once_with(*want)
 
         def test_empty(self, mocker, minimal_chart):
             mock = mocker.patch.object(
                 minimal_chart.sync_track, "timestamp_at_tick", return_value=(None, None)
             )
-            instrument_track = minimal_chart.instrument_tracks[pytest.defaults.instrument][
-                pytest.defaults.difficulty
-            ]
-            minimal_chart._populate_last_note_timestamp(instrument_track)
+            track = minimal_chart[pytest.defaults.instrument][pytest.defaults.difficulty]
+            minimal_chart._populate_last_note_timestamp(track)
             mock.assert_not_called()
 
     class TestSecondsFromTicksAtBPM(object):
@@ -348,13 +344,11 @@ class TestChart(object):
         def test_with_ticks(
             self, mocker, minimal_chart, start_tick, end_tick, want_lower_bound, want_upper_bound
         ):
-            instrument_track = minimal_chart.instrument_tracks[pytest.defaults.instrument][
-                pytest.defaults.difficulty
-            ]
-            instrument_track._last_note_timestamp = _max_timedelta
+            track = minimal_chart[pytest.defaults.instrument][pytest.defaults.difficulty]
+            track._last_note_timestamp = _max_timedelta
             minimal_chart.instrument_tracks = {
                 pytest.defaults.instrument: {
-                    pytest.defaults.difficulty: instrument_track,
+                    pytest.defaults.difficulty: track,
                 }
             }
 
@@ -400,10 +394,8 @@ class TestChart(object):
         def test_with_time(
             self, mocker, minimal_chart, start_time, end_time, want_lower_bound, want_upper_bound
         ):
-            instrument_track = minimal_chart.instrument_tracks[pytest.defaults.instrument][
-                pytest.defaults.difficulty
-            ]
-            instrument_track._last_note_timestamp = _max_timedelta
+            track = minimal_chart[pytest.defaults.instrument][pytest.defaults.difficulty]
+            track._last_note_timestamp = _max_timedelta
             spy = mocker.spy(minimal_chart, "_notes_per_second")
             _ = minimal_chart.notes_per_second(
                 pytest.defaults.instrument,
@@ -441,10 +433,8 @@ class TestChart(object):
             want_lower_bound,
             want_upper_bound,
         ):
-            instrument_track = minimal_chart.instrument_tracks[pytest.defaults.instrument][
-                pytest.defaults.difficulty
-            ]
-            instrument_track._last_note_timestamp = _max_timedelta
+            track = minimal_chart[pytest.defaults.instrument][pytest.defaults.difficulty]
+            track._last_note_timestamp = _max_timedelta
             spy = mocker.spy(minimal_chart, "_notes_per_second")
             _ = minimal_chart.notes_per_second(
                 pytest.defaults.instrument,
@@ -488,6 +478,14 @@ class TestChart(object):
                     difficulty,
                     start_tick=0,
                 )
+
+    class TestGetItem(object):
+        def test_basic(self, default_chart):
+            got = default_chart[pytest.defaults.instrument][pytest.defaults.difficulty]
+            want = default_chart.instrument_tracks[pytest.defaults.instrument][
+                pytest.defaults.difficulty
+            ]
+            assert got == want
 
 
 class TestIterateFromSecondElem(object):
