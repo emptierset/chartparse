@@ -221,17 +221,17 @@ class TestInstrumentTrack(object):
         def test_integration(
             self, mocker, lines, want_note_events, want_star_power_events, minimal_timestamp_getter
         ):
-            instrument_track = InstrumentTrack.from_chart_lines(
+            got = InstrumentTrack.from_chart_lines(
                 pytest.defaults.instrument,
                 pytest.defaults.difficulty,
                 lambda: iter(lines),
                 minimal_timestamp_getter,
                 pytest.defaults.resolution,
             )
-            assert instrument_track.instrument == pytest.defaults.instrument
-            assert instrument_track.difficulty == pytest.defaults.difficulty
-            assert instrument_track.note_events == want_note_events
-            assert instrument_track.star_power_events == want_star_power_events
+            assert got.instrument == pytest.defaults.instrument
+            assert got.difficulty == pytest.defaults.difficulty
+            assert got.note_events == want_note_events
+            assert got.star_power_events == want_star_power_events
 
     class TestPopulateStarPowerData(object):
         @pytest.mark.parametrize(
@@ -346,7 +346,8 @@ class TestNoteEvent(object):
             ],
         )
         def test_basic(self, sustain, want):
-            assert NoteEvent._refine_sustain(sustain) == want
+            got = NoteEvent._refine_sustain(sustain)
+            assert got == want
 
     class TestComputeHOPOState(object):
         @pytest.mark.parametrize(
@@ -487,8 +488,8 @@ class TestNoteEvent(object):
             ],
         )
         def test_basic(self, current, previous, want):
-            state = NoteEvent._compute_hopo_state(pytest.defaults.resolution, current, previous)
-            assert state == want
+            got = NoteEvent._compute_hopo_state(pytest.defaults.resolution, current, previous)
+            assert got == want
 
     class TestLongestSustain(object):
         @pytest.mark.parametrize(
@@ -500,7 +501,8 @@ class TestNoteEvent(object):
         )
         def test_basic(self, bare_note_event, sustain, want):
             bare_note_event.sustain = sustain
-            assert bare_note_event.longest_sustain == want
+            got = bare_note_event.longest_sustain
+            assert got == want
 
         def test_raises(self, bare_note_event):
             bare_note_event.sustain = [None, None, None, None, None]

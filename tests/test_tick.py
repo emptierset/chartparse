@@ -17,13 +17,11 @@ class TestCalculateTicksBetweenNotes(object):
         ],
     )
     def test_basic(self, resolution, note_duration, want):
-        assert chartparse.tick.calculate_ticks_between_notes(resolution, note_duration) == want
+        got = chartparse.tick.calculate_ticks_between_notes(resolution, note_duration)
+        assert got == want
 
 
 # TODO: Add "id" (and pytest.param where still missing) everywhere.
-# TODO: Refactor all asserts to assign to a local variable `got` first. It makes output prettier.
-# TODO: Refactor tests that do not need class enclosures to not use classes. Particularly, this is
-# the classes that just contain a single test_basic and possibly a test_error.
 class TestSecondsFromTicksAtBPM(object):
     @pytest.mark.parametrize(
         "ticks,bpm,resolution,want",

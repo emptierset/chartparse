@@ -171,9 +171,9 @@ class TestSyncTrack(object):
 class TestTimeSignatureEvent(object):
     class TestInit(object):
         def test_basic(self):
-            event = TimeSignatureEventWithDefaults()
-            assert event.upper_numeral == pytest.defaults.upper_time_signature_numeral
-            assert event.lower_numeral == pytest.defaults.lower_time_signature_numeral
+            got = TimeSignatureEventWithDefaults()
+            assert got.upper_numeral == pytest.defaults.upper_time_signature_numeral
+            assert got.lower_numeral == pytest.defaults.lower_time_signature_numeral
 
     class TestFromChartLine(object):
         def test_shortform(self, mocker, minimal_timestamp_getter):
@@ -181,7 +181,7 @@ class TestTimeSignatureEvent(object):
             line = generate_time_signature_line(
                 pytest.defaults.tick, pytest.defaults.upper_time_signature_numeral
             )
-            event = TimeSignatureEvent.from_chart_line(
+            got = TimeSignatureEvent.from_chart_line(
                 line,
                 None,
                 minimal_timestamp_getter,
@@ -190,8 +190,8 @@ class TestTimeSignatureEvent(object):
             spy_calculate_timestamp.assert_called_once_with(
                 pytest.defaults.tick, None, minimal_timestamp_getter, pytest.defaults.resolution
             )
-            assert event.upper_numeral == pytest.defaults.upper_time_signature_numeral
-            assert event.lower_numeral == TimeSignatureEvent._default_lower_numeral
+            assert got.upper_numeral == pytest.defaults.upper_time_signature_numeral
+            assert got.lower_numeral == TimeSignatureEvent._default_lower_numeral
 
         def test_longform(self, mocker, minimal_timestamp_getter):
             spy_calculate_timestamp = mocker.spy(TimeSignatureEvent, "calculate_timestamp")
@@ -200,7 +200,7 @@ class TestTimeSignatureEvent(object):
                 pytest.defaults.upper_time_signature_numeral,
                 pytest.defaults.lower_time_signature_numeral,
             )
-            event = TimeSignatureEvent.from_chart_line(
+            got = TimeSignatureEvent.from_chart_line(
                 line,
                 None,
                 minimal_timestamp_getter,
@@ -209,8 +209,8 @@ class TestTimeSignatureEvent(object):
             spy_calculate_timestamp.assert_called_once_with(
                 pytest.defaults.tick, None, minimal_timestamp_getter, pytest.defaults.resolution
             )
-            assert event.upper_numeral == pytest.defaults.upper_time_signature_numeral
-            assert event.lower_numeral == pytest.defaults.lower_time_signature_numeral
+            assert got.upper_numeral == pytest.defaults.upper_time_signature_numeral
+            assert got.lower_numeral == pytest.defaults.lower_time_signature_numeral
 
         def test_no_match(self, invalid_chart_line, minimal_timestamp_getter):
             with pytest.raises(RegexNotMatchError):
@@ -269,10 +269,10 @@ class TestBPMEvent(object):
             current_line = generate_bpm_line(current_event_tick, pytest.defaults.bpm)
             spy_calculate_timestamp = mocker.spy(BPMEvent, "calculate_timestamp")
             with expectation:
-                current_event = BPMEvent.from_chart_line(
+                got = BPMEvent.from_chart_line(
                     current_line, prev_event, pytest.defaults.resolution
                 )
-                assert current_event.bpm == pytest.defaults.bpm
+                assert got.bpm == pytest.defaults.bpm
             # Use ANY to match the function defined within ``from_chart_line``.
             spy_calculate_timestamp.assert_called_once_with(
                 current_event_tick,

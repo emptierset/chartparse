@@ -35,17 +35,17 @@ class TestChart(object):
             mock_populate_last_note_timestamp = mocker.patch.object(
                 Chart, "_populate_last_note_timestamp"
             )
-            c = Chart(
+            got = Chart(
                 default_metadata,
                 default_global_events_track,
                 default_sync_track,
                 default_instrument_tracks,
             )
 
-            assert c.metadata == default_metadata
-            assert c.global_events_track == default_global_events_track
-            assert c.sync_track == default_sync_track
-            assert c.instrument_tracks == default_instrument_tracks
+            assert got.metadata == default_metadata
+            assert got.global_events_track == default_global_events_track
+            assert got.sync_track == default_sync_track
+            assert got.instrument_tracks == default_instrument_tracks
 
             mock_populate_event_hopo_states.assert_called_once_with(
                 default_instrument_track.note_events
@@ -82,8 +82,11 @@ class TestChart(object):
                 InstrumentTrack, "from_chart_lines", return_value=default_instrument_track
             )
             with open(_valid_chart_filepath, "r", encoding="utf-8-sig") as f:
-                assert Chart.from_file(f) == default_chart
-            assert Chart.from_filepath(_valid_chart_filepath) == default_chart
+                got_from_file = Chart.from_file(f)
+            got_from_filepath = Chart.from_filepath(_valid_chart_filepath)
+
+            assert got_from_file == default_chart
+            assert got_from_filepath == default_chart
 
         @pytest.mark.parametrize(
             "path",
@@ -214,7 +217,7 @@ class TestChart(object):
         def test_empty(self, minimal_chart):
             note_events = []
             minimal_chart._populate_note_event_hopo_states(note_events)
-            assert not note_events
+            assert len(note_events) == 0
 
     class TestPopulateLastNoteTimestamp(object):
         @pytest.mark.parametrize(
@@ -315,12 +318,10 @@ class TestChart(object):
             ],
         )
         def test_from_note_events(self, bare_chart, lower_bound, upper_bound, want):
-            assert (
-                bare_chart._notes_per_second(
-                    self.test_notes_per_second_note_events, lower_bound, upper_bound
-                )
-                == want
+            got = bare_chart._notes_per_second(
+                self.test_notes_per_second_note_events, lower_bound, upper_bound
             )
+            assert got == want
 
         @pytest.mark.parametrize(
             "start_tick,end_tick,want_lower_bound,want_upper_bound",

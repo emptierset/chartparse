@@ -70,8 +70,8 @@ class TestGlobalEventsTrack(object):
 class TestGlobalEvent(object):
     class TestInit(object):
         def test_basic(self):
-            event = GlobalEventWithDefaults()
-            assert event.value == pytest.defaults.global_event_value
+            got = GlobalEventWithDefaults()
+            assert got.value == pytest.defaults.global_event_value
 
     class TestFromChartLine(object):
         test_regex = r"^T (\d+?) V (.*?)$"
@@ -87,7 +87,7 @@ class TestGlobalEvent(object):
         def test_basic(self, mocker, minimal_timestamp_getter):
             line = f"T {pytest.defaults.tick} V {pytest.defaults.global_event_value}"
             spy_calculate_timestamp = mocker.spy(GlobalEvent, "calculate_timestamp")
-            e = GlobalEvent.from_chart_line(
+            got = GlobalEvent.from_chart_line(
                 line,
                 None,
                 minimal_timestamp_getter,
@@ -96,7 +96,7 @@ class TestGlobalEvent(object):
             spy_calculate_timestamp.assert_called_once_with(
                 pytest.defaults.tick, None, minimal_timestamp_getter, pytest.defaults.resolution
             )
-            assert e.value == pytest.defaults.global_event_value
+            assert got.value == pytest.defaults.global_event_value
 
         def test_no_match(self, invalid_chart_line, minimal_timestamp_getter):
             with pytest.raises(RegexNotMatchError):
