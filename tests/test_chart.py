@@ -22,11 +22,11 @@ class TestChart(object):
         def test_basic(
             self,
             mocker,
-            basic_metadata,
-            basic_global_events_track,
-            basic_sync_track,
-            basic_instrument_track,
-            basic_instrument_tracks,
+            default_metadata,
+            default_global_events_track,
+            default_sync_track,
+            default_instrument_track,
+            default_instrument_tracks,
         ):
             mock_populate_event_hopo_states = mocker.patch.object(
                 Chart, "_populate_note_event_hopo_states"
@@ -35,32 +35,32 @@ class TestChart(object):
                 Chart, "_populate_last_note_timestamp"
             )
             c = Chart(
-                basic_metadata,
-                basic_global_events_track,
-                basic_sync_track,
-                basic_instrument_tracks,
+                default_metadata,
+                default_global_events_track,
+                default_sync_track,
+                default_instrument_tracks,
             )
 
-            assert c.metadata == basic_metadata
-            assert c.global_events_track == basic_global_events_track
-            assert c.sync_track == basic_sync_track
-            assert c.instrument_tracks == basic_instrument_tracks
+            assert c.metadata == default_metadata
+            assert c.global_events_track == default_global_events_track
+            assert c.sync_track == default_sync_track
+            assert c.instrument_tracks == default_instrument_tracks
 
             mock_populate_event_hopo_states.assert_called_once_with(
-                basic_instrument_track.note_events
+                default_instrument_track.note_events
             )
-            mock_populate_last_note_timestamp.assert_called_once_with(basic_instrument_track)
+            mock_populate_last_note_timestamp.assert_called_once_with(default_instrument_track)
 
     class TestFromFileAndFilepath(object):
         def test_basic(
             self,
             mocker,
             minimal_string_iterator_getter,
-            basic_chart,
-            basic_metadata,
-            basic_global_events_track,
-            basic_sync_track,
-            basic_instrument_track,
+            default_chart,
+            default_metadata,
+            default_global_events_track,
+            default_sync_track,
+            default_instrument_track,
         ):
             mocker.patch.object(
                 Chart,
@@ -72,17 +72,17 @@ class TestChart(object):
                     "ExpertSingle": minimal_string_iterator_getter,
                 },
             )
-            mocker.patch.object(Metadata, "from_chart_lines", return_value=basic_metadata)
+            mocker.patch.object(Metadata, "from_chart_lines", return_value=default_metadata)
             mocker.patch.object(
-                GlobalEventsTrack, "from_chart_lines", return_value=basic_global_events_track
+                GlobalEventsTrack, "from_chart_lines", return_value=default_global_events_track
             )
-            mocker.patch.object(SyncTrack, "from_chart_lines", return_value=basic_sync_track)
+            mocker.patch.object(SyncTrack, "from_chart_lines", return_value=default_sync_track)
             mocker.patch.object(
-                InstrumentTrack, "from_chart_lines", return_value=basic_instrument_track
+                InstrumentTrack, "from_chart_lines", return_value=default_instrument_track
             )
             with open(_valid_chart_filepath, "r", encoding="utf-8-sig") as f:
-                assert Chart.from_file(f) == basic_chart
-            assert Chart.from_filepath(_valid_chart_filepath) == basic_chart
+                assert Chart.from_file(f) == default_chart
+            assert Chart.from_filepath(_valid_chart_filepath) == default_chart
 
         @pytest.mark.parametrize(
             "path",
@@ -474,9 +474,9 @@ class TestChart(object):
                 pytest.param(Instrument.BASS, Difficulty.MEDIUM),
             ],
         )
-        def test_missing_instrument_difficulty(self, basic_chart, instrument, difficulty):
+        def test_missing_instrument_difficulty(self, default_chart, instrument, difficulty):
             with pytest.raises(ValueError):
-                _ = basic_chart.notes_per_second(
+                _ = default_chart.notes_per_second(
                     instrument,
                     difficulty,
                     start_tick=0,

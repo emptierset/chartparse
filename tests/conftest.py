@@ -399,7 +399,7 @@ def minimal_metadata():
 
 
 @pytest.fixture
-def basic_metadata():
+def default_metadata():
     return Metadata(
         _default_resolution,
         _default_offset,
@@ -442,7 +442,7 @@ def minimal_global_events_track(bare_global_events_track):
 
 
 @pytest.fixture
-def basic_global_events_track():
+def default_global_events_track():
     return GlobalEventsTrack(
         _default_text_events_list, _default_section_events_list, _default_lyric_events_list
     )
@@ -461,7 +461,7 @@ def minimal_sync_track(bare_sync_track):
 
 
 @pytest.fixture
-def basic_sync_track():
+def default_sync_track():
     return SyncTrack(_default_time_signature_event_list, _default_bpm_event_list)
 
 
@@ -481,7 +481,7 @@ def minimal_instrument_track(bare_instrument_track):
 
 
 @pytest.fixture
-def basic_instrument_track():
+def default_instrument_track():
     return InstrumentTrack(
         _default_instrument,
         _default_difficulty,
@@ -491,8 +491,8 @@ def basic_instrument_track():
 
 
 @pytest.fixture
-def basic_instrument_tracks(basic_instrument_track):
-    return {_default_instrument: {_default_difficulty: basic_instrument_track}}
+def default_instrument_tracks(default_instrument_track):
+    return {_default_instrument: {_default_difficulty: default_instrument_track}}
 
 
 @pytest.fixture
@@ -520,15 +520,18 @@ def minimal_chart(
 
 
 @pytest.fixture
-def basic_chart(
-    basic_metadata,
-    basic_global_events_track,
-    basic_sync_track,
-    basic_instrument_track,
+def default_chart(
+    default_metadata,
+    default_global_events_track,
+    default_sync_track,
+    default_instrument_track,
 ):
-    basic_instrument_tracks_dict = {
-        _default_instrument: {_default_difficulty: basic_instrument_track}
+    default_instrument_tracks_dict = {
+        _default_instrument: {_default_difficulty: default_instrument_track}
     }
     return Chart(
-        basic_metadata, basic_global_events_track, basic_sync_track, basic_instrument_tracks_dict
+        default_metadata,
+        default_global_events_track,
+        default_sync_track,
+        default_instrument_tracks_dict,
     )

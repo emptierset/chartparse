@@ -5,31 +5,31 @@ from chartparse.metadata import Metadata
 
 
 class TestInit(object):
-    def test_basic(self, basic_metadata):
-        assert basic_metadata.name == pytest.defaults.name
-        assert basic_metadata.artist == pytest.defaults.artist
-        assert basic_metadata.charter == pytest.defaults.charter
-        assert basic_metadata.album == pytest.defaults.album
-        assert basic_metadata.year == pytest.defaults.year
-        assert basic_metadata.offset == pytest.defaults.offset
-        assert basic_metadata.resolution == pytest.defaults.resolution
-        assert basic_metadata.player2 == pytest.defaults.player2
-        assert basic_metadata.difficulty == pytest.defaults.intensity
-        assert basic_metadata.preview_start == pytest.defaults.preview_start
-        assert basic_metadata.preview_end == pytest.defaults.preview_end
-        assert basic_metadata.genre == pytest.defaults.genre
-        assert basic_metadata.media_type == pytest.defaults.media_type
-        assert basic_metadata.music_stream == pytest.defaults.music_stream
-        assert basic_metadata.guitar_stream == pytest.defaults.guitar_stream
-        assert basic_metadata.rhythm_stream == pytest.defaults.rhythm_stream
-        assert basic_metadata.bass_stream == pytest.defaults.bass_stream
-        assert basic_metadata.drum_stream == pytest.defaults.drum_stream
-        assert basic_metadata.drum2_stream == pytest.defaults.drum2_stream
-        assert basic_metadata.drum3_stream == pytest.defaults.drum3_stream
-        assert basic_metadata.drum4_stream == pytest.defaults.drum4_stream
-        assert basic_metadata.vocal_stream == pytest.defaults.vocal_stream
-        assert basic_metadata.keys_stream == pytest.defaults.keys_stream
-        assert basic_metadata.crowd_stream == pytest.defaults.crowd_stream
+    def test_basic(self, default_metadata):
+        assert default_metadata.name == pytest.defaults.name
+        assert default_metadata.artist == pytest.defaults.artist
+        assert default_metadata.charter == pytest.defaults.charter
+        assert default_metadata.album == pytest.defaults.album
+        assert default_metadata.year == pytest.defaults.year
+        assert default_metadata.offset == pytest.defaults.offset
+        assert default_metadata.resolution == pytest.defaults.resolution
+        assert default_metadata.player2 == pytest.defaults.player2
+        assert default_metadata.difficulty == pytest.defaults.intensity
+        assert default_metadata.preview_start == pytest.defaults.preview_start
+        assert default_metadata.preview_end == pytest.defaults.preview_end
+        assert default_metadata.genre == pytest.defaults.genre
+        assert default_metadata.media_type == pytest.defaults.media_type
+        assert default_metadata.music_stream == pytest.defaults.music_stream
+        assert default_metadata.guitar_stream == pytest.defaults.guitar_stream
+        assert default_metadata.rhythm_stream == pytest.defaults.rhythm_stream
+        assert default_metadata.bass_stream == pytest.defaults.bass_stream
+        assert default_metadata.drum_stream == pytest.defaults.drum_stream
+        assert default_metadata.drum2_stream == pytest.defaults.drum2_stream
+        assert default_metadata.drum3_stream == pytest.defaults.drum3_stream
+        assert default_metadata.drum4_stream == pytest.defaults.drum4_stream
+        assert default_metadata.vocal_stream == pytest.defaults.vocal_stream
+        assert default_metadata.keys_stream == pytest.defaults.keys_stream
+        assert default_metadata.crowd_stream == pytest.defaults.crowd_stream
 
 
 class TestFromChartLines(object):

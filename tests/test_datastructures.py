@@ -9,87 +9,87 @@ _default_tuple_list = [(1, 3), (2, 2), (3, 1)]
 
 
 @pytest.fixture
-def basic_sorted_list():
+def default_sorted_list():
     return _default_sorted_list
 
 
 @pytest.fixture
-def basic_list():
+def default_list():
     return _default_list
 
 
 @pytest.fixture
-def alternate_basic_list():
+def alternate_default_list():
     return _default_list
 
 
 @pytest.fixture
-def basic_tuple_list():
+def default_tuple_list():
     return _default_tuple_list
 
 
 @pytest.fixture
-def basic_immutable_list(basic_list):
-    return ImmutableList(basic_list)
+def default_immutable_list(default_list):
+    return ImmutableList(default_list)
 
 
 @pytest.fixture
-def alternate_basic_immutable_list(alternate_basic_list):
-    return ImmutableList(alternate_basic_list)
+def alternate_default_immutable_list(alternate_default_list):
+    return ImmutableList(alternate_default_list)
 
 
 @pytest.fixture
-def basic_immutable_sorted_list(basic_list):
-    return ImmutableSortedList(basic_list)
+def default_immutable_sorted_list(default_list):
+    return ImmutableSortedList(default_list)
 
 
 class TestImmutableList(object):
-    def test_init(self, basic_immutable_list, basic_list):
-        assert basic_immutable_list._seq == basic_list
+    def test_init(self, default_immutable_list, default_list):
+        assert default_immutable_list._seq == default_list
 
-        from_iterable = ImmutableList(iter(basic_list))
-        assert from_iterable == basic_list
+        from_iterable = ImmutableList(iter(default_list))
+        assert from_iterable == default_list
 
-    def test_getitem(self, basic_immutable_list, basic_list):
-        assert basic_immutable_list[0] == basic_list[0]
+    def test_getitem(self, default_immutable_list, default_list):
+        assert default_immutable_list[0] == default_list[0]
 
-    def test_iter_len(self, basic_immutable_list, basic_list):
-        assert len(basic_immutable_list) == len(basic_list)
-        for a, b in zip(basic_immutable_list, basic_list):
+    def test_iter_len(self, default_immutable_list, default_list):
+        assert len(default_immutable_list) == len(default_list)
+        for a, b in zip(default_immutable_list, default_list):
             assert a == b
 
-    def test_eq(self, basic_immutable_list, basic_list, alternate_basic_immutable_list):
+    def test_eq(self, default_immutable_list, default_list, alternate_default_immutable_list):
         # Mismatched types
-        assert basic_immutable_list == basic_list
-        assert basic_list == basic_immutable_list
+        assert default_immutable_list == default_list
+        assert default_list == default_immutable_list
 
         # Both immutable
-        assert basic_immutable_list == alternate_basic_immutable_list
-        assert alternate_basic_immutable_list == basic_immutable_list
+        assert default_immutable_list == alternate_default_immutable_list
+        assert alternate_default_immutable_list == default_immutable_list
 
-        assert basic_immutable_list != 1
-        assert 1 != basic_immutable_list
+        assert default_immutable_list != 1
+        assert 1 != default_immutable_list
 
-    def test_contains(self, basic_immutable_list, basic_list):
-        for x in basic_list:
-            assert x in basic_immutable_list
+    def test_contains(self, default_immutable_list, default_list):
+        for x in default_list:
+            assert x in default_immutable_list
 
-    def test_reversed(self, basic_immutable_list, basic_list):
-        assert list(reversed(basic_immutable_list)) == list(reversed(basic_list))
+    def test_reversed(self, default_immutable_list, default_list):
+        assert list(reversed(default_immutable_list)) == list(reversed(default_list))
 
 
 class TestImmutableSortedList(object):
     class TestInit(object):
-        def test_basic(self, basic_list):
-            assert ImmutableSortedList(basic_list) == sorted(basic_list)
+        def test_basic(self, default_list):
+            assert ImmutableSortedList(default_list) == sorted(default_list)
 
-        def test_with_key(self, basic_tuple_list):
+        def test_with_key(self, default_tuple_list):
             key = lambda x: x[1]
-            assert ImmutableSortedList(basic_tuple_list, key=key) == sorted(
-                basic_tuple_list, key=key
+            assert ImmutableSortedList(default_tuple_list, key=key) == sorted(
+                default_tuple_list, key=key
             )
 
-        def test_already_sorted(self, basic_sorted_list):
-            assert ImmutableSortedList(basic_sorted_list, already_sorted=True) == sorted(
-                basic_sorted_list
+        def test_already_sorted(self, default_sorted_list):
+            assert ImmutableSortedList(default_sorted_list, already_sorted=True) == sorted(
+                default_sorted_list
             )

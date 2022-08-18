@@ -15,10 +15,10 @@ from tests.helpers.constructors import GlobalEventWithDefaults
 
 
 class TestGlobalEventsTrack(object):
-    def test_init(self, basic_global_events_track):
-        assert basic_global_events_track.text_events == pytest.defaults.text_event_list
-        assert basic_global_events_track.section_events == pytest.defaults.section_event_list
-        assert basic_global_events_track.lyric_events == pytest.defaults.lyric_event_list
+    def test_init(self, default_global_events_track):
+        assert default_global_events_track.text_events == pytest.defaults.text_event_list
+        assert default_global_events_track.section_events == pytest.defaults.section_event_list
+        assert default_global_events_track.lyric_events == pytest.defaults.lyric_event_list
 
     def test_from_chart_lines(
         self, mocker, minimal_string_iterator_getter, minimal_timestamp_getter

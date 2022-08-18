@@ -23,7 +23,7 @@ from tests.helpers.constructors import StarPowerEventWithDefaults, NoteEventWith
 
 class TestInstrumentTrack(object):
     class TestInit(object):
-        def test_basic(self, mocker, basic_instrument_track):
+        def test_basic(self, mocker, default_instrument_track):
             mock_populate_star_power_data = mocker.patch.object(
                 InstrumentTrack, "_populate_star_power_data"
             )
@@ -33,13 +33,13 @@ class TestInstrumentTrack(object):
                 pytest.defaults.note_event_list,
                 pytest.defaults.star_power_event_list,
             )
-            assert basic_instrument_track.instrument == pytest.defaults.instrument
-            assert basic_instrument_track.difficulty == pytest.defaults.difficulty
-            assert basic_instrument_track.note_events == pytest.defaults.note_event_list
+            assert default_instrument_track.instrument == pytest.defaults.instrument
+            assert default_instrument_track.difficulty == pytest.defaults.difficulty
+            assert default_instrument_track.note_events == pytest.defaults.note_event_list
             assert (
-                basic_instrument_track.star_power_events == pytest.defaults.star_power_event_list
+                default_instrument_track.star_power_events == pytest.defaults.star_power_event_list
             )
-            assert basic_instrument_track.section_name == pytest.defaults.section_name
+            assert default_instrument_track.section_name == pytest.defaults.section_name
             mock_populate_star_power_data.assert_called_once()
 
     class TestFromChartLines(object):
