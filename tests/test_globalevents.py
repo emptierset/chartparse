@@ -11,6 +11,8 @@ from chartparse.globalevents import (
     LyricEvent,
 )
 
+from tests.helpers.constructors import GlobalEventWithDefaults
+
 
 class TestGlobalEventsTrack(object):
     def test_init(self, basic_global_events_track):
@@ -68,9 +70,7 @@ class TestGlobalEventsTrack(object):
 class TestGlobalEvent(object):
     class TestInit(object):
         def test_basic(self):
-            event = GlobalEvent(
-                pytest.default_tick, pytest.default_timestamp, pytest.default_global_event_value
-            )
+            event = GlobalEventWithDefaults()
             assert event.value == pytest.default_global_event_value
 
     class TestFromChartLine(object):
