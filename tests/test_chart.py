@@ -5,10 +5,11 @@ import pytest
 from chartparse.chart import Chart, _iterate_from_second_elem, _max_timedelta, _zero_timedelta
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.globalevents import GlobalEventsTrack
-from chartparse.instrument import NoteEvent, InstrumentTrack, Difficulty, Instrument, Note
+from chartparse.instrument import InstrumentTrack, Difficulty, Instrument, Note
 from chartparse.metadata import Metadata
 from chartparse.sync import SyncTrack
 
+from tests.helpers.constructors import NoteEventWithDefaults
 
 _directory_of_this_file = pathlib.Path(__file__).parent.resolve()
 _chart_directory_filepath = _directory_of_this_file / "data"
@@ -188,12 +189,11 @@ class TestChart(object):
 
     class TestPopulateNoteEventHOPOStates(object):
         def test_basic(self, mocker, minimal_chart):
-            note_event1 = NoteEvent(0, pytest.defaults.timestamp, Note.G)
-            note_event2 = NoteEvent(pytest.defaults.resolution, pytest.defaults.timestamp, Note.R)
-            note_event3 = NoteEvent(
-                pytest.defaults.resolution + pytest.defaults.resolution * 2,
-                pytest.defaults.timestamp,
-                Note.Y,
+            note_event1 = NoteEventWithDefaults(tick=0, note=Note.G)
+            note_event2 = NoteEventWithDefaults(tick=pytest.defaults.resolution, note=Note.R)
+            note_event3 = NoteEventWithDefaults(
+                tick=pytest.defaults.resolution + pytest.defaults.resolution * 2,
+                note=Note.Y,
             )
             note_events = [note_event1, note_event2, note_event3]
 
@@ -221,18 +221,18 @@ class TestChart(object):
             "note_events,want",
             [
                 pytest.param(
-                    [NoteEvent(1, pytest.defaults.timestamp, pytest.defaults.note)],
+                    [NoteEventWithDefaults(tick=1)],
                     (1, pytest.defaults.resolution),
                 ),
                 pytest.param(
                     [
-                        NoteEvent(1, pytest.defaults.timestamp, pytest.defaults.note),
-                        NoteEvent(2, pytest.defaults.timestamp, pytest.defaults.note),
+                        NoteEventWithDefaults(tick=1),
+                        NoteEventWithDefaults(tick=2),
                     ],
                     (2, pytest.defaults.resolution),
                 ),
                 pytest.param(
-                    [NoteEvent(1, pytest.defaults.timestamp, pytest.defaults.note, sustain=100)],
+                    [NoteEventWithDefaults(tick=1, sustain=100)],
                     (101, pytest.defaults.resolution),
                 ),
             ],
@@ -268,14 +268,20 @@ class TestChart(object):
             )
 
     class TestNotesPerSecond(object):
-        note_event1 = NoteEvent(
-            pytest.defaults.resolution, datetime.timedelta(seconds=1), Note.GRY
+        note_event1 = NoteEventWithDefaults(
+            tick=pytest.defaults.resolution,
+            timestamp=datetime.timedelta(seconds=1),
+            note=Note.GRY,
         )
-        note_event2 = NoteEvent(
-            pytest.defaults.resolution * 2, datetime.timedelta(seconds=2), Note.RYB
+        note_event2 = NoteEventWithDefaults(
+            tick=pytest.defaults.resolution * 2,
+            timestamp=datetime.timedelta(seconds=2),
+            note=Note.RYB,
         )
-        note_event3 = NoteEvent(
-            pytest.defaults.resolution * 3, datetime.timedelta(seconds=3), Note.YBO
+        note_event3 = NoteEventWithDefaults(
+            tick=pytest.defaults.resolution * 3,
+            timestamp=datetime.timedelta(seconds=3),
+            note=Note.YBO,
         )
         test_notes_per_second_note_events = [note_event1, note_event2, note_event3]
 
