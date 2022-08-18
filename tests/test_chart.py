@@ -2,7 +2,7 @@ import datetime
 import pathlib
 import pytest
 
-from chartparse.chart import Chart, _iterate_from_second_elem, _max_timedelta, _zero_timedelta
+from chartparse.chart import Chart, _iterate_from_second_elem, _max_timedelta
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.globalevents import GlobalEventsTrack
 from chartparse.instrument import InstrumentTrack, Difficulty, Instrument, Note
@@ -329,7 +329,7 @@ class TestChart(object):
                 pytest.param(
                     None,
                     2,
-                    _zero_timedelta,
+                    datetime.timedelta(0),
                     datetime.timedelta(seconds=2),
                     id="all_start_args_none",
                 ),

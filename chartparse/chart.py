@@ -36,7 +36,6 @@ from chartparse.metadata import Metadata
 from chartparse.sync import SyncTrack
 from chartparse.util import DictPropertiesEqMixin, DictReprTruncatedSequencesMixin
 
-_zero_timedelta = datetime.timedelta(0)
 _max_timedelta = datetime.datetime.max - datetime.datetime.min
 
 
@@ -276,7 +275,7 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             lower_bound = (
                 self.sync_track.timestamp_at_tick(start_tick, self.metadata.resolution)[0]
                 if start_tick is not None
-                else _zero_timedelta
+                else datetime.timedelta(0)
             )
             upper_bound = (
                 self.sync_track.timestamp_at_tick(end_tick, self.metadata.resolution)[0]
@@ -284,13 +283,13 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
                 else track._last_note_timestamp
             )
         elif start_time is not None:
-            lower_bound = start_time if start_time is not None else _zero_timedelta
+            lower_bound = start_time if start_time is not None else datetime.timedelta(0)
             upper_bound = end_time if end_time is not None else track._last_note_timestamp
         elif start_seconds is not None:
             lower_bound = (
                 datetime.timedelta(seconds=start_seconds)
                 if start_seconds is not None
-                else _zero_timedelta
+                else datetime.timedelta(0)
             )
             upper_bound = (
                 datetime.timedelta(seconds=end_seconds)
