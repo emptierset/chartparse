@@ -19,7 +19,7 @@ class TestDictPropertiesEqMixin(object):
             self.y = y
 
     class TestEq(object):
-        def test_basic(self):
+        def test(self):
             foo1 = TestDictPropertiesEqMixin.Foo(1, 2)
             foo2 = TestDictPropertiesEqMixin.Foo(1, 2)
             foo3 = TestDictPropertiesEqMixin.Foo(1, 3)
@@ -50,7 +50,7 @@ class TestAllValuesGettableEnum(object):
         TOO = 2
 
     class TestAllValues(object):
-        def test_basic(self):
+        def test(self):
             assert TestAllValuesGettableEnum.TrinketEnum.all_values() == ImmutableList([1, 2])
 
         def test_does_not_get_aliases(self):

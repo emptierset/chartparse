@@ -4,7 +4,7 @@ import tests.helpers.lines
 
 
 class TestGenerateValidBPMLine(object):
-    def test_basic(self):
+    def test(self):
         got = tests.helpers.lines.generate_bpm(100, 120.000)
         assert got == "  100 = B 120000"
 
@@ -24,12 +24,12 @@ class TestGenerateValidTimeSignatureLine(object):
 
 
 class TestGenerateValidStarPowerLine(object):
-    def test_basic(self):
+    def test(self):
         got = tests.helpers.lines.generate_star_power(100, 1000)
         assert got == "  100 = S 2 1000"
 
 
 class TestGenerateValidNoteLine(object):
-    def test_basic(self):
+    def test(self):
         got = tests.helpers.lines.generate_note(100, 0, 1000)
         assert got == "  100 = N 0 1000"

@@ -6,7 +6,7 @@ from chartparse.event import Event
 
 class TestEvent(object):
     class TestInit(object):
-        def test_basic(self, tick_having_event):
+        def test(self, tick_having_event):
             assert tick_having_event.tick == pytest.defaults.tick
 
     class TestCalculateTimestamp(object):

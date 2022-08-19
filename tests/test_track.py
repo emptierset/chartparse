@@ -38,7 +38,7 @@ class TestParseEventsFromChartLines(object):
             ),
         ],
     )
-    def test_basic(
+    def test(
         self,
         mocker,
         invalid_chart_line,

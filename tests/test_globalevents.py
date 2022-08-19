@@ -16,7 +16,7 @@ from tests.helpers.constructors import GlobalEventWithDefaults
 
 class TestGlobalEventsTrack(object):
     class TestInit(object):
-        def test_basic(self, default_global_events_track):
+        def test(self, default_global_events_track):
             assert default_global_events_track.text_events == pytest.defaults.text_events
             assert default_global_events_track.section_events == pytest.defaults.section_events
             assert default_global_events_track.lyric_events == pytest.defaults.lyric_events
@@ -73,7 +73,7 @@ class TestGlobalEventsTrack(object):
 
 class TestGlobalEvent(object):
     class TestInit(object):
-        def test_basic(self):
+        def test(self):
             got = GlobalEventWithDefaults()
             assert got.value == pytest.defaults.global_event_value
 
@@ -88,7 +88,7 @@ class TestGlobalEvent(object):
             del GlobalEvent._regex
             del GlobalEvent._regex_prog
 
-        def test_basic(self, mocker, minimal_tatter):
+        def test(self, mocker, minimal_tatter):
             line = f"T {pytest.defaults.tick} V {pytest.defaults.global_event_value}"
             spy_calculate_timestamp = mocker.spy(GlobalEvent, "calculate_timestamp")
             got = GlobalEvent.from_chart_line(line, None, minimal_tatter)

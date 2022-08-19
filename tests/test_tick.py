@@ -16,7 +16,7 @@ class TestCalculateTicksBetweenNotes(object):
             pytest.param(192, NoteDuration.SIXTEENTH_TRIPLET, 32),
         ],
     )
-    def test_basic(self, resolution, note_duration, want):
+    def test(self, resolution, note_duration, want):
         got = chartparse.tick.calculate_ticks_between_notes(resolution, note_duration)
         assert got == want
 
@@ -33,7 +33,7 @@ class TestSecondsFromTicksAtBPM(object):
             pytest.param(100, 60, 200, 0.5),
         ],
     )
-    def test_basic(self, ticks, bpm, resolution, want):
+    def test(self, ticks, bpm, resolution, want):
         got = chartparse.tick.seconds_from_ticks_at_bpm(ticks, bpm, resolution)
         assert got == want
 

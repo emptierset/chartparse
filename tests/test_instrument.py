@@ -23,7 +23,7 @@ from tests.helpers.constructors import StarPowerEventWithDefaults, NoteEventWith
 
 class TestInstrumentTrack(object):
     class TestInit(object):
-        def test_basic(self, mocker, default_instrument_track):
+        def test(self, mocker, default_instrument_track):
             mock_populate_star_power_data = mocker.patch.object(
                 InstrumentTrack, "_populate_star_power_data"
             )
@@ -61,7 +61,7 @@ class TestInstrumentTrack(object):
                 )
 
     class TestFromChartLines(object):
-        def test_basic(self, mocker, minimal_string_iterator_getter, minimal_tatter):
+        def test(self, mocker, minimal_string_iterator_getter, minimal_tatter):
             mock_parse_note_events = mocker.patch.object(
                 InstrumentTrack,
                 "_parse_note_events_from_chart_lines",
@@ -284,7 +284,7 @@ class TestInstrumentTrack(object):
                 ),
             ],
         )
-        def test_basic(self, bare_instrument_track, note_events, star_power_events, want):
+        def test(self, bare_instrument_track, note_events, star_power_events, want):
             bare_instrument_track.note_events = note_events
             bare_instrument_track.star_power_events = star_power_events
             bare_instrument_track._populate_star_power_data()
@@ -294,7 +294,7 @@ class TestInstrumentTrack(object):
 
 class TestNoteEvent(object):
     class TestInit(object):
-        def test_basic(self, mocker):
+        def test(self, mocker):
             mock_validate_sustain = mocker.patch.object(NoteEvent, "_validate_sustain")
             mock_refine_sustain = mocker.patch.object(
                 NoteEvent, "_refine_sustain", return_value=pytest.defaults.sustain
@@ -359,7 +359,7 @@ class TestNoteEvent(object):
                 ),
             ],
         )
-        def test_basic(self, sustain, want):
+        def test(self, sustain, want):
             got = NoteEvent._refine_sustain(sustain)
             assert got == want
 
@@ -501,7 +501,7 @@ class TestNoteEvent(object):
                 ),
             ],
         )
-        def test_basic(self, current, previous, want):
+        def test(self, current, previous, want):
             got = NoteEvent._compute_hopo_state(pytest.defaults.resolution, current, previous)
             assert got == want
 
@@ -513,7 +513,7 @@ class TestNoteEvent(object):
                 pytest.param([50, 100, None, 200, None], 200),
             ],
         )
-        def test_basic(self, bare_note_event, sustain, want):
+        def test(self, bare_note_event, sustain, want):
             bare_note_event.sustain = sustain
             got = bare_note_event.longest_sustain
             assert got == want
@@ -526,7 +526,7 @@ class TestNoteEvent(object):
 
 class TestSpecialEvent(object):
     class TestInit(object):
-        def test_basic(self, default_star_power_event):
+        def test(self, default_star_power_event):
             assert default_star_power_event.sustain == pytest.defaults.sustain
 
     class TestFromChartLine(object):
@@ -540,7 +540,7 @@ class TestSpecialEvent(object):
             del SpecialEvent._regex
             del SpecialEvent._regex_prog
 
-        def test_basic(self, mocker, minimal_tatter):
+        def test(self, mocker, minimal_tatter):
             line = f"T {pytest.defaults.tick} V {pytest.defaults.sustain}"
             spy_calculate_timestamp = mocker.spy(SpecialEvent, "calculate_timestamp")
             got = SpecialEvent.from_chart_line(line, None, minimal_tatter)

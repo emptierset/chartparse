@@ -5,7 +5,7 @@ from chartparse.metadata import Metadata
 
 
 class TestInit(object):
-    def test_basic(self, default_metadata):
+    def test(self, default_metadata):
         assert default_metadata.name == pytest.defaults.name
         assert default_metadata.artist == pytest.defaults.artist
         assert default_metadata.charter == pytest.defaults.charter
@@ -33,7 +33,7 @@ class TestInit(object):
 
 
 class TestFromChartLines(object):
-    def test_basic(self):
+    def test(self):
         lines = [
             f'  Name = "{pytest.defaults.name}"',
             f'  Artist = "{pytest.defaults.artist}"',

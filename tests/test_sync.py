@@ -13,7 +13,7 @@ from tests.helpers.constructors import TimeSignatureEventWithDefaults, BPMEventW
 
 class TestSyncTrack(object):
     class TestInit(object):
-        def test_basic(self):
+        def test(self):
             got = SyncTrack(
                 pytest.defaults.resolution,
                 pytest.defaults.time_signature_events,
@@ -65,7 +65,7 @@ class TestSyncTrack(object):
                 )
 
     class TestFromChartLines(object):
-        def test_basic(self, mocker, minimal_string_iterator_getter):
+        def test(self, mocker, minimal_string_iterator_getter):
             mock_parse_events = mocker.patch(
                 "chartparse.track.parse_events_from_chart_lines",
                 side_effect=[
@@ -184,7 +184,7 @@ class TestSyncTrack(object):
                 ),
             ],
         )
-        def test_basic(self, bare_sync_track, tick, start_idx, bpm_events, want, expectation):
+        def test(self, bare_sync_track, tick, start_idx, bpm_events, want, expectation):
             with expectation:
                 got = bare_sync_track._idx_of_proximal_bpm_event(
                     bpm_events, tick, start_idx=start_idx
@@ -194,7 +194,7 @@ class TestSyncTrack(object):
 
 class TestTimeSignatureEvent(object):
     class TestInit(object):
-        def test_basic(self):
+        def test(self):
             got = TimeSignatureEventWithDefaults()
             assert got.upper_numeral == pytest.defaults.upper_time_signature_numeral
             assert got.lower_numeral == pytest.defaults.lower_time_signature_numeral
@@ -233,7 +233,7 @@ class TestTimeSignatureEvent(object):
 
 class TestBPMEvent(object):
     class TestInit(object):
-        def test_basic(self, default_bpm_event):
+        def test(self, default_bpm_event):
             assert default_bpm_event.bpm == pytest.defaults.bpm
 
         def test_more_than_three_decimal_places_error(self):
@@ -270,7 +270,7 @@ class TestBPMEvent(object):
                 ),
             ],
         )
-        def test_basic(self, mocker, prev_event_tick, current_event_tick, expectation):
+        def test(self, mocker, prev_event_tick, current_event_tick, expectation):
             prev_event = (
                 BPMEventWithDefaults(tick=prev_event_tick) if prev_event_tick is not None else None
             )

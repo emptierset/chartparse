@@ -20,7 +20,7 @@ _missing_sync_track_chart_filepath = _chart_directory_filepath / "missing_sync_t
 
 class TestChart(object):
     class TestInit(object):
-        def test_basic(
+        def test(
             self,
             mocker,
             default_metadata,
@@ -53,8 +53,7 @@ class TestChart(object):
             mock_populate_last_note_timestamp.assert_called_once_with(default_instrument_track)
 
     class TestFromFileAndFilepath(object):
-        # TODO: Rename all test_basic to test.
-        def test_basic(
+        def test(
             self,
             mocker,
             minimal_string_iterator_getter,
@@ -101,7 +100,7 @@ class TestChart(object):
                 _ = Chart.from_file(f)
 
     class TestFindSections(object):
-        def test_basic(self):
+        def test(self):
             # TODO: Reconstruct file contents from want_lines rather than having an actual file.
             with open(_valid_chart_filepath, "r", encoding="utf-8-sig") as f:
                 lines = f.read().splitlines()
@@ -192,7 +191,7 @@ class TestChart(object):
                 _ = Chart._find_sections(lines)
 
     class TestPopulateNoteEventHOPOStates(object):
-        def test_basic(self, mocker, minimal_chart):
+        def test(self, mocker, minimal_chart):
             note_event1 = NoteEventWithDefaults(tick=0, note=Note.G)
             note_event2 = NoteEventWithDefaults(tick=pytest.defaults.resolution, note=Note.R)
             note_event3 = NoteEventWithDefaults(
@@ -244,7 +243,7 @@ class TestChart(object):
                 ),
             ],
         )
-        def test_basic(self, mocker, minimal_chart, note_events, want_timestamp_at_tick_arg):
+        def test(self, mocker, minimal_chart, note_events, want_timestamp_at_tick_arg):
             mock_timestamp_at_tick = mocker.patch.object(
                 minimal_chart.sync_track, "timestamp_at_tick", return_value=(None, None)
             )
@@ -263,7 +262,7 @@ class TestChart(object):
             mock.assert_not_called()
 
     class TestSecondsFromTicksAtBPM(object):
-        def test_basic(self, mocker, minimal_chart):
+        def test(self, mocker, minimal_chart):
             mock = mocker.patch("chartparse.tick.seconds_from_ticks_at_bpm")
             _ = minimal_chart._seconds_from_ticks_at_bpm(pytest.defaults.tick, pytest.defaults.bpm)
             mock.assert_called_once_with(
@@ -484,7 +483,7 @@ class TestChart(object):
                 )
 
     class TestGetItem(object):
-        def test_basic(self, default_chart):
+        def test(self, default_chart):
             got = default_chart[pytest.defaults.instrument][pytest.defaults.difficulty]
             want = default_chart.instrument_tracks[pytest.defaults.instrument][
                 pytest.defaults.difficulty
@@ -493,7 +492,7 @@ class TestChart(object):
 
 
 class TestIterateFromSecondElem(object):
-    def test_basic(self):
+    def test(self):
         xs = [3, 4, 2, 5]
         for x1, x2 in zip(_iterate_from_second_elem(xs), xs[1:]):
             assert x1 == x2

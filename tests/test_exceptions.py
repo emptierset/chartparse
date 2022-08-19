@@ -4,7 +4,7 @@ from chartparse.exceptions import MissingRequiredField, RegexNotMatchError, Prog
 
 
 class TestRaise(object):
-    def test_basic(self):
+    def test(self):
         with pytest.raises(ValueError):
             raise_(ValueError)
 
@@ -13,7 +13,7 @@ class TestRaise(object):
 
 
 class TestMissingRequiredField(object):
-    def test_basic(self):
+    def test(self):
         got = MissingRequiredField("foo")
         assert got.field_name == "foo"
         assert got.message == "unable to find a chart line matching required field 'foo'"
@@ -37,6 +37,6 @@ class TestRegexNotMatchError(object):
 
 
 class TestProgrammerError(object):
-    def test_basic(self):
+    def test(self):
         got = ProgrammerError()
         assert got.message == ProgrammerError.message

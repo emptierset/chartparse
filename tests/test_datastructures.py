@@ -80,7 +80,7 @@ class TestImmutableList(object):
 
 class TestImmutableSortedList(object):
     class TestInit(object):
-        def test_basic(self, default_list):
+        def test(self, default_list):
             assert ImmutableSortedList(default_list) == sorted(default_list)
 
         def test_with_key(self, default_tuple_list):
