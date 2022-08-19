@@ -16,6 +16,9 @@ _chart_directory_filepath = _directory_of_this_file / "data"
 _valid_chart_filepath = _chart_directory_filepath / "test.chart"
 _missing_metadata_chart_filepath = _chart_directory_filepath / "missing_metadata.chart"
 _missing_sync_track_chart_filepath = _chart_directory_filepath / "missing_sync_track.chart"
+_missing_global_events_track_chart_filepath = (
+    _chart_directory_filepath / "missing_global_events_track.chart"
+)
 
 
 class TestChart(object):
@@ -93,6 +96,9 @@ class TestChart(object):
             [
                 pytest.param(_missing_metadata_chart_filepath, id="missing_metadata"),
                 pytest.param(_missing_sync_track_chart_filepath, id="missing_sync_track"),
+                pytest.param(
+                    _missing_global_events_track_chart_filepath, id="missing_global_events_track"
+                ),
             ],
         )
         def test_invalid_chart(self, path):

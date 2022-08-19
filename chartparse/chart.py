@@ -93,7 +93,11 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         with open(path, "r", encoding="utf-8-sig") as f:
             return Chart.from_file(f)
 
-    _required_sections: Final[list[str]] = [Metadata.section_name, SyncTrack.section_name]
+    _required_sections: Final[list[str]] = [
+        Metadata.section_name,
+        SyncTrack.section_name,
+        GlobalEventsTrack.section_name,
+    ]
 
     # TODO: Validate that all events are in strictly increasing or non-decreasing (depending on the
     # track) tick order.
@@ -120,6 +124,9 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         sync_track = SyncTrack.from_chart_lines(
             sections[SyncTrack.section_name], metadata.resolution
         )
+        global_events_track = GlobalEventsTrack.from_chart_lines(
+            sections[GlobalEventsTrack.section_name], sync_track
+        )
 
         instrument_track_name_to_instrument_difficulty_pair: dict[
             str, tuple[Instrument, Difficulty]
@@ -135,11 +142,7 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             Instrument, dict[Difficulty, InstrumentTrack]
         ] = collections.defaultdict(dict)
         for section_name, iterator_getter in sections.items():
-            if section_name == GlobalEventsTrack.section_name:
-                global_events_track = GlobalEventsTrack.from_chart_lines(
-                    iterator_getter, sync_track
-                )
-            elif section_name in instrument_track_name_to_instrument_difficulty_pair:
+            if section_name in instrument_track_name_to_instrument_difficulty_pair:
                 instrument, difficulty = instrument_track_name_to_instrument_difficulty_pair[
                     section_name
                 ]
