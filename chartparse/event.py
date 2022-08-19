@@ -73,7 +73,7 @@ class Event(DictPropertiesEqMixin, DictReprMixin):
         to_join = [f"{type(self).__name__}(t@{self.tick:07})"]
         as_str = (
             str(self.timestamp)
-            if self.timestamp.total_seconds() > 0
+            if not self.timestamp.total_seconds().is_integer()
             else f"{self.timestamp}.000000"
         )
         to_join.append(f": {as_str}")
