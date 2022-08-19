@@ -21,11 +21,12 @@ from __future__ import annotations
 import collections
 import datetime
 import itertools
+import logging
 import re
 import typing
 from collections.abc import Callable, Iterable, Iterator, Sequence
 from pathlib import Path
-from typing import Final, Optional, TextIO
+from typing import ClassVar, Final, Optional, TextIO
 
 import chartparse.tick
 from chartparse.exceptions import RegexNotMatchError
@@ -35,6 +36,9 @@ from chartparse.instrument import Difficulty, Instrument, InstrumentTrack, NoteE
 from chartparse.metadata import Metadata
 from chartparse.sync import SyncTrack
 from chartparse.util import DictPropertiesEqMixin, DictReprTruncatedSequencesMixin
+
+logging.basicConfig()
+logger = logging.getLogger(__name__)
 
 _max_timedelta = datetime.datetime.max - datetime.datetime.min
 
@@ -59,6 +63,8 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
     instrument_tracks: Final[dict[Instrument, dict[Difficulty, InstrumentTrack]]]
     """Contains all of the chart's :class:`~chartparse.instrument.InstrumentTrack` objects."""
+
+    _unhandled_section_log_msg_tmpl: ClassVar[str] = "unhandled section titled '{}'"
 
     def __init__(
         self,
@@ -153,7 +159,8 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
                     sync_track,
                 )
                 instrument_tracks[instrument][difficulty] = track
-            # TODO: [Logging] Log unhandled sections that also aren't in cls._required_sections.
+            elif section_name not in cls._required_sections:
+                logger.warning(cls._unhandled_section_log_msg_tmpl.format(section_name))
 
         return cls(metadata, global_events_track, sync_track, instrument_tracks)
 

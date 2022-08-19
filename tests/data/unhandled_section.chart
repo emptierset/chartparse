@@ -1,0 +1,58 @@
+﻿[Foo]
+{
+}
+[Song]
+{
+  Name = "Song Name"
+  Artist = "Artist Name"
+  Charter = "Charter Name"
+  Album = "Album Name"
+  Year = "1999"
+  Offset = 0
+  Resolution = 100
+  Player2 = bass
+  Difficulty = 6
+  PreviewStart = 0
+  PreviewEnd = 0
+  Genre = "rock"
+  MediaType = "cd"
+  MusicStream = "song.ogg"
+}
+[SyncTrack]
+{
+  0 = TS 4
+  0 = B 117000
+  800 = B 120000
+  1200 = B 90000
+  1200 = TS 6 3
+  1800 = B 100000
+}
+[Events]
+{
+  800 = E "section Section 1"
+  1000 = E "phrase_start"
+  1200 = E "lyric Lo-"
+  1230 = E "lyric rem"
+  1800 = E "lyric ip-"
+  1840 = E "lyric sum"
+}
+[ExpertSingle]
+{
+  800 = N 0 0
+  800 = N 2 0
+  825 = N 0 0
+  825 = N 5 0
+  900 = N 0 0
+  1000 = N 0 0
+  1000 = N 2 0
+  1000 = S 2 100
+  1100 = N 0 0
+  1100 = N 5 0
+  1150 = N 0 0
+  1200 = N 0 0
+  1200 = S 2 200
+  1225 = N 0 0
+  1300 = N 0 0
+  1300 = N 3 0
+  2000 = N 0 0
+}

@@ -10,6 +10,7 @@ from chartparse.metadata import Metadata
 from chartparse.sync import SyncTrack
 
 from tests.helpers.constructors import NoteEventWithDefaults
+from tests.helpers.log import LogChecker
 
 _directory_of_this_file = pathlib.Path(__file__).parent.resolve()
 _chart_directory_filepath = _directory_of_this_file / "data"
@@ -19,6 +20,7 @@ _missing_sync_track_chart_filepath = _chart_directory_filepath / "missing_sync_t
 _missing_global_events_track_chart_filepath = (
     _chart_directory_filepath / "missing_global_events_track.chart"
 )
+_unhandled_section_chart_filepath = _chart_directory_filepath / "unhandled_section.chart"
 
 
 class TestChart(object):
@@ -104,6 +106,14 @@ class TestChart(object):
         def test_invalid_chart(self, path):
             with open(path, "r", encoding="utf-8-sig") as f, pytest.raises(ValueError):
                 _ = Chart.from_file(f)
+
+        def test_unhandled_section(self, caplog):
+            with open(_unhandled_section_chart_filepath, "r", encoding="utf-8-sig") as f:
+                _ = Chart.from_file(f)
+            logchecker = LogChecker(caplog)
+            logchecker.assert_contains_string_in_one_line(
+                Chart._unhandled_section_log_msg_tmpl.format("Foo")
+            )
 
     class TestFindSections(object):
         def test(self):
