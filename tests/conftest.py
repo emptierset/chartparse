@@ -56,11 +56,13 @@ _default_global_event_value = "default_global_event_value"
 _default_text_event_value = "default_text_event_value"
 _default_section_event_value = "default_section_event_value"
 _default_lyric_event_value = "default_lyric_event_value"
+_default_global_event = GlobalEvent(_default_tick, _default_timestamp, _default_global_event_value)
 _default_text_event = TextEvent(_default_tick, _default_text_event_value, _default_timestamp)
 _default_section_event = SectionEvent(
     _default_tick, _default_section_event_value, _default_timestamp
 )
 _default_lyric_event = LyricEvent(_default_tick, _default_lyric_event_value, _default_timestamp)
+_default_global_events = [_default_global_event]
 _default_text_events = [_default_text_event]
 _default_section_events = [_default_section_event]
 _default_lyric_events = [_default_lyric_event]
@@ -117,6 +119,7 @@ _default_crowd_stream = "crowd.ogg"
 _unmatchable_regex = r"(?!x)x"
 
 
+# TODO: Avoid this abstraction by just setting the defaults manually.
 def dataclass_list_field(xs):
     return dataclasses.field(default_factory=lambda: list(xs))
 
@@ -223,62 +226,6 @@ def minimal_string_iterator_getter(invalid_chart_line):
     return lambda: [invalid_chart_line]
 
 
-@pytest.fixture
-def default_event():
-    return Event(_default_tick, _default_timestamp)
-
-
-@pytest.fixture
-def bare_note_event():
-    return NoteEvent.__new__(NoteEvent)
-
-
-# TODO: Reorder fixtures sensibly.
-@pytest.fixture
-def bare_special_event():
-    return SpecialEvent.__new__(SpecialEvent)
-
-
-@pytest.fixture
-def default_time_signature_event():
-    return _default_time_signature_event
-
-
-@pytest.fixture
-def default_bpm_event():
-    return _default_bpm_event
-
-
-@pytest.fixture
-def bare_global_event():
-    return GlobalEvent.__new__(GlobalEvent)
-
-
-@pytest.fixture
-def default_text_event():
-    return _default_text_event
-
-
-@pytest.fixture
-def default_section_event():
-    return _default_section_event
-
-
-@pytest.fixture
-def default_lyric_event():
-    return _default_lyric_event
-
-
-@pytest.fixture
-def default_note_event():
-    return _default_note_event
-
-
-@pytest.fixture
-def default_star_power_event():
-    return _default_star_power_event
-
-
 @pytest.fixture(
     params=[
         # Base events
@@ -299,6 +246,236 @@ def tick_having_event(request):
     return request.getfixturevalue(request.param)
 
 
+# chart.py object fixtures
+
+
+@pytest.fixture
+def minimal_instrument_tracks(minimal_instrument_track):
+    return {_default_instrument: {_default_difficulty: minimal_instrument_track}}
+
+
+@pytest.fixture
+def default_instrument_tracks(default_instrument_track):
+    return {_default_instrument: {_default_difficulty: default_instrument_track}}
+
+
+@pytest.fixture
+def bare_chart():
+    return Chart.__new__(Chart)
+
+
+@pytest.fixture
+def minimal_chart(
+    bare_chart,
+    minimal_metadata,
+    minimal_instrument_tracks,
+    minimal_sync_track,
+    minimal_global_events_track,
+):
+    """Minimal initialization necessary to avoid attribute errors."""
+    bare_chart.metadata = minimal_metadata
+    bare_chart.sync_track = minimal_sync_track
+    bare_chart.global_events_track = minimal_global_events_track
+    bare_chart.instrument_tracks = minimal_instrument_tracks
+    return bare_chart
+
+
+@pytest.fixture
+def default_chart(
+    default_metadata,
+    default_global_events_track,
+    default_sync_track,
+    default_instrument_tracks,
+):
+    return Chart(
+        default_metadata,
+        default_global_events_track,
+        default_sync_track,
+        default_instrument_tracks,
+    )
+
+
+# event.py object fixtures
+
+
+@pytest.fixture
+def bare_event():
+    return Event.__new__(Event)
+
+
+@pytest.fixture
+def default_event():
+    return Event(_default_tick, _default_timestamp)
+
+
+# instrument.py object fixtures
+
+
+@pytest.fixture
+def bare_instrument_track():
+    return InstrumentTrack.__new__(InstrumentTrack)
+
+
+@pytest.fixture
+def minimal_instrument_track(bare_instrument_track):
+    """Minimal initialization necessary to avoid attribute errors."""
+    bare_instrument_track.instrument = _default_instrument
+    bare_instrument_track.difficulty = _default_difficulty
+    bare_instrument_track.section_name = "ExpertSingle"
+    bare_instrument_track.note_events = []
+    bare_instrument_track.star_power_events = []
+    return bare_instrument_track
+
+
+@pytest.fixture
+def default_instrument_track():
+    return InstrumentTrack(
+        _default_resolution,
+        _default_instrument,
+        _default_difficulty,
+        _default_note_events,
+        _default_star_power_events,
+    )
+
+
+@pytest.fixture
+def bare_note_event():
+    return NoteEvent.__new__(NoteEvent)
+
+
+@pytest.fixture
+def default_note_event():
+    return _default_note_event
+
+
+@pytest.fixture
+def bare_special_event():
+    return SpecialEvent.__new__(SpecialEvent)
+
+
+@pytest.fixture
+def default_special_event():
+    return SpecialEvent(_default_tick, _default_timestamp, _default_sustain)
+
+
+@pytest.fixture
+def bare_star_power_event():
+    return StarPowerEvent.__new__(StarPowerEvent)
+
+
+@pytest.fixture
+def default_star_power_event():
+    return _default_star_power_event
+
+
+# sync.py object fixtures
+
+
+@pytest.fixture
+def bare_sync_track():
+    return SyncTrack.__new__(SyncTrack)
+
+
+@pytest.fixture
+def minimal_sync_track(bare_sync_track):
+    """Minimal initialization necessary to avoid attribute errors."""
+    bare_sync_track.time_signature_events = []
+    bare_sync_track.bpm_events = []
+    return bare_sync_track
+
+
+@pytest.fixture
+def default_sync_track():
+    return SyncTrack(_default_resolution, _default_time_signature_events, _default_bpm_events)
+
+
+@pytest.fixture
+def bare_time_signature_event():
+    return TimeSignatureEvent.__new__(TimeSignatureEvent)
+
+
+@pytest.fixture
+def default_time_signature_event():
+    return _default_time_signature_event
+
+
+@pytest.fixture
+def bare_bpm_event():
+    return BPMEvent.__new__(BPMEvent)
+
+
+@pytest.fixture
+def default_bpm_event():
+    return _default_bpm_event
+
+
+# globalevents.py object fixtures
+
+
+@pytest.fixture
+def bare_global_events_track():
+    return GlobalEventsTrack.__new__(GlobalEventsTrack)
+
+
+@pytest.fixture
+def minimal_global_events_track(bare_global_events_track):
+    """Minimal initialization necessary to avoid attribute errors."""
+    bare_global_events_track.text_events = []
+    bare_global_events_track.section_events = []
+    bare_global_events_track.lyric_events = []
+    return bare_global_events_track
+
+
+@pytest.fixture
+def default_global_events_track():
+    return GlobalEventsTrack(
+        _default_resolution, _default_text_events, _default_section_events, _default_lyric_events
+    )
+
+
+@pytest.fixture
+def bare_global_event():
+    return GlobalEvent.__new__(GlobalEvent)
+
+
+@pytest.fixture
+def default_global_event():
+    return _default_global_event
+
+
+@pytest.fixture
+def bare_text_event():
+    return TextEvent.__new__(TextEvent)
+
+
+@pytest.fixture
+def default_text_event():
+    return _default_text_event
+
+
+@pytest.fixture
+def bare_section_event():
+    return SectionEvent.__new__(SectionEvent)
+
+
+@pytest.fixture
+def default_section_event():
+    return _default_section_event
+
+
+@pytest.fixture
+def bare_lyric_event():
+    return LyricEvent.__new__(LyricEvent)
+
+
+@pytest.fixture
+def default_lyric_event():
+    return _default_lyric_event
+
+
+# metadata.py object fixtures
+
+
 @pytest.fixture
 def bare_metadata():
     return Metadata.__new__(Metadata)
@@ -306,6 +483,7 @@ def bare_metadata():
 
 @pytest.fixture
 def minimal_metadata():
+    """Minimal initialization necessary to avoid attribute errors."""
     return Metadata(_default_resolution)
 
 
@@ -336,114 +514,4 @@ def default_metadata():
         _default_vocal_stream,
         _default_keys_stream,
         _default_crowd_stream,
-    )
-
-
-@pytest.fixture
-def bare_global_events_track():
-    return GlobalEventsTrack.__new__(GlobalEventsTrack)
-
-
-@pytest.fixture
-def minimal_global_events_track(bare_global_events_track):
-    bare_global_events_track.text_events = []
-    bare_global_events_track.section_events = []
-    bare_global_events_track.lyric_events = []
-    return bare_global_events_track
-
-
-@pytest.fixture
-def default_global_events_track():
-    return GlobalEventsTrack(
-        _default_resolution, _default_text_events, _default_section_events, _default_lyric_events
-    )
-
-
-@pytest.fixture
-def bare_sync_track():
-    return SyncTrack.__new__(SyncTrack)
-
-
-@pytest.fixture
-def minimal_sync_track(bare_sync_track):
-    bare_sync_track.time_signature_events = []
-    bare_sync_track.bpm_events = []
-    return bare_sync_track
-
-
-@pytest.fixture
-def default_sync_track():
-    return SyncTrack(_default_resolution, _default_time_signature_events, _default_bpm_events)
-
-
-@pytest.fixture
-def bare_instrument_track():
-    return InstrumentTrack.__new__(InstrumentTrack)
-
-
-@pytest.fixture
-def minimal_instrument_track(bare_instrument_track):
-    bare_instrument_track.instrument = _default_instrument
-    bare_instrument_track.difficulty = _default_difficulty
-    bare_instrument_track.section_name = "ExpertSingle"
-    bare_instrument_track.note_events = []
-    bare_instrument_track.star_power_events = []
-    return bare_instrument_track
-
-
-@pytest.fixture
-def default_instrument_track():
-    return InstrumentTrack(
-        _default_resolution,
-        _default_instrument,
-        _default_difficulty,
-        _default_note_events,
-        _default_star_power_events,
-    )
-
-
-@pytest.fixture
-def default_instrument_tracks(default_instrument_track):
-    return {_default_instrument: {_default_difficulty: default_instrument_track}}
-
-
-@pytest.fixture
-def bare_chart():
-    return Chart.__new__(Chart)
-
-
-@pytest.fixture
-def minimal_chart(
-    bare_chart,
-    minimal_metadata,
-    minimal_instrument_track,
-    minimal_sync_track,
-    minimal_global_events_track,
-):
-    bare_chart.metadata = minimal_metadata
-    bare_chart.sync_track = minimal_sync_track
-    bare_chart.global_events_track = minimal_global_events_track
-    bare_chart.instrument_tracks = {
-        _default_instrument: {
-            _default_difficulty: minimal_instrument_track,
-        }
-    }
-    return bare_chart
-
-
-@pytest.fixture
-def default_chart(
-    default_metadata,
-    default_global_events_track,
-    default_sync_track,
-    default_instrument_track,
-):
-    default_instrument_tracks_dict = {
-        _default_instrument: {_default_difficulty: default_instrument_track}
-    }
-    return Chart(
-        default_metadata,
-        default_global_events_track,
-        default_sync_track,
-        default_instrument_tracks_dict,
     )
