@@ -57,11 +57,11 @@ _default_text_event_value = "default_text_event_value"
 _default_section_event_value = "default_section_event_value"
 _default_lyric_event_value = "default_lyric_event_value"
 _default_global_event = GlobalEvent(_default_tick, _default_timestamp, _default_global_event_value)
-_default_text_event = TextEvent(_default_tick, _default_text_event_value, _default_timestamp)
+_default_text_event = TextEvent(_default_tick, _default_timestamp, _default_text_event_value)
 _default_section_event = SectionEvent(
-    _default_tick, _default_section_event_value, _default_timestamp
+    _default_tick, _default_timestamp, _default_section_event_value
 )
-_default_lyric_event = LyricEvent(_default_tick, _default_lyric_event_value, _default_timestamp)
+_default_lyric_event = LyricEvent(_default_tick, _default_timestamp, _default_lyric_event_value)
 _default_global_events = [_default_global_event]
 _default_text_events = [_default_text_event]
 _default_section_events = [_default_section_event]
