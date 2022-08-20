@@ -297,7 +297,7 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
                 tick_to_is_forced[tick] = True
             else:  # pragma: no cover
                 # TODO: [Logging] Log unhandled instrument track note index.
-                pass
+                continue
 
         events = []
         for tick in tick_to_note_array.keys():
@@ -424,7 +424,7 @@ class NoteEvent(Event):
     # Match 1: Tick
     # Match 2: Note index
     # Match 3: Sustain (ticks)
-    _regex: Final[str] = r"^\s*?(\d+?) = N ([0-7]) (\d+?)\s*?$"
+    _regex: Final[str] = r"^\s*?(\d+?) = N (\d+?) (\d+?)\s*?$"
     _regex_prog: Final[Pattern[str]] = re.compile(_regex)
 
     def __init__(

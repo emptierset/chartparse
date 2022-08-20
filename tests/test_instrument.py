@@ -233,6 +233,8 @@ class TestInstrumentTrack(object):
                 ),
             ],
         )
+        # TODO: This test currently tests parse_note_events_from_chart_lines by
+        # proxy. Make its own tests instead.
         def test_integration(
             self, mocker, lines, want_note_events, want_star_power_events, minimal_tatter
         ):
