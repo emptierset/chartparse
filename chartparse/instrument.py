@@ -13,12 +13,13 @@ from __future__ import annotations
 import collections
 import datetime
 import enum
+import logging
 import re
 import typing
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 from enum import Enum
-from typing import Final, List, Optional, Pattern, Type, TypeVar, Union
+from typing import ClassVar, Final, List, Optional, Pattern, Type, TypeVar, Union
 
 import chartparse.tick
 import chartparse.track
@@ -31,6 +32,8 @@ from chartparse.util import (
     DictPropertiesEqMixin,
     DictReprTruncatedSequencesMixin,
 )
+
+logger = logging.getLogger(__name__)
 
 InstrumentTrackT = TypeVar("InstrumentTrackT", bound="InstrumentTrack")
 
@@ -200,6 +203,8 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     _forced_instrument_track_index = 5
     _tap_instrument_track_index = 6
 
+    _unhandled_note_track_index_log_msg_tmpl: ClassVar[str] = "unhandled note track index {}"
+
     def __init__(
         self,
         resolution: int,
@@ -261,8 +266,9 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             f"len(star_power_events): {len(self.star_power_events)})"
         )
 
-    @staticmethod
+    @classmethod
     def _parse_note_events_from_chart_lines(
+        cls,
         chart_lines: Iterable[str],
         tatter: TimestampAtTickSupporter,
     ) -> ImmutableSortedList[NoteEvent]:
@@ -296,7 +302,9 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             elif note_index == InstrumentTrack._forced_instrument_track_index:
                 tick_to_is_forced[tick] = True
             else:  # pragma: no cover
-                # TODO: [Logging] Log unhandled instrument track note index.
+                # TODO: Once _parse_note_events_from_chart_lines has its own unit tests, cover this
+                # branch.
+                logger.warning(cls._unhandled_note_track_index_log_msg_tmpl.format(note_index))
                 continue
 
         events = []
