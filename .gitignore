@@ -2,6 +2,10 @@
 /data/
 /chartparse/playground.py
 
+# profiling
+/prof.py
+*.prof
+
 # Vim
 .*.sw?
 
