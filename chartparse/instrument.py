@@ -19,7 +19,7 @@ import typing
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 from enum import Enum
-from typing import ClassVar, Final, List, Optional, Pattern, Type, TypeVar, Union
+from typing import ClassVar, Final, Optional, Pattern, Type, TypeVar, Union
 
 import chartparse.tick
 import chartparse.track
@@ -318,7 +318,7 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
                 tick,
                 timestamp,
                 note,
-                sustain=tick_to_sustain_list[tick],
+                sustain=tuple(tick_to_sustain_list[tick]),
                 is_forced=tick_to_is_forced[tick],
                 is_tap=tick_to_is_tap[tick],
             )
@@ -365,15 +365,15 @@ class StarPowerData(DictPropertiesEqMixin):
     is_end_of_phrase: bool
 
 
-SustainListT = List[Optional[int]]
-"""A 5-element list representing the sustain value of each note lane for nonuniform sustains.
+SustainTupleT = tuple[Optional[int], ...]
+"""A 5-element tuple representing the sustain value of each note lane for nonuniform sustains.
 
 An element is ``None`` if and only if the corresponding note lane is inactive. If an element is
 ``0``, then there must be at least one other non-``0``, non-``None`` element; this is because that
 ``0`` element represents an unsustained note in unison with a sustained note.
 """
 
-ComplexNoteSustainT = Union[int, SustainListT]
+ComplexNoteSustainT = Union[int, SustainTupleT]
 """A sustain value that can capture multiple coinciding notes with different sustain values.
 
 If this value is an ``int``, it means that all active note lanes at this tick value are sustained
@@ -458,7 +458,7 @@ class NoteEvent(Event):
 
     @staticmethod
     def _refine_sustain(sustain: ComplexNoteSustainT) -> ComplexNoteSustainT:
-        if isinstance(sustain, list):
+        if isinstance(sustain, tuple):
             if all(d is None or d == 0 for d in sustain):
                 return 0
             first_non_none_sustain = next(d for d in sustain if d is not None)
@@ -528,7 +528,7 @@ class NoteEvent(Event):
     def longest_sustain(self) -> int:
         if isinstance(self.sustain, int):
             return self.sustain
-        elif isinstance(self.sustain, list):
+        elif isinstance(self.sustain, tuple):
             if all(s is None for s in self.sustain):
                 raise ValueError("all sustain values are `None`")
             return max(s for s in self.sustain if s is not None)

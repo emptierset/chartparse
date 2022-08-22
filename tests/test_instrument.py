@@ -177,7 +177,7 @@ class TestInstrumentTrack(object):
                         NoteEventWithDefaults(
                             tick=0,
                             note=Note.GR,
-                            sustain=[100, 0, None, None, None],
+                            sustain=(100, 0, None, None, None),
                         )
                     ],
                     [],
@@ -311,13 +311,13 @@ class TestNoteEvent(object):
         @pytest.mark.parametrize(
             "sustain, want",
             [
-                pytest.param([None, None, None, None, None], 0, id="all_none"),
-                pytest.param([0, 0, 0, 0, 0], 0, id="all_zero"),
-                pytest.param([0, 0, None, None, None], 0, id="all_none_or_zero"),
-                pytest.param([100, None, None, 100, None], 100, id="all_the_same"),
+                pytest.param((None, None, None, None, None), 0, id="all_none"),
+                pytest.param((0, 0, 0, 0, 0), 0, id="all_zero"),
+                pytest.param((0, 0, None, None, None), 0, id="all_none_or_zero"),
+                pytest.param((100, None, None, 100, None), 100, id="all_the_same"),
                 pytest.param(100, 100, id="int_pass_through"),
                 pytest.param(
-                    [100, 0, None, None, None], [100, 0, None, None, None], id="list_pass_through"
+                    (100, 0, None, None, None), (100, 0, None, None, None), id="list_pass_through"
                 ),
             ],
         )
@@ -472,7 +472,7 @@ class TestNoteEvent(object):
             "sustain,want",
             [
                 pytest.param(100, 100),
-                pytest.param([50, 100, None, 200, None], 200),
+                pytest.param((50, 100, None, 200, None), 200),
             ],
         )
         def test(self, bare_note_event, sustain, want):
@@ -481,7 +481,7 @@ class TestNoteEvent(object):
             assert got == want
 
         def test_raises(self, bare_note_event):
-            bare_note_event.sustain = [None, None, None, None, None]
+            bare_note_event.sustain = (None, None, None, None, None)
             with pytest.raises(ValueError):
                 _ = bare_note_event.longest_sustain
 
