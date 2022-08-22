@@ -10,7 +10,7 @@ def StarPowerEventWithDefaults(
     tick=pytest.defaults.tick,
     timestamp=pytest.defaults.timestamp,
     sustain=pytest.defaults.sustain,
-    proximal_bpm_event_idx=None,
+    proximal_bpm_event_idx=0,
 ):
     return StarPowerEvent(tick, timestamp, sustain, proximal_bpm_event_idx=proximal_bpm_event_idx)
 

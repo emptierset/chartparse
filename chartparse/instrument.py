@@ -311,10 +311,13 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
                 logger.warning(cls._unhandled_note_track_index_log_msg_tmpl.format(note_index))
                 continue
 
+        start_bpm_event_index = 0
         events = []
-        for tick in tick_to_note_array.keys():
+        for tick in sorted(tick_to_note_array.keys()):
             note = Note(tick_to_note_array[tick])
-            timestamp, _ = tatter.timestamp_at_tick(tick)
+            timestamp, start_bpm_event_index = tatter.timestamp_at_tick(
+                tick, start_bpm_event_index=start_bpm_event_index
+            )
             event = NoteEvent(
                 tick,
                 timestamp,
@@ -322,6 +325,7 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
                 sustain=tuple(tick_to_sustain_list[tick]),
                 is_forced=tick_to_is_forced[tick],
                 is_tap=tick_to_is_tap[tick],
+                proximal_bpm_event_idx=start_bpm_event_index,
             )
             events.append(event)
         return ImmutableSortedList(events, key=lambda e: e.tick)
@@ -449,8 +453,9 @@ class NoteEvent(Event):
         is_forced: bool = False,
         is_tap: bool = False,
         star_power_data: Optional[StarPowerData] = None,
+        proximal_bpm_event_idx: int = 0,
     ) -> None:
-        super().__init__(tick, timestamp)
+        super().__init__(tick, timestamp, proximal_bpm_event_idx=proximal_bpm_event_idx)
         self.note = note
         self.sustain = self._refine_sustain(sustain)
         self._is_forced = is_forced
@@ -566,9 +571,9 @@ class SpecialEvent(Event):
         tick: int,
         timestamp: datetime.timedelta,
         sustain: int,
-        proximal_bpm_event_idx: Optional[int] = None,
+        proximal_bpm_event_idx: int = 0,
     ) -> None:
-        super().__init__(tick, timestamp)
+        super().__init__(tick, timestamp, proximal_bpm_event_idx=proximal_bpm_event_idx)
         self.sustain = sustain
 
     @classmethod

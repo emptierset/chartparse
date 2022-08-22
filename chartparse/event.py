@@ -39,13 +39,13 @@ class Event(DictPropertiesEqMixin, DictReprMixin):
     timestamp: Final[datetime.timedelta]
     """The timestamp when this event occurs."""
 
-    _proximal_bpm_event_index: Optional[int]
+    _proximal_bpm_event_index: Final[int]
 
     def __init__(
         self,
         tick: int,
         timestamp: datetime.timedelta,
-        proximal_bpm_event_idx: Optional[int] = None,
+        proximal_bpm_event_idx: int = 0,
     ) -> None:
         self.tick = tick
         self.timestamp = timestamp

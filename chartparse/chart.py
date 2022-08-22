@@ -201,7 +201,9 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             return
         last_event = track.note_events[-1]
         last_tick = last_event.tick + last_event.longest_sustain
-        track._last_note_timestamp, _ = self.sync_track.timestamp_at_tick(last_tick)
+        track._last_note_timestamp, _ = self.sync_track.timestamp_at_tick(
+            last_tick, start_bpm_event_index=last_event._proximal_bpm_event_index
+        )
 
     def _populate_note_event_hopo_states(self, events: Sequence[NoteEvent]) -> None:
         if not events:

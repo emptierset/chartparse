@@ -11,6 +11,7 @@ You should not need to create any of this module's objects manually; please inst
 from __future__ import annotations
 
 import datetime
+import logging
 import re
 import typing
 from collections.abc import Callable, Iterable, Sequence
@@ -24,6 +25,8 @@ from chartparse.exceptions import RegexNotMatchError
 from chartparse.util import DictPropertiesEqMixin, DictReprTruncatedSequencesMixin
 
 SyncTrackT = TypeVar("SyncTrackT", bound="SyncTrack")
+
+logger = logging.getLogger(__name__)
 
 
 @typing.final
@@ -137,7 +140,7 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             ``start_bpm_event_index`` as an optimization.
         """
         return self._timestamp_at_tick(
-            self.bpm_events, tick, self.resolution, start_bpm_event_index
+            self.bpm_events, tick, self.resolution, start_bpm_event_index=start_bpm_event_index
         )
 
     @staticmethod
@@ -205,7 +208,7 @@ class TimeSignatureEvent(Event):
         timestamp: datetime.timedelta,
         upper_numeral: int,
         lower_numeral: int,
-        proximal_bpm_event_idx: Optional[int] = None,
+        proximal_bpm_event_idx: int = 0,
     ):
         """Initializes all instance attributes."""
 

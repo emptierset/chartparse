@@ -108,7 +108,10 @@ class TestSyncTrack(object):
 
             _ = bare_sync_track.timestamp_at_tick(pytest.defaults.tick, start_bpm_event_index=0)
             mock_impl.assert_called_once_with(
-                pytest.defaults.bpm_events, pytest.defaults.tick, pytest.defaults.resolution, 0
+                pytest.defaults.bpm_events,
+                pytest.defaults.tick,
+                pytest.defaults.resolution,
+                start_bpm_event_index=0,
             )
 
         event0 = BPMEvent.from_chart_line(generate_bpm_line(0, 60.000), None, 100)

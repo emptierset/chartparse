@@ -237,11 +237,12 @@ class TestChart(object):
 
     class TestPopulateLastNoteTimestamp(object):
         @pytest.mark.parametrize(
-            "note_events,want_timestamp_at_tick_arg",
+            "note_events,want_tick,want_start_bpm_event_idx",
             [
                 pytest.param(
                     [NoteEventWithDefaults(tick=1)],
                     1,
+                    0,
                     id="one_event",
                 ),
                 pytest.param(
@@ -250,16 +251,18 @@ class TestChart(object):
                         NoteEventWithDefaults(tick=2),
                     ],
                     2,
+                    0,
                     id="two_events",
                 ),
                 pytest.param(
                     [NoteEventWithDefaults(tick=1, sustain=100)],
                     101,
+                    0,
                     id="event_with_sustain",
                 ),
             ],
         )
-        def test(self, mocker, minimal_chart, note_events, want_timestamp_at_tick_arg):
+        def test(self, mocker, minimal_chart, note_events, want_tick, want_start_bpm_event_idx):
             mock_timestamp_at_tick = mocker.patch.object(
                 minimal_chart.sync_track, "timestamp_at_tick", return_value=(None, None)
             )
@@ -267,7 +270,9 @@ class TestChart(object):
             track = minimal_chart[pytest.defaults.instrument][pytest.defaults.difficulty]
             track.note_events = note_events
             minimal_chart._populate_last_note_timestamp(track)
-            mock_timestamp_at_tick.assert_called_once_with(want_timestamp_at_tick_arg)
+            mock_timestamp_at_tick.assert_called_once_with(
+                want_tick, start_bpm_event_index=want_start_bpm_event_idx
+            )
 
         def test_empty(self, mocker, minimal_chart):
             mock = mocker.patch.object(

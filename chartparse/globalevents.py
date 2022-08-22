@@ -11,6 +11,7 @@ You should not need to create any of this module's objects manually; please inst
 from __future__ import annotations
 
 import datetime
+import logging
 import re
 import typing
 from collections.abc import Callable, Iterable, Sequence
@@ -23,6 +24,8 @@ from chartparse.exceptions import RegexNotMatchError
 from chartparse.util import DictPropertiesEqMixin, DictReprTruncatedSequencesMixin
 
 GlobalEventsTrackT = TypeVar("GlobalEventsTrackT", bound="GlobalEventsTrack")
+
+logger = logging.getLogger(__name__)
 
 
 @typing.final
@@ -132,7 +135,7 @@ class GlobalEvent(Event):
         tick: int,
         timestamp: datetime.timedelta,
         value: str,
-        proximal_bpm_event_idx: Optional[int] = None,
+        proximal_bpm_event_idx: int = 0,
     ) -> None:
         super().__init__(tick, timestamp, proximal_bpm_event_idx=proximal_bpm_event_idx)
         self.value = value
@@ -157,7 +160,6 @@ class GlobalEvent(Event):
         Raises:
             RegexNotMatchError: If the mixed-into class' ``_regex`` does not match ``line``.
         """
-
         m = cls._regex_prog.match(line)
         if not m:
             raise RegexNotMatchError(cls._regex, line)
