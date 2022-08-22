@@ -526,7 +526,7 @@ class NoteEvent(Event):
 
         return "".join(to_join)
 
-    @property
+    @functools.cached_property
     def longest_sustain(self) -> int:
         if isinstance(self.sustain, int):
             return self.sustain
