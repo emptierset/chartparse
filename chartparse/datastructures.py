@@ -9,8 +9,9 @@ from __future__ import annotations
 
 import typing
 from collections.abc import Callable, Iterable, Iterator, Sequence
-from typing import Union
+from typing import Union, Literal
 
+from chartparse.exceptions import ProgrammerError
 from chartparse.hints import ComparableT, T
 
 
@@ -80,7 +81,15 @@ class ImmutableSortedList(ImmutableList[T]):
     """A ``list`` equivalent that cannot be mutated and is sorted during initialization."""
 
     @typing.overload
-    def __init__(self, xs: Iterable[ComparableT], *, already_sorted: bool = False) -> None:
+    def __init__(self, xs: Iterable[ComparableT]) -> None:
+        ...  # pragma: no cover
+
+    @typing.overload
+    def __init__(self, xs: Iterable[ComparableT], *, already_sorted: bool) -> None:
+        ...  # pragma: no cover
+
+    @typing.overload
+    def __init__(self, xs: Iterable[T], *, already_sorted: Literal[True]) -> None:
         ...  # pragma: no cover
 
     @typing.overload
@@ -88,11 +97,11 @@ class ImmutableSortedList(ImmutableList[T]):
         ...  # pragma: no cover
 
     def __init__(self, xs, *, key=None, already_sorted=False) -> None:
-        if already_sorted:
+        if already_sorted:  # covers sigs 2 and 3
             super().__init__(xs)
-        elif key is None:
+        elif key is None:  # covers sig 1
             super().__init__(sorted(xs))
-        elif key is not None:
+        elif key is not None:  # covers sig 4
             super().__init__(sorted(xs, key=key))
         else:  # pragma: no cover
-            raise TypeError
+            raise ProgrammerError

@@ -305,7 +305,7 @@ class BPMEvent(Event):
 
         Raises:
             RegexNotMatchError: If the mixed-into class' ``_regex`` does not match ``line``.
-            ValueError: If ``prev_event.tick`` is not leses than the tick value parsed from
+            ValueError: If ``prev_event.tick`` is not less than the tick value parsed from
                 ``line``.
         """
 
