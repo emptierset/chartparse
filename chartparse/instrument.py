@@ -449,40 +449,12 @@ class NoteEvent(Event):
         is_tap: bool = False,
         star_power_data: Optional[StarPowerData] = None,
     ) -> None:
-        self._validate_sustain(sustain, note)
         super().__init__(tick, timestamp)
         self.note = note
         self.sustain = self._refine_sustain(sustain)
         self._is_forced = is_forced
         self._is_tap = is_tap
         self.star_power_data = star_power_data
-
-    @staticmethod
-    def _validate_sustain(sustain: ComplexNoteSustainT, note: Note) -> None:
-        if isinstance(sustain, int):
-            NoteEvent._validate_int_sustain(sustain)
-        elif isinstance(sustain, list):
-            NoteEvent._validate_list_sustain(sustain, note)
-        else:
-            raise TypeError(f"sustain {sustain} must be type list, or int.")
-
-    @staticmethod
-    def _validate_int_sustain(sustain: int) -> None:
-        if sustain < 0:
-            raise ValueError(f"int sustain {sustain} must be positive.")
-
-    @staticmethod
-    def _validate_list_sustain(sustain: SustainListT, note: Note) -> None:
-        if len(sustain) != len(note.value):
-            raise ValueError(f"list sustain {sustain} must have length {len(note.value)}")
-        for note_lane_value, sustain_lane_value in zip(note.value, sustain):
-            lane_is_active = note_lane_value == 1
-            sustain_is_set = sustain_lane_value is not None
-            if lane_is_active != sustain_is_set:
-                raise ValueError(
-                    f"list sustain {sustain} must have "
-                    "values for exactly the active note lanes."
-                )
 
     @staticmethod
     def _refine_sustain(sustain: ComplexNoteSustainT) -> ComplexNoteSustainT:

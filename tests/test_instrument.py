@@ -297,55 +297,15 @@ class TestInstrumentTrack(object):
 class TestNoteEvent(object):
     class TestInit(object):
         def test(self, mocker):
-            mock_validate_sustain = mocker.patch.object(NoteEvent, "_validate_sustain")
             mock_refine_sustain = mocker.patch.object(
                 NoteEvent, "_refine_sustain", return_value=pytest.defaults.sustain
             )
             got = NoteEventWithDefaults(is_forced=True, is_tap=True)
-            mock_validate_sustain.assert_called_once_with(
-                pytest.defaults.sustain, pytest.defaults.note
-            )
             mock_refine_sustain.assert_called_once_with(pytest.defaults.sustain)
             assert got.note == pytest.defaults.note
             assert got.sustain == pytest.defaults.sustain
             assert got._is_forced is True
             assert got._is_tap is True
-
-    class TestValidateSustain(object):
-        def test_int(self, mocker):
-            sustain = 0
-            mock = mocker.patch.object(NoteEvent, "_validate_int_sustain")
-            NoteEvent._validate_sustain(sustain, pytest.defaults.note)
-            mock.assert_called_once_with(sustain)
-
-        def test_list(self, mocker):
-            sustain = [100, None, None, None, None]
-            mock = mocker.patch.object(NoteEvent, "_validate_list_sustain")
-            NoteEvent._validate_sustain(sustain, pytest.defaults.note)
-            mock.assert_called_once_with(sustain, pytest.defaults.note)
-
-        def test_unhandled_type(self, mocker):
-            with pytest.raises(TypeError):
-                NoteEvent._validate_sustain((100, None, None, None, None), pytest.defaults.note)
-
-    class TestValidateIntSustain(object):
-        def test_negative(self):
-            with pytest.raises(ValueError):
-                NoteEvent._validate_int_sustain(-1)
-
-    class TestValidateListSustain(object):
-        @pytest.mark.parametrize(
-            "sustain, note",
-            [
-                pytest.param(
-                    [None, None, None, None], pytest.defaults.note, id="incorrect_length_list"
-                ),
-                pytest.param([100, 100, None, None, None], Note.G, id="mismatched_set_lanes"),
-            ],
-        )
-        def test_raises(self, sustain, note):
-            with pytest.raises(ValueError):
-                NoteEvent._validate_list_sustain(sustain, note)
 
     class TestRefineSustain(object):
         @pytest.mark.parametrize(
