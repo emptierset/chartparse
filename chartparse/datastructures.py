@@ -30,11 +30,15 @@ class ImmutableList(Sequence[T]):
     # variable.
     _seq: Sequence[T]
 
+    length: int
+
     def __init__(self, xs: Iterable[T]):
         if isinstance(xs, Sequence):
             self._seq = xs
+            self.length = len(xs)
         else:
             self._seq = list(xs)
+            self.length = len(self._seq)
 
     @typing.overload
     def __getitem__(self, index: int) -> T:
@@ -54,7 +58,7 @@ class ImmutableList(Sequence[T]):
         return repr(self._seq)  # pragma: no cover
 
     def __len__(self) -> int:
-        return len(self._seq)
+        return self.length
 
     def __contains__(self, obj: object) -> bool:
         return obj in self._seq

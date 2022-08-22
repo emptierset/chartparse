@@ -36,7 +36,7 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     time_signature_events: Final[Sequence[TimeSignatureEvent]]
     """A ``SyncTrack``'s ``TimeSignatureEvent``\\ s."""
 
-    bpm_events: Final[Sequence[BPMEvent]]
+    bpm_events: Final[ImmutableSortedList[BPMEvent]]
     """A ``SyncTrack``'s ``BPMEvent``\\ s."""
 
     section_name: Final[str] = "SyncTrack"
@@ -46,7 +46,7 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         self,
         resolution: int,
         time_signature_events: Sequence[TimeSignatureEvent],
-        bpm_events: Sequence[BPMEvent],
+        bpm_events: ImmutableSortedList[BPMEvent],
     ):
         """Instantiates and validates all instance attributes.
 
@@ -142,7 +142,10 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
     @staticmethod
     def _timestamp_at_tick(
-        bpm_events: Sequence[BPMEvent], tick: int, resolution: int, start_bpm_event_index: int = 0
+        bpm_events: ImmutableSortedList[BPMEvent],
+        tick: int,
+        resolution: int,
+        start_bpm_event_index: int = 0,
     ) -> tuple[datetime.timedelta, int]:
         """Allows ``timestamp_at_tick`` to be used by injecting a ``bpm_events`` object."""
 
@@ -164,10 +167,11 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
     @staticmethod
     def _idx_of_proximal_bpm_event(
-        bpm_events: Sequence[BPMEvent], tick: int, start_idx: int = 0
+        bpm_events: ImmutableSortedList[BPMEvent], tick: int, start_idx: int = 0
     ) -> int:
-        for idx in range(start_idx, len(bpm_events)):
-            is_last_bpm_event = idx == len(bpm_events) - 1
+        idx_of_last_bpm_event = bpm_events.length - 1
+        for idx in range(start_idx, bpm_events.length):
+            is_last_bpm_event = idx == idx_of_last_bpm_event
             next_bpm_event = bpm_events[idx + 1] if not is_last_bpm_event else None
             if is_last_bpm_event or (next_bpm_event is not None and next_bpm_event.tick > tick):
                 return idx

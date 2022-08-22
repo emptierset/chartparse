@@ -10,6 +10,7 @@ import datetime
 import pytest
 
 from chartparse.chart import Chart
+from chartparse.datastructures import ImmutableSortedList
 from chartparse.event import Event
 from chartparse.globalevents import (
     GlobalEventsTrack,
@@ -40,7 +41,7 @@ _default_timestamp = datetime.timedelta(0)
 
 _default_bpm = 120.000
 _default_bpm_event = BPMEvent(_default_tick, _default_timestamp, _default_bpm)
-_default_bpm_events = [_default_bpm_event]
+_default_bpm_events = ImmutableSortedList([_default_bpm_event], already_sorted=True)
 
 _default_upper_time_signature_numeral = 4
 _default_lower_time_signature_numeral = 8

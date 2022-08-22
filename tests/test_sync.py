@@ -3,6 +3,7 @@ import pytest
 import unittest.mock
 from contextlib import nullcontext as does_not_raise
 
+from chartparse.datastructures import ImmutableSortedList
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.sync import SyncTrack, BPMEvent, TimeSignatureEvent
 
@@ -114,7 +115,9 @@ class TestSyncTrack(object):
         event1 = BPMEvent.from_chart_line(generate_bpm_line(100, 120.000), event0, 100)
         event2 = BPMEvent.from_chart_line(generate_bpm_line(400, 180.000), event1, 100)
         event3 = BPMEvent.from_chart_line(generate_bpm_line(800, 90.000), event2, 100)
-        test_bpm_events = [event0, event1, event2, event3]
+        test_bpm_events = ImmutableSortedList(
+            [event0, event1, event2, event3], already_sorted=True
+        )
 
         @pytest.mark.parametrize(
             "resolution,tick,want_timestamp,want_proximal_bpm_event_idx",
@@ -140,45 +143,64 @@ class TestSyncTrack(object):
                 pytest.param(
                     1,
                     0,
-                    [BPMEventWithDefaults(tick=0), BPMEventWithDefaults(tick=2)],
+                    ImmutableSortedList(
+                        [BPMEventWithDefaults(tick=0), BPMEventWithDefaults(tick=2)],
+                        already_sorted=True,
+                    ),
                     0,
                     does_not_raise(),
                 ),
                 pytest.param(
                     2,
                     0,
-                    [BPMEventWithDefaults(tick=0), BPMEventWithDefaults(tick=2)],
+                    ImmutableSortedList(
+                        [BPMEventWithDefaults(tick=0), BPMEventWithDefaults(tick=2)],
+                        already_sorted=True,
+                    ),
                     1,
                     does_not_raise(),
                 ),
                 pytest.param(
                     2,
                     1,
-                    [BPMEventWithDefaults(tick=0), BPMEventWithDefaults(tick=2)],
+                    ImmutableSortedList(
+                        [BPMEventWithDefaults(tick=0), BPMEventWithDefaults(tick=2)],
+                        already_sorted=True,
+                    ),
                     1,
                     does_not_raise(),
                 ),
                 pytest.param(
                     3,
                     0,
-                    [BPMEventWithDefaults(tick=0), BPMEventWithDefaults(tick=2)],
+                    ImmutableSortedList(
+                        [BPMEventWithDefaults(tick=0), BPMEventWithDefaults(tick=2)],
+                        already_sorted=True,
+                    ),
                     1,
                     does_not_raise(),
                 ),
                 pytest.param(
                     3,
                     1,
-                    [BPMEventWithDefaults(tick=0), BPMEventWithDefaults(tick=2)],
+                    ImmutableSortedList(
+                        [BPMEventWithDefaults(tick=0), BPMEventWithDefaults(tick=2)],
+                        already_sorted=True,
+                    ),
                     1,
                     does_not_raise(),
                 ),
                 pytest.param(
-                    pytest.defaults.tick, 0, [], unittest.mock.ANY, pytest.raises(ValueError)
+                    pytest.defaults.tick,
+                    0,
+                    ImmutableSortedList([]),
+                    unittest.mock.ANY,
+                    pytest.raises(ValueError),
                 ),
                 pytest.param(
                     pytest.defaults.tick,
                     1,
-                    [BPMEventWithDefaults(tick=0)],
+                    ImmutableSortedList([BPMEventWithDefaults(tick=0)], already_sorted=True),
                     unittest.mock.ANY,
                     pytest.raises(ValueError),
                 ),

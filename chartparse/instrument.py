@@ -266,12 +266,15 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             f"len(star_power_events): {len(self.star_power_events)})"
         )
 
+    # TODO: Granularize this function into multiple functions for better profiling and readability.
     @classmethod
     def _parse_note_events_from_chart_lines(
         cls,
         chart_lines: Iterable[str],
         tatter: TimestampAtTickSupporter,
     ) -> ImmutableSortedList[NoteEvent]:
+        # TODO: Use regular dicts here; this function is a very tight loop so
+        # they're probably faster.
         tick_to_note_array: collections.defaultdict[int, bytearray] = collections.defaultdict(
             lambda: bytearray(5)
         )
@@ -415,6 +418,7 @@ class NoteEvent(Event):
     This is not set in ``__init__``; it must be set via ``NoteEvent._populate_hopo_state``.
     """
 
+    # TODO: Make this final.
     star_power_data: Optional[StarPowerData]
     """Information associated with star power for this note.
 
