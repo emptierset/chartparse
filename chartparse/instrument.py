@@ -13,6 +13,7 @@ from __future__ import annotations
 import collections
 import datetime
 import enum
+import functools
 import logging
 import re
 import typing
@@ -457,6 +458,7 @@ class NoteEvent(Event):
         self.star_power_data = star_power_data
 
     @staticmethod
+    @functools.lru_cache
     def _refine_sustain(sustain: ComplexNoteSustainT) -> ComplexNoteSustainT:
         if isinstance(sustain, tuple):
             if all(d is None or d == 0 for d in sustain):
