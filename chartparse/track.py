@@ -80,9 +80,10 @@ def parse_events_from_chart_lines(
             try:
                 bpm_event = from_chart_line_fn(line, prev_bpm_event, resolution)
             except RegexNotMatchError:
+                # TODO: Figure out how to log which lines are uncovered by any parser.
                 continue
             bpm_events.append(bpm_event)
-        return ImmutableSortedList(bpm_events, key=lambda e: e.tick)
+        return ImmutableSortedList(bpm_events, already_sorted=True)
     elif isinstance(resolution_or_tatter, TimestampAtTickSupporter):
         tatter = resolution_or_tatter
         from_chart_line_fn = typing.cast(
