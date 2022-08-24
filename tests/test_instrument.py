@@ -491,7 +491,14 @@ class TestNoteEvent(object):
             ],
         )
         def test(self, current, previous, want):
-            got = NoteEvent._compute_hopo_state(pytest.defaults.resolution, current, previous)
+            got = NoteEvent._compute_hopo_state(
+                pytest.defaults.resolution,
+                current.tick,
+                current.note,
+                current._is_tap,
+                current._is_forced,
+                previous,
+            )
             assert got == want
 
     class TestLongestSustain(object):

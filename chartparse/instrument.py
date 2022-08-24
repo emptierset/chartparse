@@ -475,14 +475,21 @@ class NoteEvent(Event):
         return sustain
 
     def _populate_hopo_state(self, resolution: int, previous: Optional[NoteEvent]) -> None:
-        self.hopo_state = self._compute_hopo_state(resolution, self, previous)
+        self.hopo_state = self._compute_hopo_state(
+            resolution, self.tick, self.note, self._is_tap, self._is_forced, previous
+        )
 
     # TODO: Refactor this to an instance method and delete _populate_hopo_state.
     @staticmethod
     def _compute_hopo_state(
-        resolution: int, current: NoteEvent, previous: Optional[NoteEvent]
+        resolution: int,
+        tick: int,
+        note: Note,
+        is_tap: bool,
+        is_forced: bool,
+        previous: Optional[NoteEvent],
     ) -> HOPOState:
-        if current._is_tap:
+        if is_tap:
             return HOPOState.TAP
 
         # The Moonscraper UI does not allow the first note to be forced, so it must be a strum if
@@ -493,16 +500,16 @@ class NoteEvent(Event):
         eighth_triplet_tick_boundary = chartparse.tick.calculate_ticks_between_notes(
             resolution, NoteDuration.EIGHTH_TRIPLET
         )
-        ticks_since_previous = current.tick - previous.tick
+        ticks_since_previous = tick - previous.tick
         previous_is_within_eighth_triplet = ticks_since_previous <= eighth_triplet_tick_boundary
-        previous_note_is_different = current.note != previous.note
+        previous_note_is_different = note != previous.note
         should_be_hopo = (
             previous_is_within_eighth_triplet
             and previous_note_is_different
-            and not current.note.is_chord()
+            and not note.is_chord()
         )
 
-        if should_be_hopo != current._is_forced:
+        if should_be_hopo != is_forced:
             return HOPOState.HOPO
         else:
             return HOPOState.STRUM
