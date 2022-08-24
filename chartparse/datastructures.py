@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import typing
 from collections.abc import Callable, Iterable, Iterator, Sequence
-from typing import Union, Literal
+from typing import Literal, Union
 
 from chartparse.exceptions import ProgrammerError
 from chartparse.hints import ComparableT, T
