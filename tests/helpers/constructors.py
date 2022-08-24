@@ -1,8 +1,13 @@
 import pytest
 
+from chartparse.datastructures import ImmutableSortedList
 from chartparse.globalevents import GlobalEvent
 from chartparse.instrument import StarPowerEvent, NoteEvent
 from chartparse.sync import TimeSignatureEvent, BPMEvent
+
+
+def AlreadySortedImmutableSortedList(xs):
+    return ImmutableSortedList(xs, already_sorted=True)
 
 
 def StarPowerEventWithDefaults(

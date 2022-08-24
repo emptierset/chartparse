@@ -477,6 +477,7 @@ class NoteEvent(Event):
     def _populate_hopo_state(self, resolution: int, previous: Optional[NoteEvent]) -> None:
         self.hopo_state = self._compute_hopo_state(resolution, self, previous)
 
+    # TODO: Refactor this to an instance method and delete _populate_hopo_state.
     @staticmethod
     def _compute_hopo_state(
         resolution: int, current: NoteEvent, previous: Optional[NoteEvent]
