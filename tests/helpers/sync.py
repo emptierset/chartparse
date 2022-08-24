@@ -1,6 +1,15 @@
 import pytest
 
-from chartparse.sync import TimeSignatureEvent, BPMEvent
+from chartparse.sync import TimeSignatureEvent, BPMEvent, SyncTrack
+
+
+def SyncTrackWithDefaults(
+    *,
+    resolution=pytest.defaults.resolution,
+    time_signature_events=pytest.defaults.time_signature_events,
+    bpm_events=pytest.defaults.bpm_events,
+):
+    return SyncTrack(resolution, time_signature_events, bpm_events)
 
 
 def TimeSignatureEventWithDefaults(

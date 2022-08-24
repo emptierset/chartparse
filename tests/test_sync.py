@@ -9,58 +9,49 @@ from chartparse.sync import SyncTrack, BPMEvent, TimeSignatureEvent
 from tests.helpers.datastructures import AlreadySortedImmutableSortedList
 from tests.helpers.lines import generate_bpm as generate_bpm_line
 from tests.helpers.lines import generate_time_signature as generate_time_signature_line
-from tests.helpers.sync import TimeSignatureEventWithDefaults, BPMEventWithDefaults
+from tests.helpers.sync import (
+    TimeSignatureEventWithDefaults,
+    BPMEventWithDefaults,
+    SyncTrackWithDefaults,
+)
 
 
 class TestSyncTrack(object):
     class TestInit(object):
         def test(self):
-            got = SyncTrack(
-                pytest.defaults.resolution,
-                pytest.defaults.time_signature_events,
-                pytest.defaults.bpm_events,
-            )
+            got = SyncTrackWithDefaults()
             assert got.time_signature_events == pytest.defaults.time_signature_events
             assert got.bpm_events == pytest.defaults.bpm_events
 
         def test_non_positive_resolution(self):
             with pytest.raises(ValueError):
-                # TODO: Add SyncTrackWithDefaults (and other tracks)
-                _ = SyncTrack(0, pytest.defaults.time_signature_events, pytest.defaults.bpm_events)
+                _ = SyncTrackWithDefaults(resolution=0)
             with pytest.raises(ValueError):
-                _ = SyncTrack(
-                    -1, pytest.defaults.time_signature_events, pytest.defaults.bpm_events
-                )
+                _ = SyncTrackWithDefaults(resolution=-1)
 
         def test_empty_time_signature_events(self):
             with pytest.raises(ValueError):
-                _ = SyncTrack(pytest.defaults.resolution, [], pytest.defaults.bpm_events)
+                _ = SyncTrackWithDefaults(time_signature_events=[])
 
         def test_missing_first_time_signature_event(self):
             with pytest.raises(ValueError):
-                _ = SyncTrack(
-                    pytest.defaults.resolution,
-                    [
+                _ = SyncTrackWithDefaults(
+                    time_signature_events=[
                         TimeSignatureEventWithDefaults(
                             tick=1,
                             timestamp=datetime.timedelta(seconds=1),
                         )
                     ],
-                    pytest.defaults.bpm_events,
                 )
 
         def test_empty_bpm_events(self):
             with pytest.raises(ValueError):
-                _ = SyncTrack(
-                    pytest.defaults.resolution, pytest.defaults.time_signature_events, []
-                )
+                _ = SyncTrackWithDefaults(bpm_events=[])
 
         def test_missing_first_bpm_event(self):
             with pytest.raises(ValueError):
-                _ = SyncTrack(
-                    pytest.defaults.resolution,
-                    pytest.defaults.time_signature_events,
-                    [
+                _ = SyncTrackWithDefaults(
+                    bpm_events=[
                         BPMEventWithDefaults(
                             tick=1,
                             timestamp=datetime.timedelta(seconds=1),
