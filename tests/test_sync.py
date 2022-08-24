@@ -6,13 +6,10 @@ from contextlib import nullcontext as does_not_raise
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.sync import SyncTrack, BPMEvent, TimeSignatureEvent
 
+from tests.helpers.datastructures import AlreadySortedImmutableSortedList
 from tests.helpers.lines import generate_bpm as generate_bpm_line
 from tests.helpers.lines import generate_time_signature as generate_time_signature_line
-from tests.helpers.constructors import (
-    TimeSignatureEventWithDefaults,
-    BPMEventWithDefaults,
-    AlreadySortedImmutableSortedList,
-)
+from tests.helpers.sync import TimeSignatureEventWithDefaults, BPMEventWithDefaults
 
 
 class TestSyncTrack(object):

@@ -11,7 +11,7 @@ from chartparse.globalevents import (
     LyricEvent,
 )
 
-from tests.helpers.constructors import GlobalEventWithDefaults
+from tests.helpers.globalevents import GlobalEventWithDefaults
 
 
 class TestGlobalEventsTrack(object):

@@ -9,7 +9,7 @@ from chartparse.instrument import InstrumentTrack, Difficulty, Instrument, Note
 from chartparse.metadata import Metadata
 from chartparse.sync import SyncTrack
 
-from tests.helpers.constructors import NoteEventWithDefaults
+from tests.helpers.instrument import NoteEventWithDefaults
 from tests.helpers.log import LogChecker
 
 _directory_of_this_file = pathlib.Path(__file__).parent.resolve()

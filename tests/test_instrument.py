@@ -16,9 +16,9 @@ from chartparse.instrument import (
 from chartparse.tick import NoteDuration
 
 import tests.helpers.tick
+from tests.helpers.instrument import StarPowerEventWithDefaults, NoteEventWithDefaults
 from tests.helpers.lines import generate_note as generate_note_line
 from tests.helpers.lines import generate_star_power as generate_star_power_line
-from tests.helpers.constructors import StarPowerEventWithDefaults, NoteEventWithDefaults
 
 
 class TestInstrumentTrack(object):
