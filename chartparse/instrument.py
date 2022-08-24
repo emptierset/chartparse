@@ -361,11 +361,7 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             star_power_index_of_note = note_idx_to_star_power_idx.get(note_idx, None)
             if star_power_index_of_note is None:
                 continue
-            next_star_power_idx = note_idx_to_star_power_idx.get(note_idx + 1, None)
-            note_is_end_of_phrase = star_power_index_of_note != next_star_power_idx
-            note_event.star_power_data = StarPowerData(
-                star_power_index_of_note, note_is_end_of_phrase
-            )
+            note_event.star_power_data = StarPowerData(star_power_index_of_note)
 
 
 @typing.final
@@ -373,10 +369,9 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 class StarPowerData(DictPropertiesEqMixin):
     """Star power related info for a :class:`~chartparse.instrument.NoteEvent`."""
 
-    # These are conceptually Final, but annotating them as such confuses mypy into thinking these
-    # should be ClassVar.
+    # This is conceptually Final, but annotating it as such confuses mypy into thinking it should
+    # be ClassVar.
     star_power_event_idx: int
-    is_end_of_phrase: bool
 
 
 SustainTupleT = tuple[Optional[int], ...]
