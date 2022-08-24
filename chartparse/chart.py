@@ -127,7 +127,7 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
         metadata = Metadata.from_chart_lines(sections[Metadata.section_name])
         sync_track = SyncTrack.from_chart_lines(
-            sections[SyncTrack.section_name], metadata.resolution
+            metadata.resolution, sections[SyncTrack.section_name]
         )
         global_events_track = GlobalEventsTrack.from_chart_lines(
             sections[GlobalEventsTrack.section_name], sync_track

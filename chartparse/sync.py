@@ -74,20 +74,19 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         self.time_signature_events = time_signature_events
         self.bpm_events = bpm_events
 
-    # TODO: resolution first param, for all ``from_chart_lines``.
     @classmethod
     def from_chart_lines(
         cls: Type[SyncTrackT],
-        iterator_getter: Callable[[], Iterable[str]],
         resolution: int,
+        iterator_getter: Callable[[], Iterable[str]],
     ) -> SyncTrackT:
         """Initializes instance attributes by parsing an iterable of strings.
 
         Args:
+            resolution: The number of ticks in a quarter note.
             iterator_getter: The iterable of strings returned by this is most likely from a
                 Moonscraper ``.chart``. Must be a function so the strings can be iterated over
                 multiple times, if necessary.
-            resolution: The number of ticks in a quarter note.
 
         Returns:
             A ``SyncTrack`` parsed from the strings returned by ``iterator_getter``.

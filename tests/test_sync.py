@@ -82,7 +82,7 @@ class TestSyncTrack(object):
             )
             spy_init = mocker.spy(SyncTrack, "__init__")
             _ = SyncTrack.from_chart_lines(
-                minimal_string_iterator_getter, pytest.defaults.resolution
+                pytest.defaults.resolution, minimal_string_iterator_getter
             )
             mock_parse_events.assert_has_calls(
                 [
