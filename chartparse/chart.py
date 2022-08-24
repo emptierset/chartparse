@@ -328,8 +328,6 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         upper_bound: datetime.timedelta,
     ) -> float:
         def is_event_eligible(note: NoteEvent) -> bool:
-            # TODO: This assert can most likely go away. Also look for other possible removals.
-            assert note.timestamp is not None
             return lower_bound <= note.timestamp <= upper_bound
 
         num_events_to_consider = sum(1 for e in events if is_event_eligible(e))

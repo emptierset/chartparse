@@ -51,7 +51,6 @@ class Event(DictPropertiesEqMixin, DictReprMixin):
         self.timestamp = timestamp
         self._proximal_bpm_event_index = proximal_bpm_event_idx
 
-    # TODO: Should this really be a staticmethod?
     @staticmethod
     def calculate_timestamp(
         tick: int,
