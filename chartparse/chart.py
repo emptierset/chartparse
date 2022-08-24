@@ -24,14 +24,13 @@ import itertools
 import logging
 import re
 import typing
-from collections.abc import Callable, Iterable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from pathlib import Path
 from typing import ClassVar, Final, Optional, TextIO
 
 import chartparse.tick
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.globalevents import GlobalEventsTrack
-from chartparse.hints import T
 from chartparse.instrument import Difficulty, Instrument, InstrumentTrack, NoteEvent
 from chartparse.metadata import Metadata
 from chartparse.sync import SyncTrack
@@ -319,6 +318,7 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         upper_bound: datetime.timedelta,
     ) -> float:
         def is_event_eligible(note: NoteEvent) -> bool:
+            # TODO: This assert can most likely go away. Also look for other possible removals.
             assert note.timestamp is not None
             return lower_bound <= note.timestamp <= upper_bound
 
@@ -344,17 +344,3 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
     def __getitem__(self, instrument: Instrument) -> dict[Difficulty, InstrumentTrack]:
         return self.instrument_tracks[instrument]
-
-
-def _iterate_from_second_elem(xs: Sequence[T]) -> Iterator[T]:
-    """Given an iterable ``xs``, return an iterator that skips ``xs[0]``.
-
-    Args:
-        xs: Any non-exhausted iterable.
-
-    Returns:
-        A iterator that iterates over ``xs``, ignoring the first element.
-    """
-    it = iter(xs)
-    next(it)
-    yield from it

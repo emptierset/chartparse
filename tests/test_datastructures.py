@@ -38,11 +38,6 @@ def alternate_default_immutable_list(alternate_default_list):
     return ImmutableList(alternate_default_list)
 
 
-@pytest.fixture
-def default_immutable_sorted_list(default_list):
-    return ImmutableSortedList(default_list)
-
-
 class TestImmutableList(object):
     def test_init(self, default_immutable_list, default_list):
         assert default_immutable_list._seq == default_list

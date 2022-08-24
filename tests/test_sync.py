@@ -209,6 +209,7 @@ class TestSyncTrack(object):
                 ),
             ],
         )
+        # TODO: Refactor this into test and test_raises. Too complex as-is.
         def test(self, bare_sync_track, tick, start_idx, bpm_events, want, expectation):
             with expectation:
                 got = bare_sync_track._idx_of_proximal_bpm_event(

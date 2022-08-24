@@ -2,7 +2,7 @@ import datetime
 import pathlib
 import pytest
 
-from chartparse.chart import Chart, _iterate_from_second_elem, _max_timedelta
+from chartparse.chart import Chart, _max_timedelta
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.globalevents import GlobalEventsTrack
 from chartparse.instrument import InstrumentTrack, Difficulty, Instrument, Note
@@ -510,10 +510,3 @@ class TestChart(object):
                 pytest.defaults.difficulty
             ]
             assert got == want
-
-
-class TestIterateFromSecondElem(object):
-    def test(self):
-        xs = [3, 4, 2, 5]
-        for x1, x2 in zip(_iterate_from_second_elem(xs), xs[1:]):
-            assert x1 == x2

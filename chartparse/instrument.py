@@ -188,6 +188,7 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     star_power_events: Final[Sequence[StarPowerEvent]]
     """An (instrument, difficulty) pair's ``StarPowerEvent`` objects."""
 
+    # TODO: Make this optional? What if there are no notes?
     _last_note_timestamp: datetime.timedelta
     """The timestamp at which the :attr:`~chartparse.instrument.NoteEvent.sustain` value of the
     last :class:`~chartparse.instrument.NoteEvent` ends.
