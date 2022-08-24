@@ -10,9 +10,6 @@ class TestEvent(object):
             assert tick_having_event.tick == pytest.defaults.tick
 
     class TestCalculateTimestamp(object):
-        nonzero_timedelta = datetime.timedelta(1)
-        nonzero_int = 1
-
         def test_early_return(self, minimal_tatter):
             got_timestamp, got_proximal_bpm_event_idx = Event.calculate_timestamp(
                 pytest.defaults.tick, None, minimal_tatter

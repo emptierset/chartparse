@@ -96,10 +96,17 @@ class TestChart(object):
         @pytest.mark.parametrize(
             "path",
             [
-                pytest.param(_missing_metadata_chart_filepath, id="missing_metadata"),
-                pytest.param(_missing_sync_track_chart_filepath, id="missing_sync_track"),
                 pytest.param(
-                    _missing_global_events_track_chart_filepath, id="missing_global_events_track"
+                    _missing_metadata_chart_filepath,
+                    id="missing_metadata",
+                ),
+                pytest.param(
+                    _missing_sync_track_chart_filepath,
+                    id="missing_sync_track",
+                ),
+                pytest.param(
+                    _missing_global_events_track_chart_filepath,
+                    id="missing_global_events_track",
                 ),
             ],
         )
@@ -198,8 +205,24 @@ class TestChart(object):
         @pytest.mark.parametrize(
             "lines",
             [
-                ["Song]", "{", '  Name = "Song Name"', "}"],
-                ["[Song]", "{", '  Name = "Song Name"', "}", "[ExpertSingle"],
+                pytest.param(
+                    ["Song]", "{", '  Name = "Song Name"', "}"],
+                    id="malformed_missing_open_bracket",
+                ),
+                pytest.param(
+                    ["[Song", "{", '  Name = "Song Name"', "}"],
+                    id="malformed_missing_close_bracket",
+                ),
+                pytest.param(
+                    [
+                        "[Song]",
+                        "{",
+                        '  Name = "Song Name"',
+                        "}",
+                        "[ExpertSingle",
+                    ],
+                    id="malformed_noninitial_section",
+                ),
             ],
         )
         def test_raises(self, lines):
@@ -208,26 +231,24 @@ class TestChart(object):
 
     class TestPopulateNoteEventHOPOStates(object):
         def test(self, mocker, minimal_chart):
-            note_event1 = NoteEventWithDefaults(tick=0, note=Note.G)
-            note_event2 = NoteEventWithDefaults(tick=pytest.defaults.resolution, note=Note.R)
-            note_event3 = NoteEventWithDefaults(
-                tick=pytest.defaults.resolution + pytest.defaults.resolution * 2,
-                note=Note.Y,
+            note_event1 = NoteEventWithDefaults(
+                tick=0,
+                note=Note.G,
             )
-            note_events = [note_event1, note_event2, note_event3]
+            note_event2 = NoteEventWithDefaults(
+                tick=1,
+                note=Note.R,
+            )
+            note_events = [note_event1, note_event2]
 
             mock_populate_hopo_state1 = mocker.patch.object(note_event1, "_populate_hopo_state")
             mock_populate_hopo_state2 = mocker.patch.object(note_event2, "_populate_hopo_state")
-            mock_populate_hopo_state3 = mocker.patch.object(note_event3, "_populate_hopo_state")
 
             minimal_chart._populate_note_event_hopo_states(note_events)
 
             mock_populate_hopo_state1.assert_called_once_with(pytest.defaults.resolution, None)
             mock_populate_hopo_state2.assert_called_once_with(
                 pytest.defaults.resolution, note_event1
-            )
-            mock_populate_hopo_state3.assert_called_once_with(
-                pytest.defaults.resolution, note_event2
             )
 
         def test_empty(self, minimal_chart):
@@ -306,23 +327,6 @@ class TestChart(object):
             )
 
     class TestNotesPerSecond(object):
-        note_event1 = NoteEventWithDefaults(
-            tick=pytest.defaults.resolution,
-            timestamp=datetime.timedelta(seconds=1),
-            note=Note.GRY,
-        )
-        note_event2 = NoteEventWithDefaults(
-            tick=pytest.defaults.resolution * 2,
-            timestamp=datetime.timedelta(seconds=2),
-            note=Note.RYB,
-        )
-        note_event3 = NoteEventWithDefaults(
-            tick=pytest.defaults.resolution * 3,
-            timestamp=datetime.timedelta(seconds=3),
-            note=Note.YBO,
-        )
-        test_notes_per_second_note_events = [note_event1, note_event2, note_event3]
-
         @pytest.mark.parametrize(
             "lower_bound,upper_bound,want",
             [
@@ -353,8 +357,21 @@ class TestChart(object):
             ],
         )
         def test_from_note_events(self, bare_chart, lower_bound, upper_bound, want):
+            note_event1 = NoteEventWithDefaults(
+                timestamp=datetime.timedelta(seconds=1),
+                note=Note.GRY,
+            )
+            note_event2 = NoteEventWithDefaults(
+                timestamp=datetime.timedelta(seconds=2),
+                note=Note.RYB,
+            )
+            note_event3 = NoteEventWithDefaults(
+                timestamp=datetime.timedelta(seconds=3),
+                note=Note.YBO,
+            )
+            test_notes_per_second_note_events = [note_event1, note_event2, note_event3]
             got = bare_chart._notes_per_second(
-                self.test_notes_per_second_note_events, lower_bound, upper_bound
+                test_notes_per_second_note_events, lower_bound, upper_bound
             )
             assert got == want
 
@@ -369,7 +386,11 @@ class TestChart(object):
                     id="all_start_args_none",
                 ),
                 pytest.param(
-                    1, None, datetime.timedelta(seconds=1), _max_timedelta, id="last_none"
+                    1,
+                    None,
+                    datetime.timedelta(seconds=1),
+                    _max_timedelta,
+                    id="last_none",
                 ),
                 pytest.param(
                     1,
@@ -486,10 +507,26 @@ class TestChart(object):
         @pytest.mark.parametrize(
             "start_time,start_tick,start_seconds",
             [
-                pytest.param(datetime.timedelta(0), 0, None),
-                pytest.param(datetime.timedelta(0), None, 0),
-                pytest.param(None, 0, 0),
-                pytest.param(datetime.timedelta(0), 0, 0),
+                pytest.param(
+                    pytest.defaults.timestamp,
+                    pytest.defaults.tick,
+                    None,
+                ),
+                pytest.param(
+                    pytest.defaults.timestamp,
+                    None,
+                    pytest.defaults.seconds,
+                ),
+                pytest.param(
+                    None,
+                    pytest.defaults.tick,
+                    pytest.defaults.seconds,
+                ),
+                pytest.param(
+                    pytest.defaults.timestamp,
+                    pytest.defaults.tick,
+                    pytest.defaults.seconds,
+                ),
             ],
         )
         def test_too_many_start_args(self, bare_chart, start_time, start_tick, start_seconds):
@@ -515,7 +552,6 @@ class TestChart(object):
                 _ = default_chart.notes_per_second(
                     instrument,
                     difficulty,
-                    start_tick=0,
                 )
 
     class TestGetItem(object):

@@ -96,7 +96,12 @@ class TestInstrumentTrack(object):
         @pytest.mark.parametrize(
             "lines, want_note_events, want_star_power_events",
             [
-                pytest.param([pytest.invalid_chart_line], [], [], id="skip_invalid_line"),
+                pytest.param(
+                    [pytest.invalid_chart_line],
+                    [],
+                    [],
+                    id="skip_invalid_line",
+                ),
                 pytest.param(
                     [generate_note_line(0, NoteTrackIndex.OPEN.value)],
                     [NoteEventWithDefaults(tick=0, note=Note.OPEN)],
@@ -311,13 +316,35 @@ class TestNoteEvent(object):
         @pytest.mark.parametrize(
             "sustain, want",
             [
-                pytest.param((None, None, None, None, None), 0, id="all_none"),
-                pytest.param((0, 0, 0, 0, 0), 0, id="all_zero"),
-                pytest.param((0, 0, None, None, None), 0, id="all_none_or_zero"),
-                pytest.param((100, None, None, 100, None), 100, id="all_the_same"),
-                pytest.param(100, 100, id="int_pass_through"),
                 pytest.param(
-                    (100, 0, None, None, None), (100, 0, None, None, None), id="list_pass_through"
+                    (None, None, None, None, None),
+                    0,
+                    id="all_none",
+                ),
+                pytest.param(
+                    (0, 0, 0, 0, 0),
+                    0,
+                    id="all_zero",
+                ),
+                pytest.param(
+                    (0, 0, None, None, None),
+                    0,
+                    id="all_none_or_zero",
+                ),
+                pytest.param(
+                    (100, None, None, 100, None),
+                    100,
+                    id="all_the_same",
+                ),
+                pytest.param(
+                    100,
+                    100,
+                    id="int_pass_through",
+                ),
+                pytest.param(
+                    (100, 0, None, None, None),
+                    (100, 0, None, None, None),
+                    id="list_pass_through",
                 ),
             ],
         )

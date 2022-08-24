@@ -10,7 +10,10 @@ def generate_bpm(tick, bpm):
 
 def generate_time_signature(tick, upper_numeral, lower_numeral=None):
     if lower_numeral is not None:
-        return f"  {tick} = TS {upper_numeral} {int(math.log(lower_numeral, 2))}"
+        lg_base2_of_lower = math.log(lower_numeral, 2)
+        if int(lg_base2_of_lower) != lg_base2_of_lower:
+            raise ValueError(f"lower_numeral {lower_numeral} is not a power of 2")
+        return f"  {tick} = TS {upper_numeral} {int(lg_base2_of_lower)}"
     else:
         return f"  {tick} = TS {upper_numeral}"
 

@@ -10,7 +10,10 @@ class TestGenerateValidBPMLine(object):
 
     def test_raises(self):
         with pytest.raises(ValueError):
-            _ = tests.helpers.lines.generate_bpm(100, 120.5555)
+            _ = tests.helpers.lines.generate_bpm(
+                pytest.defaults.tick,
+                pytest.defaults.bpm + 0.0001,
+            )
 
 
 class TestGenerateValidTimeSignatureLine(object):
@@ -21,6 +24,14 @@ class TestGenerateValidTimeSignatureLine(object):
     def test_longform(self):
         got = tests.helpers.lines.generate_time_signature(100, 4, 8)
         assert got == "  100 = TS 4 3"
+
+    def test_longform_raises(self):
+        with pytest.raises(ValueError):
+            _ = tests.helpers.lines.generate_time_signature(
+                pytest.defaults.tick,
+                pytest.defaults.upper_time_signature_numeral,
+                8 + 1,
+            )
 
 
 class TestGenerateValidStarPowerLine(object):

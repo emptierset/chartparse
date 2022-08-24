@@ -62,6 +62,7 @@ class TestImmutableList(object):
         assert default_immutable_list == alternate_default_immutable_list
         assert alternate_default_immutable_list == default_immutable_list
 
+        # NotImplemented
         assert default_immutable_list != 1
         assert 1 != default_immutable_list
 
@@ -85,6 +86,5 @@ class TestImmutableSortedList(object):
             )
 
         def test_already_sorted(self, default_sorted_list):
-            assert ImmutableSortedList(default_sorted_list, already_sorted=True) == sorted(
-                default_sorted_list
-            )
+            got = ImmutableSortedList(default_sorted_list, already_sorted=True)
+            assert got == sorted(default_sorted_list)

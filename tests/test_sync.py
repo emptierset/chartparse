@@ -37,14 +37,15 @@ class TestSyncTrack(object):
                 _ = SyncTrack(pytest.defaults.resolution, [], pytest.defaults.bpm_events)
 
         def test_missing_first_time_signature_event(self):
-            noninitial_time_signature_event = TimeSignatureEventWithDefaults(
-                tick=1,
-                timestamp=datetime.timedelta(seconds=1),
-            )
             with pytest.raises(ValueError):
                 _ = SyncTrack(
                     pytest.defaults.resolution,
-                    [noninitial_time_signature_event],
+                    [
+                        TimeSignatureEventWithDefaults(
+                            tick=1,
+                            timestamp=datetime.timedelta(seconds=1),
+                        )
+                    ],
                     pytest.defaults.bpm_events,
                 )
 
@@ -55,14 +56,16 @@ class TestSyncTrack(object):
                 )
 
         def test_missing_first_bpm_event(self):
-            noninitial_bpm_event = BPMEventWithDefaults(
-                tick=1, timestamp=datetime.timedelta(seconds=1)
-            )
             with pytest.raises(ValueError):
                 _ = SyncTrack(
                     pytest.defaults.resolution,
                     pytest.defaults.time_signature_events,
-                    [noninitial_bpm_event],
+                    [
+                        BPMEventWithDefaults(
+                            tick=1,
+                            timestamp=datetime.timedelta(seconds=1),
+                        )
+                    ],
                 )
 
     class TestFromChartLines(object):
@@ -114,27 +117,30 @@ class TestSyncTrack(object):
                 start_bpm_event_index=0,
             )
 
-        event0 = BPMEvent.from_chart_line(generate_bpm_line(0, 60.000), None, 100)
-        event1 = BPMEvent.from_chart_line(generate_bpm_line(100, 120.000), event0, 100)
-        event2 = BPMEvent.from_chart_line(generate_bpm_line(400, 180.000), event1, 100)
-        event3 = BPMEvent.from_chart_line(generate_bpm_line(800, 90.000), event2, 100)
-        test_bpm_events = ImmutableSortedList(
-            [event0, event1, event2, event3], already_sorted=True
-        )
-
+        # TODO: Figure out where proximal_bpm_event_idxs and start_bpm_event_idxs need to be
+        # asserted.
         @pytest.mark.parametrize(
-            "resolution,tick,want_timestamp,want_proximal_bpm_event_idx",
+            "tick,want_timestamp,want_proximal_bpm_event_idx",
             [
                 # TODO: Create helper that allows me to define pytest.param values by "name".
-                pytest.param(100, 100, datetime.timedelta(seconds=1), 1),
-                pytest.param(100, 120, datetime.timedelta(seconds=1.1), 1),
-                pytest.param(100, 400, datetime.timedelta(seconds=2.5), 2),
-                pytest.param(100, 1000, datetime.timedelta(seconds=5.166666), 3),
+                pytest.param(100, datetime.timedelta(seconds=1), 1),
+                pytest.param(120, datetime.timedelta(seconds=1.1), 1),
+                pytest.param(400, datetime.timedelta(seconds=2.5), 2),
+                pytest.param(1000, datetime.timedelta(seconds=5.166666), 3),
             ],
         )
-        def test_impl(self, resolution, tick, want_timestamp, want_proximal_bpm_event_idx):
+        def test_impl(self, tick, want_timestamp, want_proximal_bpm_event_idx):
+            resolution = 100
+            event0 = BPMEvent.from_chart_line(generate_bpm_line(0, 60.000), None, resolution)
+            event1 = BPMEvent.from_chart_line(generate_bpm_line(100, 120.000), event0, resolution)
+            event2 = BPMEvent.from_chart_line(generate_bpm_line(400, 180.000), event1, resolution)
+            event3 = BPMEvent.from_chart_line(generate_bpm_line(800, 90.000), event2, resolution)
+            test_bpm_events = ImmutableSortedList(
+                [event0, event1, event2, event3], already_sorted=True
+            )
+
             got_timestamp, got_proximal_bpm_event_idx = SyncTrack._timestamp_at_tick(
-                self.test_bpm_events, tick, resolution
+                test_bpm_events, tick, resolution
             )
             assert got_timestamp == want_timestamp
             assert got_proximal_bpm_event_idx == want_proximal_bpm_event_idx
@@ -144,6 +150,16 @@ class TestSyncTrack(object):
             "tick,start_idx,bpm_events,want,expectation",
             [
                 pytest.param(
+                    0,
+                    0,
+                    ImmutableSortedList(
+                        [BPMEventWithDefaults(tick=0), BPMEventWithDefaults(tick=2)],
+                        already_sorted=True,
+                    ),
+                    0,
+                    does_not_raise(),
+                ),
+                pytest.param(
                     1,
                     0,
                     ImmutableSortedList(
@@ -157,7 +173,10 @@ class TestSyncTrack(object):
                     2,
                     0,
                     ImmutableSortedList(
-                        [BPMEventWithDefaults(tick=0), BPMEventWithDefaults(tick=2)],
+                        [
+                            BPMEventWithDefaults(tick=0),
+                            BPMEventWithDefaults(tick=2),
+                        ],
                         already_sorted=True,
                     ),
                     1,
@@ -187,7 +206,10 @@ class TestSyncTrack(object):
                     3,
                     1,
                     ImmutableSortedList(
-                        [BPMEventWithDefaults(tick=0), BPMEventWithDefaults(tick=2)],
+                        [
+                            BPMEventWithDefaults(tick=1),
+                            BPMEventWithDefaults(tick=2),
+                        ],
                         already_sorted=True,
                     ),
                     1,
@@ -199,13 +221,15 @@ class TestSyncTrack(object):
                     ImmutableSortedList([]),
                     unittest.mock.ANY,
                     pytest.raises(ValueError),
+                    id="no_bpm_events",
                 ),
                 pytest.param(
                     pytest.defaults.tick,
                     1,
-                    ImmutableSortedList([BPMEventWithDefaults(tick=0)], already_sorted=True),
+                    ImmutableSortedList([BPMEventWithDefaults()]),
                     unittest.mock.ANY,
                     pytest.raises(ValueError),
+                    id="start_idx_after_last_bpm_event",
                 ),
             ],
         )

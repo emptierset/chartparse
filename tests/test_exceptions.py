@@ -8,9 +8,6 @@ class TestRaise(object):
         with pytest.raises(ValueError):
             raise_(ValueError)
 
-        with pytest.raises(TypeError):
-            raise_(TypeError)
-
 
 class TestMissingRequiredField(object):
     def test(self):
@@ -26,12 +23,12 @@ class TestRegexNotMatchError(object):
         assert got.message == r"regex '\d+' failed to match"
 
     def test_regex_and_s(self):
-        got = RegexNotMatchError(r"\d+", "foo")
+        got = RegexNotMatchError(r"\d+", pytest.invalid_chart_line)
         assert got.regex == r"\d+"
-        assert got.message == r"string 'foo' failed to match regex '\d+'"
+        assert got.message == rf"string '{pytest.invalid_chart_line}' failed to match regex '\d+'"
 
     def test_regex_and_collection(self):
-        got = RegexNotMatchError(r"\d+", ["foo", "bar"])
+        got = RegexNotMatchError(r"\d+", [pytest.invalid_chart_line, pytest.invalid_chart_line])
         assert got.regex == r"\d+"
         assert got.message == r"none of 2 strings matched regex '\d+'"
 
