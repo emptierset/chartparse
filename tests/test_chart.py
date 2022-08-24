@@ -237,42 +237,57 @@ class TestChart(object):
 
     class TestPopulateLastNoteTimestamp(object):
         @pytest.mark.parametrize(
-            "note_events,want_tick,want_start_bpm_event_idx",
+            "note_events,want_tick",
             [
                 pytest.param(
                     [NoteEventWithDefaults(tick=1)],
                     1,
-                    0,
                     id="one_event",
                 ),
                 pytest.param(
                     [
-                        NoteEventWithDefaults(tick=1),
+                        NoteEventWithDefaults(
+                            tick=1,
+                        ),
                         NoteEventWithDefaults(tick=2),
                     ],
                     2,
-                    0,
                     id="two_events",
                 ),
                 pytest.param(
-                    [NoteEventWithDefaults(tick=1, sustain=100)],
-                    101,
-                    0,
+                    [NoteEventWithDefaults(tick=1, sustain=2)],
+                    3,
                     id="event_with_sustain",
+                ),
+                pytest.param(
+                    [
+                        NoteEventWithDefaults(
+                            tick=1,
+                            note=Note.G,
+                            sustain=3,
+                        ),
+                        NoteEventWithDefaults(
+                            tick=2,
+                            note=Note.R,
+                        ),
+                    ],
+                    4,
+                    id="event_with_sustain_through_note",
                 ),
             ],
         )
-        def test(self, mocker, minimal_chart, note_events, want_tick, want_start_bpm_event_idx):
+        def test(self, mocker, minimal_chart, note_events, want_tick):
             mock_timestamp_at_tick = mocker.patch.object(
-                minimal_chart.sync_track, "timestamp_at_tick", return_value=(None, None)
+                minimal_chart.sync_track,
+                "timestamp_at_tick",
+                return_value=(pytest.defaults.timestamp, None),
             )
             # TODO: Make it simpler to fetch the only instrument track when there is only one.
             track = minimal_chart[pytest.defaults.instrument][pytest.defaults.difficulty]
             track.note_events = note_events
             minimal_chart._populate_last_note_timestamp(track)
-            mock_timestamp_at_tick.assert_called_once_with(
-                want_tick, start_bpm_event_index=want_start_bpm_event_idx
-            )
+            mock_timestamp_at_tick.assert_called_once_with(want_tick, start_bpm_event_index=0)
+            assert track._last_note_timestamp == pytest.defaults.timestamp
 
         def test_empty(self, mocker, minimal_chart):
             mock = mocker.patch.object(

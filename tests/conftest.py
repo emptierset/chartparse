@@ -39,6 +39,8 @@ _default_tick = 0
 
 _default_timestamp = datetime.timedelta(0)
 
+_default_seconds = 0
+
 _default_bpm = 120.000
 _default_bpm_event = BPMEvent(_default_tick, _default_timestamp, _default_bpm)
 _default_bpm_events = ImmutableSortedList([_default_bpm_event], already_sorted=True)
@@ -133,6 +135,8 @@ class Defaults(object):
     sustain: ... = _default_sustain
 
     timestamp: ... = _default_timestamp
+
+    seconds: ... = _default_seconds
 
     name: ... = _default_name
     artist: ... = _default_artist

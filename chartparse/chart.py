@@ -198,10 +198,20 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     def _populate_last_note_timestamp(self, track: InstrumentTrack) -> None:
         if len(track.note_events) == 0:
             return
-        last_event = track.note_events[-1]
-        last_tick = last_event.tick + last_event.longest_sustain
+
+        def final_tick_from_event(event):
+            return event.tick + event.longest_sustain
+
+        most_final_tick_event = track.note_events[0]
+        most_final_tick = final_tick_from_event(most_final_tick_event)
+        for event in track.note_events:
+            final_tick = final_tick_from_event(event)
+            if final_tick >= most_final_tick:
+                most_final_tick = final_tick
+                most_final_tick_event = event
+
         track._last_note_timestamp, _ = self.sync_track.timestamp_at_tick(
-            last_tick, start_bpm_event_index=last_event._proximal_bpm_event_index
+            most_final_tick, start_bpm_event_index=most_final_tick_event._proximal_bpm_event_index
         )
 
     def _populate_note_event_hopo_states(self, events: Sequence[NoteEvent]) -> None:
