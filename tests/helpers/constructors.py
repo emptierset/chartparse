@@ -25,18 +25,16 @@ def NoteEventWithDefaults(
     tick=pytest.defaults.tick,
     timestamp=pytest.defaults.timestamp,
     note=pytest.defaults.note,
+    hopo_state=pytest.defaults.hopo_state,
     sustain=pytest.defaults.sustain,
-    is_forced=False,
-    is_tap=False,
     star_power_data=None,
 ):
     return NoteEvent(
         tick,
         timestamp,
         note,
+        hopo_state,
         sustain=sustain,
-        is_forced=is_forced,
-        is_tap=is_tap,
         star_power_data=star_power_data,
     )
 

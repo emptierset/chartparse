@@ -27,6 +27,7 @@ from chartparse.instrument import (
     Instrument,
     Difficulty,
     Note,
+    HOPOState,
 )
 from chartparse.metadata import Metadata, Player2Instrument
 from chartparse.sync import SyncTrack, BPMEvent, TimeSignatureEvent
@@ -79,8 +80,11 @@ _default_sustain = 0  # ticks
 _default_note = Note.G
 _default_note_instrument_track_index = InstrumentTrack._min_note_instrument_track_index
 
+_default_hopo_state = HOPOState.STRUM
 
-_default_note_event = NoteEvent(_default_tick, _default_timestamp, _default_note)
+_default_note_event = NoteEvent(
+    _default_tick, _default_timestamp, _default_note, _default_hopo_state
+)
 _default_note_events = [_default_note_event]
 
 
@@ -192,6 +196,8 @@ class Defaults(object):
     instrument: ... = _default_instrument
     difficulty: ... = _default_difficulty
     section_name: ... = _default_section_name
+
+    hopo_state: ... = _default_hopo_state
 
     note: ... = _default_note
     note_event: ... = _default_note_event

@@ -2,7 +2,6 @@ import pytest
 import re
 import unittest.mock
 
-import chartparse.tick
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.instrument import (
     InstrumentTrack,
@@ -16,6 +15,7 @@ from chartparse.instrument import (
 )
 from chartparse.tick import NoteDuration
 
+import tests.helpers.tick
 from tests.helpers.lines import generate_note as generate_note_line
 from tests.helpers.lines import generate_star_power as generate_star_power_line
 from tests.helpers.constructors import StarPowerEventWithDefaults, NoteEventWithDefaults
@@ -143,18 +143,22 @@ class TestInstrumentTrack(object):
                         generate_note_line(0, NoteTrackIndex.G.value),
                         generate_note_line(0, NoteTrackIndex.TAP.value),
                     ],
-                    [NoteEventWithDefaults(tick=0, note=Note.G, is_tap=True)],
+                    [NoteEventWithDefaults(tick=0, note=Note.G, hopo_state=HOPOState.TAP)],
                     [],
                     id="tap_green_note",
                 ),
                 pytest.param(
                     [
                         generate_note_line(0, NoteTrackIndex.G.value),
-                        generate_note_line(0, NoteTrackIndex.FORCED.value),
+                        generate_note_line(1, NoteTrackIndex.R.value),
+                        generate_note_line(1, NoteTrackIndex.FORCED.value),
                     ],
-                    [NoteEventWithDefaults(tick=0, note=Note.G, is_forced=True)],
+                    [
+                        NoteEventWithDefaults(tick=0, note=Note.G),
+                        NoteEventWithDefaults(tick=1, note=Note.R, hopo_state=HOPOState.STRUM),
+                    ],
                     [],
-                    id="forced_green_note",
+                    id="forced_red_note",
                 ),
                 pytest.param(
                     [
@@ -226,8 +230,8 @@ class TestInstrumentTrack(object):
                             note=Note.YB,
                             star_power_data=StarPowerData(1, True),
                         ),
-                        NoteEventWithDefaults(tick=2100, note=Note.O, is_forced=True),
-                        NoteEventWithDefaults(tick=2200, note=Note.B, is_tap=True),
+                        NoteEventWithDefaults(tick=2100, note=Note.O, hopo_state=HOPOState.STRUM),
+                        NoteEventWithDefaults(tick=2200, note=Note.B, hopo_state=HOPOState.TAP),
                         NoteEventWithDefaults(tick=2300, note=Note.OPEN),
                     ],
                     [
@@ -305,12 +309,11 @@ class TestNoteEvent(object):
             mock_refine_sustain = mocker.patch.object(
                 NoteEvent, "_refine_sustain", return_value=pytest.defaults.sustain
             )
-            got = NoteEventWithDefaults(is_forced=True, is_tap=True)
+            got = NoteEventWithDefaults()
             mock_refine_sustain.assert_called_once_with(pytest.defaults.sustain)
             assert got.note == pytest.defaults.note
             assert got.sustain == pytest.defaults.sustain
-            assert got._is_forced is True
-            assert got._is_tap is True
+            assert got.hopo_state == pytest.defaults.hopo_state
 
     class TestRefineSustain(object):
         @pytest.mark.parametrize(
@@ -354,152 +357,195 @@ class TestNoteEvent(object):
 
     class TestComputeHOPOState(object):
         @pytest.mark.parametrize(
-            "current,previous,want",
+            "tick,note,is_tap,is_forced,previous,want",
             [
                 pytest.param(
-                    NoteEventWithDefaults(tick=0, note=Note.G, is_tap=True, is_forced=True),
-                    None,
+                    tests.helpers.tick.calculate_ticks_between_notes_with_defaults(
+                        NoteDuration.SIXTEENTH,
+                    ),
+                    Note.R,
+                    True,
+                    True,
+                    NoteEventWithDefaults(
+                        tick=0,
+                        note=Note.G,
+                    ),
                     HOPOState.TAP,
-                    id="tap_notes_are_taps",
+                    id="forced_tap_note_is_a_tap",
+                    # TODO: I don't actually know if this test case is accurate. Needs verifying.
                 ),
                 pytest.param(
-                    NoteEventWithDefaults(tick=0, note=Note.G),
+                    0,
+                    Note.G,
+                    False,
+                    False,
                     None,
                     HOPOState.STRUM,
                     id="first_note_is_strum",
                 ),
                 pytest.param(
-                    NoteEventWithDefaults(
-                        tick=chartparse.tick.calculate_ticks_between_notes(
-                            pytest.defaults.resolution,
-                            NoteDuration.SIXTEENTH,
-                        ),
-                        note=Note.R,
+                    tests.helpers.tick.calculate_ticks_between_notes_with_defaults(
+                        NoteDuration.SIXTEENTH,
                     ),
-                    NoteEventWithDefaults(tick=0, note=Note.G),
+                    Note.R,
+                    False,
+                    False,
+                    NoteEventWithDefaults(
+                        tick=0,
+                        note=Note.G,
+                    ),
                     HOPOState.HOPO,
                     id="16th_notes_are_hopos",
                 ),
                 pytest.param(
-                    NoteEventWithDefaults(
-                        tick=chartparse.tick.calculate_ticks_between_notes(
-                            pytest.defaults.resolution,
-                            NoteDuration.TWELFTH,
-                        ),
-                        note=Note.R,
+                    tests.helpers.tick.calculate_ticks_between_notes_with_defaults(
+                        NoteDuration.TWELFTH,
                     ),
-                    NoteEventWithDefaults(tick=0, note=Note.G),
+                    Note.R,
+                    False,
+                    False,
+                    NoteEventWithDefaults(
+                        tick=0,
+                        note=Note.G,
+                    ),
                     HOPOState.HOPO,
                     id="12th_notes_are_hopos",
                 ),
                 pytest.param(
-                    NoteEventWithDefaults(
-                        tick=chartparse.tick.calculate_ticks_between_notes(
-                            pytest.defaults.resolution,
-                            NoteDuration.EIGHTH,
-                        ),
-                        note=Note.R,
+                    tests.helpers.tick.calculate_ticks_between_notes_with_defaults(
+                        NoteDuration.EIGHTH,
                     ),
-                    NoteEventWithDefaults(tick=0, note=Note.G),
+                    Note.R,
+                    False,
+                    False,
+                    NoteEventWithDefaults(
+                        tick=0,
+                        note=Note.G,
+                    ),
                     HOPOState.STRUM,
                     id="8th_notes_are_strums",
                 ),
                 pytest.param(
+                    tests.helpers.tick.calculate_ticks_between_notes_with_defaults(
+                        NoteDuration.SIXTEENTH,
+                    ),
+                    Note.G,
+                    False,
+                    False,
                     NoteEventWithDefaults(
-                        tick=chartparse.tick.calculate_ticks_between_notes(
-                            pytest.defaults.resolution,
-                            NoteDuration.SIXTEENTH,
-                        ),
+                        tick=0,
                         note=Note.G,
                     ),
-                    NoteEventWithDefaults(tick=0, note=Note.G),
                     HOPOState.STRUM,
                     id="consecutive_16th_notes_are_strums",
                 ),
                 pytest.param(
+                    tests.helpers.tick.calculate_ticks_between_notes_with_defaults(
+                        NoteDuration.TWELFTH,
+                    ),
+                    Note.G,
+                    False,
+                    False,
                     NoteEventWithDefaults(
-                        tick=chartparse.tick.calculate_ticks_between_notes(
-                            pytest.defaults.resolution,
-                            NoteDuration.TWELFTH,
-                        ),
+                        tick=0,
                         note=Note.G,
                     ),
-                    NoteEventWithDefaults(tick=0, note=Note.G),
                     HOPOState.STRUM,
                     id="consecutive_12th_notes_are_strums",
                 ),
                 pytest.param(
+                    tests.helpers.tick.calculate_ticks_between_notes_with_defaults(
+                        NoteDuration.EIGHTH,
+                    ),
+                    Note.G,
+                    False,
+                    False,
                     NoteEventWithDefaults(
-                        tick=chartparse.tick.calculate_ticks_between_notes(
-                            pytest.defaults.resolution,
-                            NoteDuration.EIGHTH,
-                        ),
+                        tick=0,
                         note=Note.G,
                     ),
-                    NoteEventWithDefaults(tick=0, note=Note.G),
                     HOPOState.STRUM,
                     id="consecutive_8th_notes_are_strums",
                 ),
                 pytest.param(
-                    NoteEventWithDefaults(
-                        tick=chartparse.tick.calculate_ticks_between_notes(
-                            pytest.defaults.resolution,
-                            NoteDuration.TWELFTH,
-                        ),
-                        note=Note.G,
+                    tests.helpers.tick.calculate_ticks_between_notes_with_defaults(
+                        NoteDuration.TWELFTH,
                     ),
-                    NoteEventWithDefaults(tick=0, note=Note.RY),
+                    Note.G,
+                    False,
+                    False,
+                    NoteEventWithDefaults(
+                        tick=0,
+                        note=Note.RY,
+                    ),
                     HOPOState.HOPO,
                     id="pull_off_from_chord_is_hopo",
                 ),
                 pytest.param(
-                    NoteEventWithDefaults(
-                        tick=chartparse.tick.calculate_ticks_between_notes(
-                            pytest.defaults.resolution,
-                            NoteDuration.TWELFTH,
-                        ),
-                        note=Note.RY,
+                    tests.helpers.tick.calculate_ticks_between_notes_with_defaults(
+                        NoteDuration.TWELFTH,
                     ),
-                    NoteEventWithDefaults(tick=0, note=Note.G),
+                    Note.RY,
+                    False,
+                    False,
+                    NoteEventWithDefaults(
+                        tick=0,
+                        note=Note.G,
+                    ),
                     HOPOState.STRUM,
                     id="hammer_on_to_chord_is_not_hopo",
                 ),
                 pytest.param(
-                    NoteEventWithDefaults(
-                        tick=chartparse.tick.calculate_ticks_between_notes(
-                            pytest.defaults.resolution,
-                            NoteDuration.TWELFTH,
-                        ),
-                        note=Note.OPEN,
+                    tests.helpers.tick.calculate_ticks_between_notes_with_defaults(
+                        NoteDuration.TWELFTH,
                     ),
-                    NoteEventWithDefaults(tick=0, note=Note.G),
+                    Note.OPEN,
+                    False,
+                    False,
+                    NoteEventWithDefaults(
+                        tick=0,
+                        note=Note.G,
+                    ),
                     HOPOState.HOPO,
                     id="hammer_on_to_open_is_hopo",
                 ),
                 pytest.param(
-                    NoteEventWithDefaults(
-                        tick=chartparse.tick.calculate_ticks_between_notes(
-                            pytest.defaults.resolution,
-                            NoteDuration.TWELFTH,
-                        ),
-                        note=Note.G,
+                    tests.helpers.tick.calculate_ticks_between_notes_with_defaults(
+                        NoteDuration.TWELFTH,
                     ),
-                    NoteEventWithDefaults(tick=0, note=Note.OPEN),
+                    Note.G,
+                    False,
+                    False,
+                    NoteEventWithDefaults(
+                        tick=0,
+                        note=Note.OPEN,
+                    ),
                     HOPOState.HOPO,
                     id="pull_off_to_open_is_hopo",
                 ),
             ],
         )
-        def test(self, current, previous, want):
-            got = NoteEvent._compute_hopo_state(
+        def test(self, tick, note, is_tap, is_forced, previous, want):
+            got = NoteEvent.compute_hopo_state(
                 pytest.defaults.resolution,
-                current.tick,
-                current.note,
-                current._is_tap,
-                current._is_forced,
+                tick,
+                note,
+                is_tap,
+                is_forced,
                 previous,
             )
             assert got == want
+
+        def test_forced_first_note_raises(self):
+            with pytest.raises(ValueError):
+                _ = NoteEvent.compute_hopo_state(
+                    pytest.defaults.resolution,
+                    pytest.defaults.tick,
+                    pytest.defaults.note,
+                    False,
+                    True,
+                    None,
+                )
 
     class TestLongestSustain(object):
         @pytest.mark.parametrize(

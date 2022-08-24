@@ -81,7 +81,6 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
         for instrument, difficulties in self.instrument_tracks.items():
             for difficulty, track in difficulties.items():
-                self._populate_note_event_hopo_states(track.note_events)
                 self._populate_last_note_timestamp(track)
 
     @classmethod
@@ -213,14 +212,6 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         track._last_note_timestamp, _ = self.sync_track.timestamp_at_tick(
             most_final_tick, start_bpm_event_index=most_final_tick_event._proximal_bpm_event_index
         )
-
-    def _populate_note_event_hopo_states(self, events: Sequence[NoteEvent]) -> None:
-        if not events:
-            return
-
-        for i, cur_event in enumerate(events):
-            previous_event = events[i - 1] if i > 0 else None
-            cur_event._populate_hopo_state(self.metadata.resolution, previous_event)
 
     def _seconds_from_ticks_at_bpm(self, ticks: int, bpm: float) -> float:
         return chartparse.tick.seconds_from_ticks_at_bpm(ticks, bpm, self.metadata.resolution)

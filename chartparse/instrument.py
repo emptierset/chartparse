@@ -313,19 +313,27 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
                 continue
 
         start_bpm_event_index = 0
-        events = []
+        events: list[NoteEvent] = []
         for tick in sorted(tick_to_note_array.keys()):
             note = Note(tick_to_note_array[tick])
             timestamp, start_bpm_event_index = tatter.timestamp_at_tick(
                 tick, start_bpm_event_index=start_bpm_event_index
             )
+            previous_event = events[-1] if events else None
+            hopo_state = NoteEvent.compute_hopo_state(
+                tatter.resolution,
+                tick,
+                note,
+                tick_to_is_tap[tick],
+                tick_to_is_forced[tick],
+                previous_event,
+            )
             event = NoteEvent(
                 tick,
                 timestamp,
                 note,
+                hopo_state,
                 sustain=tuple(tick_to_sustain_list[tick]),
-                is_forced=tick_to_is_forced[tick],
-                is_tap=tick_to_is_tap[tick],
                 proximal_bpm_event_idx=start_bpm_event_index,
             )
             events.append(event)
@@ -416,13 +424,8 @@ class NoteEvent(Event):
     sustain: Final[ComplexNoteSustainT]
     """Information about this note event's sustain value."""
 
-    # TODO: Figure out how to accurately represent it in the type system that this is set later.
-    # Might involve wrapping ``NoteEvent`` in a subclass that has ``hopo_state``.
-    hopo_state: HOPOState
-    """Whether the note is a strum, a HOPO, or a tap note.
-
-    This is not set in ``__init__``; it must be set via ``NoteEvent._populate_hopo_state``.
-    """
+    hopo_state: Final[HOPOState]
+    """Whether the note is a strum, a HOPO, or a tap note."""
 
     # TODO: Make this final.
     star_power_data: Optional[StarPowerData]
@@ -430,10 +433,6 @@ class NoteEvent(Event):
 
     If this is ``None``, then the note is not a star power note.
     """
-
-    _is_forced: Final[bool]
-
-    _is_tap: Final[bool]
 
     # This regex matches a single "N" line within a instrument track section,
     # but this class should be used to represent all of the notes at a
@@ -450,17 +449,15 @@ class NoteEvent(Event):
         tick: int,
         timestamp: datetime.timedelta,
         note: Note,
+        hopo_state: HOPOState,
         sustain: ComplexNoteSustainT = 0,
-        is_forced: bool = False,
-        is_tap: bool = False,
         star_power_data: Optional[StarPowerData] = None,
         proximal_bpm_event_idx: int = 0,
     ) -> None:
         super().__init__(tick, timestamp, proximal_bpm_event_idx=proximal_bpm_event_idx)
         self.note = note
+        self.hopo_state = hopo_state
         self.sustain = self._refine_sustain(sustain)
-        self._is_forced = is_forced
-        self._is_tap = is_tap
         self.star_power_data = star_power_data
 
     @staticmethod
@@ -474,14 +471,8 @@ class NoteEvent(Event):
                 return first_non_none_sustain
         return sustain
 
-    def _populate_hopo_state(self, resolution: int, previous: Optional[NoteEvent]) -> None:
-        self.hopo_state = self._compute_hopo_state(
-            resolution, self.tick, self.note, self._is_tap, self._is_forced, previous
-        )
-
-    # TODO: Refactor this to an instance method and delete _populate_hopo_state.
     @staticmethod
-    def _compute_hopo_state(
+    def compute_hopo_state(
         resolution: int,
         tick: int,
         note: Note,
@@ -489,6 +480,9 @@ class NoteEvent(Event):
         is_forced: bool,
         previous: Optional[NoteEvent],
     ) -> HOPOState:
+        if is_forced and previous is None:
+            raise ValueError("cannot force the first note in a chart")
+
         if is_tap:
             return HOPOState.TAP
 
@@ -523,18 +517,12 @@ class NoteEvent(Event):
             to_join.append("*")
 
         flags = []
-        if hasattr(self, "hopo_state") and self.hopo_state is not None:
-            if self.hopo_state == HOPOState.TAP:
-                flags.append("T")
-            elif self.hopo_state == HOPOState.HOPO:
-                flags.append("H")
-            elif self.hopo_state == HOPOState.STRUM:
-                flags.append("S")
-        else:
-            if self._is_forced:
-                flags.append("F")
-            if self._is_tap:
-                flags.append("T")
+        if self.hopo_state == HOPOState.TAP:
+            flags.append("T")
+        elif self.hopo_state == HOPOState.HOPO:
+            flags.append("H")
+        elif self.hopo_state == HOPOState.STRUM:
+            flags.append("S")
         if flags:
             to_join.extend([" [hopo_state=", "".join(flags), "]"])
 

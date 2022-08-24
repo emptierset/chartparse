@@ -34,9 +34,6 @@ class TestChart(object):
             default_instrument_track,
             default_instrument_tracks,
         ):
-            mock_populate_event_hopo_states = mocker.patch.object(
-                Chart, "_populate_note_event_hopo_states"
-            )
             mock_populate_last_note_timestamp = mocker.patch.object(
                 Chart, "_populate_last_note_timestamp"
             )
@@ -52,9 +49,6 @@ class TestChart(object):
             assert got.sync_track == default_sync_track
             assert got.instrument_tracks == default_instrument_tracks
 
-            mock_populate_event_hopo_states.assert_called_once_with(
-                default_instrument_track.note_events
-            )
             mock_populate_last_note_timestamp.assert_called_once_with(default_instrument_track)
 
     class TestFromFileAndFilepath(object):
@@ -228,33 +222,6 @@ class TestChart(object):
         def test_raises(self, lines):
             with pytest.raises(RegexNotMatchError):
                 _ = Chart._find_sections(lines)
-
-    class TestPopulateNoteEventHOPOStates(object):
-        def test(self, mocker, minimal_chart):
-            note_event1 = NoteEventWithDefaults(
-                tick=0,
-                note=Note.G,
-            )
-            note_event2 = NoteEventWithDefaults(
-                tick=1,
-                note=Note.R,
-            )
-            note_events = [note_event1, note_event2]
-
-            mock_populate_hopo_state1 = mocker.patch.object(note_event1, "_populate_hopo_state")
-            mock_populate_hopo_state2 = mocker.patch.object(note_event2, "_populate_hopo_state")
-
-            minimal_chart._populate_note_event_hopo_states(note_events)
-
-            mock_populate_hopo_state1.assert_called_once_with(pytest.defaults.resolution, None)
-            mock_populate_hopo_state2.assert_called_once_with(
-                pytest.defaults.resolution, note_event1
-            )
-
-        def test_empty(self, minimal_chart):
-            note_events = []
-            minimal_chart._populate_note_event_hopo_states(note_events)
-            assert len(note_events) == 0
 
     class TestPopulateLastNoteTimestamp(object):
         @pytest.mark.parametrize(
