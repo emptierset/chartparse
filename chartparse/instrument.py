@@ -26,7 +26,7 @@ import chartparse.tick
 import chartparse.track
 from chartparse.datastructures import ImmutableSortedList
 from chartparse.event import Event, TimestampAtTickSupporter
-from chartparse.exceptions import RegexNotMatchError
+from chartparse.exceptions import ProgrammerError, RegexNotMatchError
 from chartparse.tick import NoteDuration
 from chartparse.util import (
     AllValuesGettableEnum,
@@ -545,9 +545,7 @@ class NoteEvent(Event):
                 raise ValueError("all sustain values are `None`")
             return max(s for s in self.sustain if s is not None)
         else:
-            raise RuntimeError(
-                f"sustain {self.sustain} must be type list, or int."
-            )  # pragma: no cover
+            raise ProgrammerError  # pragma: no cover
 
     @functools.cached_property
     def end_tick(self) -> int:
