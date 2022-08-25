@@ -185,7 +185,7 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     note_events: Final[Sequence[NoteEvent]]
     """An (instrument, difficulty) pair's ``NoteEvent`` objects."""
 
-    star_power_events: Final[Sequence[StarPowerEvent]]
+    star_power_events: Final[ImmutableSortedList[StarPowerEvent]]
     """An (instrument, difficulty) pair's ``StarPowerEvent`` objects."""
 
     # TODO: Make this optional? What if there are no notes?
@@ -213,7 +213,7 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         instrument: Instrument,
         difficulty: Difficulty,
         note_events: Sequence[NoteEvent],
-        star_power_events: Sequence[StarPowerEvent],
+        star_power_events: ImmutableSortedList[StarPowerEvent],
     ) -> None:
         """Instantiates all instance attributes."""
         if resolution <= 0:
