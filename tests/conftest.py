@@ -126,91 +126,159 @@ _default_crowd_stream = "crowd.ogg"
 _unmatchable_regex = r"(?!x)x"
 
 
-# TODO: Avoid this abstraction by just setting the defaults manually.
-def dataclass_list_field(xs):
-    return dataclasses.field(default_factory=lambda: list(xs))
-
-
 @dataclasses.dataclass
 class Defaults(object):
-    filepath: ... = _default_filepath
+    filepath: ...
 
-    tick: ... = _default_tick
-    sustain: ... = _default_sustain
+    tick: ...
+    sustain: ...
 
-    timestamp: ... = _default_timestamp
+    timestamp: ...
 
-    seconds: ... = _default_seconds
+    seconds: ...
 
-    name: ... = _default_name
-    artist: ... = _default_artist
-    charter: ... = _default_charter
-    album: ... = _default_album
-    year: ... = _default_year
-    offset: ... = _default_offset
-    offset_string: ... = _default_offset_string
-    resolution: ... = _default_resolution
-    resolution_string: ... = _default_resolution_string
-    player2: ... = _default_player2
-    player2_string: ... = _default_player2_string
-    intensity: ... = _default_intensity
-    intensity_string: ... = _default_intensity_string
-    preview_start: ... = _default_preview_start
-    preview_start_string: ... = _default_preview_start_string
-    preview_end: ... = _default_preview_end
-    preview_end_string: ... = _default_preview_end_string
-    genre: ... = _default_genre
-    media_type: ... = _default_media_type
-    music_stream: ... = _default_music_stream
-    guitar_stream: ... = _default_guitar_stream
-    rhythm_stream: ... = _default_rhythm_stream
-    bass_stream: ... = _default_bass_stream
-    drum_stream: ... = _default_drum_stream
-    drum2_stream: ... = _default_drum2_stream
-    drum3_stream: ... = _default_drum3_stream
-    drum4_stream: ... = _default_drum4_stream
-    vocal_stream: ... = _default_vocal_stream
-    keys_stream: ... = _default_keys_stream
-    crowd_stream: ... = _default_crowd_stream
+    name: ...
+    artist: ...
+    charter: ...
+    album: ...
+    year: ...
+    offset: ...
+    offset_string: ...
+    resolution: ...
+    resolution_string: ...
+    player2: ...
+    player2_string: ...
+    intensity: ...
+    intensity_string: ...
+    preview_start: ...
+    preview_start_string: ...
+    preview_end: ...
+    preview_end_string: ...
+    genre: ...
+    media_type: ...
+    music_stream: ...
+    guitar_stream: ...
+    rhythm_stream: ...
+    bass_stream: ...
+    drum_stream: ...
+    drum2_stream: ...
+    drum3_stream: ...
+    drum4_stream: ...
+    vocal_stream: ...
+    keys_stream: ...
+    crowd_stream: ...
 
-    bpm: ... = _default_bpm
-    bpm_event: ... = _default_bpm_event
-    bpm_events: ... = dataclass_list_field(_default_bpm_events)
+    bpm: ...
+    bpm_event: ...
+    bpm_events: ...
 
-    upper_time_signature_numeral: ... = _default_upper_time_signature_numeral
-    lower_time_signature_numeral: ... = _default_lower_time_signature_numeral
-    time_signature_event: ... = _default_time_signature_event
-    time_signature_events: ... = dataclass_list_field(_default_time_signature_events)
+    upper_time_signature_numeral: ...
+    lower_time_signature_numeral: ...
+    time_signature_event: ...
+    time_signature_events: ...
 
-    global_event_value: ... = _default_global_event_value
-    text_event_value: ... = _default_text_event_value
-    section_event_value: ... = _default_section_event_value
-    lyric_event_value: ... = _default_lyric_event_value
-    text_event: ... = _default_text_event
-    section_event: ... = _default_section_event
-    lyric_event: ... = _default_lyric_event
-    text_events: ... = dataclass_list_field(_default_text_events)
-    section_events: ... = dataclass_list_field(_default_section_events)
-    lyric_events: ... = dataclass_list_field(_default_lyric_events)
+    global_event_value: ...
+    text_event_value: ...
+    section_event_value: ...
+    lyric_event_value: ...
+    text_event: ...
+    section_event: ...
+    lyric_event: ...
+    text_events: ...
+    section_events: ...
+    lyric_events: ...
 
-    instrument: ... = _default_instrument
-    difficulty: ... = _default_difficulty
-    section_name: ... = _default_section_name
+    instrument: ...
+    difficulty: ...
+    section_name: ...
 
-    hopo_state: ... = _default_hopo_state
+    hopo_state: ...
 
-    note: ... = _default_note
-    note_event: ... = _default_note_event
-    note_events: ... = dataclass_list_field(_default_note_events)
+    note: ...
+    note_event: ...
+    note_events: ...
 
-    star_power_event: ... = _default_star_power_event
-    star_power_events: ... = dataclass_list_field(_default_star_power_events)
+    star_power_event: ...
+    star_power_events: ...
 
 
 def pytest_configure():
     pytest.invalid_chart_line = _invalid_chart_line
     pytest.unmatchable_regex = _unmatchable_regex
-    pytest.defaults = Defaults()
+    pytest.defaults = Defaults(
+        filepath=_default_filepath,
+
+        tick=_default_tick,
+        sustain=_default_sustain,
+
+        timestamp=_default_timestamp,
+
+        seconds=_default_seconds,
+
+        name=_default_name,
+        artist=_default_artist,
+        charter=_default_charter,
+        album=_default_album,
+        year=_default_year,
+        offset=_default_offset,
+        offset_string=_default_offset_string,
+        resolution=_default_resolution,
+        resolution_string=_default_resolution_string,
+        player2=_default_player2,
+        player2_string=_default_player2_string,
+        intensity=_default_intensity,
+        intensity_string=_default_intensity_string,
+        preview_start=_default_preview_start,
+        preview_start_string=_default_preview_start_string,
+        preview_end=_default_preview_end,
+        preview_end_string=_default_preview_end_string,
+        genre=_default_genre,
+        media_type=_default_media_type,
+        music_stream=_default_music_stream,
+        guitar_stream=_default_guitar_stream,
+        rhythm_stream=_default_rhythm_stream,
+        bass_stream=_default_bass_stream,
+        drum_stream=_default_drum_stream,
+        drum2_stream=_default_drum2_stream,
+        drum3_stream=_default_drum3_stream,
+        drum4_stream=_default_drum4_stream,
+        vocal_stream=_default_vocal_stream,
+        keys_stream=_default_keys_stream,
+        crowd_stream=_default_crowd_stream,
+
+        bpm=_default_bpm,
+        bpm_event=_default_bpm_event,
+        bpm_events=_default_bpm_events,
+
+        upper_time_signature_numeral=_default_upper_time_signature_numeral,
+        lower_time_signature_numeral=_default_lower_time_signature_numeral,
+        time_signature_event=_default_time_signature_event,
+        time_signature_events=_default_time_signature_events,
+
+        global_event_value=_default_global_event_value,
+        text_event_value=_default_text_event_value,
+        section_event_value=_default_section_event_value,
+        lyric_event_value=_default_lyric_event_value,
+        text_event=_default_text_event,
+        section_event=_default_section_event,
+        lyric_event=_default_lyric_event,
+        text_events=_default_text_events,
+        section_events=_default_section_events,
+        lyric_events=_default_lyric_events,
+
+        instrument=_default_instrument,
+        difficulty=_default_difficulty,
+        section_name=_default_section_name,
+
+        hopo_state=_default_hopo_state,
+
+        note=_default_note,
+        note_event=_default_note_event,
+        note_events=_default_note_events,
+
+        star_power_event=_default_star_power_event,
+        star_power_events=_default_star_power_events,
+    )
 
 
 @pytest.fixture
