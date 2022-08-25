@@ -320,7 +320,7 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
                 tick, start_bpm_event_index=start_bpm_event_index
             )
             previous_event = events[-1] if events else None
-            hopo_state = NoteEvent.compute_hopo_state(
+            hopo_state = NoteEvent._compute_hopo_state(
                 tatter.resolution,
                 tick,
                 note,
@@ -467,7 +467,7 @@ class NoteEvent(Event):
         return sustain
 
     @staticmethod
-    def compute_hopo_state(
+    def _compute_hopo_state(
         resolution: int,
         tick: int,
         note: Note,

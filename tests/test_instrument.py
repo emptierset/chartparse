@@ -526,7 +526,7 @@ class TestNoteEvent(object):
             ],
         )
         def test(self, tick, note, is_tap, is_forced, previous, want):
-            got = NoteEvent.compute_hopo_state(
+            got = NoteEvent._compute_hopo_state(
                 pytest.defaults.resolution,
                 tick,
                 note,
@@ -538,7 +538,7 @@ class TestNoteEvent(object):
 
         def test_forced_first_note_raises(self):
             with pytest.raises(ValueError):
-                _ = NoteEvent.compute_hopo_state(
+                _ = NoteEvent._compute_hopo_state(
                     pytest.defaults.resolution,
                     pytest.defaults.tick,
                     pytest.defaults.note,
