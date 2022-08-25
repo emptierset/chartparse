@@ -549,6 +549,10 @@ class NoteEvent(Event):
                 f"sustain {self.sustain} must be type list, or int."
             )  # pragma: no cover
 
+    @functools.cached_property
+    def end_tick(self) -> int:
+        return self.tick + self.longest_sustain
+
 
 SpecialEventT = TypeVar("SpecialEventT", bound="SpecialEvent")
 

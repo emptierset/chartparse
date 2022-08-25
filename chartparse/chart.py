@@ -195,22 +195,17 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         return sections
 
     def _populate_last_note_timestamp(self, track: InstrumentTrack) -> None:
-        if len(track.note_events) == 0:
+        if not track.note_events:
             return
 
-        def final_tick_from_event(event):
-            return event.tick + event.longest_sustain
-
-        most_final_tick_event = track.note_events[0]
-        most_final_tick = final_tick_from_event(most_final_tick_event)
+        event_with_final_tick = track.note_events[0]
         for event in track.note_events:
-            final_tick = final_tick_from_event(event)
-            if final_tick >= most_final_tick:
-                most_final_tick = final_tick
-                most_final_tick_event = event
+            if event.end_tick >= event_with_final_tick.end_tick:
+                event_with_final_tick = event
 
         track._last_note_timestamp, _ = self.sync_track.timestamp_at_tick(
-            most_final_tick, start_bpm_event_index=most_final_tick_event._proximal_bpm_event_index
+            event_with_final_tick.end_tick,
+            start_bpm_event_index=event_with_final_tick._proximal_bpm_event_index,
         )
 
     def _seconds_from_ticks_at_bpm(self, ticks: int, bpm: float) -> float:
