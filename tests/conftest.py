@@ -89,7 +89,7 @@ _default_note_events = [_default_note_event]
 
 
 _default_star_power_event = StarPowerEvent(_default_tick, _default_timestamp, _default_sustain)
-_default_star_power_events = [_default_star_power_event]
+_default_star_power_events = ImmutableSortedList([_default_star_power_event], already_sorted=True)
 
 _default_name = "Song Name"
 _default_artist = "Artist Name"
@@ -207,14 +207,10 @@ def pytest_configure():
     pytest.unmatchable_regex = _unmatchable_regex
     pytest.defaults = Defaults(
         filepath=_default_filepath,
-
         tick=_default_tick,
         sustain=_default_sustain,
-
         timestamp=_default_timestamp,
-
         seconds=_default_seconds,
-
         name=_default_name,
         artist=_default_artist,
         charter=_default_charter,
@@ -245,16 +241,13 @@ def pytest_configure():
         vocal_stream=_default_vocal_stream,
         keys_stream=_default_keys_stream,
         crowd_stream=_default_crowd_stream,
-
         bpm=_default_bpm,
         bpm_event=_default_bpm_event,
         bpm_events=_default_bpm_events,
-
         upper_time_signature_numeral=_default_upper_time_signature_numeral,
         lower_time_signature_numeral=_default_lower_time_signature_numeral,
         time_signature_event=_default_time_signature_event,
         time_signature_events=_default_time_signature_events,
-
         global_event_value=_default_global_event_value,
         text_event_value=_default_text_event_value,
         section_event_value=_default_section_event_value,
@@ -265,17 +258,13 @@ def pytest_configure():
         text_events=_default_text_events,
         section_events=_default_section_events,
         lyric_events=_default_lyric_events,
-
         instrument=_default_instrument,
         difficulty=_default_difficulty,
         section_name=_default_section_name,
-
         hopo_state=_default_hopo_state,
-
         note=_default_note,
         note_event=_default_note_event,
         note_events=_default_note_events,
-
         star_power_event=_default_star_power_event,
         star_power_events=_default_star_power_events,
     )

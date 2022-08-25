@@ -1,6 +1,20 @@
 import pytest
 
-from chartparse.instrument import StarPowerEvent, NoteEvent
+from chartparse.instrument import StarPowerEvent, NoteEvent, SpecialEvent
+
+
+def SpecialEventWithDefaults(
+    *,
+    tick=pytest.defaults.tick,
+    timestamp=pytest.defaults.timestamp,
+    sustain=pytest.defaults.sustain,
+    proximal_bpm_event_idx=0,
+    init_end_tick=False,
+):
+    s = SpecialEvent(tick, timestamp, sustain, proximal_bpm_event_idx=proximal_bpm_event_idx)
+    if init_end_tick:
+        s.end_tick  # accessing this initializes it because it's a cached_property
+    return s
 
 
 def StarPowerEventWithDefaults(
@@ -9,8 +23,12 @@ def StarPowerEventWithDefaults(
     timestamp=pytest.defaults.timestamp,
     sustain=pytest.defaults.sustain,
     proximal_bpm_event_idx=0,
+    init_end_tick=False,
 ):
-    return StarPowerEvent(tick, timestamp, sustain, proximal_bpm_event_idx=proximal_bpm_event_idx)
+    s = StarPowerEvent(tick, timestamp, sustain, proximal_bpm_event_idx=proximal_bpm_event_idx)
+    if init_end_tick:
+        s.end_tick  # accessing this initializes it because it's a cached_property
+    return s
 
 
 def NoteEventWithDefaults(

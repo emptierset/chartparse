@@ -225,7 +225,6 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         self.note_events = note_events
         self.star_power_events = star_power_events
         self.section_name = difficulty.value + instrument.value
-        self._populate_star_power_data()
 
     @classmethod
     def from_chart_lines(
@@ -249,13 +248,15 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             An ``InstrumentTrack`` parsed from the strings returned by ``iterator_getter``.
         """
 
-        note_events = cls._parse_note_events_from_chart_lines(iterator_getter(), tatter)
         star_power_events: ImmutableSortedList[
             StarPowerEvent
         ] = chartparse.track.parse_events_from_chart_lines(
             iterator_getter(),
             StarPowerEvent.from_chart_line,
             tatter,
+        )
+        note_events = cls._parse_note_events_from_chart_lines(
+            iterator_getter(), star_power_events, tatter
         )
         return cls(tatter.resolution, instrument, difficulty, note_events, star_power_events)
 
@@ -273,6 +274,7 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     def _parse_note_events_from_chart_lines(
         cls,
         chart_lines: Iterable[str],
+        star_power_events: ImmutableSortedList[StarPowerEvent],
         tatter: TimestampAtTickSupporter,
     ) -> ImmutableSortedList[NoteEvent]:
         # TODO: Use regular dicts here; this function is a very tight loop so
@@ -312,13 +314,16 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
                 logger.warning(cls._unhandled_note_track_index_log_msg_tmpl.format(note_index))
                 continue
 
+        star_power_event_index = 0
         start_bpm_event_index = 0
         events: list[NoteEvent] = []
         for tick in sorted(tick_to_note_array.keys()):
             note = Note(tick_to_note_array[tick])
+
             timestamp, start_bpm_event_index = tatter.timestamp_at_tick(
                 tick, start_bpm_event_index=start_bpm_event_index
             )
+
             previous_event = events[-1] if events else None
             hopo_state = NoteEvent._compute_hopo_state(
                 tatter.resolution,
@@ -328,6 +333,11 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
                 tick_to_is_forced[tick],
                 previous_event,
             )
+
+            star_power_data, star_power_event_index = NoteEvent._compute_star_power_data(
+                tick, star_power_events, start_idx=star_power_event_index
+            )
+
             event = NoteEvent(
                 tick,
                 timestamp,
@@ -335,34 +345,12 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
                 hopo_state,
                 sustain=tuple(tick_to_sustain_list[tick]),
                 proximal_bpm_event_idx=start_bpm_event_index,
+                star_power_data=star_power_data,
             )
             events.append(event)
+
         # This is already sorted because we iterate over `sorted(tick_to_note_array.keys())`.
         return ImmutableSortedList(events, already_sorted=True)
-
-    def _populate_star_power_data(self) -> None:
-        num_notes = len(self.note_events)
-
-        note_idx_to_star_power_idx = dict()
-        note_idx = 0
-        for star_power_idx, star_power_event in enumerate(self.star_power_events):
-            star_power_start_tick = star_power_event.tick
-            star_power_end_tick = star_power_start_tick + star_power_event.sustain
-
-            # Seek the first note after this star power phrase.
-            while note_idx < num_notes:
-                note = self.note_events[note_idx]
-                if note.tick >= star_power_end_tick:
-                    break
-                if star_power_start_tick <= note.tick:
-                    note_idx_to_star_power_idx[note_idx] = star_power_idx
-                note_idx += 1
-
-        for note_idx, note_event in enumerate(self.note_events):
-            star_power_index_of_note = note_idx_to_star_power_idx.get(note_idx, None)
-            if star_power_index_of_note is None:
-                continue
-            note_event.star_power_data = StarPowerData(star_power_index_of_note)
 
 
 @typing.final
@@ -423,8 +411,7 @@ class NoteEvent(Event):
     hopo_state: Final[HOPOState]
     """Whether the note is a strum, a HOPO, or a tap note."""
 
-    # TODO: Make this final.
-    star_power_data: Optional[StarPowerData]
+    star_power_data: Final[Optional[StarPowerData]]
     """Information associated with star power for this note.
 
     If this is ``None``, then the note is not a star power note.
@@ -504,6 +491,31 @@ class NoteEvent(Event):
         else:
             return HOPOState.STRUM
 
+    @staticmethod
+    def _compute_star_power_data(
+        tick: int,
+        star_power_events: ImmutableSortedList[StarPowerEvent],
+        *,
+        start_idx: int = 0,
+    ) -> tuple[Optional[StarPowerData], int]:
+        if not star_power_events:
+            return None, 0
+
+        if start_idx >= star_power_events.length:
+            raise ValueError(
+                f"there are no StarPowerEvents at or after index {start_idx} in star_power_events"
+            )
+
+        for candidate_idx in range(start_idx, star_power_events.length):
+            if not star_power_events[candidate_idx].tick_is_after_event(tick):
+                break
+
+        candidate = star_power_events[candidate_idx]
+        if not candidate.tick_is_in_event(tick):
+            return None, candidate_idx
+
+        return StarPowerData(candidate_idx), candidate_idx
+
     def __str__(self) -> str:  # pragma: no cover
         to_join = [super().__str__()]
         to_join.append(f": sustain={self.sustain}")
@@ -545,10 +557,13 @@ class SpecialEvent(Event):
     """Provides a regex template for parsing 'S' style chart lines.
 
     This is typically used only as a base class for more specialized subclasses.
+    """
 
-    Attributes:
-        sustain: The number of ticks for which this event is sustained. This event does _not_
-            overlap events at ``tick + sustain``; it ends immediately before that tick.
+    sustain: Final[int]
+    """The number of ticks for which this event is sustained.
+
+    This event does _not_ overlap events at ``tick + sustain``; it ends immediately before that
+    tick.
     """
 
     # Match 1: Tick
@@ -597,6 +612,16 @@ class SpecialEvent(Event):
         tick, sustain = int(m.group(1)), int(m.group(2))
         timestamp, proximal_bpm_event_idx = cls.calculate_timestamp(tick, prev_event, tatter)
         return cls(tick, timestamp, sustain, proximal_bpm_event_idx=proximal_bpm_event_idx)
+
+    @functools.cached_property
+    def end_tick(self) -> int:
+        return self.tick + self.sustain
+
+    def tick_is_in_event(self, tick: int) -> bool:
+        return self.tick <= tick and not self.tick_is_after_event(tick)
+
+    def tick_is_after_event(self, tick: int) -> bool:
+        return tick >= self.end_tick
 
     def __str__(self) -> str:  # pragma: no cover
         to_join = [super().__str__()]

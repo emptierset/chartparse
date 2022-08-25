@@ -16,7 +16,12 @@ from chartparse.instrument import (
 from chartparse.tick import NoteDuration
 
 import tests.helpers.tick
-from tests.helpers.instrument import StarPowerEventWithDefaults, NoteEventWithDefaults
+from tests.helpers.datastructures import AlreadySortedImmutableSortedList
+from tests.helpers.instrument import (
+    StarPowerEventWithDefaults,
+    NoteEventWithDefaults,
+    SpecialEventWithDefaults,
+)
 from tests.helpers.lines import generate_note as generate_note_line
 from tests.helpers.lines import generate_star_power as generate_star_power_line
 
@@ -24,9 +29,6 @@ from tests.helpers.lines import generate_star_power as generate_star_power_line
 class TestInstrumentTrack(object):
     class TestInit(object):
         def test(self, mocker, default_instrument_track):
-            mock_populate_star_power_data = mocker.patch.object(
-                InstrumentTrack, "_populate_star_power_data"
-            )
             _ = InstrumentTrack(
                 pytest.defaults.resolution,
                 pytest.defaults.instrument,
@@ -39,7 +41,6 @@ class TestInstrumentTrack(object):
             assert default_instrument_track.note_events == pytest.defaults.note_events
             assert default_instrument_track.star_power_events == pytest.defaults.star_power_events
             assert default_instrument_track.section_name == pytest.defaults.section_name
-            mock_populate_star_power_data.assert_called_once()
 
         def test_non_positive_resolution(self):
             with pytest.raises(ValueError):
@@ -79,7 +80,7 @@ class TestInstrumentTrack(object):
                 minimal_tatter,
             )
             mock_parse_note_events.assert_called_once_with(
-                minimal_string_iterator_getter(), minimal_tatter
+                minimal_string_iterator_getter(), pytest.defaults.star_power_events, minimal_tatter
             )
             mock_parse_events.assert_called_once_with(
                 minimal_string_iterator_getter(), StarPowerEvent.from_chart_line, minimal_tatter
@@ -235,8 +236,8 @@ class TestInstrumentTrack(object):
                         NoteEventWithDefaults(tick=2300, note=Note.OPEN),
                     ],
                     [
-                        StarPowerEventWithDefaults(tick=0, sustain=100),
-                        StarPowerEventWithDefaults(tick=2000, sustain=80),
+                        StarPowerEventWithDefaults(tick=0, sustain=100, init_end_tick=True),
+                        StarPowerEventWithDefaults(tick=2000, sustain=80, init_end_tick=True),
                     ],
                     id="everything_together",
                 ),
@@ -255,52 +256,8 @@ class TestInstrumentTrack(object):
             )
             assert got.instrument == pytest.defaults.instrument
             assert got.difficulty == pytest.defaults.difficulty
-            assert got.note_events == want_note_events
             assert got.star_power_events == want_star_power_events
-
-    class TestPopulateStarPowerData(object):
-        @pytest.mark.parametrize(
-            "note_events,star_power_events,want",
-            [
-                pytest.param(
-                    [
-                        NoteEventWithDefaults(tick=0, note=Note.G, sustain=100),
-                        NoteEventWithDefaults(tick=2000, note=Note.R, sustain=50),
-                        NoteEventWithDefaults(tick=2075, note=Note.YB),
-                    ],
-                    [
-                        StarPowerEventWithDefaults(tick=0, sustain=100),
-                        StarPowerEventWithDefaults(tick=2000, sustain=80),
-                    ],
-                    [
-                        NoteEventWithDefaults(
-                            tick=0,
-                            note=Note.G,
-                            sustain=100,
-                            star_power_data=StarPowerData(0),
-                        ),
-                        NoteEventWithDefaults(
-                            tick=2000,
-                            note=Note.R,
-                            sustain=50,
-                            star_power_data=StarPowerData(1),
-                        ),
-                        NoteEventWithDefaults(
-                            tick=2075,
-                            note=Note.YB,
-                            star_power_data=StarPowerData(1),
-                        ),
-                    ],
-                    id="basic",
-                ),
-            ],
-        )
-        def test(self, bare_instrument_track, note_events, star_power_events, want):
-            bare_instrument_track.note_events = note_events
-            bare_instrument_track.star_power_events = star_power_events
-            bare_instrument_track._populate_star_power_data()
-            got = bare_instrument_track.note_events
-            assert got == want
+            assert got.note_events == want_note_events
 
 
 class TestNoteEvent(object):
@@ -547,6 +504,76 @@ class TestNoteEvent(object):
                     None,
                 )
 
+    class TestComputeStarPowerData(object):
+        @pytest.mark.parametrize(
+            "tick,star_power_events,want_star_power_data,want_start_idx",
+            [
+                pytest.param(
+                    pytest.defaults.tick,
+                    AlreadySortedImmutableSortedList([]),
+                    None,
+                    0,
+                    id="empty_star_power_events",
+                ),
+                pytest.param(
+                    0,
+                    AlreadySortedImmutableSortedList(
+                        [StarPowerEventWithDefaults(tick=100, sustain=10)]
+                    ),
+                    None,
+                    0,
+                    id="tick_not_in_event",
+                ),
+                pytest.param(
+                    10,
+                    AlreadySortedImmutableSortedList(
+                        [
+                            StarPowerEventWithDefaults(tick=0, sustain=10),
+                            StarPowerEventWithDefaults(tick=100, sustain=10),
+                        ]
+                    ),
+                    None,
+                    1,
+                    id="tick_not_in_event_with_noninitial_candidate_idx",
+                ),
+                pytest.param(
+                    0,
+                    AlreadySortedImmutableSortedList(
+                        [StarPowerEventWithDefaults(tick=0, sustain=10)]
+                    ),
+                    StarPowerData(star_power_event_idx=0),
+                    0,
+                    id="tick_in_event",
+                ),
+                pytest.param(
+                    100,
+                    AlreadySortedImmutableSortedList(
+                        [
+                            StarPowerEventWithDefaults(tick=0, sustain=10),
+                            StarPowerEventWithDefaults(tick=100, sustain=10),
+                        ]
+                    ),
+                    StarPowerData(star_power_event_idx=1),
+                    1,
+                    id="tick_in_event_with_noninitial_candidate_idx",
+                ),
+            ],
+        )
+        def test(self, tick, star_power_events, want_star_power_data, want_start_idx):
+            got_star_power_data, got_start_idx = NoteEvent._compute_star_power_data(
+                tick, star_power_events, start_idx=0
+            )
+            assert got_star_power_data == want_star_power_data
+            assert got_start_idx == want_start_idx
+
+        def test_start_idx_after_last_event(self):
+            with pytest.raises(ValueError):
+                _, _ = NoteEvent._compute_star_power_data(
+                    pytest.defaults.tick,
+                    pytest.defaults.star_power_events,
+                    start_idx=len(pytest.defaults.star_power_events),
+                )
+
     class TestLongestSustain(object):
         @pytest.mark.parametrize(
             "sustain,want",
@@ -594,6 +621,44 @@ class TestSpecialEvent(object):
         def test_no_match(self, invalid_chart_line, minimal_tatter):
             with pytest.raises(RegexNotMatchError):
                 _ = SpecialEvent.from_chart_line(invalid_chart_line, None, minimal_tatter)
+
+    class TestTickIsAfterEvent(object):
+        @pytest.mark.parametrize(
+            "tick,want",
+            [
+                pytest.param(0, False, id="before"),
+                pytest.param(
+                    100,
+                    False,
+                    id="coincide_with_start",
+                ),
+                pytest.param(110, True, id="coincide_with_end"),
+                pytest.param(111, True, id="after"),
+            ],
+        )
+        def test(self, tick, want):
+            event = SpecialEventWithDefaults(tick=100, sustain=10)
+            got = event.tick_is_after_event(tick)
+            assert got == want
+
+    class TestTickIsInEvent(object):
+        @pytest.mark.parametrize(
+            "tick,want",
+            [
+                pytest.param(0, False, id="before"),
+                pytest.param(
+                    100,
+                    True,
+                    id="coincide_with_start",
+                ),
+                pytest.param(110, False, id="coincide_with_end"),
+                pytest.param(111, False, id="after"),
+            ],
+        )
+        def test(self, tick, want):
+            event = SpecialEventWithDefaults(tick=100, sustain=10)
+            got = event.tick_is_in_event(tick)
+            assert got == want
 
 
 # TODO: Test regex?
