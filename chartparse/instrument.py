@@ -337,7 +337,8 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
                 proximal_bpm_event_idx=start_bpm_event_index,
             )
             events.append(event)
-        return ImmutableSortedList(events, key=lambda e: e.tick)
+        # This is already sorted because we iterate over `sorted(tick_to_note_array.keys())`.
+        return ImmutableSortedList(events, already_sorted=True)
 
     def _populate_star_power_data(self) -> None:
         num_notes = len(self.note_events)
