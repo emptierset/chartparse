@@ -280,14 +280,72 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         star_power_events: ImmutableSortedList[StarPowerEvent],
         tatter: TimestampAtTickSupporter,
     ) -> ImmutableSortedList[NoteEvent]:
-        tick_to_note_array: collections.defaultdict[int, bytearray] = collections.defaultdict(
+        note_arrays, sustain_lists, is_taps, is_forceds = cls._parse_tick_dicts_from_chart_lines(
+            chart_lines
+        )
+
+        star_power_event_index = 0
+        start_bpm_event_index = 0
+        events: list[NoteEvent] = []
+        for note_tick in sorted(note_arrays.keys()):
+            note = Note(note_arrays[note_tick])
+
+            timestamp, start_bpm_event_index = tatter.timestamp_at_tick(
+                note_tick, start_bpm_event_index=start_bpm_event_index
+            )
+
+            previous_event = events[-1] if events else None
+            hopo_state = NoteEvent._compute_hopo_state(
+                tatter.resolution,
+                note_tick,
+                note,
+                is_taps[note_tick],
+                is_forceds[note_tick],
+                previous_event,
+            )
+
+            star_power_data, star_power_event_index = NoteEvent._compute_star_power_data(
+                note_tick, star_power_events, start_idx=star_power_event_index
+            )
+
+            end_timestamp, _ = tatter.timestamp_at_tick(
+                note_tick, start_bpm_event_index=start_bpm_event_index
+            )
+
+            event = NoteEvent(
+                note_tick,
+                timestamp,
+                end_timestamp,
+                note,
+                hopo_state,
+                sustain=tuple(sustain_lists[note_tick]),
+                proximal_bpm_event_idx=start_bpm_event_index,
+                star_power_data=star_power_data,
+            )
+            events.append(event)
+
+        # This is already sorted because we iterate over `sorted(note_arrays.keys())`.
+        return ImmutableSortedList(events, already_sorted=True)
+
+    @classmethod
+    def _parse_tick_dicts_from_chart_lines(
+        cls,
+        chart_lines: Iterable[str],
+    ) -> tuple[
+        collections.defaultdict[int, bytearray],
+        collections.defaultdict[int, list[Optional[int]]],
+        collections.defaultdict[int, bool],
+        collections.defaultdict[int, bool],
+    ]:
+        note_arrays: collections.defaultdict[int, bytearray] = collections.defaultdict(
             lambda: bytearray(5)
         )
-        tick_to_sustain_list: collections.defaultdict[
-            int, list[Optional[int]]
-        ] = collections.defaultdict(lambda: [None] * 5)
-        tick_to_is_tap = collections.defaultdict(bool)
-        tick_to_is_forced = collections.defaultdict(bool)
+        sustain_lists: collections.defaultdict[int, list[Optional[int]]] = collections.defaultdict(
+            lambda: [None] * 5
+        )
+        is_taps = collections.defaultdict(bool)
+        is_forceds = collections.defaultdict(bool)
+
         for line in chart_lines:
             m = NoteEvent._regex_prog.match(line)
             if not m:
@@ -298,65 +356,23 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
                 <= note_index
                 <= InstrumentTrack._max_note_instrument_track_index
             ):
-                tick_to_note_array[tick][note_index] = 1
-                tick_to_sustain_list[tick][note_index] = sustain
+                note_arrays[tick][note_index] = 1
+                sustain_lists[tick][note_index] = sustain
             elif note_index == InstrumentTrack._open_instrument_track_index:
-                # Because `tick_to_note_array` is a defaultdict, simply accessing it at `tick` is
+                # Because `note_arrays` is a defaultdict, simply accessing it at `tick` is
                 # sufficient to conjure a bytearray representing an open note.
-                tick_to_note_array[tick]
-                tick_to_sustain_list[tick]
+                note_arrays[tick]
+                sustain_lists[tick]
             elif note_index == InstrumentTrack._tap_instrument_track_index:
-                tick_to_is_tap[tick] = True
+                is_taps[tick] = True
             elif note_index == InstrumentTrack._forced_instrument_track_index:
-                tick_to_is_forced[tick] = True
+                is_forceds[tick] = True
             else:  # pragma: no cover
                 # TODO: Once _parse_note_events_from_chart_lines has its own unit tests, cover this
                 # branch.
                 logger.warning(cls._unhandled_note_track_index_log_msg_tmpl.format(note_index))
-                continue
 
-        star_power_event_index = 0
-        start_bpm_event_index = 0
-        events: list[NoteEvent] = []
-        for tick in sorted(tick_to_note_array.keys()):
-            note = Note(tick_to_note_array[tick])
-
-            timestamp, start_bpm_event_index = tatter.timestamp_at_tick(
-                tick, start_bpm_event_index=start_bpm_event_index
-            )
-
-            previous_event = events[-1] if events else None
-            hopo_state = NoteEvent._compute_hopo_state(
-                tatter.resolution,
-                tick,
-                note,
-                tick_to_is_tap[tick],
-                tick_to_is_forced[tick],
-                previous_event,
-            )
-
-            star_power_data, star_power_event_index = NoteEvent._compute_star_power_data(
-                tick, star_power_events, start_idx=star_power_event_index
-            )
-
-            end_timestamp, _ = tatter.timestamp_at_tick(
-                tick, start_bpm_event_index=start_bpm_event_index
-            )
-
-            event = NoteEvent(
-                tick,
-                timestamp,
-                end_timestamp,
-                note,
-                hopo_state,
-                sustain=tuple(tick_to_sustain_list[tick]),
-                proximal_bpm_event_idx=start_bpm_event_index,
-                star_power_data=star_power_data,
-            )
-            events.append(event)
-
-        # This is already sorted because we iterate over `sorted(tick_to_note_array.keys())`.
-        return ImmutableSortedList(events, already_sorted=True)
+        return note_arrays, sustain_lists, is_taps, is_forceds
 
 
 @typing.final
