@@ -218,6 +218,17 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         self.star_power_events = star_power_events
         self.section_name = difficulty.value + instrument.value
 
+    @functools.cached_property
+    def last_note_end_timestamp(self) -> Optional[datetime.timedelta]:
+        """The timestamp at which the :attr:`~chartparse.instrument.NoteEvent.sustain` value of the
+        last :class:`~chartparse.instrument.NoteEvent` ends.
+
+        This is ``None`` iff the track has no notes.
+        """
+        if not self.note_events:
+            return None
+        return max(self.note_events, key=lambda e: e.end_timestamp).end_timestamp
+
     @classmethod
     def from_chart_lines(
         cls: Type[InstrumentTrackT],
@@ -349,17 +360,6 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         # This is already sorted because we iterate over `sorted(tick_to_note_array.keys())`.
         return ImmutableSortedList(events, already_sorted=True)
 
-    @functools.cached_property
-    def last_note_end_timestamp(self) -> Optional[datetime.timedelta]:
-        """The timestamp at which the :attr:`~chartparse.instrument.NoteEvent.sustain` value of the
-        last :class:`~chartparse.instrument.NoteEvent` ends.
-
-        This is ``None`` iff the track has no notes.
-        """
-        if not self.note_events:
-            return None
-        return max(self.note_events, key=lambda e: e.end_timestamp).end_timestamp
-
 
 @typing.final
 @dataclass
@@ -457,6 +457,21 @@ class NoteEvent(Event):
         self.sustain = self._refine_sustain(sustain)
         self.star_power_data = star_power_data
 
+    @functools.cached_property
+    def longest_sustain(self) -> int:
+        if isinstance(self.sustain, int):
+            return self.sustain
+        elif isinstance(self.sustain, tuple):
+            if all(s is None for s in self.sustain):
+                raise ValueError("all sustain values are `None`")
+            return max(s for s in self.sustain if s is not None)
+        else:
+            raise ProgrammerError  # pragma: no cover
+
+    @functools.cached_property
+    def end_tick(self) -> int:
+        return self.tick + self.longest_sustain
+
     @staticmethod
     @functools.lru_cache
     def _refine_sustain(sustain: ComplexNoteSustainT) -> ComplexNoteSustainT:
@@ -550,21 +565,6 @@ class NoteEvent(Event):
 
         return "".join(to_join)
 
-    @functools.cached_property
-    def longest_sustain(self) -> int:
-        if isinstance(self.sustain, int):
-            return self.sustain
-        elif isinstance(self.sustain, tuple):
-            if all(s is None for s in self.sustain):
-                raise ValueError("all sustain values are `None`")
-            return max(s for s in self.sustain if s is not None)
-        else:
-            raise ProgrammerError  # pragma: no cover
-
-    @functools.cached_property
-    def end_tick(self) -> int:
-        return self.tick + self.longest_sustain
-
 
 SpecialEventT = TypeVar("SpecialEventT", bound="SpecialEvent")
 
@@ -600,6 +600,10 @@ class SpecialEvent(Event):
         super().__init__(tick, timestamp, proximal_bpm_event_idx=proximal_bpm_event_idx)
         self.sustain = sustain
 
+    @functools.cached_property
+    def end_tick(self) -> int:
+        return self.tick + self.sustain
+
     @classmethod
     def from_chart_line(
         cls: Type[SpecialEventT],
@@ -628,10 +632,6 @@ class SpecialEvent(Event):
         tick, sustain = int(m.group(1)), int(m.group(2))
         timestamp, proximal_bpm_event_idx = cls.calculate_timestamp(tick, prev_event, tatter)
         return cls(tick, timestamp, sustain, proximal_bpm_event_idx=proximal_bpm_event_idx)
-
-    @functools.cached_property
-    def end_tick(self) -> int:
-        return self.tick + self.sustain
 
     def tick_is_in_event(self, tick: int) -> bool:
         return self.tick <= tick and not self.tick_is_after_event(tick)
