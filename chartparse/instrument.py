@@ -179,10 +179,6 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     difficulty: Final[Difficulty]
     """This track's difficulty setting."""
 
-    # TODO: implement this as a @property.
-    section_name: Final[str]
-    """The concatenation of this track's difficulty and instrument (in that order)."""
-
     # TODO: All of these sequences of events should probably be individual objects so things like
     # _last_note_timestamp can live more tightly coupled to the actual events.
     note_events: Final[Sequence[NoteEvent]]
@@ -216,7 +212,11 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         self.difficulty = difficulty
         self.note_events = note_events
         self.star_power_events = star_power_events
-        self.section_name = difficulty.value + instrument.value
+
+    @functools.cached_property
+    def section_name(self) -> str:
+        """The concatenation of this track's difficulty and instrument (in that order)."""
+        return self.difficulty.value + self.instrument.value
 
     @functools.cached_property
     def last_note_end_timestamp(self) -> Optional[datetime.timedelta]:
@@ -280,8 +280,6 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         star_power_events: ImmutableSortedList[StarPowerEvent],
         tatter: TimestampAtTickSupporter,
     ) -> ImmutableSortedList[NoteEvent]:
-        # TODO: Use regular dicts here; this function is a very tight loop so
-        # they're probably faster.
         tick_to_note_array: collections.defaultdict[int, bytearray] = collections.defaultdict(
             lambda: bytearray(5)
         )

@@ -99,8 +99,6 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         GlobalEventsTrack.section_name,
     ]
 
-    # TODO: Validate that all events are in strictly increasing or non-decreasing (depending on the
-    # track) tick order.
     @classmethod
     def from_file(cls, fp: TextIO) -> Chart:
         """Given a file object, parses its contents and returns a new Chart.
