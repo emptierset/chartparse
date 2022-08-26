@@ -179,25 +179,17 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     difficulty: Final[Difficulty]
     """This track's difficulty setting."""
 
+    # TODO: implement this as a @property.
     section_name: Final[str]
     """The concatenation of this track's difficulty and instrument (in that order)."""
 
+    # TODO: All of these sequences of events should probably be individual objects so things like
+    # _last_note_timestamp can live more tightly coupled to the actual events.
     note_events: Final[Sequence[NoteEvent]]
     """An (instrument, difficulty) pair's ``NoteEvent`` objects."""
 
     star_power_events: Final[ImmutableSortedList[StarPowerEvent]]
     """An (instrument, difficulty) pair's ``StarPowerEvent`` objects."""
-
-    # TODO: Make this optional? What if there are no notes?
-    _last_note_timestamp: datetime.timedelta
-    """The timestamp at which the :attr:`~chartparse.instrument.NoteEvent.sustain` value of the
-    last :class:`~chartparse.instrument.NoteEvent` ends.
-
-    If that event has no :attr:`~chartparse.instrument.NoteEvent.sustain` value, then this is just
-    the timestamp of that :class:`~chartparse.instrument.NoteEvent`.
-
-    This is not set in ``__init__``; it must be set via ``Chart._populate_last_note_timestamp``.
-    """
 
     _min_note_instrument_track_index = 0
     _max_note_instrument_track_index = 4
@@ -338,9 +330,14 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
                 tick, star_power_events, start_idx=star_power_event_index
             )
 
+            end_timestamp, _ = tatter.timestamp_at_tick(
+                tick, start_bpm_event_index=start_bpm_event_index
+            )
+
             event = NoteEvent(
                 tick,
                 timestamp,
+                end_timestamp,
                 note,
                 hopo_state,
                 sustain=tuple(tick_to_sustain_list[tick]),
@@ -351,6 +348,17 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
         # This is already sorted because we iterate over `sorted(tick_to_note_array.keys())`.
         return ImmutableSortedList(events, already_sorted=True)
+
+    @functools.cached_property
+    def last_note_end_timestamp(self) -> Optional[datetime.timedelta]:
+        """The timestamp at which the :attr:`~chartparse.instrument.NoteEvent.sustain` value of the
+        last :class:`~chartparse.instrument.NoteEvent` ends.
+
+        This is ``None`` iff the track has no notes.
+        """
+        if not self.note_events:
+            return None
+        return max(self.note_events, key=lambda e: e.end_timestamp).end_timestamp
 
 
 @typing.final
@@ -408,6 +416,9 @@ class NoteEvent(Event):
     sustain: Final[ComplexNoteSustainT]
     """Information about this note event's sustain value."""
 
+    end_timestamp: Final[datetime.timedelta]
+    """The timestamp at which this note ends."""
+
     hopo_state: Final[HOPOState]
     """Whether the note is a strum, a HOPO, or a tap note."""
 
@@ -430,7 +441,9 @@ class NoteEvent(Event):
     def __init__(
         self,
         tick: int,
+        # TODO: Refactor timestamp calculation inside this?
         timestamp: datetime.timedelta,
+        end_timestamp: datetime.timedelta,
         note: Note,
         hopo_state: HOPOState,
         sustain: ComplexNoteSustainT = 0,
@@ -438,6 +451,7 @@ class NoteEvent(Event):
         proximal_bpm_event_idx: int = 0,
     ) -> None:
         super().__init__(tick, timestamp, proximal_bpm_event_idx=proximal_bpm_event_idx)
+        self.end_timestamp = end_timestamp
         self.note = note
         self.hopo_state = hopo_state
         self.sustain = self._refine_sustain(sustain)

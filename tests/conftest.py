@@ -83,7 +83,7 @@ _default_note_instrument_track_index = InstrumentTrack._min_note_instrument_trac
 _default_hopo_state = HOPOState.STRUM
 
 _default_note_event = NoteEvent(
-    _default_tick, _default_timestamp, _default_note, _default_hopo_state
+    _default_tick, _default_timestamp, _default_timestamp, _default_note, _default_hopo_state
 )
 _default_note_events = [_default_note_event]
 
@@ -276,15 +276,16 @@ def invalid_chart_line():
 
 
 @pytest.fixture
-def minimal_tatter():
+def minimal_tatter(mocker):
     class FakeTimestampAtTicker(object):
         resolution: int
 
         def __init__(self, resolution: int):
             self.resolution = resolution
+            self.spy = mocker.spy(self, "timestamp_at_tick")
 
         def timestamp_at_tick(self, tick, start_bpm_event_index=0):
-            return (datetime.timedelta(0), 0)
+            return _default_timestamp, 0
 
     return FakeTimestampAtTicker(_default_resolution)
 

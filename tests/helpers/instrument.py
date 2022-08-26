@@ -35,6 +35,7 @@ def NoteEventWithDefaults(
     *,
     tick=pytest.defaults.tick,
     timestamp=pytest.defaults.timestamp,
+    end_timestamp=pytest.defaults.timestamp,
     note=pytest.defaults.note,
     hopo_state=pytest.defaults.hopo_state,
     sustain=pytest.defaults.sustain,
@@ -43,6 +44,7 @@ def NoteEventWithDefaults(
     return NoteEvent(
         tick,
         timestamp,
+        end_timestamp,
         note,
         hopo_state,
         sustain=sustain,

@@ -29,7 +29,7 @@ from pathlib import Path
 from typing import ClassVar, Final, Optional, TextIO
 
 import chartparse.tick
-from chartparse.exceptions import RegexNotMatchError
+from chartparse.exceptions import ProgrammerError, RegexNotMatchError
 from chartparse.globalevents import GlobalEventsTrack
 from chartparse.instrument import Difficulty, Instrument, InstrumentTrack, NoteEvent
 from chartparse.metadata import Metadata
@@ -78,10 +78,6 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         self.global_events_track = global_events_track
         self.sync_track = sync_track
         self.instrument_tracks = instrument_tracks
-
-        for instrument, difficulties in self.instrument_tracks.items():
-            for difficulty, track in difficulties.items():
-                self._populate_last_note_timestamp(track)
 
     @classmethod
     def from_filepath(cls, path: Path) -> Chart:
@@ -194,20 +190,6 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
                 curr_last_line_idx = None
         return sections
 
-    def _populate_last_note_timestamp(self, track: InstrumentTrack) -> None:
-        if not track.note_events:
-            return
-
-        event_with_final_tick = track.note_events[0]
-        for event in track.note_events:
-            if event.end_tick >= event_with_final_tick.end_tick:
-                event_with_final_tick = event
-
-        track._last_note_timestamp, _ = self.sync_track.timestamp_at_tick(
-            event_with_final_tick.end_tick,
-            start_bpm_event_index=event_with_final_tick._proximal_bpm_event_index,
-        )
-
     def _seconds_from_ticks_at_bpm(self, ticks: int, bpm: float) -> float:
         return chartparse.tick.seconds_from_ticks_at_bpm(ticks, bpm, self.metadata.resolution)
 
@@ -274,6 +256,9 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
                 f"no instrument track for difficulty {difficulty} instrument {instrument}"
             )
 
+        if not track.note_events:
+            raise ValueError("notes per second undefined for track with no notes")
+
         all_start_args_none = num_of_start_args_none == len(start_args)
         if (start_tick is not None) or all_start_args_none:
             lower_bound = (
@@ -284,11 +269,17 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             upper_bound = (
                 self.sync_track.timestamp_at_tick(end_tick, self.metadata.resolution)[0]
                 if end_tick is not None
-                else track._last_note_timestamp
+                # ValueError is raised above if there are no NoteEvents.
+                else typing.cast(datetime.timedelta, track.last_note_end_timestamp)
             )
         elif start_time is not None:
             lower_bound = start_time if start_time is not None else datetime.timedelta(0)
-            upper_bound = end_time if end_time is not None else track._last_note_timestamp
+            # ValueError is raised above if there are no NoteEvents.
+            upper_bound = (
+                end_time
+                if end_time is not None
+                else typing.cast(datetime.timedelta, track.last_note_end_timestamp)
+            )
         elif start_seconds is not None:
             lower_bound = (
                 datetime.timedelta(seconds=start_seconds)
@@ -298,12 +289,11 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             upper_bound = (
                 datetime.timedelta(seconds=end_seconds)
                 if end_seconds is not None
-                else track._last_note_timestamp
+                # ValueError is raised above if there are no NoteEvents.
+                else typing.cast(datetime.timedelta, track.last_note_end_timestamp)
             )
-        else:
-            raise RuntimeError(
-                "unhandled input combination; should be impossible"
-            )  # pragma: no cover
+        else:  # pragma: no cover
+            raise ProgrammerError
 
         return self._notes_per_second(track.note_events, lower_bound, upper_bound)
 

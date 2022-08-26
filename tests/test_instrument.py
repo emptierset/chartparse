@@ -1,3 +1,4 @@
+import datetime
 import pytest
 import re
 import unittest.mock
@@ -258,6 +259,29 @@ class TestInstrumentTrack(object):
             assert got.difficulty == pytest.defaults.difficulty
             assert got.star_power_events == want_star_power_events
             assert got.note_events == want_note_events
+
+    class TestLastNoteEndTimestamp(object):
+        @pytest.mark.parametrize(
+            "note_events,want",
+            [
+                pytest.param(
+                    [
+                        NoteEventWithDefaults(end_timestamp=datetime.timedelta(seconds=0)),
+                        NoteEventWithDefaults(end_timestamp=datetime.timedelta(seconds=1)),
+                        NoteEventWithDefaults(end_timestamp=datetime.timedelta(seconds=0.5)),
+                    ],
+                    datetime.timedelta(seconds=1),
+                ),
+            ],
+        )
+        def test(self, bare_instrument_track, note_events, want):
+            bare_instrument_track.note_events = note_events
+            got = bare_instrument_track.last_note_end_timestamp
+            assert got == want
+
+        def test_empty(self, minimal_instrument_track):
+            got = minimal_instrument_track.last_note_end_timestamp
+            assert got is None
 
 
 class TestNoteEvent(object):
@@ -591,6 +615,13 @@ class TestNoteEvent(object):
             bare_note_event.sustain = (None, None, None, None, None)
             with pytest.raises(ValueError):
                 _ = bare_note_event.longest_sustain
+
+    class TestEndTick(object):
+        def test(self, mocker, bare_note_event):
+            bare_note_event.tick = 100
+            bare_note_event.sustain = 10
+            got = bare_note_event.end_tick
+            assert got == 110
 
 
 class TestSpecialEvent(object):
