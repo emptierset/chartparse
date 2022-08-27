@@ -135,6 +135,7 @@ class GlobalEvent(Event):
         tick: int,
         timestamp: datetime.timedelta,
         value: str,
+        # TODO: Consider making proximal_bpm_event_idx required.
         proximal_bpm_event_idx: int = 0,
     ) -> None:
         super().__init__(tick, timestamp, proximal_bpm_event_idx=proximal_bpm_event_idx)

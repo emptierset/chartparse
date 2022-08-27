@@ -18,6 +18,7 @@ def TimeSignatureEventWithDefaults(
     timestamp=pytest.defaults.timestamp,
     upper_numeral=pytest.defaults.upper_time_signature_numeral,
     lower_numeral=pytest.defaults.lower_time_signature_numeral,
+    # TODO: This shouldn't be None.
     proximal_bpm_event_idx=None,
 ):
     return TimeSignatureEvent(
@@ -34,5 +35,7 @@ def BPMEventWithDefaults(
     tick=pytest.defaults.tick,
     timestamp=pytest.defaults.timestamp,
     bpm=pytest.defaults.bpm,
+    # TODO: This shouldn't be None.
+    proximal_bpm_event_idx=None,
 ):
-    return BPMEvent(tick, timestamp, bpm)
+    return BPMEvent(tick, timestamp, bpm, proximal_bpm_event_idx=proximal_bpm_event_idx)

@@ -57,14 +57,9 @@ class Event(DictPropertiesEqMixin, DictReprMixin):
         prev_event: Optional[EventT],
         tatter: TimestampAtTickSupporter,
     ) -> tuple[datetime.timedelta, int]:
-        if prev_event is None:
-            return datetime.timedelta(0), 0
-        start_bpm_event_index = (
-            prev_event._proximal_bpm_event_index
-            if prev_event._proximal_bpm_event_index is not None
-            else 0
+        return tatter.timestamp_at_tick(
+            tick, start_bpm_event_index=prev_event._proximal_bpm_event_index if prev_event else 0
         )
-        return tatter.timestamp_at_tick(tick, start_bpm_event_index=start_bpm_event_index)
 
     # TODO: Figure out a way for the final closing parenthesis to wrap _around_ any additional info
     # added by subclass __str__ implementations.

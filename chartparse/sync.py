@@ -294,7 +294,9 @@ class BPMEvent(Event):
     _regex: Final[str] = r"^\s*?(\d+?) = B (\d+?)\s*?$"
     _regex_prog: Final[Pattern[str]] = re.compile(_regex)
 
-    def __init__(self, tick: int, timestamp: datetime.timedelta, bpm: float):
+    def __init__(
+        self, tick: int, timestamp: datetime.timedelta, bpm: float, proximal_bpm_event_idx: int = 0
+    ):
         """Initialize all instance attributes.
 
         Raises:
@@ -302,7 +304,7 @@ class BPMEvent(Event):
         """
         if round(bpm, 3) != bpm:
             raise ValueError(f"bpm {bpm} must not have more than 3 decimal places.")
-        super().__init__(tick, timestamp)
+        super().__init__(tick, timestamp, proximal_bpm_event_idx=proximal_bpm_event_idx)
         self.bpm = bpm
 
     # TODO: Refactor all regex matching for all `from_chart_line` functions to a match method for
@@ -348,9 +350,8 @@ class BPMEvent(Event):
             def timestamp_at_tick(
                 self, tick: int, start_bpm_event_index: int = 0
             ) -> tuple[datetime.timedelta, int]:
-                # Because this will be used by Event.calculate_timestamp, it will only be
-                # called if prev_event has been None-checked.
-                assert prev_event is not None
+                if prev_event is None:
+                    return datetime.timedelta(0), 0
                 if tick <= prev_event.tick:
                     raise ValueError(
                         f"{cls.__name__} at tick {tick} does not occur after previous "
@@ -362,11 +363,11 @@ class BPMEvent(Event):
                     ticks_since_prev, prev_event.bpm, self.resolution
                 )
                 timestamp = prev_event.timestamp + datetime.timedelta(seconds=seconds_since_prev)
-                return timestamp, 0
+                return timestamp, start_bpm_event_index
 
         tatter = TimestampAtTicker(resolution)
-        timestamp, _ = cls.calculate_timestamp(tick, prev_event, tatter)
-        return cls(tick, timestamp, bpm)
+        timestamp, proximal_bpm_event_idx = cls.calculate_timestamp(tick, prev_event, tatter)
+        return cls(tick, timestamp, bpm, proximal_bpm_event_idx=proximal_bpm_event_idx)
 
     def __str__(self) -> str:  # pragma: no cover
         to_join = [super().__str__()]
