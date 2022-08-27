@@ -166,6 +166,9 @@ class NoteTrackIndex(AllValuesGettableEnum):
     OPEN = 7
 
 
+# TODO: create newtype (?) for bytearray for note array.
+
+
 @typing.final
 class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     """All of the instrument-related events for one (instrument, difficulty) pair."""
@@ -272,7 +275,6 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             f"len(star_power_events): {len(self.star_power_events)})"
         )
 
-    # TODO: Granularize this function into multiple functions for better profiling and readability.
     @classmethod
     def _parse_note_events_from_chart_lines(
         cls,
@@ -284,43 +286,22 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             chart_lines
         )
 
-        star_power_event_index = 0
-        start_bpm_event_index = 0
+        start_bpm_event_idx = 0
+        star_power_event_idx = 0
         events: list[NoteEvent] = []
         for note_tick in sorted(note_arrays.keys()):
-            note = Note(note_arrays[note_tick])
-
-            timestamp, start_bpm_event_index = tatter.timestamp_at_tick(
-                note_tick, start_bpm_event_index=start_bpm_event_index
-            )
-
             previous_event = events[-1] if events else None
-            hopo_state = NoteEvent._compute_hopo_state(
-                tatter.resolution,
+            event, start_bpm_event_idx, star_power_event_idx = NoteEvent.from_parsed_data(
                 note_tick,
-                note,
+                note_arrays[note_tick],
+                tuple(sustain_lists[note_tick]),
                 is_taps[note_tick],
                 is_forceds[note_tick],
                 previous_event,
-            )
-
-            star_power_data, star_power_event_index = NoteEvent._compute_star_power_data(
-                note_tick, star_power_events, start_idx=star_power_event_index
-            )
-
-            end_timestamp, _ = tatter.timestamp_at_tick(
-                note_tick, start_bpm_event_index=start_bpm_event_index
-            )
-
-            event = NoteEvent(
-                note_tick,
-                timestamp,
-                end_timestamp,
-                note,
-                hopo_state,
-                sustain=tuple(sustain_lists[note_tick]),
-                proximal_bpm_event_idx=start_bpm_event_index,
-                star_power_data=star_power_data,
+                star_power_events,
+                tatter,
+                proximal_bpm_event_idx=start_bpm_event_idx,
+                star_power_event_idx=star_power_event_idx,
             )
             events.append(event)
 
@@ -411,6 +392,9 @@ class HOPOState(Enum):
     TAP = 2
 
 
+NoteEventT = TypeVar("NoteEventT", bound="NoteEvent")
+
+
 @typing.final
 class NoteEvent(Event):
     """An event representing all of the notes at a particular tick.
@@ -455,7 +439,6 @@ class NoteEvent(Event):
     def __init__(
         self,
         tick: int,
-        # TODO: Refactor timestamp calculation inside this?
         timestamp: datetime.timedelta,
         end_timestamp: datetime.timedelta,
         note: Note,
@@ -485,6 +468,58 @@ class NoteEvent(Event):
     @functools.cached_property
     def end_tick(self) -> int:
         return self.tick + self.longest_sustain
+
+    @classmethod
+    def from_parsed_data(
+        cls: Type[NoteEventT],
+        tick: int,
+        note_array: bytearray,
+        sustain: SustainTupleT,
+        is_tap: bool,
+        is_forced: bool,
+        previous_event: Optional[NoteEvent],
+        star_power_events: ImmutableSortedList[StarPowerEvent],
+        tatter: TimestampAtTickSupporter,
+        proximal_bpm_event_idx: int = 0,
+        star_power_event_idx: int = 0,
+    ) -> tuple[NoteEventT, int, int]:
+        note = Note(note_array)
+
+        timestamp, proximal_bpm_event_idx = tatter.timestamp_at_tick(
+            tick, start_bpm_event_index=proximal_bpm_event_idx
+        )
+
+        hopo_state = NoteEvent._compute_hopo_state(
+            tatter.resolution,
+            tick,
+            note,
+            is_tap,
+            is_forced,
+            previous_event,
+        )
+
+        star_power_data, star_power_event_idx = NoteEvent._compute_star_power_data(
+            tick, star_power_events, start_idx=star_power_event_idx
+        )
+
+        end_timestamp, _ = tatter.timestamp_at_tick(
+            tick, start_bpm_event_index=proximal_bpm_event_idx
+        )
+
+        return (
+            cls(
+                tick,
+                timestamp,
+                end_timestamp,
+                note,
+                hopo_state,
+                sustain=sustain,
+                proximal_bpm_event_idx=proximal_bpm_event_idx,
+                star_power_data=star_power_data,
+            ),
+            proximal_bpm_event_idx,
+            star_power_event_idx,
+        )
 
     @staticmethod
     @functools.lru_cache
