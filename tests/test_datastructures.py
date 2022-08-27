@@ -88,3 +88,48 @@ class TestImmutableSortedList(object):
         def test_already_sorted(self, default_sorted_list):
             got = ImmutableSortedList(default_sorted_list, already_sorted=True)
             assert got == sorted(default_sorted_list)
+
+    class TestBinarySearch(object):
+        xs = [0, 2, 4, 4, 9, 10]
+
+        @pytest.mark.parametrize("x,want", [(0, 0), (2, 1), (4, 2), (9, 4), (10, 5)])
+        def test_present(self, x, want):
+            xsi = ImmutableSortedList(self.xs, already_sorted=True)
+            got = xsi.binary_search(x)
+            assert got == want
+
+        @pytest.mark.parametrize("x", [-1, 1, 3, 5, 6, 7, 8, 11])
+        def test_absent(self, x):
+            xsi = ImmutableSortedList(self.xs, already_sorted=True)
+            got = xsi.binary_search(x)
+            assert got is None
+
+    class TestFindLe(object):
+        xs = [0, 2, 4, 4, 9, 10]
+
+        @pytest.mark.parametrize(
+            "x,want",
+            [
+                (0, 0),
+                (1, 0),
+                (2, 1),
+                (3, 1),
+                (4, 3),
+                (5, 3),
+                (6, 3),
+                (7, 3),
+                (8, 3),
+                (9, 4),
+                (10, 5),
+                (11, 5),
+            ],
+        )
+        def test(self, x, want):
+            xsi = ImmutableSortedList(self.xs, already_sorted=True)
+            got = xsi.find_le(x)
+            assert got == want
+
+        def test_does_not_exist(self):
+            xsi = ImmutableSortedList(self.xs, already_sorted=True)
+            with pytest.raises(ValueError):
+                _ = xsi.find_le(-1)

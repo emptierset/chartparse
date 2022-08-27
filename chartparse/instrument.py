@@ -506,20 +506,17 @@ class NoteEvent(Event):
             tick, start_bpm_event_index=proximal_bpm_event_idx
         )
 
-        return (
-            cls(
-                tick,
-                timestamp,
-                end_timestamp,
-                note,
-                hopo_state,
-                sustain=sustain,
-                proximal_bpm_event_idx=proximal_bpm_event_idx,
-                star_power_data=star_power_data,
-            ),
-            proximal_bpm_event_idx,
-            star_power_event_idx,
+        event = cls(
+            tick,
+            timestamp,
+            end_timestamp,
+            note,
+            hopo_state,
+            sustain=sustain,
+            proximal_bpm_event_idx=proximal_bpm_event_idx,
+            star_power_data=star_power_data,
         )
+        return event, proximal_bpm_event_idx, star_power_event_idx
 
     @staticmethod
     @functools.lru_cache

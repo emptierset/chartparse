@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import bisect
 import typing
 from collections.abc import Callable, Iterable, Iterator, Sequence
 from typing import Literal, Union
@@ -75,7 +76,6 @@ class ImmutableList(Sequence[T]):
         return NotImplemented
 
 
-# TODO: Allow binary searching?
 @typing.final
 class ImmutableSortedList(ImmutableList[T]):
     """A ``list`` equivalent that cannot be mutated and is sorted during initialization."""
@@ -105,3 +105,21 @@ class ImmutableSortedList(ImmutableList[T]):
             super().__init__(sorted(xs, key=key))
         else:  # pragma: no cover
             raise ProgrammerError
+
+    def binary_search(self, x, *, lo=0, hi=None, key=None):
+        if hi is None:
+            hi = self.length
+        idx = bisect.bisect_left(self._seq, x, lo=lo, hi=hi, key=key)
+        if idx == hi or self._seq[idx] != x:
+            return None
+        return idx
+
+    def find_le(self, x, *, lo=0, hi=None, key=None):
+        idx = bisect.bisect_right(self._seq, x, lo=lo, hi=hi, key=key)
+        if idx:
+            return idx - 1
+        raise ValueError(f"query value {x} less than all list elements")
+
+
+# TODO: ImmutableSortedUniqueList, for bpm events. Requires a key parameter, since the values might
+# be unique under some transformation (`lambda e: e.tick` for bpm events).

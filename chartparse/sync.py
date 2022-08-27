@@ -167,7 +167,6 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         timestamp = proximal_bpm_event.timestamp + timedelta_since_proximal_bpm_event
         return timestamp, proximal_bpm_event_idx
 
-    # TODO: Profile binary search performance for proximal BPM event.
     @staticmethod
     def _idx_of_proximal_bpm_event(
         bpm_events: ImmutableSortedList[BPMEvent], tick: int, start_idx: int = 0
@@ -185,13 +184,20 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
                 f"input tick {tick} precedes tick value of first BPMEvent ({first_event.tick})"
             )
 
-        # Do NOT iterate over last BPMEvent, since it has no next event.
-        for idx in range(start_idx, idx_of_last_event):
-            if bpm_events[idx + 1].tick > tick:
-                return idx
+        use_binary_search = False
+        if use_binary_search:  # pragma: no cover
+            return bpm_events.find_le(
+                tick, lo=start_idx, hi=bpm_events.length, key=lambda e: e.tick
+            )
+        else:
+            # Do NOT iterate over last BPMEvent, since it has no next event.
+            for idx in range(start_idx, idx_of_last_event):
+                if bpm_events[idx + 1].tick > tick:
+                    return idx
 
-        # If none of the previous BPMEvents are proximal, the last event is proximal by definition.
-        return idx_of_last_event
+            # If none of the previous BPMEvents are proximal, the last event is proximal by
+            # definition.
+            return idx_of_last_event
 
 
 TimeSignatureEventT = TypeVar("TimeSignatureEventT", bound="TimeSignatureEvent")
