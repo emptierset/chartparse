@@ -298,10 +298,10 @@ class TestTimeSignatureEvent(object):
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self
                 pytest.defaults.tick,
-                pytest.defaults.timestamp,
+                pytest.defaults.minimal_tatter_timestamp,
                 pytest.defaults.upper_time_signature_numeral,
                 want_lower,
-                proximal_bpm_event_index=pytest.defaults.proximal_bpm_event_index,
+                proximal_bpm_event_index=pytest.defaults.minimal_tatter_index,
             )
 
         def test_no_match(self, invalid_chart_line, minimal_tatter):

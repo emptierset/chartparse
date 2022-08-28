@@ -45,6 +45,9 @@ _default_seconds = 0
 _default_proximal_bpm_event_index = 0
 _default_proximal_star_power_event_index = 0
 
+_default_tatter_timestamp = datetime.timedelta(seconds=834)
+_default_tatter_bpm_event_index = 47
+
 _default_bpm = 120.000
 _default_bpm_event = BPMEvent(_default_tick, _default_timestamp, _default_bpm)
 _default_bpm_events = ImmutableSortedList([_default_bpm_event], already_sorted=True)
@@ -142,6 +145,9 @@ class Defaults(object):
     proximal_bpm_event_index: ...
     proximal_star_power_event_index: ...
 
+    minimal_tatter_timestamp: ...
+    minimal_tatter_index: ...
+
     name: ...
     artist: ...
     charter: ...
@@ -218,6 +224,8 @@ def pytest_configure():
         seconds=_default_seconds,
         proximal_bpm_event_index=_default_proximal_bpm_event_index,
         proximal_star_power_event_index=_default_proximal_star_power_event_index,
+        minimal_tatter_timestamp=_default_tatter_timestamp,
+        minimal_tatter_index=_default_tatter_bpm_event_index,
         name=_default_name,
         artist=_default_artist,
         charter=_default_charter,
@@ -286,14 +294,12 @@ def invalid_chart_line():
 @pytest.fixture
 def minimal_tatter(mocker):
     class FakeTimestampAtTicker(object):
-        resolution: int
-
         def __init__(self, resolution: int):
             self.resolution = resolution
             self.spy = mocker.spy(self, "timestamp_at_tick")
 
         def timestamp_at_tick(self, tick, proximal_bpm_event_index=0):
-            return _default_timestamp, _default_proximal_bpm_event_index
+            return _default_tatter_timestamp, _default_tatter_bpm_event_index
 
     return FakeTimestampAtTicker(_default_resolution)
 

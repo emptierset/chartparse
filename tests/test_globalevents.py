@@ -120,11 +120,9 @@ class TestGlobalEvent(object):
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self
                 pytest.defaults.tick,
-                pytest.defaults.timestamp,
+                pytest.defaults.minimal_tatter_timestamp,
                 pytest.defaults.global_event_value,
-                # TODO: Define the index/timestamp that minimal_tatter returns
-                # on it, for more robust testing.
-                proximal_bpm_event_index=pytest.defaults.proximal_bpm_event_index,
+                proximal_bpm_event_index=pytest.defaults.minimal_tatter_index,
             )
 
         def test_no_match(self, invalid_chart_line, minimal_tatter):

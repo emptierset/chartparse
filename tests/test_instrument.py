@@ -96,6 +96,21 @@ class TestInstrumentTrack(object):
                 pytest.defaults.star_power_events,
             )
 
+        def NoteEventWithDefaultsPlus(**kwargs):
+            return NoteEventWithDefaults(
+                proximal_bpm_event_index=pytest.defaults.minimal_tatter_index,
+                timestamp=pytest.defaults.minimal_tatter_timestamp,
+                end_timestamp=pytest.defaults.minimal_tatter_timestamp,
+                **kwargs,
+            )
+
+        def StarPowerEventWithDefaultsPlus(**kwargs):
+            return StarPowerEventWithDefaults(
+                proximal_bpm_event_index=pytest.defaults.minimal_tatter_index,
+                timestamp=pytest.defaults.minimal_tatter_timestamp,
+                **kwargs,
+            )
+
         @pytest.mark.parametrize(
             "lines, want_note_events, want_star_power_events",
             [
@@ -107,37 +122,37 @@ class TestInstrumentTrack(object):
                 ),
                 pytest.param(
                     [generate_note_line(0, NoteTrackIndex.OPEN.value)],
-                    [NoteEventWithDefaults(tick=0, note=Note.OPEN)],
+                    [NoteEventWithDefaultsPlus(tick=0, note=Note.OPEN)],
                     [],
                     id="open_note",
                 ),
                 pytest.param(
                     [generate_note_line(0, NoteTrackIndex.G.value)],
-                    [NoteEventWithDefaults(tick=0, note=Note.G)],
+                    [NoteEventWithDefaultsPlus(tick=0, note=Note.G)],
                     [],
                     id="green_note",
                 ),
                 pytest.param(
                     [generate_note_line(0, NoteTrackIndex.R.value)],
-                    [NoteEventWithDefaults(tick=0, note=Note.R)],
+                    [NoteEventWithDefaultsPlus(tick=0, note=Note.R)],
                     [],
                     id="red_note",
                 ),
                 pytest.param(
                     [generate_note_line(0, NoteTrackIndex.Y.value)],
-                    [NoteEventWithDefaults(tick=0, note=Note.Y)],
+                    [NoteEventWithDefaultsPlus(tick=0, note=Note.Y)],
                     [],
                     id="yellow_note",
                 ),
                 pytest.param(
                     [generate_note_line(0, NoteTrackIndex.B.value)],
-                    [NoteEventWithDefaults(tick=0, note=Note.B)],
+                    [NoteEventWithDefaultsPlus(tick=0, note=Note.B)],
                     [],
                     id="blue_note",
                 ),
                 pytest.param(
                     [generate_note_line(0, NoteTrackIndex.O.value)],
-                    [NoteEventWithDefaults(tick=0, note=Note.O)],
+                    [NoteEventWithDefaultsPlus(tick=0, note=Note.O)],
                     [],
                     id="orange_note",
                 ),
@@ -146,7 +161,13 @@ class TestInstrumentTrack(object):
                         generate_note_line(0, NoteTrackIndex.G.value),
                         generate_note_line(0, NoteTrackIndex.TAP.value),
                     ],
-                    [NoteEventWithDefaults(tick=0, note=Note.G, hopo_state=HOPOState.TAP)],
+                    [
+                        NoteEventWithDefaultsPlus(
+                            tick=0,
+                            note=Note.G,
+                            hopo_state=HOPOState.TAP,
+                        )
+                    ],
                     [],
                     id="tap_green_note",
                 ),
@@ -157,8 +178,15 @@ class TestInstrumentTrack(object):
                         generate_note_line(1, NoteTrackIndex.FORCED.value),
                     ],
                     [
-                        NoteEventWithDefaults(tick=0, note=Note.G),
-                        NoteEventWithDefaults(tick=1, note=Note.R, hopo_state=HOPOState.STRUM),
+                        NoteEventWithDefaultsPlus(
+                            tick=0,
+                            note=Note.G,
+                        ),
+                        NoteEventWithDefaultsPlus(
+                            tick=1,
+                            note=Note.R,
+                            hopo_state=HOPOState.STRUM,
+                        ),
                     ],
                     [],
                     id="forced_red_note",
@@ -167,7 +195,7 @@ class TestInstrumentTrack(object):
                     [
                         generate_note_line(0, NoteTrackIndex.G.value, sustain=100),
                     ],
-                    [NoteEventWithDefaults(tick=0, note=Note.G, sustain=100)],
+                    [NoteEventWithDefaultsPlus(tick=0, note=Note.G, sustain=100)],
                     [],
                     id="green_with_sustain",
                 ),
@@ -176,7 +204,7 @@ class TestInstrumentTrack(object):
                         generate_note_line(0, NoteTrackIndex.G.value),
                         generate_note_line(0, NoteTrackIndex.R.value),
                     ],
-                    [NoteEventWithDefaults(tick=0, note=Note.GR)],
+                    [NoteEventWithDefaultsPlus(tick=0, note=Note.GR)],
                     [],
                     id="chord",
                 ),
@@ -186,7 +214,7 @@ class TestInstrumentTrack(object):
                         generate_note_line(0, NoteTrackIndex.R.value),
                     ],
                     [
-                        NoteEventWithDefaults(
+                        NoteEventWithDefaultsPlus(
                             tick=0,
                             note=Note.GR,
                             sustain=(100, 0, None, None, None),
@@ -198,7 +226,7 @@ class TestInstrumentTrack(object):
                 pytest.param(
                     [generate_star_power_line(0, 100)],
                     [],
-                    [StarPowerEventWithDefaults(tick=0, sustain=100)],
+                    [StarPowerEventWithDefaultsPlus(tick=0, sustain=100)],
                     id="single_star_power_phrase",
                 ),
                 pytest.param(
@@ -216,30 +244,49 @@ class TestInstrumentTrack(object):
                         generate_note_line(2300, NoteTrackIndex.OPEN.value),
                     ],
                     [
-                        NoteEventWithDefaults(
+                        NoteEventWithDefaultsPlus(
                             tick=0,
                             note=Note.G,
                             sustain=100,
                             star_power_data=StarPowerData(0),
                         ),
-                        NoteEventWithDefaults(
+                        NoteEventWithDefaultsPlus(
                             tick=2000,
                             note=Note.R,
                             sustain=50,
                             star_power_data=StarPowerData(1),
                         ),
-                        NoteEventWithDefaults(
+                        NoteEventWithDefaultsPlus(
                             tick=2075,
                             note=Note.YB,
                             star_power_data=StarPowerData(1),
                         ),
-                        NoteEventWithDefaults(tick=2100, note=Note.O, hopo_state=HOPOState.STRUM),
-                        NoteEventWithDefaults(tick=2200, note=Note.B, hopo_state=HOPOState.TAP),
-                        NoteEventWithDefaults(tick=2300, note=Note.OPEN),
+                        NoteEventWithDefaultsPlus(
+                            tick=2100,
+                            note=Note.O,
+                            hopo_state=HOPOState.STRUM,
+                        ),
+                        NoteEventWithDefaultsPlus(
+                            tick=2200,
+                            note=Note.B,
+                            hopo_state=HOPOState.TAP,
+                        ),
+                        NoteEventWithDefaultsPlus(
+                            tick=2300,
+                            note=Note.OPEN,
+                        ),
                     ],
                     [
-                        StarPowerEventWithDefaults(tick=0, sustain=100, init_end_tick=True),
-                        StarPowerEventWithDefaults(tick=2000, sustain=80, init_end_tick=True),
+                        StarPowerEventWithDefaultsPlus(
+                            tick=0,
+                            sustain=100,
+                            init_end_tick=True,
+                        ),
+                        StarPowerEventWithDefaultsPlus(
+                            tick=2000,
+                            sustain=80,
+                            init_end_tick=True,
+                        ),
                     ],
                     id="everything_together",
                 ),
@@ -709,9 +756,9 @@ class TestSpecialEvent(object):
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self
                 pytest.defaults.tick,
-                pytest.defaults.timestamp,
+                pytest.defaults.minimal_tatter_timestamp,
                 pytest.defaults.sustain,
-                proximal_bpm_event_index=pytest.defaults.proximal_bpm_event_index,
+                proximal_bpm_event_index=pytest.defaults.minimal_tatter_index,
             )
 
         def test_no_match(self, invalid_chart_line, minimal_tatter):
