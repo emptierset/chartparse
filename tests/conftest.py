@@ -145,8 +145,8 @@ class Defaults(object):
     proximal_bpm_event_index: ...
     proximal_star_power_event_index: ...
 
-    minimal_tatter_timestamp: ...
-    minimal_tatter_index: ...
+    default_tatter_timestamp: ...
+    default_tatter_index: ...
 
     name: ...
     artist: ...
@@ -224,8 +224,8 @@ def pytest_configure():
         seconds=_default_seconds,
         proximal_bpm_event_index=_default_proximal_bpm_event_index,
         proximal_star_power_event_index=_default_proximal_star_power_event_index,
-        minimal_tatter_timestamp=_default_tatter_timestamp,
-        minimal_tatter_index=_default_tatter_bpm_event_index,
+        default_tatter_timestamp=_default_tatter_timestamp,
+        default_tatter_index=_default_tatter_bpm_event_index,
         name=_default_name,
         artist=_default_artist,
         charter=_default_charter,
@@ -290,9 +290,8 @@ def invalid_chart_line():
     return _invalid_chart_line
 
 
-# TODO: Rename to default_tatter.
 @pytest.fixture
-def minimal_tatter(mocker):
+def default_tatter(mocker):
     class FakeTimestampAtTicker(object):
         def __init__(self, resolution: int):
             self.resolution = resolution

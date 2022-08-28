@@ -45,7 +45,7 @@ class TestInstrumentTrack(object):
                 _ = InstrumentTrackWithDefaults(resolution=0)
 
     class TestFromChartLines(object):
-        def test(self, mocker, minimal_string_iterator_getter, minimal_tatter):
+        def test(self, mocker, minimal_string_iterator_getter, default_tatter):
             mock_parse_note_events = mocker.patch.object(
                 InstrumentTrack,
                 "_parse_note_events_from_chart_lines",
@@ -60,13 +60,13 @@ class TestInstrumentTrack(object):
                 pytest.defaults.instrument,
                 pytest.defaults.difficulty,
                 minimal_string_iterator_getter,
-                minimal_tatter,
+                default_tatter,
             )
             mock_parse_note_events.assert_called_once_with(
-                minimal_string_iterator_getter(), pytest.defaults.star_power_events, minimal_tatter
+                minimal_string_iterator_getter(), pytest.defaults.star_power_events, default_tatter
             )
             mock_parse_events.assert_called_once_with(
-                minimal_string_iterator_getter(), StarPowerEvent.from_chart_line, minimal_tatter
+                minimal_string_iterator_getter(), StarPowerEvent.from_chart_line, default_tatter
             )
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self
@@ -79,16 +79,16 @@ class TestInstrumentTrack(object):
 
         def NoteEventWithDefaultsPlus(**kwargs):
             return NoteEventWithDefaults(
-                proximal_bpm_event_index=pytest.defaults.minimal_tatter_index,
-                timestamp=pytest.defaults.minimal_tatter_timestamp,
-                end_timestamp=pytest.defaults.minimal_tatter_timestamp,
+                proximal_bpm_event_index=pytest.defaults.default_tatter_index,
+                timestamp=pytest.defaults.default_tatter_timestamp,
+                end_timestamp=pytest.defaults.default_tatter_timestamp,
                 **kwargs,
             )
 
         def StarPowerEventWithDefaultsPlus(**kwargs):
             return StarPowerEventWithDefaults(
-                proximal_bpm_event_index=pytest.defaults.minimal_tatter_index,
-                timestamp=pytest.defaults.minimal_tatter_timestamp,
+                proximal_bpm_event_index=pytest.defaults.default_tatter_index,
+                timestamp=pytest.defaults.default_tatter_timestamp,
                 **kwargs,
             )
 
@@ -276,13 +276,13 @@ class TestInstrumentTrack(object):
         # TODO: This test currently tests parse_note_events_from_chart_lines by
         # proxy. Make its own tests instead.
         def test_integration(
-            self, mocker, lines, want_note_events, want_star_power_events, minimal_tatter
+            self, mocker, lines, want_note_events, want_star_power_events, default_tatter
         ):
             got = InstrumentTrack.from_chart_lines(
                 pytest.defaults.instrument,
                 pytest.defaults.difficulty,
                 lambda: iter(lines),
-                minimal_tatter,
+                default_tatter,
             )
             assert got.instrument == pytest.defaults.instrument
             assert got.difficulty == pytest.defaults.difficulty
@@ -723,28 +723,28 @@ class TestSpecialEvent(object):
                 ),
             ],
         )
-        def test(self, mocker, minimal_tatter, prev_event):
+        def test(self, mocker, default_tatter, prev_event):
             spy_init = mocker.spy(SpecialEvent, "__init__")
 
             _ = SpecialEvent.from_chart_line(
-                f"T {pytest.defaults.tick} V {pytest.defaults.sustain}", prev_event, minimal_tatter
+                f"T {pytest.defaults.tick} V {pytest.defaults.sustain}", prev_event, default_tatter
             )
 
-            minimal_tatter.spy.assert_called_once_with(
+            default_tatter.spy.assert_called_once_with(
                 pytest.defaults.tick,
                 proximal_bpm_event_index=prev_event._proximal_bpm_event_index if prev_event else 0,
             )
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self
                 pytest.defaults.tick,
-                pytest.defaults.minimal_tatter_timestamp,
+                pytest.defaults.default_tatter_timestamp,
                 pytest.defaults.sustain,
-                proximal_bpm_event_index=pytest.defaults.minimal_tatter_index,
+                proximal_bpm_event_index=pytest.defaults.default_tatter_index,
             )
 
-        def test_no_match(self, invalid_chart_line, minimal_tatter):
+        def test_no_match(self, invalid_chart_line, default_tatter):
             with pytest.raises(RegexNotMatchError):
-                _ = SpecialEvent.from_chart_line(invalid_chart_line, None, minimal_tatter)
+                _ = SpecialEvent.from_chart_line(invalid_chart_line, None, default_tatter)
 
         def setup_method(self):
             SpecialEvent._regex = self.test_regex

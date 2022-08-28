@@ -39,7 +39,7 @@ class TestParseEventsFromChartLines(object):
         self,
         mocker,
         invalid_chart_line,
-        minimal_tatter,
+        default_tatter,
         from_chart_line_return_value,
         from_chart_line_side_effect,
         want,
@@ -50,7 +50,7 @@ class TestParseEventsFromChartLines(object):
         if isinstance(from_chart_line_return_value, BPMEvent):
             resolution_or_tatter = pytest.defaults.resolution
         else:
-            resolution_or_tatter = minimal_tatter
+            resolution_or_tatter = default_tatter
 
         got = parse_events_from_chart_lines(
             [invalid_chart_line], from_chart_line_fn_mock, resolution_or_tatter

@@ -285,27 +285,27 @@ class TestTimeSignatureEvent(object):
                 ),
             ],
         )
-        def test(self, mocker, minimal_tatter, line, want_lower, prev_event):
+        def test(self, mocker, default_tatter, line, want_lower, prev_event):
             spy_init = mocker.spy(TimeSignatureEvent, "__init__")
 
-            _ = TimeSignatureEvent.from_chart_line(line, prev_event, minimal_tatter)
+            _ = TimeSignatureEvent.from_chart_line(line, prev_event, default_tatter)
 
-            minimal_tatter.spy.assert_called_once_with(
+            default_tatter.spy.assert_called_once_with(
                 pytest.defaults.tick,
                 proximal_bpm_event_index=prev_event._proximal_bpm_event_index if prev_event else 0,
             )
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self
                 pytest.defaults.tick,
-                pytest.defaults.minimal_tatter_timestamp,
+                pytest.defaults.default_tatter_timestamp,
                 pytest.defaults.upper_time_signature_numeral,
                 want_lower,
-                proximal_bpm_event_index=pytest.defaults.minimal_tatter_index,
+                proximal_bpm_event_index=pytest.defaults.default_tatter_index,
             )
 
-        def test_no_match(self, invalid_chart_line, minimal_tatter):
+        def test_no_match(self, invalid_chart_line, default_tatter):
             with pytest.raises(RegexNotMatchError):
-                _ = TimeSignatureEvent.from_chart_line(invalid_chart_line, None, minimal_tatter)
+                _ = TimeSignatureEvent.from_chart_line(invalid_chart_line, None, default_tatter)
 
 
 class TestBPMEvent(object):

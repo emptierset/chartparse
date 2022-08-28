@@ -27,7 +27,7 @@ class TestGlobalEventsTrack(object):
             with pytest.raises(ValueError):
                 _ = GlobalEventsTrackWithDefaults(resolution=resolution)
 
-    def test_from_chart_lines(self, mocker, minimal_string_iterator_getter, minimal_tatter):
+    def test_from_chart_lines(self, mocker, minimal_string_iterator_getter, default_tatter):
         mock_parse_events = mocker.patch(
             "chartparse.track.parse_events_from_chart_lines",
             side_effect=[
@@ -37,17 +37,17 @@ class TestGlobalEventsTrack(object):
             ],
         )
         spy_init = mocker.spy(GlobalEventsTrack, "__init__")
-        _ = GlobalEventsTrack.from_chart_lines(minimal_string_iterator_getter, minimal_tatter)
+        _ = GlobalEventsTrack.from_chart_lines(minimal_string_iterator_getter, default_tatter)
         mock_parse_events.assert_has_calls(
             [
                 unittest.mock.call(
-                    minimal_string_iterator_getter(), TextEvent.from_chart_line, minimal_tatter
+                    minimal_string_iterator_getter(), TextEvent.from_chart_line, default_tatter
                 ),
                 unittest.mock.call(
-                    minimal_string_iterator_getter(), SectionEvent.from_chart_line, minimal_tatter
+                    minimal_string_iterator_getter(), SectionEvent.from_chart_line, default_tatter
                 ),
                 unittest.mock.call(
-                    minimal_string_iterator_getter(), LyricEvent.from_chart_line, minimal_tatter
+                    minimal_string_iterator_getter(), LyricEvent.from_chart_line, default_tatter
                 ),
             ]
         )
@@ -91,16 +91,16 @@ class TestGlobalEvent(object):
                 ),
             ],
         )
-        def test(self, mocker, minimal_tatter, prev_event):
+        def test(self, mocker, default_tatter, prev_event):
             spy_init = mocker.spy(GlobalEvent, "__init__")
 
             _ = GlobalEvent.from_chart_line(
                 f"T {pytest.defaults.tick} V {pytest.defaults.global_event_value}",
                 prev_event,
-                minimal_tatter,
+                default_tatter,
             )
 
-            minimal_tatter.spy.assert_called_once_with(
+            default_tatter.spy.assert_called_once_with(
                 pytest.defaults.tick,
                 proximal_bpm_event_index=prev_event._proximal_bpm_event_index if prev_event else 0,
             )
@@ -108,14 +108,14 @@ class TestGlobalEvent(object):
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self
                 pytest.defaults.tick,
-                pytest.defaults.minimal_tatter_timestamp,
+                pytest.defaults.default_tatter_timestamp,
                 pytest.defaults.global_event_value,
-                proximal_bpm_event_index=pytest.defaults.minimal_tatter_index,
+                proximal_bpm_event_index=pytest.defaults.default_tatter_index,
             )
 
-        def test_no_match(self, invalid_chart_line, minimal_tatter):
+        def test_no_match(self, invalid_chart_line, default_tatter):
             with pytest.raises(RegexNotMatchError):
-                _ = GlobalEvent.from_chart_line(invalid_chart_line, None, minimal_tatter)
+                _ = GlobalEvent.from_chart_line(invalid_chart_line, None, default_tatter)
 
         def setup_method(self):
             GlobalEvent._regex = self.test_regex
