@@ -256,6 +256,16 @@ class TestTimeSignatureEvent(object):
 
     class TestFromChartLine(object):
         @pytest.mark.parametrize(
+            "prev_event",
+            [
+                pytest.param(None, id="prev_event_none"),
+                pytest.param(
+                    TimeSignatureEventWithDefaults(proximal_bpm_event_index=1),
+                    id="prev_event_present",
+                ),
+            ],
+        )
+        @pytest.mark.parametrize(
             "line,want_lower",
             [
                 pytest.param(
@@ -276,13 +286,14 @@ class TestTimeSignatureEvent(object):
                 ),
             ],
         )
-        def test(self, mocker, minimal_tatter, line, want_lower):
+        def test(self, mocker, minimal_tatter, line, want_lower, prev_event):
             spy_init = mocker.spy(TimeSignatureEvent, "__init__")
 
-            _ = TimeSignatureEvent.from_chart_line(line, None, minimal_tatter)
+            _ = TimeSignatureEvent.from_chart_line(line, prev_event, minimal_tatter)
 
             minimal_tatter.spy.assert_called_once_with(
-                pytest.defaults.tick, proximal_bpm_event_index=0
+                pytest.defaults.tick,
+                proximal_bpm_event_index=prev_event._proximal_bpm_event_index if prev_event else 0,
             )
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self

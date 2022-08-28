@@ -686,14 +686,25 @@ class TestSpecialEvent(object):
     class TestFromChartLine(object):
         test_regex = r"^T (\d+?) V (.*?)$"
 
-        def test(self, mocker, minimal_tatter):
+        @pytest.mark.parametrize(
+            "prev_event",
+            [
+                pytest.param(None, id="prev_event_none"),
+                pytest.param(
+                    SpecialEventWithDefaults(proximal_bpm_event_index=1), id="prev_event_present"
+                ),
+            ],
+        )
+        def test(self, mocker, minimal_tatter, prev_event):
             spy_init = mocker.spy(SpecialEvent, "__init__")
 
-            line = f"T {pytest.defaults.tick} V {pytest.defaults.sustain}"
-            _ = SpecialEvent.from_chart_line(line, None, minimal_tatter)
+            _ = SpecialEvent.from_chart_line(
+                f"T {pytest.defaults.tick} V {pytest.defaults.sustain}", prev_event, minimal_tatter
+            )
 
             minimal_tatter.spy.assert_called_once_with(
-                pytest.defaults.tick, proximal_bpm_event_index=0
+                pytest.defaults.tick,
+                proximal_bpm_event_index=prev_event._proximal_bpm_event_index if prev_event else 0,
             )
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self
