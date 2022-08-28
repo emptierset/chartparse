@@ -2,6 +2,7 @@ import datetime
 import pytest
 import unittest.mock
 
+from chartparse.event import Event
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.sync import SyncTrack, BPMEvent, TimeSignatureEvent
 
@@ -230,10 +231,28 @@ class TestSyncTrack(object):
 
 class TestTimeSignatureEvent(object):
     class TestInit(object):
-        def test(self):
-            got = TimeSignatureEventWithDefaults()
-            assert got.upper_numeral == pytest.defaults.upper_time_signature_numeral
-            assert got.lower_numeral == pytest.defaults.lower_time_signature_numeral
+        def test(self, mocker):
+            want_upper_numeral = 1
+            want_lower_numeral = 2
+            want_proximal_bpm_event_index = 3
+
+            spy_init = mocker.spy(Event, "__init__")
+
+            got = TimeSignatureEventWithDefaults(
+                upper_numeral=want_upper_numeral,
+                lower_numeral=want_lower_numeral,
+                proximal_bpm_event_index=want_proximal_bpm_event_index,
+            )
+
+            spy_init.assert_called_once_with(
+                unittest.mock.ANY,  # ignore self
+                pytest.defaults.tick,
+                pytest.defaults.timestamp,
+                proximal_bpm_event_index=want_proximal_bpm_event_index,
+            )
+
+            assert got.upper_numeral == want_upper_numeral
+            assert got.lower_numeral == want_lower_numeral
 
     class TestFromChartLine(object):
         @pytest.mark.parametrize(
@@ -271,7 +290,7 @@ class TestTimeSignatureEvent(object):
                 pytest.defaults.timestamp,
                 pytest.defaults.upper_time_signature_numeral,
                 want_lower,
-                proximal_bpm_event_index=0,
+                proximal_bpm_event_index=pytest.defaults.proximal_bpm_event_index,
             )
 
         def test_no_match(self, invalid_chart_line, minimal_tatter):
@@ -281,8 +300,21 @@ class TestTimeSignatureEvent(object):
 
 class TestBPMEvent(object):
     class TestInit(object):
-        def test(self, default_bpm_event):
-            assert default_bpm_event.bpm == pytest.defaults.bpm
+        def test(self, mocker):
+            want_proximal_bpm_event_index = 1
+
+            spy_init = mocker.spy(Event, "__init__")
+
+            got = BPMEventWithDefaults(proximal_bpm_event_index=want_proximal_bpm_event_index)
+
+            spy_init.assert_called_once_with(
+                unittest.mock.ANY,  # ignore self
+                pytest.defaults.tick,
+                pytest.defaults.timestamp,
+                proximal_bpm_event_index=want_proximal_bpm_event_index,
+            )
+
+            assert got.bpm == pytest.defaults.bpm
 
         def test_more_than_three_decimal_places_error(self):
             with pytest.raises(ValueError):
@@ -331,7 +363,7 @@ class TestBPMEvent(object):
                 current_event_tick,
                 prev_event.timestamp + datetime.timedelta(seconds=seconds_since_prev),
                 pytest.defaults.bpm,
-                proximal_bpm_event_index=None,
+                proximal_bpm_event_index=pytest.defaults.proximal_bpm_event_index,
             )
 
         @pytest.mark.parametrize(

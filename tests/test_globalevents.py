@@ -2,6 +2,7 @@ import pytest
 import re
 import unittest.mock
 
+from chartparse.event import Event
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.globalevents import (
     GlobalEventsTrack,
@@ -73,20 +74,25 @@ class TestGlobalEventsTrack(object):
 
 class TestGlobalEvent(object):
     class TestInit(object):
-        def test(self):
-            got = GlobalEventWithDefaults()
-            assert got.value == pytest.defaults.global_event_value
+        def test(self, mocker):
+            want_proximal_bpm_event_index = 1
+            want_value = "value"
+            spy_init = mocker.spy(Event, "__init__")
+
+            got = GlobalEventWithDefaults(
+                value=want_value, proximal_bpm_event_index=want_proximal_bpm_event_index
+            )
+
+            spy_init.assert_called_once_with(
+                unittest.mock.ANY,  # ignore self
+                pytest.defaults.tick,
+                pytest.defaults.timestamp,
+                proximal_bpm_event_index=want_proximal_bpm_event_index,
+            )
+            assert got.value == want_value
 
     class TestFromChartLine(object):
         test_regex = r"^T (\d+?) V (.*?)$"
-
-        def setup_method(self):
-            GlobalEvent._regex = self.test_regex
-            GlobalEvent._regex_prog = re.compile(GlobalEvent._regex)
-
-        def teardown_method(self):
-            del GlobalEvent._regex
-            del GlobalEvent._regex_prog
 
         def test(self, mocker, minimal_tatter):
             spy_init = mocker.spy(GlobalEvent, "__init__")
@@ -102,12 +108,20 @@ class TestGlobalEvent(object):
                 pytest.defaults.tick,
                 pytest.defaults.timestamp,
                 pytest.defaults.global_event_value,
-                proximal_bpm_event_index=0,
+                proximal_bpm_event_index=pytest.defaults.proximal_bpm_event_index,
             )
 
         def test_no_match(self, invalid_chart_line, minimal_tatter):
             with pytest.raises(RegexNotMatchError):
                 _ = GlobalEvent.from_chart_line(invalid_chart_line, None, minimal_tatter)
+
+        def setup_method(self):
+            GlobalEvent._regex = self.test_regex
+            GlobalEvent._regex_prog = re.compile(GlobalEvent._regex)
+
+        def teardown_method(self):
+            del GlobalEvent._regex
+            del GlobalEvent._regex_prog
 
 
 # TODO: Test regex?

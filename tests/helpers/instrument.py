@@ -8,7 +8,7 @@ def SpecialEventWithDefaults(
     tick=pytest.defaults.tick,
     timestamp=pytest.defaults.timestamp,
     sustain=pytest.defaults.sustain,
-    proximal_bpm_event_index=0,
+    proximal_bpm_event_index=pytest.defaults.proximal_bpm_event_index,
     init_end_tick=False,
 ):
     s = SpecialEvent(tick, timestamp, sustain, proximal_bpm_event_index=proximal_bpm_event_index)
@@ -22,7 +22,7 @@ def StarPowerEventWithDefaults(
     tick=pytest.defaults.tick,
     timestamp=pytest.defaults.timestamp,
     sustain=pytest.defaults.sustain,
-    proximal_bpm_event_index=0,
+    proximal_bpm_event_index=pytest.defaults.proximal_bpm_event_index,
     init_end_tick=False,
 ):
     s = StarPowerEvent(tick, timestamp, sustain, proximal_bpm_event_index=proximal_bpm_event_index)
@@ -40,6 +40,7 @@ def NoteEventWithDefaults(
     hopo_state=pytest.defaults.hopo_state,
     sustain=pytest.defaults.sustain,
     star_power_data=None,
+    proximal_bpm_event_index=pytest.defaults.proximal_bpm_event_index,
 ):
     return NoteEvent(
         tick,
@@ -49,4 +50,5 @@ def NoteEventWithDefaults(
         hopo_state,
         sustain=sustain,
         star_power_data=star_power_data,
+        proximal_bpm_event_index=proximal_bpm_event_index,
     )

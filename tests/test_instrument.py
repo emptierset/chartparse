@@ -3,6 +3,7 @@ import pytest
 import re
 import unittest.mock
 
+from chartparse.event import Event
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.instrument import (
     InstrumentTrack,
@@ -287,14 +288,43 @@ class TestInstrumentTrack(object):
 class TestNoteEvent(object):
     class TestInit(object):
         def test(self, mocker):
+            want_end_timestamp = datetime.timedelta(1)
+            want_star_power_data = StarPowerData(2)
+            want_sustain = 3
+            input_sustain = 4
+            want_proximal_bpm_event_index = 5
+            want_note = Note.ORANGE
+            want_hopo_state = HOPOState.TAP
+
+            spy_init = mocker.spy(Event, "__init__")
+
             mock_refine_sustain = mocker.patch.object(
-                NoteEvent, "_refine_sustain", return_value=pytest.defaults.sustain
+                NoteEvent, "_refine_sustain", return_value=want_sustain
             )
-            got = NoteEventWithDefaults()
-            mock_refine_sustain.assert_called_once_with(pytest.defaults.sustain)
-            assert got.note == pytest.defaults.note
-            assert got.sustain == pytest.defaults.sustain
-            assert got.hopo_state == pytest.defaults.hopo_state
+
+            got = NoteEventWithDefaults(
+                end_timestamp=want_end_timestamp,
+                note=want_note,
+                hopo_state=want_hopo_state,
+                sustain=input_sustain,
+                star_power_data=want_star_power_data,
+                proximal_bpm_event_index=want_proximal_bpm_event_index,
+            )
+
+            spy_init.assert_called_once_with(
+                unittest.mock.ANY,  # ignore self
+                pytest.defaults.tick,
+                pytest.defaults.timestamp,
+                want_proximal_bpm_event_index,
+            )
+
+            mock_refine_sustain.assert_called_once_with(input_sustain)
+
+            assert got.end_timestamp == want_end_timestamp
+            assert got.note == want_note
+            assert got.sustain == want_sustain
+            assert got.hopo_state == want_hopo_state
+            assert got.star_power_data == want_star_power_data
 
     class TestRefineSustain(object):
         @pytest.mark.parametrize(
@@ -530,7 +560,7 @@ class TestNoteEvent(object):
 
     class TestComputeStarPowerData(object):
         @pytest.mark.parametrize(
-            "tick,star_power_events,want_star_power_data,want_proximal_star_power_event_index",
+            "tick,star_power_events,want_data,want_proximal_star_power_event_index",
             [
                 pytest.param(
                     pytest.defaults.tick,
@@ -565,7 +595,9 @@ class TestNoteEvent(object):
                     AlreadySortedImmutableSortedList(
                         [StarPowerEventWithDefaults(tick=0, sustain=10)]
                     ),
-                    StarPowerData(star_power_event_index=0),
+                    StarPowerData(
+                        star_power_event_index=pytest.defaults.proximal_star_power_event_index
+                    ),
                     0,
                     id="tick_in_event",
                 ),
@@ -587,16 +619,15 @@ class TestNoteEvent(object):
             self,
             tick,
             star_power_events,
-            want_star_power_data,
+            want_data,
             want_proximal_star_power_event_index,
         ):
-            (
-                got_star_power_data,
-                got_proximal_star_power_event_index,
-            ) = NoteEvent._compute_star_power_data(
-                tick, star_power_events, proximal_star_power_event_index=0
+            got_data, got_proximal_star_power_event_index = NoteEvent._compute_star_power_data(
+                tick,
+                star_power_events,
+                proximal_star_power_event_index=pytest.defaults.proximal_star_power_event_index,
             )
-            assert got_star_power_data == want_star_power_data
+            assert got_data == want_data
             assert got_proximal_star_power_event_index == want_proximal_star_power_event_index
 
         def test_proximal_star_power_event_index_after_last_event(self):
@@ -635,19 +666,25 @@ class TestNoteEvent(object):
 
 class TestSpecialEvent(object):
     class TestInit(object):
-        def test(self, default_star_power_event):
-            assert default_star_power_event.sustain == pytest.defaults.sustain
+        def test(self, mocker):
+            want_proximal_bpm_event_index = 1
+            want_sustain = 2
+            spy_init = mocker.spy(Event, "__init__")
+
+            got = SpecialEventWithDefaults(
+                sustain=want_sustain, proximal_bpm_event_index=want_proximal_bpm_event_index
+            )
+
+            spy_init.assert_called_once_with(
+                unittest.mock.ANY,  # ignore self
+                pytest.defaults.tick,
+                pytest.defaults.timestamp,
+                proximal_bpm_event_index=want_proximal_bpm_event_index,
+            )
+            assert got.sustain == want_sustain
 
     class TestFromChartLine(object):
         test_regex = r"^T (\d+?) V (.*?)$"
-
-        def setup_method(self):
-            SpecialEvent._regex = self.test_regex
-            SpecialEvent._regex_prog = re.compile(SpecialEvent._regex)
-
-        def teardown_method(self):
-            del SpecialEvent._regex
-            del SpecialEvent._regex_prog
 
         def test(self, mocker, minimal_tatter):
             spy_init = mocker.spy(SpecialEvent, "__init__")
@@ -663,12 +700,20 @@ class TestSpecialEvent(object):
                 pytest.defaults.tick,
                 pytest.defaults.timestamp,
                 pytest.defaults.sustain,
-                proximal_bpm_event_index=0,
+                proximal_bpm_event_index=pytest.defaults.proximal_bpm_event_index,
             )
 
         def test_no_match(self, invalid_chart_line, minimal_tatter):
             with pytest.raises(RegexNotMatchError):
                 _ = SpecialEvent.from_chart_line(invalid_chart_line, None, minimal_tatter)
+
+        def setup_method(self):
+            SpecialEvent._regex = self.test_regex
+            SpecialEvent._regex_prog = re.compile(SpecialEvent._regex)
+
+        def teardown_method(self):
+            del SpecialEvent._regex
+            del SpecialEvent._regex_prog
 
     class TestTickIsAfterEvent(object):
         @pytest.mark.parametrize(
