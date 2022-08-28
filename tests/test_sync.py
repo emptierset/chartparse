@@ -108,7 +108,6 @@ class TestSyncTrack(object):
                 proximal_bpm_event_index=0,
             )
 
-        # TODO: Figure out where proximal_bpm_event_index need to be asserted.
         @pytest.mark.parametrize(
             "tick,want_timestamp,want_proximal_bpm_event_index",
             [

@@ -12,7 +12,7 @@ from chartparse.globalevents import (
     LyricEvent,
 )
 
-from tests.helpers.globalevents import GlobalEventWithDefaults
+from tests.helpers.globalevents import GlobalEventWithDefaults, GlobalEventsTrackWithDefaults
 
 
 class TestGlobalEventsTrack(object):
@@ -22,22 +22,10 @@ class TestGlobalEventsTrack(object):
             assert default_global_events_track.section_events == pytest.defaults.section_events
             assert default_global_events_track.lyric_events == pytest.defaults.lyric_events
 
-        def test_non_positive_resolution(self):
+        @pytest.mark.parametrize("resolution", [0, -1])
+        def test_non_positive_resolution(self, resolution):
             with pytest.raises(ValueError):
-                # TODO: Add GlobalEventTrackWithDefaults (and other tracks)
-                _ = GlobalEventsTrack(
-                    0,
-                    pytest.defaults.text_events,
-                    pytest.defaults.section_events,
-                    pytest.defaults.lyric_events,
-                )
-            with pytest.raises(ValueError):
-                _ = GlobalEventsTrack(
-                    -1,
-                    pytest.defaults.text_events,
-                    pytest.defaults.section_events,
-                    pytest.defaults.lyric_events,
-                )
+                _ = GlobalEventsTrackWithDefaults(resolution=resolution)
 
     def test_from_chart_lines(self, mocker, minimal_string_iterator_getter, minimal_tatter):
         mock_parse_events = mocker.patch(
