@@ -1,6 +1,17 @@
 import pytest
 
-from chartparse.instrument import StarPowerEvent, NoteEvent, SpecialEvent
+from chartparse.instrument import StarPowerEvent, NoteEvent, SpecialEvent, InstrumentTrack
+
+
+def InstrumentTrackWithDefaults(
+    *,
+    resolution=pytest.defaults.resolution,
+    instrument=pytest.defaults.instrument,
+    difficulty=pytest.defaults.difficulty,
+    note_events=pytest.defaults.note_events,
+    star_power_events=pytest.defaults.star_power_events,
+):
+    return InstrumentTrack(resolution, instrument, difficulty, note_events, star_power_events)
 
 
 def SpecialEventWithDefaults(

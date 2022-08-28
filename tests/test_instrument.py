@@ -20,6 +20,7 @@ from chartparse.tick import NoteDuration
 import tests.helpers.tick
 from tests.helpers.datastructures import AlreadySortedImmutableSortedList
 from tests.helpers.instrument import (
+    InstrumentTrackWithDefaults,
     StarPowerEventWithDefaults,
     NoteEventWithDefaults,
     SpecialEventWithDefaults,
@@ -31,37 +32,17 @@ from tests.helpers.lines import generate_star_power as generate_star_power_line
 class TestInstrumentTrack(object):
     class TestInit(object):
         def test(self, mocker, default_instrument_track):
-            _ = InstrumentTrack(
-                pytest.defaults.resolution,
-                pytest.defaults.instrument,
-                pytest.defaults.difficulty,
-                pytest.defaults.note_events,
-                pytest.defaults.star_power_events,
-            )
+            _ = InstrumentTrackWithDefaults()
             assert default_instrument_track.instrument == pytest.defaults.instrument
             assert default_instrument_track.difficulty == pytest.defaults.difficulty
             assert default_instrument_track.note_events == pytest.defaults.note_events
             assert default_instrument_track.star_power_events == pytest.defaults.star_power_events
             assert default_instrument_track.section_name == pytest.defaults.section_name
 
-        def test_non_positive_resolution(self):
+        @pytest.mark.parametrize("resolution", [0, -1])
+        def test_non_positive_resolution(self, resolution):
             with pytest.raises(ValueError):
-                # TODO: Add InstrumentTrackWithDefaults (and other tracks)
-                _ = InstrumentTrack(
-                    0,
-                    pytest.defaults.instrument,
-                    pytest.defaults.difficulty,
-                    pytest.defaults.note_events,
-                    pytest.defaults.star_power_events,
-                )
-            with pytest.raises(ValueError):
-                _ = InstrumentTrack(
-                    -1,
-                    pytest.defaults.instrument,
-                    pytest.defaults.difficulty,
-                    pytest.defaults.note_events,
-                    pytest.defaults.star_power_events,
-                )
+                _ = InstrumentTrackWithDefaults(resolution=0)
 
     class TestFromChartLines(object):
         def test(self, mocker, minimal_string_iterator_getter, minimal_tatter):
