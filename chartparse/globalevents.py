@@ -165,7 +165,9 @@ class GlobalEvent(Event):
         if not m:
             raise RegexNotMatchError(cls._regex, line)
         tick, value = int(m.group(1)), m.group(2)
-        timestamp, proximal_bpm_event_idx = cls.calculate_timestamp(tick, prev_event, tatter)
+        timestamp, proximal_bpm_event_idx = tatter.timestamp_at_tick(
+            tick, start_bpm_event_index=prev_event._proximal_bpm_event_index if prev_event else 0
+        )
         return cls(tick, timestamp, value, proximal_bpm_event_idx=proximal_bpm_event_idx)
 
     def __str__(self) -> str:  # pragma: no cover

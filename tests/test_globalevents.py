@@ -89,13 +89,21 @@ class TestGlobalEvent(object):
             del GlobalEvent._regex_prog
 
         def test(self, mocker, minimal_tatter):
+            spy_init = mocker.spy(GlobalEvent, "__init__")
+
             line = f"T {pytest.defaults.tick} V {pytest.defaults.global_event_value}"
-            spy_calculate_timestamp = mocker.spy(GlobalEvent, "calculate_timestamp")
-            got = GlobalEvent.from_chart_line(line, None, minimal_tatter)
-            spy_calculate_timestamp.assert_called_once_with(
-                pytest.defaults.tick, None, minimal_tatter
+            _ = GlobalEvent.from_chart_line(line, None, minimal_tatter)
+
+            minimal_tatter.spy.assert_called_once_with(
+                pytest.defaults.tick, start_bpm_event_index=0
             )
-            assert got.value == pytest.defaults.global_event_value
+            spy_init.assert_called_once_with(
+                unittest.mock.ANY,  # ignore self
+                pytest.defaults.tick,
+                pytest.defaults.timestamp,
+                pytest.defaults.global_event_value,
+                proximal_bpm_event_idx=0,
+            )
 
         def test_no_match(self, invalid_chart_line, minimal_tatter):
             with pytest.raises(RegexNotMatchError):

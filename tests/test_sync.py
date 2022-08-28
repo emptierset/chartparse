@@ -1,7 +1,6 @@
 import datetime
 import pytest
 import unittest.mock
-from contextlib import nullcontext as does_not_raise
 
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.sync import SyncTrack, BPMEvent, TimeSignatureEvent
@@ -236,31 +235,43 @@ class TestTimeSignatureEvent(object):
             assert got.lower_numeral == pytest.defaults.lower_time_signature_numeral
 
     class TestFromChartLine(object):
-        def test_shortform(self, mocker, minimal_tatter):
-            spy_calculate_timestamp = mocker.spy(TimeSignatureEvent, "calculate_timestamp")
-            line = generate_time_signature_line(
-                pytest.defaults.tick, pytest.defaults.upper_time_signature_numeral
-            )
-            got = TimeSignatureEvent.from_chart_line(line, None, minimal_tatter)
-            spy_calculate_timestamp.assert_called_once_with(
-                pytest.defaults.tick, None, minimal_tatter
-            )
-            assert got.upper_numeral == pytest.defaults.upper_time_signature_numeral
-            assert got.lower_numeral == TimeSignatureEvent._default_lower_numeral
+        @pytest.mark.parametrize(
+            "line,want_lower",
+            [
+                pytest.param(
+                    generate_time_signature_line(
+                        pytest.defaults.tick, pytest.defaults.upper_time_signature_numeral
+                    ),
+                    TimeSignatureEvent._default_lower_numeral,
+                    id="line_without_lower_specified",
+                ),
+                pytest.param(
+                    generate_time_signature_line(
+                        pytest.defaults.tick,
+                        pytest.defaults.upper_time_signature_numeral,
+                        pytest.defaults.lower_time_signature_numeral,
+                    ),
+                    pytest.defaults.lower_time_signature_numeral,
+                    id="line_with_lower_specified",
+                ),
+            ],
+        )
+        def test(self, mocker, minimal_tatter, line, want_lower):
+            spy_init = mocker.spy(TimeSignatureEvent, "__init__")
 
-        def test_longform(self, mocker, minimal_tatter):
-            spy_calculate_timestamp = mocker.spy(TimeSignatureEvent, "calculate_timestamp")
-            line = generate_time_signature_line(
+            _ = TimeSignatureEvent.from_chart_line(line, None, minimal_tatter)
+
+            minimal_tatter.spy.assert_called_once_with(
+                pytest.defaults.tick, start_bpm_event_index=0
+            )
+            spy_init.assert_called_once_with(
+                unittest.mock.ANY,  # ignore self
                 pytest.defaults.tick,
+                pytest.defaults.timestamp,
                 pytest.defaults.upper_time_signature_numeral,
-                pytest.defaults.lower_time_signature_numeral,
+                want_lower,
+                proximal_bpm_event_idx=0,
             )
-            got = TimeSignatureEvent.from_chart_line(line, None, minimal_tatter)
-            spy_calculate_timestamp.assert_called_once_with(
-                pytest.defaults.tick, None, minimal_tatter
-            )
-            assert got.upper_numeral == pytest.defaults.upper_time_signature_numeral
-            assert got.lower_numeral == pytest.defaults.lower_time_signature_numeral
 
         def test_no_match(self, invalid_chart_line, minimal_tatter):
             with pytest.raises(RegexNotMatchError):
@@ -277,52 +288,62 @@ class TestBPMEvent(object):
                 _ = BPMEventWithDefaults(bpm=120.0001)
 
     class TestFromChartLine(object):
-        @pytest.mark.parametrize(
-            "prev_event_tick,current_event_tick,expectation",
-            [
-                pytest.param(
-                    None,
-                    pytest.defaults.tick,
-                    does_not_raise(),
-                    id="None prev event",
-                ),
-                pytest.param(
-                    pytest.defaults.tick,
-                    pytest.defaults.tick + 1,
-                    does_not_raise(),
-                    id="Present prev event",
-                ),
-                pytest.param(
-                    pytest.defaults.tick + 1,
-                    pytest.defaults.tick,
-                    pytest.raises(ValueError),
-                    id="Prev event after current",
-                ),
-                pytest.param(
-                    pytest.defaults.tick,
-                    pytest.defaults.tick,
-                    pytest.raises(ValueError),
-                    id="Prev event equal to current",
-                ),
-            ],
-        )
-        def test(self, mocker, prev_event_tick, current_event_tick, expectation):
-            prev_event = (
-                BPMEventWithDefaults(tick=prev_event_tick) if prev_event_tick is not None else None
+        def test_prev_event_none(self, mocker):
+            spy_init = mocker.spy(BPMEvent, "__init__")
+
+            current_line = generate_bpm_line(0, pytest.defaults.bpm)
+            _ = BPMEvent.from_chart_line(current_line, None, pytest.defaults.resolution)
+
+            spy_init.assert_called_once_with(
+                unittest.mock.ANY,  # ignore self
+                0,
+                datetime.timedelta(0),
+                pytest.defaults.bpm,
+                proximal_bpm_event_idx=0,
             )
 
+        def test_prev_event_present(self, mocker):
+            current_event_tick = 3
             current_line = generate_bpm_line(current_event_tick, pytest.defaults.bpm)
-            spy_calculate_timestamp = mocker.spy(BPMEvent, "calculate_timestamp")
-            with expectation:
-                got = BPMEvent.from_chart_line(
-                    current_line, prev_event, pytest.defaults.resolution
-                )
-                assert got.bpm == pytest.defaults.bpm
-            spy_calculate_timestamp.assert_called_once_with(
-                current_event_tick,
-                prev_event,
-                unittest.mock.ANY,  # ignore locally conjured object
+
+            prev_event = BPMEventWithDefaults(tick=1, timestamp=datetime.timedelta(seconds=1))
+
+            spy_init = mocker.spy(BPMEvent, "__init__")
+
+            # NOTE: this value is clearly not the result of truthful arithmetic; a unique value was
+            # chosen to ensure the right values are passed to the right places.
+            seconds_since_prev = 4
+            mock_seconds_from_ticks_at_bpm = mocker.patch(
+                "chartparse.tick.seconds_from_ticks_at_bpm", return_value=seconds_since_prev
             )
+
+            _ = BPMEvent.from_chart_line(current_line, prev_event, pytest.defaults.resolution)
+
+            mock_seconds_from_ticks_at_bpm.assert_called_once_with(
+                current_event_tick - prev_event.tick,
+                pytest.defaults.bpm,
+                pytest.defaults.resolution,
+            )
+
+            spy_init.assert_called_once_with(
+                unittest.mock.ANY,  # ignore self
+                current_event_tick,
+                prev_event.timestamp + datetime.timedelta(seconds=seconds_since_prev),
+                pytest.defaults.bpm,
+                proximal_bpm_event_idx=None,
+            )
+
+        @pytest.mark.parametrize(
+            "prev_event,current_event_tick",
+            [
+                pytest.param(BPMEventWithDefaults(tick=1), 0, id="prev_event_after_current"),
+                pytest.param(BPMEventWithDefaults(tick=0), 0, id="prev_event_equal_to_current"),
+            ],
+        )
+        def test_wrongly_ordered_events(self, mocker, prev_event, current_event_tick):
+            current_line = generate_bpm_line(current_event_tick, pytest.defaults.bpm)
+            with pytest.raises(ValueError):
+                _ = BPMEvent.from_chart_line(current_line, prev_event, pytest.defaults.resolution)
 
         def test_no_match(self):
             with pytest.raises(RegexNotMatchError):

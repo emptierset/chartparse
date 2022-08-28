@@ -275,6 +275,7 @@ def invalid_chart_line():
     return _invalid_chart_line
 
 
+# TODO: Rename to default_tatter.
 @pytest.fixture
 def minimal_tatter(mocker):
     class FakeTimestampAtTicker(object):

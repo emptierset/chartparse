@@ -264,7 +264,9 @@ class TimeSignatureEvent(Event):
         tick, upper_numeral = int(m.group(1)), int(m.group(2))
         # The lower number is written by Moonscraper as the log2 of the true value.
         lower_numeral = 2 ** int(m.group(3)) if m.group(3) else cls._default_lower_numeral
-        timestamp, proximal_bpm_event_idx = cls.calculate_timestamp(tick, prev_event, tatter)
+        timestamp, proximal_bpm_event_idx = tatter.timestamp_at_tick(
+            tick, start_bpm_event_index=prev_event._proximal_bpm_event_index if prev_event else 0
+        )
         return cls(
             tick,
             timestamp,
@@ -366,7 +368,9 @@ class BPMEvent(Event):
                 return timestamp, start_bpm_event_index
 
         tatter = TimestampAtTicker(resolution)
-        timestamp, proximal_bpm_event_idx = cls.calculate_timestamp(tick, prev_event, tatter)
+        timestamp, proximal_bpm_event_idx = tatter.timestamp_at_tick(
+            tick, start_bpm_event_index=prev_event._proximal_bpm_event_index if prev_event else 0
+        )
         return cls(tick, timestamp, bpm, proximal_bpm_event_idx=proximal_bpm_event_idx)
 
     def __str__(self) -> str:  # pragma: no cover
