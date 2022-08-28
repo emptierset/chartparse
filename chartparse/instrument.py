@@ -11,6 +11,7 @@ You should not need to create any of this module's objects manually; please inst
 from __future__ import annotations
 
 import collections
+import dataclasses
 import datetime
 import enum
 import functools
@@ -196,7 +197,7 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     _forced_instrument_track_index = 5
     _tap_instrument_track_index = 6
 
-    _unhandled_note_track_index_log_msg_tmpl: ClassVar[str] = "unhandled note track index {}"
+    _unhandled_note_track_index_log_msg_tmpl: Final[str] = "unhandled note track index {}"
 
     def __init__(
         self,
@@ -354,6 +355,14 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
                 logger.warning(cls._unhandled_note_track_index_log_msg_tmpl.format(note_index))
 
         return note_arrays, sustain_lists, is_taps, is_forceds
+
+
+@typing.final
+@dataclasses.dataclass
+class NoteEventParsedData(object):
+    tick: int
+    note_index: int
+    sustain: int
 
 
 @typing.final
@@ -629,14 +638,6 @@ class SpecialEvent(Event):
     tick.
     """
 
-    # Match 1: Tick
-    # Match 2: Sustain (ticks)
-    _regex_template: Final[str] = r"^\s*?(\d+?) = S {} (\d+?)\s*?$"
-
-    # These should be set by a subclass.
-    _regex: str
-    _regex_prog: Pattern[str]
-
     def __init__(
         self,
         tick: int,
@@ -673,15 +674,14 @@ class SpecialEvent(Event):
             RegexNotMatchError: If the mixed-into class' ``_regex`` does not match ``line``.
         """
 
-        m = cls._regex_prog.match(line)
-        if not m:
-            raise RegexNotMatchError(cls._regex, line)
-        tick, sustain = int(m.group(1)), int(m.group(2))
+        data = cls.ParsedData.from_chart_line(line)
         timestamp, proximal_bpm_event_index = tatter.timestamp_at_tick(
-            tick,
+            data.tick,
             proximal_bpm_event_index=prev_event._proximal_bpm_event_index if prev_event else 0,
         )
-        return cls(tick, timestamp, sustain, proximal_bpm_event_index=proximal_bpm_event_index)
+        return cls(
+            data.tick, timestamp, data.sustain, proximal_bpm_event_index=proximal_bpm_event_index
+        )
 
     def tick_is_in_event(self, tick: int) -> bool:
         return self.tick <= tick and not self.tick_is_after_event(tick)
@@ -694,13 +694,42 @@ class SpecialEvent(Event):
         to_join.append(f": sustain={self.sustain}")
         return "".join(to_join)
 
+    ParsedDataT = TypeVar("ParsedDataT", bound="ParsedData")
+
+    @dataclasses.dataclass
+    class ParsedData(object):
+        tick: int
+        sustain: int
+
+        _regex: ClassVar[str]
+        _regex_prog: ClassVar[Pattern[str]]
+
+        # Match 1: Tick
+        # Match 2: Sustain (ticks)
+        _regex_template: Final[str] = r"^\s*?(\d+?) = S {} (\d+?)\s*?$"
+        _index_regex: ClassVar[str]
+
+        @classmethod
+        def from_chart_line(
+            cls: Type[SpecialEvent.ParsedDataT], line: str
+        ) -> SpecialEvent.ParsedDataT:
+            m = cls._regex_prog.match(line)
+            if not m:
+                raise RegexNotMatchError(cls._regex, line)
+            tick, sustain = int(m.group(1)), int(m.group(2))
+            return cls(tick, sustain)
+
 
 @typing.final
 class StarPowerEvent(SpecialEvent):
     """An event representing star power starting at some tick and lasting for some duration."""
 
-    _regex = SpecialEvent._regex_template.format(r"2")
-    _regex_prog = re.compile(_regex)
+    @typing.final
+    @dataclasses.dataclass
+    class ParsedData(SpecialEvent.ParsedData):
+        _index_regex = r"2"
+        _regex = SpecialEvent.ParsedData._regex_template.format(_index_regex)
+        _regex_prog = re.compile(_regex)
 
 
 # TODO: Support S 0 ## and S 1 ## (GH1/2 Co-op)

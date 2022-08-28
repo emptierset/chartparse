@@ -118,12 +118,12 @@ class TestGlobalEvent(object):
                 _ = GlobalEvent.from_chart_line(invalid_chart_line, None, default_tatter)
 
         def setup_method(self):
-            GlobalEvent._regex = self.test_regex
-            GlobalEvent._regex_prog = re.compile(GlobalEvent._regex)
+            GlobalEvent.ParsedData._regex = self.test_regex
+            GlobalEvent.ParsedData._regex_prog = re.compile(GlobalEvent.ParsedData._regex)
 
         def teardown_method(self):
-            del GlobalEvent._regex
-            del GlobalEvent._regex_prog
+            del GlobalEvent.ParsedData._regex
+            del GlobalEvent.ParsedData._regex_prog
 
 
 # TODO: Test regex?

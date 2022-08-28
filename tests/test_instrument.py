@@ -747,12 +747,12 @@ class TestSpecialEvent(object):
                 _ = SpecialEvent.from_chart_line(invalid_chart_line, None, default_tatter)
 
         def setup_method(self):
-            SpecialEvent._regex = self.test_regex
-            SpecialEvent._regex_prog = re.compile(SpecialEvent._regex)
+            SpecialEvent.ParsedData._regex = self.test_regex
+            SpecialEvent.ParsedData._regex_prog = re.compile(SpecialEvent.ParsedData._regex)
 
         def teardown_method(self):
-            del SpecialEvent._regex
-            del SpecialEvent._regex_prog
+            del SpecialEvent.ParsedData._regex
+            del SpecialEvent.ParsedData._regex_prog
 
     class TestTickIsAfterEvent(object):
         @pytest.mark.parametrize(

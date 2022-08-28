@@ -10,6 +10,7 @@ You should not need to create any of this module's objects manually; please inst
 
 from __future__ import annotations
 
+import dataclasses
 import datetime
 import logging
 import re
@@ -123,13 +124,6 @@ class GlobalEvent(Event):
     value: Final[str]
     """The data that this event stores."""
 
-    _regex: ClassVar[str]
-    _regex_prog: ClassVar[Pattern[str]]
-
-    # Match 1: Tick
-    # Match 2: Event value (to be added by subclass via template hole)
-    _regex_template: Final[str] = r"^\s*?(\d+?) = E \"{}\"\s*?$"
-
     def __init__(
         self,
         tick: int,
@@ -161,28 +155,56 @@ class GlobalEvent(Event):
         Raises:
             RegexNotMatchError: If the mixed-into class' ``_regex`` does not match ``line``.
         """
-        m = cls._regex_prog.match(line)
-        if not m:
-            raise RegexNotMatchError(cls._regex, line)
-        tick, value = int(m.group(1)), m.group(2)
+        data = cls.ParsedData.from_chart_line(line)
         timestamp, proximal_bpm_event_index = tatter.timestamp_at_tick(
-            tick,
+            data.tick,
             proximal_bpm_event_index=prev_event._proximal_bpm_event_index if prev_event else 0,
         )
-        return cls(tick, timestamp, value, proximal_bpm_event_index=proximal_bpm_event_index)
+        return cls(
+            data.tick, timestamp, data.value, proximal_bpm_event_index=proximal_bpm_event_index
+        )
 
     def __str__(self) -> str:  # pragma: no cover
         to_join = [super().__str__()]
         to_join.append(f': "{self.value}"')
         return "".join(to_join)
 
+    ParsedDataT = TypeVar("ParsedDataT", bound="ParsedData")
+
+    @dataclasses.dataclass
+    class ParsedData(object):
+        tick: int
+        value: str
+
+        _regex: ClassVar[str]
+        _regex_prog: ClassVar[Pattern[str]]
+
+        # Match 1: Tick
+        # Match 2: Event value (to be added by subclass via _value_regex)
+        _regex_template: Final[str] = r"^\s*?(\d+?) = E \"{}\"\s*?$"
+        _value_regex: ClassVar[str]
+
+        @classmethod
+        def from_chart_line(
+            cls: Type[GlobalEvent.ParsedDataT], line: str
+        ) -> GlobalEvent.ParsedDataT:
+            m = cls._regex_prog.match(line)
+            if not m:
+                raise RegexNotMatchError(cls._regex, line)
+            tick, value = int(m.group(1)), m.group(2)
+            return cls(tick, value)
+
 
 @typing.final
 class TextEvent(GlobalEvent):
     """A :class:`~chartparse.globalevents.GlobalEvent` that stores freeform text event data."""
 
-    _regex = GlobalEvent._regex_template.format("([^ ]*?)")
-    _regex_prog = re.compile(_regex)
+    @typing.final
+    @dataclasses.dataclass
+    class ParsedData(GlobalEvent.ParsedData):
+        _value_regex = r"([^ ]*?)"
+        _regex = GlobalEvent.ParsedData._regex_template.format(_value_regex)
+        _regex_prog = re.compile(_regex)
 
 
 @typing.final
@@ -192,8 +214,12 @@ class SectionEvent(GlobalEvent):
     The event's ``value`` attribute contains the section's name.
     """
 
-    _regex = GlobalEvent._regex_template.format("section (.*?)")
-    _regex_prog = re.compile(_regex)
+    @typing.final
+    @dataclasses.dataclass
+    class ParsedData(GlobalEvent.ParsedData):
+        _value_regex = r"section (.*?)"
+        _regex = GlobalEvent.ParsedData._regex_template.format(_value_regex)
+        _regex_prog = re.compile(_regex)
 
 
 @typing.final
@@ -203,5 +229,9 @@ class LyricEvent(GlobalEvent):
     The event's ``value`` attribute contains the lyric's text, typically a single syllable's worth.
     """
 
-    _regex = GlobalEvent._regex_template.format("lyric (.*?)")
-    _regex_prog = re.compile(_regex)
+    @typing.final
+    @dataclasses.dataclass
+    class ParsedData(GlobalEvent.ParsedData):
+        _value_regex = "lyric (.*?)"
+        _regex = GlobalEvent.ParsedData._regex_template.format(_value_regex)
+        _regex_prog = re.compile(_regex)

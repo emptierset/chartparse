@@ -26,7 +26,7 @@ import re
 import typing
 from collections.abc import Callable, Iterable, Sequence
 from pathlib import Path
-from typing import ClassVar, Final, Optional, TextIO
+from typing import Final, Optional, TextIO
 
 import chartparse.tick
 from chartparse.exceptions import ProgrammerError, RegexNotMatchError
@@ -63,7 +63,7 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     instrument_tracks: Final[dict[Instrument, dict[Difficulty, InstrumentTrack]]]
     """Contains all of the chart's :class:`~chartparse.instrument.InstrumentTrack` objects."""
 
-    _unhandled_section_log_msg_tmpl: ClassVar[str] = "unhandled section titled '{}'"
+    _unhandled_section_log_msg_tmpl: Final[str] = "unhandled section titled '{}'"
 
     def __init__(
         self,

@@ -10,6 +10,7 @@ You should not need to create any of this module's objects manually; please inst
 
 from __future__ import annotations
 
+import dataclasses
 import datetime
 import logging
 import re
@@ -220,12 +221,6 @@ class TimeSignatureEvent(Event):
     lower_numeral: Final[int]
     """The number indicating the note value that represents one beat."""
 
-    # Match 1: Tick
-    # Match 2: Upper numeral
-    # Match 3: Lower numeral (optional; assumed to be 4 if absent)
-    _regex: Final[str] = r"^\s*?(\d+?) = TS (\d+?)(?: (\d+?))?\s*?$"
-    _regex_prog: Final[Pattern[str]] = re.compile(_regex)
-
     _default_lower_numeral: Final[int] = 4
 
     def __init__(
@@ -265,20 +260,17 @@ class TimeSignatureEvent(Event):
             RegexNotMatchError: If the mixed-into class' ``_regex`` does not match ``line``.
         """
 
-        m = cls._regex_prog.match(line)
-        if not m:
-            raise RegexNotMatchError(cls._regex, line)
-        tick, upper_numeral = int(m.group(1)), int(m.group(2))
+        data = cls.ParsedData.from_chart_line(line)
         # The lower number is written by Moonscraper as the log2 of the true value.
-        lower_numeral = 2 ** int(m.group(3)) if m.group(3) else cls._default_lower_numeral
+        lower_numeral = 2**data.lower if data.lower else cls._default_lower_numeral
         timestamp, proximal_bpm_event_index = tatter.timestamp_at_tick(
-            tick,
+            data.tick,
             proximal_bpm_event_index=prev_event._proximal_bpm_event_index if prev_event else 0,
         )
         return cls(
-            tick,
+            data.tick,
             timestamp,
-            upper_numeral,
+            data.upper,
             lower_numeral,
             proximal_bpm_event_index=proximal_bpm_event_index,
         )
@@ -287,6 +279,35 @@ class TimeSignatureEvent(Event):
         to_join = [super().__str__()]
         to_join.append(f": {self.upper_numeral}/{self.lower_numeral}")
         return "".join(to_join)
+
+    ParsedDataT = TypeVar("ParsedDataT", bound="ParsedData")
+
+    @typing.final
+    @dataclasses.dataclass
+    class ParsedData(object):
+        tick: int
+        upper: int
+        lower: Optional[int]
+
+        # Match 1: Tick
+        # Match 2: Upper numeral
+        # Match 3: Lower numeral (optional; assumed to be 4 if absent)
+        _regex: Final[str] = r"^\s*?(\d+?) = TS (\d+?)(?: (\d+?))?\s*?$"
+        _regex_prog: Final[Pattern[str]] = re.compile(_regex)
+
+        @classmethod
+        def from_chart_line(
+            cls: Type[TimeSignatureEvent.ParsedDataT], line: str
+        ) -> TimeSignatureEvent.ParsedDataT:
+            m = cls._regex_prog.match(line)
+            if not m:
+                raise RegexNotMatchError(cls._regex, line)
+            tick, upper = int(m.group(1)), int(m.group(2))
+            try:
+                lower = int(m.group(3))
+            except TypeError:
+                lower = None
+            return cls(tick, upper, lower)
 
 
 BPMEventT = TypeVar("BPMEventT", bound="BPMEvent")
@@ -298,11 +319,6 @@ class BPMEvent(Event):
 
     bpm: Final[float]
     """The beats per minute value. Must not have more than 3 decimal places."""
-
-    # Match 1: Tick
-    # Match 2: BPM (the last 3 digits are the decimal places)
-    _regex: Final[str] = r"^\s*?(\d+?) = B (\d+?)\s*?$"
-    _regex_prog: Final[Pattern[str]] = re.compile(_regex)
 
     def __init__(
         self,
@@ -321,8 +337,6 @@ class BPMEvent(Event):
         super().__init__(tick, timestamp, proximal_bpm_event_index=proximal_bpm_event_index)
         self.bpm = bpm
 
-    # TODO: Refactor all regex matching for all `from_chart_line` functions to a match method for
-    # better unit testability.
     @classmethod
     def from_chart_line(
         cls: Type[BPMEventT], line: str, prev_event: Optional[BPMEventT], resolution: int
@@ -344,13 +358,9 @@ class BPMEvent(Event):
                 ``line``.
         """
 
-        m = cls._regex_prog.match(line)
-        if not m:
-            raise RegexNotMatchError(cls._regex, line)
+        data = cls.ParsedData.from_chart_line(line)
 
-        tick, raw_bpm = int(m.group(1)), m.group(2)
-
-        bpm_whole_part_str, bpm_decimal_part_str = raw_bpm[:-3], raw_bpm[-3:]
+        bpm_whole_part_str, bpm_decimal_part_str = data.raw_bpm[:-3], data.raw_bpm[-3:]
         bpm_whole_part = int(bpm_whole_part_str) if bpm_whole_part_str != "" else 0
         bpm_decimal_part = int(bpm_decimal_part_str) / 1000
         bpm = bpm_whole_part + bpm_decimal_part
@@ -381,12 +391,33 @@ class BPMEvent(Event):
 
         tatter = TimestampAtTicker(resolution)
         timestamp, proximal_bpm_event_index = tatter.timestamp_at_tick(
-            tick,
+            data.tick,
             proximal_bpm_event_index=prev_event._proximal_bpm_event_index if prev_event else 0,
         )
-        return cls(tick, timestamp, bpm, proximal_bpm_event_index=proximal_bpm_event_index)
+        return cls(data.tick, timestamp, bpm, proximal_bpm_event_index=proximal_bpm_event_index)
 
     def __str__(self) -> str:  # pragma: no cover
         to_join = [super().__str__()]
         to_join.append(f": {self.bpm} BPM")
         return "".join(to_join)
+
+    ParsedDataT = TypeVar("ParsedDataT", bound="ParsedData")
+
+    @typing.final
+    @dataclasses.dataclass
+    class ParsedData(object):
+        tick: int
+        raw_bpm: str
+
+        # Match 1: Tick
+        # Match 2: BPM (the last 3 digits are the decimal places)
+        _regex: Final[str] = r"^\s*?(\d+?) = B (\d+?)\s*?$"
+        _regex_prog: Final[Pattern[str]] = re.compile(_regex)
+
+        @classmethod
+        def from_chart_line(cls: Type[BPMEvent.ParsedDataT], line: str) -> BPMEvent.ParsedDataT:
+            m = cls._regex_prog.match(line)
+            if not m:
+                raise RegexNotMatchError(cls._regex, line)
+            tick, raw_bpm = int(m.group(1)), m.group(2)
+            return cls(tick, raw_bpm)
