@@ -8,6 +8,6 @@ def GlobalEventWithDefaults(
     tick=pytest.defaults.tick,
     timestamp=pytest.defaults.timestamp,
     value=pytest.defaults.global_event_value,
-    proximal_bpm_event_idx=None,
+    proximal_bpm_event_index=None,
 ):
-    return GlobalEvent(tick, timestamp, value, proximal_bpm_event_idx=proximal_bpm_event_idx)
+    return GlobalEvent(tick, timestamp, value, proximal_bpm_event_index=proximal_bpm_event_index)

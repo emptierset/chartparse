@@ -21,7 +21,7 @@ class TimestampAtTickSupporter(Protocol):
     resolution: int
 
     def timestamp_at_tick(
-        self, tick: int, start_bpm_event_index: int = ...
+        self, tick: int, proximal_bpm_event_index: int = ...
     ) -> tuple[datetime.timedelta, int]:
         ...  # pragma: no cover
 
@@ -45,11 +45,11 @@ class Event(DictPropertiesEqMixin, DictReprMixin):
         self,
         tick: int,
         timestamp: datetime.timedelta,
-        proximal_bpm_event_idx: int = 0,
+        proximal_bpm_event_index: int = 0,
     ) -> None:
         self.tick = tick
         self.timestamp = timestamp
-        self._proximal_bpm_event_index = proximal_bpm_event_idx
+        self._proximal_bpm_event_index = proximal_bpm_event_index
 
     # TODO: Figure out a way for the final closing parenthesis to wrap _around_ any additional info
     # added by subclass __str__ implementations.

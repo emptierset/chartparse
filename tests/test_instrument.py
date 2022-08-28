@@ -530,7 +530,7 @@ class TestNoteEvent(object):
 
     class TestComputeStarPowerData(object):
         @pytest.mark.parametrize(
-            "tick,star_power_events,want_star_power_data,want_start_idx",
+            "tick,star_power_events,want_star_power_data,want_proximal_star_power_event_index",
             [
                 pytest.param(
                     pytest.defaults.tick,
@@ -558,14 +558,14 @@ class TestNoteEvent(object):
                     ),
                     None,
                     1,
-                    id="tick_not_in_event_with_noninitial_candidate_idx",
+                    id="tick_not_in_event_with_noninitial_candidate_index",
                 ),
                 pytest.param(
                     0,
                     AlreadySortedImmutableSortedList(
                         [StarPowerEventWithDefaults(tick=0, sustain=10)]
                     ),
-                    StarPowerData(star_power_event_idx=0),
+                    StarPowerData(star_power_event_index=0),
                     0,
                     id="tick_in_event",
                 ),
@@ -577,25 +577,34 @@ class TestNoteEvent(object):
                             StarPowerEventWithDefaults(tick=100, sustain=10),
                         ]
                     ),
-                    StarPowerData(star_power_event_idx=1),
+                    StarPowerData(star_power_event_index=1),
                     1,
-                    id="tick_in_event_with_noninitial_candidate_idx",
+                    id="tick_in_event_with_noninitial_candidate_index",
                 ),
             ],
         )
-        def test(self, tick, star_power_events, want_star_power_data, want_start_idx):
-            got_star_power_data, got_start_idx = NoteEvent._compute_star_power_data(
-                tick, star_power_events, start_idx=0
+        def test(
+            self,
+            tick,
+            star_power_events,
+            want_star_power_data,
+            want_proximal_star_power_event_index,
+        ):
+            (
+                got_star_power_data,
+                got_proximal_star_power_event_index,
+            ) = NoteEvent._compute_star_power_data(
+                tick, star_power_events, proximal_star_power_event_index=0
             )
             assert got_star_power_data == want_star_power_data
-            assert got_start_idx == want_start_idx
+            assert got_proximal_star_power_event_index == want_proximal_star_power_event_index
 
-        def test_start_idx_after_last_event(self):
+        def test_proximal_star_power_event_index_after_last_event(self):
             with pytest.raises(ValueError):
                 _, _ = NoteEvent._compute_star_power_data(
                     pytest.defaults.tick,
                     pytest.defaults.star_power_events,
-                    start_idx=len(pytest.defaults.star_power_events),
+                    proximal_star_power_event_index=len(pytest.defaults.star_power_events),
                 )
 
     class TestLongestSustain(object):
@@ -647,14 +656,14 @@ class TestSpecialEvent(object):
             _ = SpecialEvent.from_chart_line(line, None, minimal_tatter)
 
             minimal_tatter.spy.assert_called_once_with(
-                pytest.defaults.tick, start_bpm_event_index=0
+                pytest.defaults.tick, proximal_bpm_event_index=0
             )
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self
                 pytest.defaults.tick,
                 pytest.defaults.timestamp,
                 pytest.defaults.sustain,
-                proximal_bpm_event_idx=0,
+                proximal_bpm_event_index=0,
             )
 
         def test_no_match(self, invalid_chart_line, minimal_tatter):

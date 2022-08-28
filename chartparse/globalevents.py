@@ -135,10 +135,10 @@ class GlobalEvent(Event):
         tick: int,
         timestamp: datetime.timedelta,
         value: str,
-        # TODO: Consider making proximal_bpm_event_idx required.
-        proximal_bpm_event_idx: int = 0,
+        # TODO: Consider making proximal_bpm_event_index required.
+        proximal_bpm_event_index: int = 0,
     ) -> None:
-        super().__init__(tick, timestamp, proximal_bpm_event_idx=proximal_bpm_event_idx)
+        super().__init__(tick, timestamp, proximal_bpm_event_index=proximal_bpm_event_index)
         self.value = value
 
     @classmethod
@@ -165,10 +165,11 @@ class GlobalEvent(Event):
         if not m:
             raise RegexNotMatchError(cls._regex, line)
         tick, value = int(m.group(1)), m.group(2)
-        timestamp, proximal_bpm_event_idx = tatter.timestamp_at_tick(
-            tick, start_bpm_event_index=prev_event._proximal_bpm_event_index if prev_event else 0
+        timestamp, proximal_bpm_event_index = tatter.timestamp_at_tick(
+            tick,
+            proximal_bpm_event_index=prev_event._proximal_bpm_event_index if prev_event else 0,
         )
-        return cls(tick, timestamp, value, proximal_bpm_event_idx=proximal_bpm_event_idx)
+        return cls(tick, timestamp, value, proximal_bpm_event_index=proximal_bpm_event_index)
 
     def __str__(self) -> str:  # pragma: no cover
         to_join = [super().__str__()]

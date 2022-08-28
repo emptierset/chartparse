@@ -8,10 +8,10 @@ def SpecialEventWithDefaults(
     tick=pytest.defaults.tick,
     timestamp=pytest.defaults.timestamp,
     sustain=pytest.defaults.sustain,
-    proximal_bpm_event_idx=0,
+    proximal_bpm_event_index=0,
     init_end_tick=False,
 ):
-    s = SpecialEvent(tick, timestamp, sustain, proximal_bpm_event_idx=proximal_bpm_event_idx)
+    s = SpecialEvent(tick, timestamp, sustain, proximal_bpm_event_index=proximal_bpm_event_index)
     if init_end_tick:
         s.end_tick  # accessing this initializes it because it's a cached_property
     return s
@@ -22,10 +22,10 @@ def StarPowerEventWithDefaults(
     tick=pytest.defaults.tick,
     timestamp=pytest.defaults.timestamp,
     sustain=pytest.defaults.sustain,
-    proximal_bpm_event_idx=0,
+    proximal_bpm_event_index=0,
     init_end_tick=False,
 ):
-    s = StarPowerEvent(tick, timestamp, sustain, proximal_bpm_event_idx=proximal_bpm_event_idx)
+    s = StarPowerEvent(tick, timestamp, sustain, proximal_bpm_event_index=proximal_bpm_event_index)
     if init_end_tick:
         s.end_tick  # accessing this initializes it because it's a cached_property
     return s

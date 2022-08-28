@@ -103,10 +103,10 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
                 self.resolution = resolution
 
             def timestamp_at_tick(
-                self, tick: int, start_bpm_event_index: int = 0
+                self, tick: int, proximal_bpm_event_index: int = 0
             ) -> tuple[datetime.timedelta, int]:
                 return cls._timestamp_at_tick(
-                    bpm_events, tick, self.resolution, start_bpm_event_index
+                    bpm_events, tick, self.resolution, proximal_bpm_event_index
                 )  # pragma: no cover
 
         tatter = TimestampAtTicker(resolution)
@@ -121,7 +121,7 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         return cls(resolution, time_signature_events, bpm_events)
 
     def timestamp_at_tick(
-        self, tick: int, start_bpm_event_index: int = 0
+        self, tick: int, proximal_bpm_event_index: int = 0
     ) -> tuple[datetime.timedelta, int]:
         """Returns the timestamp at the input tick.
 
@@ -129,17 +129,21 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             tick: The tick at which the timestamp should be calculated.
 
         Kwargs:
-            start_bpm_event_index: An optional optimizing input that allows this function to start
-                iterating over ``BPMEvent``s at a later index. Only pass this if you are certain
-                that the event that should be proximal to ``tick`` is _not_ before this index.
+            proximal_bpm_event_index: An optional optimizing input that allows this function to
+                start iterating over ``BPMEvent``s at a later index. Only pass this if you are
+                certain that the event that should be proximal to ``tick`` is _not_ before this
+                index.
 
         Returns:
             The timestamp at the input tick, plus the index of the ``BPMEvent`` proximal to the
             input tick. This index can be passed to successive calls to this function via
-            ``start_bpm_event_index`` as an optimization.
+            ``proximal_bpm_event_index`` as an optimization.
         """
         return self._timestamp_at_tick(
-            self.bpm_events, tick, self.resolution, start_bpm_event_index=start_bpm_event_index
+            self.bpm_events,
+            tick,
+            self.resolution,
+            proximal_bpm_event_index=proximal_bpm_event_index,
         )
 
     @staticmethod
@@ -147,14 +151,14 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         bpm_events: ImmutableSortedList[BPMEvent],
         tick: int,
         resolution: int,
-        start_bpm_event_index: int = 0,
+        proximal_bpm_event_index: int = 0,
     ) -> tuple[datetime.timedelta, int]:
         """Allows ``timestamp_at_tick`` to be used by injecting a ``bpm_events`` object."""
 
-        proximal_bpm_event_idx = SyncTrack._idx_of_proximal_bpm_event(
-            bpm_events, tick, start_idx=start_bpm_event_index
+        proximal_bpm_event_index = SyncTrack._index_of_proximal_bpm_event(
+            bpm_events, tick, proximal_bpm_event_index=proximal_bpm_event_index
         )
-        proximal_bpm_event = bpm_events[proximal_bpm_event_idx]
+        proximal_bpm_event = bpm_events[proximal_bpm_event_index]
         ticks_since_proximal_bpm_event = tick - proximal_bpm_event.tick
         seconds_since_proximal_bpm_event = chartparse.tick.seconds_from_ticks_at_bpm(
             ticks_since_proximal_bpm_event,
@@ -165,20 +169,23 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             seconds=seconds_since_proximal_bpm_event
         )
         timestamp = proximal_bpm_event.timestamp + timedelta_since_proximal_bpm_event
-        return timestamp, proximal_bpm_event_idx
+        return timestamp, proximal_bpm_event_index
 
     @staticmethod
-    def _idx_of_proximal_bpm_event(
-        bpm_events: ImmutableSortedList[BPMEvent], tick: int, start_idx: int = 0
+    def _index_of_proximal_bpm_event(
+        bpm_events: ImmutableSortedList[BPMEvent], tick: int, proximal_bpm_event_index: int = 0
     ) -> int:
         if not bpm_events:
             raise ValueError("bpm_events must not be empty")
 
-        idx_of_last_event = bpm_events.length - 1
-        if start_idx > idx_of_last_event:
-            raise ValueError(f"there are no BPMEvents at or after index {start_idx} in bpm_events")
+        index_of_last_event = bpm_events.length - 1
+        if proximal_bpm_event_index > index_of_last_event:
+            raise ValueError(
+                f"there are no BPMEvents at or after index {proximal_bpm_event_index} in "
+                "bpm_events"
+            )
 
-        first_event = bpm_events[start_idx]
+        first_event = bpm_events[proximal_bpm_event_index]
         if first_event.tick > tick:
             raise ValueError(
                 f"input tick {tick} precedes tick value of first BPMEvent ({first_event.tick})"
@@ -187,17 +194,17 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         use_binary_search = False
         if use_binary_search:  # pragma: no cover
             return bpm_events.find_le(
-                tick, lo=start_idx, hi=bpm_events.length, key=lambda e: e.tick
+                tick, lo=proximal_bpm_event_index, hi=bpm_events.length, key=lambda e: e.tick
             )
         else:
             # Do NOT iterate over last BPMEvent, since it has no next event.
-            for idx in range(start_idx, idx_of_last_event):
-                if bpm_events[idx + 1].tick > tick:
-                    return idx
+            for index in range(proximal_bpm_event_index, index_of_last_event):
+                if bpm_events[index + 1].tick > tick:
+                    return index
 
             # If none of the previous BPMEvents are proximal, the last event is proximal by
             # definition.
-            return idx_of_last_event
+            return index_of_last_event
 
 
 TimeSignatureEventT = TypeVar("TimeSignatureEventT", bound="TimeSignatureEvent")
@@ -227,11 +234,11 @@ class TimeSignatureEvent(Event):
         timestamp: datetime.timedelta,
         upper_numeral: int,
         lower_numeral: int,
-        proximal_bpm_event_idx: int = 0,
+        proximal_bpm_event_index: int = 0,
     ):
         """Initializes all instance attributes."""
 
-        super().__init__(tick, timestamp, proximal_bpm_event_idx=proximal_bpm_event_idx)
+        super().__init__(tick, timestamp, proximal_bpm_event_index=proximal_bpm_event_index)
         self.upper_numeral = upper_numeral
         self.lower_numeral = lower_numeral
 
@@ -264,15 +271,16 @@ class TimeSignatureEvent(Event):
         tick, upper_numeral = int(m.group(1)), int(m.group(2))
         # The lower number is written by Moonscraper as the log2 of the true value.
         lower_numeral = 2 ** int(m.group(3)) if m.group(3) else cls._default_lower_numeral
-        timestamp, proximal_bpm_event_idx = tatter.timestamp_at_tick(
-            tick, start_bpm_event_index=prev_event._proximal_bpm_event_index if prev_event else 0
+        timestamp, proximal_bpm_event_index = tatter.timestamp_at_tick(
+            tick,
+            proximal_bpm_event_index=prev_event._proximal_bpm_event_index if prev_event else 0,
         )
         return cls(
             tick,
             timestamp,
             upper_numeral,
             lower_numeral,
-            proximal_bpm_event_idx=proximal_bpm_event_idx,
+            proximal_bpm_event_index=proximal_bpm_event_index,
         )
 
     def __str__(self) -> str:  # pragma: no cover
@@ -297,7 +305,11 @@ class BPMEvent(Event):
     _regex_prog: Final[Pattern[str]] = re.compile(_regex)
 
     def __init__(
-        self, tick: int, timestamp: datetime.timedelta, bpm: float, proximal_bpm_event_idx: int = 0
+        self,
+        tick: int,
+        timestamp: datetime.timedelta,
+        bpm: float,
+        proximal_bpm_event_index: int = 0,
     ):
         """Initialize all instance attributes.
 
@@ -306,7 +318,7 @@ class BPMEvent(Event):
         """
         if round(bpm, 3) != bpm:
             raise ValueError(f"bpm {bpm} must not have more than 3 decimal places.")
-        super().__init__(tick, timestamp, proximal_bpm_event_idx=proximal_bpm_event_idx)
+        super().__init__(tick, timestamp, proximal_bpm_event_index=proximal_bpm_event_index)
         self.bpm = bpm
 
     # TODO: Refactor all regex matching for all `from_chart_line` functions to a match method for
@@ -350,7 +362,7 @@ class BPMEvent(Event):
                 self.resolution = resolution
 
             def timestamp_at_tick(
-                self, tick: int, start_bpm_event_index: int = 0
+                self, tick: int, proximal_bpm_event_index: int = 0
             ) -> tuple[datetime.timedelta, int]:
                 if prev_event is None:
                     return datetime.timedelta(0), 0
@@ -365,13 +377,14 @@ class BPMEvent(Event):
                     ticks_since_prev, prev_event.bpm, self.resolution
                 )
                 timestamp = prev_event.timestamp + datetime.timedelta(seconds=seconds_since_prev)
-                return timestamp, start_bpm_event_index
+                return timestamp, proximal_bpm_event_index
 
         tatter = TimestampAtTicker(resolution)
-        timestamp, proximal_bpm_event_idx = tatter.timestamp_at_tick(
-            tick, start_bpm_event_index=prev_event._proximal_bpm_event_index if prev_event else 0
+        timestamp, proximal_bpm_event_index = tatter.timestamp_at_tick(
+            tick,
+            proximal_bpm_event_index=prev_event._proximal_bpm_event_index if prev_event else 0,
         )
-        return cls(tick, timestamp, bpm, proximal_bpm_event_idx=proximal_bpm_event_idx)
+        return cls(tick, timestamp, bpm, proximal_bpm_event_index=proximal_bpm_event_index)
 
     def __str__(self) -> str:  # pragma: no cover
         to_join = [super().__str__()]

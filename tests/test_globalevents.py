@@ -95,14 +95,14 @@ class TestGlobalEvent(object):
             _ = GlobalEvent.from_chart_line(line, None, minimal_tatter)
 
             minimal_tatter.spy.assert_called_once_with(
-                pytest.defaults.tick, start_bpm_event_index=0
+                pytest.defaults.tick, proximal_bpm_event_index=0
             )
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self
                 pytest.defaults.tick,
                 pytest.defaults.timestamp,
                 pytest.defaults.global_event_value,
-                proximal_bpm_event_idx=0,
+                proximal_bpm_event_index=0,
             )
 
         def test_no_match(self, invalid_chart_line, minimal_tatter):

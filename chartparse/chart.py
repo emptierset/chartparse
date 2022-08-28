@@ -163,8 +163,8 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     def _find_sections(cls, lines: Iterable[str]) -> dict[str, Callable[[], Iterable[str]]]:
         sections: dict[str, Callable[[], Iterable[str]]] = dict()
         curr_section_name = None
-        curr_first_line_idx = None
-        curr_last_line_idx = None
+        curr_first_line_index = None
+        curr_last_line_index = None
         for i, line in enumerate(lines):
             if curr_section_name is None:
                 m = cls._section_name_regex_prog.match(line)
@@ -172,20 +172,20 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
                     raise RegexNotMatchError(cls._section_name_regex, line)
                 curr_section_name = m.group(1)
             elif line == "{":
-                curr_first_line_idx = i + 1
+                curr_first_line_index = i + 1
             elif line == "}":
-                curr_last_line_idx = i - 1
+                curr_last_line_index = i - 1
                 # Set default values for x and y so their current values are
                 # captured, rather than references to these local variables.
                 iterator_getter = (
-                    lambda x=curr_first_line_idx, y=curr_last_line_idx: itertools.islice(
+                    lambda x=curr_first_line_index, y=curr_last_line_index: itertools.islice(
                         lines, x, y + 1
                     )
                 )
                 sections[curr_section_name] = iterator_getter
                 curr_section_name = None
-                curr_first_line_idx = None
-                curr_last_line_idx = None
+                curr_first_line_index = None
+                curr_last_line_index = None
         return sections
 
     def _seconds_from_ticks_at_bpm(self, ticks: int, bpm: float) -> float:

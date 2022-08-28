@@ -285,7 +285,7 @@ def minimal_tatter(mocker):
             self.resolution = resolution
             self.spy = mocker.spy(self, "timestamp_at_tick")
 
-        def timestamp_at_tick(self, tick, start_bpm_event_index=0):
+        def timestamp_at_tick(self, tick, proximal_bpm_event_index=0):
             return _default_timestamp, 0
 
     return FakeTimestampAtTicker(_default_resolution)

@@ -109,15 +109,15 @@ class ImmutableSortedList(ImmutableList[T]):
     def binary_search(self, x, *, lo=0, hi=None, key=None):
         if hi is None:
             hi = self.length
-        idx = bisect.bisect_left(self._seq, x, lo=lo, hi=hi, key=key)
-        if idx == hi or self._seq[idx] != x:
+        index = bisect.bisect_left(self._seq, x, lo=lo, hi=hi, key=key)
+        if index == hi or self._seq[index] != x:
             return None
-        return idx
+        return index
 
     def find_le(self, x, *, lo=0, hi=None, key=None):
-        idx = bisect.bisect_right(self._seq, x, lo=lo, hi=hi, key=key)
-        if idx:
-            return idx - 1
+        index = bisect.bisect_right(self._seq, x, lo=lo, hi=hi, key=key)
+        if index:
+            return index - 1
         raise ValueError(f"query value {x} less than all list elements")
 
 

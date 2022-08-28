@@ -286,12 +286,12 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             chart_lines
         )
 
-        start_bpm_event_idx = 0
-        star_power_event_idx = 0
+        proximal_bpm_event_index = 0
+        star_power_event_index = 0
         events: list[NoteEvent] = []
         for note_tick in sorted(note_arrays.keys()):
             previous_event = events[-1] if events else None
-            event, start_bpm_event_idx, star_power_event_idx = NoteEvent.from_parsed_data(
+            event, proximal_bpm_event_index, star_power_event_index = NoteEvent.from_parsed_data(
                 note_tick,
                 note_arrays[note_tick],
                 tuple(sustain_lists[note_tick]),
@@ -300,8 +300,8 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
                 previous_event,
                 star_power_events,
                 tatter,
-                proximal_bpm_event_idx=start_bpm_event_idx,
-                star_power_event_idx=star_power_event_idx,
+                proximal_bpm_event_index=proximal_bpm_event_index,
+                star_power_event_index=star_power_event_index,
             )
             events.append(event)
 
@@ -363,7 +363,7 @@ class StarPowerData(DictPropertiesEqMixin):
 
     # This is conceptually Final, but annotating it as such confuses mypy into thinking it should
     # be ClassVar.
-    star_power_event_idx: int
+    star_power_event_index: int
 
 
 SustainTupleT = tuple[Optional[int], ...]
@@ -445,9 +445,9 @@ class NoteEvent(Event):
         hopo_state: HOPOState,
         sustain: ComplexNoteSustainT = 0,
         star_power_data: Optional[StarPowerData] = None,
-        proximal_bpm_event_idx: int = 0,
+        proximal_bpm_event_index: int = 0,
     ) -> None:
-        super().__init__(tick, timestamp, proximal_bpm_event_idx=proximal_bpm_event_idx)
+        super().__init__(tick, timestamp, proximal_bpm_event_index=proximal_bpm_event_index)
         self.end_timestamp = end_timestamp
         self.note = note
         self.hopo_state = hopo_state
@@ -480,13 +480,13 @@ class NoteEvent(Event):
         previous_event: Optional[NoteEvent],
         star_power_events: ImmutableSortedList[StarPowerEvent],
         tatter: TimestampAtTickSupporter,
-        proximal_bpm_event_idx: int = 0,
-        star_power_event_idx: int = 0,
+        proximal_bpm_event_index: int = 0,
+        star_power_event_index: int = 0,
     ) -> tuple[NoteEventT, int, int]:
         note = Note(note_array)
 
-        timestamp, proximal_bpm_event_idx = tatter.timestamp_at_tick(
-            tick, start_bpm_event_index=proximal_bpm_event_idx
+        timestamp, proximal_bpm_event_index = tatter.timestamp_at_tick(
+            tick, proximal_bpm_event_index=proximal_bpm_event_index
         )
 
         hopo_state = NoteEvent._compute_hopo_state(
@@ -498,12 +498,12 @@ class NoteEvent(Event):
             previous_event,
         )
 
-        star_power_data, star_power_event_idx = NoteEvent._compute_star_power_data(
-            tick, star_power_events, start_idx=star_power_event_idx
+        star_power_data, star_power_event_index = NoteEvent._compute_star_power_data(
+            tick, star_power_events, proximal_star_power_event_index=star_power_event_index
         )
 
         end_timestamp, _ = tatter.timestamp_at_tick(
-            tick, start_bpm_event_index=proximal_bpm_event_idx
+            tick, proximal_bpm_event_index=proximal_bpm_event_index
         )
 
         event = cls(
@@ -513,10 +513,10 @@ class NoteEvent(Event):
             note,
             hopo_state,
             sustain=sustain,
-            proximal_bpm_event_idx=proximal_bpm_event_idx,
+            proximal_bpm_event_index=proximal_bpm_event_index,
             star_power_data=star_power_data,
         )
-        return event, proximal_bpm_event_idx, star_power_event_idx
+        return event, proximal_bpm_event_index, star_power_event_index
 
     @staticmethod
     @functools.lru_cache
@@ -571,25 +571,26 @@ class NoteEvent(Event):
         tick: int,
         star_power_events: ImmutableSortedList[StarPowerEvent],
         *,
-        start_idx: int = 0,
+        proximal_star_power_event_index: int = 0,
     ) -> tuple[Optional[StarPowerData], int]:
         if not star_power_events:
             return None, 0
 
-        if start_idx >= star_power_events.length:
+        if proximal_star_power_event_index >= star_power_events.length:
             raise ValueError(
-                f"there are no StarPowerEvents at or after index {start_idx} in star_power_events"
+                "there are no StarPowerEvents at or after index "
+                f"{proximal_star_power_event_index} in star_power_events"
             )
 
-        for candidate_idx in range(start_idx, star_power_events.length):
-            if not star_power_events[candidate_idx].tick_is_after_event(tick):
+        for candidate_index in range(proximal_star_power_event_index, star_power_events.length):
+            if not star_power_events[candidate_index].tick_is_after_event(tick):
                 break
 
-        candidate = star_power_events[candidate_idx]
+        candidate = star_power_events[candidate_index]
         if not candidate.tick_is_in_event(tick):
-            return None, candidate_idx
+            return None, candidate_index
 
-        return StarPowerData(candidate_idx), candidate_idx
+        return StarPowerData(candidate_index), candidate_index
 
     def __str__(self) -> str:  # pragma: no cover
         to_join = [super().__str__()]
@@ -641,9 +642,9 @@ class SpecialEvent(Event):
         tick: int,
         timestamp: datetime.timedelta,
         sustain: int,
-        proximal_bpm_event_idx: int = 0,
+        proximal_bpm_event_index: int = 0,
     ) -> None:
-        super().__init__(tick, timestamp, proximal_bpm_event_idx=proximal_bpm_event_idx)
+        super().__init__(tick, timestamp, proximal_bpm_event_index=proximal_bpm_event_index)
         self.sustain = sustain
 
     @functools.cached_property
@@ -676,10 +677,11 @@ class SpecialEvent(Event):
         if not m:
             raise RegexNotMatchError(cls._regex, line)
         tick, sustain = int(m.group(1)), int(m.group(2))
-        timestamp, proximal_bpm_event_idx = tatter.timestamp_at_tick(
-            tick, start_bpm_event_index=prev_event._proximal_bpm_event_index if prev_event else 0
+        timestamp, proximal_bpm_event_index = tatter.timestamp_at_tick(
+            tick,
+            proximal_bpm_event_index=prev_event._proximal_bpm_event_index if prev_event else 0,
         )
-        return cls(tick, timestamp, sustain, proximal_bpm_event_idx=proximal_bpm_event_idx)
+        return cls(tick, timestamp, sustain, proximal_bpm_event_index=proximal_bpm_event_index)
 
     def tick_is_in_event(self, tick: int) -> bool:
         return self.tick <= tick and not self.tick_is_after_event(tick)

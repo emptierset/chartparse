@@ -99,18 +99,17 @@ class TestSyncTrack(object):
 
             mock_impl = mocker.patch.object(bare_sync_track, "_timestamp_at_tick")
 
-            _ = bare_sync_track.timestamp_at_tick(pytest.defaults.tick, start_bpm_event_index=0)
+            _ = bare_sync_track.timestamp_at_tick(pytest.defaults.tick, proximal_bpm_event_index=0)
             mock_impl.assert_called_once_with(
                 pytest.defaults.bpm_events,
                 pytest.defaults.tick,
                 pytest.defaults.resolution,
-                start_bpm_event_index=0,
+                proximal_bpm_event_index=0,
             )
 
-        # TODO: Figure out where proximal_bpm_event_idxs and start_bpm_event_idxs need to be
-        # asserted.
+        # TODO: Figure out where proximal_bpm_event_index need to be asserted.
         @pytest.mark.parametrize(
-            "tick,want_timestamp,want_proximal_bpm_event_idx",
+            "tick,want_timestamp,want_proximal_bpm_event_index",
             [
                 # TODO: Create helper that allows me to define pytest.param values by "name".
                 pytest.param(100, datetime.timedelta(seconds=1), 1),
@@ -119,7 +118,7 @@ class TestSyncTrack(object):
                 pytest.param(1000, datetime.timedelta(seconds=5.166666), 3),
             ],
         )
-        def test_impl(self, tick, want_timestamp, want_proximal_bpm_event_idx):
+        def test_impl(self, tick, want_timestamp, want_proximal_bpm_event_index):
             resolution = 100
             event0 = BPMEvent.from_chart_line(generate_bpm_line(0, 60.000), None, resolution)
             event1 = BPMEvent.from_chart_line(generate_bpm_line(100, 120.000), event0, resolution)
@@ -127,13 +126,13 @@ class TestSyncTrack(object):
             event3 = BPMEvent.from_chart_line(generate_bpm_line(800, 90.000), event2, resolution)
             test_bpm_events = AlreadySortedImmutableSortedList([event0, event1, event2, event3])
 
-            got_timestamp, got_proximal_bpm_event_idx = SyncTrack._timestamp_at_tick(
+            got_timestamp, got_proximal_bpm_event_index = SyncTrack._timestamp_at_tick(
                 test_bpm_events, tick, resolution
             )
             assert got_timestamp == want_timestamp
-            assert got_proximal_bpm_event_idx == want_proximal_bpm_event_idx
+            assert got_proximal_bpm_event_index == want_proximal_bpm_event_index
 
-    class TestIdxOfProximalBPMEvent(object):
+    class TestindexOfProximalBPMEvent(object):
         @pytest.mark.parametrize(
             "bpm_events,tick,want",
             [
@@ -185,11 +184,11 @@ class TestSyncTrack(object):
             ],
         )
         def test(self, bare_sync_track, bpm_events, tick, want):
-            got = bare_sync_track._idx_of_proximal_bpm_event(bpm_events, tick)
+            got = bare_sync_track._index_of_proximal_bpm_event(bpm_events, tick)
             assert got == want
 
         @pytest.mark.parametrize(
-            "bpm_events,tick,start_idx",
+            "bpm_events,tick,proximal_bpm_event_index",
             [
                 pytest.param(
                     AlreadySortedImmutableSortedList([]),
@@ -201,7 +200,7 @@ class TestSyncTrack(object):
                     AlreadySortedImmutableSortedList([BPMEventWithDefaults()]),
                     0,
                     1,
-                    id="start_idx_after_last_bpm_event",
+                    id="proximal_bpm_event_index_after_last_bpm_event",
                 ),
                 pytest.param(
                     AlreadySortedImmutableSortedList(
@@ -216,14 +215,16 @@ class TestSyncTrack(object):
                     ),
                     50,
                     1,
-                    id="input_tick_before_tick_at_start_idx",
+                    id="input_tick_before_tick_at_proximal_bpm_event_index",
                 ),
             ],
         )
-        def test_raises(self, bare_sync_track, tick, start_idx, bpm_events):
+        def test_raises(self, bare_sync_track, tick, proximal_bpm_event_index, bpm_events):
             with pytest.raises(ValueError):
-                _ = bare_sync_track._idx_of_proximal_bpm_event(
-                    bpm_events, pytest.defaults.tick, start_idx=start_idx
+                _ = bare_sync_track._index_of_proximal_bpm_event(
+                    bpm_events,
+                    pytest.defaults.tick,
+                    proximal_bpm_event_index=proximal_bpm_event_index,
                 )
 
 
@@ -262,7 +263,7 @@ class TestTimeSignatureEvent(object):
             _ = TimeSignatureEvent.from_chart_line(line, None, minimal_tatter)
 
             minimal_tatter.spy.assert_called_once_with(
-                pytest.defaults.tick, start_bpm_event_index=0
+                pytest.defaults.tick, proximal_bpm_event_index=0
             )
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self
@@ -270,7 +271,7 @@ class TestTimeSignatureEvent(object):
                 pytest.defaults.timestamp,
                 pytest.defaults.upper_time_signature_numeral,
                 want_lower,
-                proximal_bpm_event_idx=0,
+                proximal_bpm_event_index=0,
             )
 
         def test_no_match(self, invalid_chart_line, minimal_tatter):
@@ -299,7 +300,7 @@ class TestBPMEvent(object):
                 0,
                 datetime.timedelta(0),
                 pytest.defaults.bpm,
-                proximal_bpm_event_idx=0,
+                proximal_bpm_event_index=0,
             )
 
         def test_prev_event_present(self, mocker):
@@ -330,7 +331,7 @@ class TestBPMEvent(object):
                 current_event_tick,
                 prev_event.timestamp + datetime.timedelta(seconds=seconds_since_prev),
                 pytest.defaults.bpm,
-                proximal_bpm_event_idx=None,
+                proximal_bpm_event_index=None,
             )
 
         @pytest.mark.parametrize(
