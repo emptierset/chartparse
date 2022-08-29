@@ -15,11 +15,11 @@ import datetime
 import logging
 import re
 import typing
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Iterable, Sequence
 from typing import ClassVar, Final, Optional, Pattern, Type, TypeVar
 
 import chartparse.track
-from chartparse.datastructures import ImmutableSortedList
+from chartparse.datastructures import ImmutableList
 from chartparse.event import Event, TimestampAtTickSupporter
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.util import DictPropertiesEqMixin, DictReprTruncatedSequencesMixin
@@ -68,43 +68,64 @@ class GlobalEventsTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     @classmethod
     def from_chart_lines(
         cls: Type[GlobalEventsTrackT],
-        iterator_getter: Callable[[], Iterable[str]],
+        lines: Iterable[str],
         tatter: TimestampAtTickSupporter,
     ) -> GlobalEventsTrackT:
         """Initializes instance attributes by parsing an iterable of strings.
 
         Args:
-            iterator_getter: The iterable of strings returned by this is most likely from a
-                Moonscraper ``.chart``. Must be a function so the strings can be iterated over
-                multiple times, if necessary.
+            lines: An iterable of strings most likely from a Moonscraper ``.chart``.
             tatter: An object that can be used to get a timestamp at a particular tick.
 
         Returns:
-            A ``GlobalEventsTrack`` parsed from the strings returned by ``iterator_getter``.
+            A ``GlobalEventsTrack`` parsed from ``lines``.
         """
 
-        text_events: ImmutableSortedList[
-            TextEvent
-        ] = chartparse.track.parse_events_from_chart_lines(
-            iterator_getter(),
-            TextEvent.from_chart_line,
+        text_data, section_data, lyric_data = cls._parse_data_from_chart_lines(lines)
+
+        text_events = chartparse.track.parse_events_from_data(
+            text_data,
+            TextEvent.from_parsed_data,
             tatter,
         )
-        section_events: ImmutableSortedList[
-            SectionEvent
-        ] = chartparse.track.parse_events_from_chart_lines(
-            iterator_getter(),
-            SectionEvent.from_chart_line,
+        section_events = chartparse.track.parse_events_from_data(
+            section_data,
+            SectionEvent.from_parsed_data,
             tatter,
         )
-        lyric_events: ImmutableSortedList[
-            LyricEvent
-        ] = chartparse.track.parse_events_from_chart_lines(
-            iterator_getter(),
-            LyricEvent.from_chart_line,
+        lyric_events = chartparse.track.parse_events_from_data(
+            lyric_data,
+            LyricEvent.from_parsed_data,
             tatter,
         )
         return cls(tatter.resolution, text_events, section_events, lyric_events)
+
+    @classmethod
+    def _parse_data_from_chart_lines(
+        cls: Type[GlobalEventsTrackT],
+        lines: Iterable[str],
+    ) -> tuple[
+        ImmutableList[TextEvent.ParsedData],
+        ImmutableList[SectionEvent.ParsedData],
+        ImmutableList[LyricEvent.ParsedData],
+    ]:
+        parsed_data = chartparse.track.parse_data_from_chart_lines(
+            (LyricEvent, SectionEvent, TextEvent),
+            lines,
+        )
+        text_data = typing.cast(
+            ImmutableList[TextEvent.ParsedData],
+            parsed_data[TextEvent],
+        )
+        section_data = typing.cast(
+            ImmutableList[SectionEvent.ParsedData],
+            parsed_data[SectionEvent],
+        )
+        lyric_data = typing.cast(
+            ImmutableList[LyricEvent.ParsedData],
+            parsed_data[LyricEvent],
+        )
+        return text_data, section_data, lyric_data
 
 
 GlobalEventT = TypeVar("GlobalEventT", bound="GlobalEvent")
@@ -136,26 +157,23 @@ class GlobalEvent(Event):
         self.value = value
 
     @classmethod
-    def from_chart_line(
+    def from_parsed_data(
         cls: Type[GlobalEventT],
-        line: str,
+        data: GlobalEvent.ParsedData,
         prev_event: Optional[GlobalEventT],
         tatter: TimestampAtTickSupporter,
     ) -> GlobalEventT:
-        """Attempt to obtain an instance of this object from a string.
+        """Obtain an instance of this object from parsed data.
 
         Args:
-            line: Most likely a line from a Moonscraper ``.chart``.
-            prev_event: The event
+            data: The data necessary to create an event. Most likely from a Moonscraper ``.chart``.
+            prev_event: The event of this type with the greatest ``tick`` value less than that of
+                this event. If this is ``None``, then this must be the first event of this type.
             tatter: An object that can be used to get a timestamp at a particular tick.
 
         Returns:
-            An an instance of this object parsed from ``line``.
-
-        Raises:
-            RegexNotMatchError: If the mixed-into class' ``_regex`` does not match ``line``.
+            An an instance of this object initialized from ``data``.
         """
-        data = cls.ParsedData.from_chart_line(line)
         timestamp, proximal_bpm_event_index = tatter.timestamp_at_tick(
             data.tick,
             proximal_bpm_event_index=prev_event._proximal_bpm_event_index if prev_event else 0,
@@ -172,7 +190,7 @@ class GlobalEvent(Event):
     ParsedDataT = TypeVar("ParsedDataT", bound="ParsedData")
 
     @dataclasses.dataclass
-    class ParsedData(object):
+    class ParsedData(Event.ParsedData):
         tick: int
         value: str
 
@@ -188,6 +206,17 @@ class GlobalEvent(Event):
         def from_chart_line(
             cls: Type[GlobalEvent.ParsedDataT], line: str
         ) -> GlobalEvent.ParsedDataT:
+            """Attempt to construct this object from a ``.chart`` line.
+
+            Args:
+                line: A string, most likely from a Moonscraper ``.chart``.
+
+            Returns:
+                An an instance of this object initialized from ``line``.
+
+            Raises:
+                RegexNotMatchError: If the mixed-into class' ``_regex`` does not match ``line``.
+            """
             m = cls._regex_prog.match(line)
             if not m:
                 raise RegexNotMatchError(cls._regex, line)

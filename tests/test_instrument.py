@@ -24,6 +24,7 @@ from tests.helpers.instrument import (
     StarPowerEventWithDefaults,
     NoteEventWithDefaults,
     SpecialEventWithDefaults,
+    SpecialEventParsedDataWithDefaults,
 )
 from tests.helpers.lines import generate_note as generate_note_line
 from tests.helpers.lines import generate_star_power as generate_star_power_line
@@ -51,8 +52,13 @@ class TestInstrumentTrack(object):
                 "_parse_note_events_from_chart_lines",
                 return_value=pytest.defaults.note_events,
             )
+            mock_parse_data = mocker.patch.object(
+                InstrumentTrack,
+                "_parse_data_from_chart_lines",
+                return_value=pytest.defaults.star_power_event_parsed_datas,
+            )
             mock_parse_events = mocker.patch(
-                "chartparse.track.parse_events_from_chart_lines",
+                "chartparse.track.parse_events_from_data",
                 return_value=pytest.defaults.star_power_events,
             )
             spy_init = mocker.spy(InstrumentTrack, "__init__")
@@ -62,11 +68,14 @@ class TestInstrumentTrack(object):
                 minimal_string_iterator_getter,
                 default_tatter,
             )
+            mock_parse_data.assert_called_once_with(minimal_string_iterator_getter())
             mock_parse_note_events.assert_called_once_with(
                 minimal_string_iterator_getter(), pytest.defaults.star_power_events, default_tatter
             )
             mock_parse_events.assert_called_once_with(
-                minimal_string_iterator_getter(), StarPowerEvent.from_chart_line, default_tatter
+                pytest.defaults.star_power_event_parsed_datas,
+                StarPowerEvent.from_parsed_data,
+                default_tatter,
             )
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self
@@ -711,9 +720,7 @@ class TestSpecialEvent(object):
             )
             assert got.sustain == want_sustain
 
-    class TestFromChartLine(object):
-        test_regex = r"^T (\d+?) V (.*?)$"
-
+    class TestFromParsedData(object):
         @pytest.mark.parametrize(
             "prev_event",
             [
@@ -726,8 +733,8 @@ class TestSpecialEvent(object):
         def test(self, mocker, default_tatter, prev_event):
             spy_init = mocker.spy(SpecialEvent, "__init__")
 
-            _ = SpecialEvent.from_chart_line(
-                f"T {pytest.defaults.tick} V {pytest.defaults.sustain}", prev_event, default_tatter
+            _ = SpecialEvent.from_parsed_data(
+                SpecialEventParsedDataWithDefaults(), prev_event, default_tatter
             )
 
             default_tatter.spy.assert_called_once_with(
@@ -742,17 +749,28 @@ class TestSpecialEvent(object):
                 proximal_bpm_event_index=pytest.defaults.default_tatter_index,
             )
 
-        def test_no_match(self, invalid_chart_line, default_tatter):
-            with pytest.raises(RegexNotMatchError):
-                _ = SpecialEvent.from_chart_line(invalid_chart_line, None, default_tatter)
+    class TestParsedData(object):
+        class TestFromChartLine(object):
+            test_regex = r"^T (\d+?) V (.*?)$"
 
-        def setup_method(self):
-            SpecialEvent.ParsedData._regex = self.test_regex
-            SpecialEvent.ParsedData._regex_prog = re.compile(SpecialEvent.ParsedData._regex)
+            def test(self, mocker):
+                got = SpecialEvent.ParsedData.from_chart_line(
+                    f"T {pytest.defaults.tick} V {pytest.defaults.sustain}"
+                )
+                assert got.tick == pytest.defaults.tick
+                assert got.sustain == pytest.defaults.sustain
 
-        def teardown_method(self):
-            del SpecialEvent.ParsedData._regex
-            del SpecialEvent.ParsedData._regex_prog
+            def test_no_match(self, invalid_chart_line, default_tatter):
+                with pytest.raises(RegexNotMatchError):
+                    _ = SpecialEvent.ParsedData.from_chart_line(invalid_chart_line)
+
+            def setup_method(self):
+                SpecialEvent.ParsedData._regex = self.test_regex
+                SpecialEvent.ParsedData._regex_prog = re.compile(SpecialEvent.ParsedData._regex)
+
+            def teardown_method(self):
+                del SpecialEvent.ParsedData._regex
+                del SpecialEvent.ParsedData._regex_prog
 
     class TestTickIsAfterEvent(object):
         @pytest.mark.parametrize(

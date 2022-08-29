@@ -22,16 +22,8 @@ class TestGenerateValidTimeSignatureLine(object):
         assert got == "  100 = TS 4"
 
     def test_longform(self):
-        got = tests.helpers.lines.generate_time_signature(100, 4, 8)
+        got = tests.helpers.lines.generate_time_signature(100, 4, 3)
         assert got == "  100 = TS 4 3"
-
-    def test_longform_raises(self):
-        with pytest.raises(ValueError):
-            _ = tests.helpers.lines.generate_time_signature(
-                pytest.defaults.tick,
-                pytest.defaults.upper_time_signature_numeral,
-                8 + 1,
-            )
 
 
 class TestGenerateValidStarPowerLine(object):

@@ -28,6 +28,14 @@ def SpecialEventWithDefaults(
     return s
 
 
+def SpecialEventParsedDataWithDefaults(
+    *,
+    tick=pytest.defaults.tick,
+    sustain=pytest.defaults.sustain,
+):
+    return SpecialEvent.ParsedData(tick=tick, sustain=sustain)
+
+
 def StarPowerEventWithDefaults(
     *,
     tick=pytest.defaults.tick,

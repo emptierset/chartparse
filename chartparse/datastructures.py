@@ -16,6 +16,7 @@ from chartparse.exceptions import ProgrammerError
 from chartparse.hints import ComparableT, T
 
 
+# TODO: ImmutableList can likely be made covariant.
 class ImmutableList(Sequence[T]):
     """A ``list`` equivalent that cannot be mutated.
 
@@ -76,6 +77,8 @@ class ImmutableList(Sequence[T]):
         return NotImplemented
 
 
+# TODO: ImmutableSortedList can likely be made covariant. Does it need to be, if it inherits from
+# a covariant type?
 @typing.final
 class ImmutableSortedList(ImmutableList[T]):
     """A ``list`` equivalent that cannot be mutated and is sorted during initialization."""

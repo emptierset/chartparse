@@ -12,12 +12,20 @@ from chartparse.globalevents import (
     LyricEvent,
 )
 
-from tests.helpers.globalevents import GlobalEventWithDefaults, GlobalEventsTrackWithDefaults
+from tests.helpers.globalevents import (
+    GlobalEventWithDefaults,
+    GlobalEventsTrackWithDefaults,
+    GlobalEventParsedDataWithDefaults,
+    TextEventParsedDataWithDefaults,
+    SectionEventParsedDataWithDefaults,
+    LyricEventParsedDataWithDefaults,
+)
 
 
 class TestGlobalEventsTrack(object):
     class TestInit(object):
         def test(self, default_global_events_track):
+            # TODO: Construct GlobalEventsTrack manually.
             assert default_global_events_track.text_events == pytest.defaults.text_events
             assert default_global_events_track.section_events == pytest.defaults.section_events
             assert default_global_events_track.lyric_events == pytest.defaults.lyric_events
@@ -27,9 +35,18 @@ class TestGlobalEventsTrack(object):
             with pytest.raises(ValueError):
                 _ = GlobalEventsTrackWithDefaults(resolution=resolution)
 
-    def test_from_chart_lines(self, mocker, minimal_string_iterator_getter, default_tatter):
+    def test_from_chart_lines(self, mocker, default_tatter):
+        mock_parse_data = mocker.patch.object(
+            GlobalEventsTrack,
+            "_parse_data_from_chart_lines",
+            return_value=(
+                pytest.defaults.text_event_parsed_datas,
+                pytest.defaults.section_event_parsed_datas,
+                pytest.defaults.lyric_event_parsed_datas,
+            ),
+        )
         mock_parse_events = mocker.patch(
-            "chartparse.track.parse_events_from_chart_lines",
+            "chartparse.track.parse_events_from_data",
             side_effect=[
                 pytest.defaults.text_events,
                 pytest.defaults.section_events,
@@ -37,19 +54,26 @@ class TestGlobalEventsTrack(object):
             ],
         )
         spy_init = mocker.spy(GlobalEventsTrack, "__init__")
-        _ = GlobalEventsTrack.from_chart_lines(minimal_string_iterator_getter, default_tatter)
+
+        _ = GlobalEventsTrack.from_chart_lines(pytest.invalid_chart_lines, default_tatter)
+
+        mock_parse_data.assert_called_once_with(pytest.invalid_chart_lines)
         mock_parse_events.assert_has_calls(
             [
                 unittest.mock.call(
-                    minimal_string_iterator_getter(), TextEvent.from_chart_line, default_tatter
+                    [TextEventParsedDataWithDefaults()], TextEvent.from_parsed_data, default_tatter
                 ),
                 unittest.mock.call(
-                    minimal_string_iterator_getter(), SectionEvent.from_chart_line, default_tatter
+                    [SectionEventParsedDataWithDefaults()],
+                    SectionEvent.from_parsed_data,
+                    default_tatter,
                 ),
                 unittest.mock.call(
-                    minimal_string_iterator_getter(), LyricEvent.from_chart_line, default_tatter
+                    [LyricEventParsedDataWithDefaults()],
+                    LyricEvent.from_parsed_data,
+                    default_tatter,
                 ),
-            ]
+            ],
         )
         spy_init.assert_called_once_with(
             unittest.mock.ANY,  # ignore self
@@ -79,23 +103,25 @@ class TestGlobalEvent(object):
             )
             assert got.value == want_value
 
-    class TestFromChartLine(object):
-        test_regex = r"^T (\d+?) V (.*?)$"
-
+    class TestFromParsedData(object):
         @pytest.mark.parametrize(
             "prev_event",
             [
-                pytest.param(None, id="prev_event_none"),
                 pytest.param(
-                    GlobalEventWithDefaults(proximal_bpm_event_index=1), id="prev_event_present"
+                    None,
+                    id="prev_event_none",
+                ),
+                pytest.param(
+                    GlobalEventWithDefaults(proximal_bpm_event_index=1),
+                    id="prev_event_present",
                 ),
             ],
         )
         def test(self, mocker, default_tatter, prev_event):
             spy_init = mocker.spy(GlobalEvent, "__init__")
 
-            _ = GlobalEvent.from_chart_line(
-                f"T {pytest.defaults.tick} V {pytest.defaults.global_event_value}",
+            _ = GlobalEvent.from_parsed_data(
+                GlobalEventParsedDataWithDefaults(),
                 prev_event,
                 default_tatter,
             )
@@ -113,17 +139,28 @@ class TestGlobalEvent(object):
                 proximal_bpm_event_index=pytest.defaults.default_tatter_index,
             )
 
-        def test_no_match(self, invalid_chart_line, default_tatter):
-            with pytest.raises(RegexNotMatchError):
-                _ = GlobalEvent.from_chart_line(invalid_chart_line, None, default_tatter)
+    class TestParsedData(object):
+        class TestFromChartLine(object):
+            test_regex = r"^T (\d+?) V (.*?)$"
 
-        def setup_method(self):
-            GlobalEvent.ParsedData._regex = self.test_regex
-            GlobalEvent.ParsedData._regex_prog = re.compile(GlobalEvent.ParsedData._regex)
+            def test(self, mocker):
+                got = GlobalEvent.ParsedData.from_chart_line(
+                    f"T {pytest.defaults.tick} V {pytest.defaults.global_event_value}"
+                )
+                assert got.tick == pytest.defaults.tick
+                assert got.value == pytest.defaults.global_event_value
 
-        def teardown_method(self):
-            del GlobalEvent.ParsedData._regex
-            del GlobalEvent.ParsedData._regex_prog
+            def test_no_match(self, invalid_chart_line):
+                with pytest.raises(RegexNotMatchError):
+                    _ = GlobalEvent.ParsedData.from_chart_line(invalid_chart_line)
+
+            def setup_method(self):
+                GlobalEvent.ParsedData._regex = self.test_regex
+                GlobalEvent.ParsedData._regex_prog = re.compile(GlobalEvent.ParsedData._regex)
+
+            def teardown_method(self):
+                del GlobalEvent.ParsedData._regex
+                del GlobalEvent.ParsedData._regex_prog
 
 
 # TODO: Test regex?

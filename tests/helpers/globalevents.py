@@ -1,6 +1,12 @@
 import pytest
 
-from chartparse.globalevents import GlobalEvent, GlobalEventsTrack
+from chartparse.globalevents import (
+    GlobalEvent,
+    GlobalEventsTrack,
+    TextEvent,
+    SectionEvent,
+    LyricEvent,
+)
 
 
 def GlobalEventsTrackWithDefaults(
@@ -21,3 +27,35 @@ def GlobalEventWithDefaults(
     proximal_bpm_event_index=pytest.defaults.proximal_bpm_event_index,
 ):
     return GlobalEvent(tick, timestamp, value, proximal_bpm_event_index=proximal_bpm_event_index)
+
+
+def GlobalEventParsedDataWithDefaults(
+    *,
+    tick=pytest.defaults.tick,
+    value=pytest.defaults.global_event_value,
+):
+    return GlobalEvent.ParsedData(tick=tick, value=value)
+
+
+def TextEventParsedDataWithDefaults(
+    *,
+    tick=pytest.defaults.tick,
+    value=pytest.defaults.text_event_value,
+):
+    return TextEvent.ParsedData(tick=tick, value=value)
+
+
+def SectionEventParsedDataWithDefaults(
+    *,
+    tick=pytest.defaults.tick,
+    value=pytest.defaults.section_event_value,
+):
+    return SectionEvent.ParsedData(tick=tick, value=value)
+
+
+def LyricEventParsedDataWithDefaults(
+    *,
+    tick=pytest.defaults.tick,
+    value=pytest.defaults.lyric_event_value,
+):
+    return LyricEvent.ParsedData(tick=tick, value=value)

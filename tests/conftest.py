@@ -7,6 +7,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "helpers"))
 
 import dataclasses
 import datetime
+import math
 import pytest
 
 from chartparse.chart import Chart
@@ -32,7 +33,9 @@ from chartparse.instrument import (
 from chartparse.metadata import Metadata, Player2Instrument
 from chartparse.sync import SyncTrack, BPMEvent, TimeSignatureEvent
 
+
 _invalid_chart_line = "this_line_is_invalid"
+_invalid_chart_lines = [_invalid_chart_line]
 
 _default_filepath = "/not/a/real/path"
 
@@ -49,11 +52,15 @@ _default_tatter_timestamp = datetime.timedelta(seconds=834)
 _default_tatter_bpm_event_index = 47
 
 _default_bpm = 120.000
+_default_raw_bpm = str(int(_default_bpm * 1000))
 _default_bpm_event = BPMEvent(_default_tick, _default_timestamp, _default_bpm)
 _default_bpm_events = ImmutableSortedList([_default_bpm_event], already_sorted=True)
+_default_bpm_event_parsed_data = BPMEvent.ParsedData(_default_tick, _default_bpm)
+_default_bpm_event_parsed_datas = [_default_bpm_event_parsed_data]
 
 _default_upper_time_signature_numeral = 4
 _default_lower_time_signature_numeral = 8
+_default_raw_lower_time_signature_numeral = int(math.log(_default_lower_time_signature_numeral, 2))
 _default_time_signature_event = TimeSignatureEvent(
     _default_tick,
     _default_timestamp,
@@ -61,21 +68,42 @@ _default_time_signature_event = TimeSignatureEvent(
     _default_lower_time_signature_numeral,
 )
 _default_time_signature_events = [_default_time_signature_event]
+_default_time_signature_event_parsed_data = TimeSignatureEvent.ParsedData(
+    _default_tick,
+    _default_upper_time_signature_numeral,
+    _default_lower_time_signature_numeral,
+)
+_default_time_signature_event_parsed_datas = [_default_time_signature_event_parsed_data]
 
 _default_global_event_value = "default_global_event_value"
-_default_text_event_value = "default_text_event_value"
-_default_section_event_value = "default_section_event_value"
-_default_lyric_event_value = "default_lyric_event_value"
 _default_global_event = GlobalEvent(_default_tick, _default_timestamp, _default_global_event_value)
+_default_global_events = [_default_global_event]
+_default_global_event_parsed_data = GlobalEvent.ParsedData(
+    _default_tick, _default_global_event_value
+)
+_default_global_event_parsed_datas = [_default_global_event_parsed_data]
+
+_default_text_event_value = "default_text_event_value"
 _default_text_event = TextEvent(_default_tick, _default_timestamp, _default_text_event_value)
+_default_text_events = [_default_text_event]
+_default_text_event_parsed_data = TextEvent.ParsedData(_default_tick, _default_text_event_value)
+_default_text_event_parsed_datas = [_default_text_event_parsed_data]
+
+_default_section_event_value = "default_section_event_value"
 _default_section_event = SectionEvent(
     _default_tick, _default_timestamp, _default_section_event_value
 )
-_default_lyric_event = LyricEvent(_default_tick, _default_timestamp, _default_lyric_event_value)
-_default_global_events = [_default_global_event]
-_default_text_events = [_default_text_event]
 _default_section_events = [_default_section_event]
+_default_section_event_parsed_data = SectionEvent.ParsedData(
+    _default_tick, _default_section_event_value
+)
+_default_section_event_parsed_datas = [_default_section_event_parsed_data]
+
+_default_lyric_event_value = "default_lyric_event_value"
+_default_lyric_event = LyricEvent(_default_tick, _default_timestamp, _default_lyric_event_value)
 _default_lyric_events = [_default_lyric_event]
+_default_lyric_event_parsed_data = LyricEvent.ParsedData(_default_tick, _default_lyric_event_value)
+_default_lyric_event_parsed_datas = [_default_lyric_event_parsed_data]
 
 
 _default_difficulty = Difficulty.EXPERT
@@ -95,6 +123,8 @@ _default_note_events = [_default_note_event]
 
 _default_star_power_event = StarPowerEvent(_default_tick, _default_timestamp, _default_sustain)
 _default_star_power_events = ImmutableSortedList([_default_star_power_event], already_sorted=True)
+_default_star_power_event_parsed_data = StarPowerEvent.ParsedData(_default_tick, _default_sustain)
+_default_star_power_event_parsed_datas = [_default_star_power_event_parsed_data]
 
 _default_name = "Song Name"
 _default_artist = "Artist Name"
@@ -180,13 +210,19 @@ class Defaults(object):
     crowd_stream: ...
 
     bpm: ...
+    raw_bpm: ...
     bpm_event: ...
     bpm_events: ...
+    bpm_event_parsed_data: ...
+    bpm_event_parsed_datas: ...
 
     upper_time_signature_numeral: ...
     lower_time_signature_numeral: ...
+    raw_lower_time_signature_numeral: ...
     time_signature_event: ...
     time_signature_events: ...
+    time_signature_event_parsed_data: ...
+    time_signature_event_parsed_datas: ...
 
     global_event_value: ...
     text_event_value: ...
@@ -195,9 +231,15 @@ class Defaults(object):
     text_event: ...
     section_event: ...
     lyric_event: ...
+    text_event_parsed_data: ...
+    section_event_parsed_data: ...
+    lyric_event_parsed_data: ...
     text_events: ...
     section_events: ...
     lyric_events: ...
+    text_event_parsed_datas: ...
+    section_event_parsed_datas: ...
+    lyric_event_parsed_datas: ...
 
     instrument: ...
     difficulty: ...
@@ -211,10 +253,13 @@ class Defaults(object):
 
     star_power_event: ...
     star_power_events: ...
+    star_power_event_parsed_data: ...
+    star_power_event_parsed_datas: ...
 
 
 def pytest_configure():
     pytest.invalid_chart_line = _invalid_chart_line
+    pytest.invalid_chart_lines = _invalid_chart_lines
     pytest.unmatchable_regex = _unmatchable_regex
     pytest.defaults = Defaults(
         filepath=_default_filepath,
@@ -257,22 +302,34 @@ def pytest_configure():
         keys_stream=_default_keys_stream,
         crowd_stream=_default_crowd_stream,
         bpm=_default_bpm,
+        raw_bpm=_default_raw_bpm,
         bpm_event=_default_bpm_event,
         bpm_events=_default_bpm_events,
+        bpm_event_parsed_data=_default_bpm_event_parsed_data,
+        bpm_event_parsed_datas=_default_bpm_event_parsed_datas,
         upper_time_signature_numeral=_default_upper_time_signature_numeral,
         lower_time_signature_numeral=_default_lower_time_signature_numeral,
+        raw_lower_time_signature_numeral=_default_raw_lower_time_signature_numeral,
         time_signature_event=_default_time_signature_event,
         time_signature_events=_default_time_signature_events,
+        time_signature_event_parsed_data=_default_time_signature_event_parsed_data,
+        time_signature_event_parsed_datas=_default_time_signature_event_parsed_datas,
         global_event_value=_default_global_event_value,
         text_event_value=_default_text_event_value,
-        section_event_value=_default_section_event_value,
-        lyric_event_value=_default_lyric_event_value,
         text_event=_default_text_event,
-        section_event=_default_section_event,
-        lyric_event=_default_lyric_event,
         text_events=_default_text_events,
+        text_event_parsed_data=_default_text_event_parsed_data,
+        text_event_parsed_datas=_default_text_event_parsed_datas,
+        section_event_value=_default_section_event_value,
+        section_event=_default_section_event,
         section_events=_default_section_events,
+        section_event_parsed_data=_default_section_event_parsed_data,
+        section_event_parsed_datas=_default_section_event_parsed_datas,
+        lyric_event_value=_default_lyric_event_value,
+        lyric_event=_default_lyric_event,
         lyric_events=_default_lyric_events,
+        lyric_event_parsed_data=_default_lyric_event_parsed_data,
+        lyric_event_parsed_datas=_default_lyric_event_parsed_datas,
         instrument=_default_instrument,
         difficulty=_default_difficulty,
         section_name=_default_section_name,
@@ -282,6 +339,8 @@ def pytest_configure():
         note_events=_default_note_events,
         star_power_event=_default_star_power_event,
         star_power_events=_default_star_power_events,
+        star_power_event_parsed_data=_default_star_power_event_parsed_data,
+        star_power_event_parsed_datas=_default_star_power_event_parsed_datas,
     )
 
 

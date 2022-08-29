@@ -15,12 +15,12 @@ import datetime
 import logging
 import re
 import typing
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Iterable, Sequence
 from typing import Final, Optional, Pattern, Type, TypeVar
 
 import chartparse.tick
 import chartparse.track
-from chartparse.datastructures import ImmutableSortedList
+from chartparse.datastructures import ImmutableList, ImmutableSortedList
 from chartparse.event import Event, TimestampAtTickSupporter
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.util import DictPropertiesEqMixin, DictReprTruncatedSequencesMixin
@@ -79,22 +79,24 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     def from_chart_lines(
         cls: Type[SyncTrackT],
         resolution: int,
-        iterator_getter: Callable[[], Iterable[str]],
+        lines: Iterable[str],
     ) -> SyncTrackT:
         """Initializes instance attributes by parsing an iterable of strings.
 
         Args:
             resolution: The number of ticks in a quarter note.
-            iterator_getter: The iterable of strings returned by this is most likely from a
-                Moonscraper ``.chart``. Must be a function so the strings can be iterated over
-                multiple times, if necessary.
+            lines: An iterable of strings most likely from a Moonscraper ``.chart``.
 
         Returns:
-            A ``SyncTrack`` parsed from the strings returned by ``iterator_getter``.
+            A ``SyncTrack`` parsed from ``lines``.
         """
 
-        bpm_events: ImmutableSortedList[BPMEvent] = chartparse.track.parse_events_from_chart_lines(
-            iterator_getter(), BPMEvent.from_chart_line, resolution
+        time_signature_data, bpm_data = cls._parse_data_from_chart_lines(lines)
+
+        bpm_events = chartparse.track.parse_events_from_data(
+            bpm_data,
+            BPMEvent.from_parsed_data,
+            resolution,
         )
 
         class TimestampAtTicker(object):
@@ -112,14 +114,29 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
         tatter = TimestampAtTicker(resolution)
 
-        time_signature_events: ImmutableSortedList[
-            TimeSignatureEvent
-        ] = chartparse.track.parse_events_from_chart_lines(
-            iterator_getter(),
-            TimeSignatureEvent.from_chart_line,
-            tatter,
+        time_signature_events = chartparse.track.parse_events_from_data(
+            time_signature_data, TimeSignatureEvent.from_parsed_data, tatter
         )
+
         return cls(resolution, time_signature_events, bpm_events)
+
+    @classmethod
+    def _parse_data_from_chart_lines(
+        cls: Type[SyncTrackT],
+        lines: Iterable[str],
+    ) -> tuple[ImmutableList[TimeSignatureEvent.ParsedData], ImmutableList[BPMEvent.ParsedData]]:
+        parsed_data = chartparse.track.parse_data_from_chart_lines(
+            (BPMEvent, TimeSignatureEvent), lines
+        )
+        time_signature_data = typing.cast(
+            ImmutableList[TimeSignatureEvent.ParsedData],
+            parsed_data[TimeSignatureEvent],
+        )
+        bpm_data = typing.cast(
+            ImmutableList[BPMEvent.ParsedData],
+            parsed_data[BPMEvent],
+        )
+        return time_signature_data, bpm_data
 
     def timestamp_at_tick(
         self, tick: int, proximal_bpm_event_index: int = 0
@@ -238,31 +255,27 @@ class TimeSignatureEvent(Event):
         self.lower_numeral = lower_numeral
 
     @classmethod
-    def from_chart_line(
+    def from_parsed_data(
         cls: Type[TimeSignatureEventT],
-        line: str,
+        data: TimeSignatureEvent.ParsedData,
         prev_event: Optional[TimeSignatureEventT],
         tatter: TimestampAtTickSupporter,
     ) -> TimeSignatureEventT:
-        """Attempt to obtain an instance of this object from a string.
+        """Obtain an instance of this object from parsed data.
 
         Args:
-            line: Most likely a line from a Moonscraper ``.chart``.
+            data: The data necessary to create an event. Most likely from a Moonscraper ``.chart``.
             prev_event: The ``TimeSignatureEvent`` with the greatest ``tick`` value less than that
                 of this event. If this is ``None``, then this must be the first
                 ``TimeSignatureEvent``.
             tatter: An object that can be used to get a timestamp at a particular tick.
 
         Returns:
-            An an instance of this object parsed from ``line``.
-
-        Raises:
-            RegexNotMatchError: If the mixed-into class' ``_regex`` does not match ``line``.
+            An an instance of this object initialized from ``data``.
         """
 
-        data = cls.ParsedData.from_chart_line(line)
         # The lower number is written by Moonscraper as the log2 of the true value.
-        lower_numeral = 2**data.lower if data.lower else cls._default_lower_numeral
+        lower_numeral = 2**data.lower if data.lower is not None else cls._default_lower_numeral
         timestamp, proximal_bpm_event_index = tatter.timestamp_at_tick(
             data.tick,
             proximal_bpm_event_index=prev_event._proximal_bpm_event_index if prev_event else 0,
@@ -284,7 +297,7 @@ class TimeSignatureEvent(Event):
 
     @typing.final
     @dataclasses.dataclass
-    class ParsedData(object):
+    class ParsedData(Event.ParsedData):
         tick: int
         upper: int
         lower: Optional[int]
@@ -299,6 +312,17 @@ class TimeSignatureEvent(Event):
         def from_chart_line(
             cls: Type[TimeSignatureEvent.ParsedDataT], line: str
         ) -> TimeSignatureEvent.ParsedDataT:
+            """Attempt to construct this object from a ``.chart`` line.
+
+            Args:
+                line: A string, most likely from a Moonscraper ``.chart``.
+
+            Returns:
+                An an instance of this object initialized from ``line``.
+
+            Raises:
+                RegexNotMatchError: If the mixed-into class' ``_regex`` does not match ``line``.
+            """
             m = cls._regex_prog.match(line)
             if not m:
                 raise RegexNotMatchError(cls._regex, line)
@@ -338,27 +362,27 @@ class BPMEvent(Event):
         self.bpm = bpm
 
     @classmethod
-    def from_chart_line(
-        cls: Type[BPMEventT], line: str, prev_event: Optional[BPMEventT], resolution: int
+    def from_parsed_data(
+        cls: Type[BPMEventT],
+        data: BPMEvent.ParsedData,
+        prev_event: Optional[BPMEventT],
+        resolution: int,
     ) -> BPMEventT:
-        """Attempt to obtain an instance of this object from a string.
+        """Obtain an instance of this object from parsed data.
 
         Args:
-            line: Most likely a line from a Moonscraper ``.chart``.
-            prev_event: The ``BPMEvent`` with the greatest ``tick`` value less than that of this
-                event. If this is ``None``, then this must be the first ``BPMEvent``.
-            resolution: The number of ticks in a quarter note.
+            data: The data necessary to create an event. Most likely from a Moonscraper ``.chart``.
+            prev_event: The event of this type with the greatest ``tick`` value less than that of
+                this event. If this is ``None``, then this must be the first event of this type.
+            resolution: The number of ticks for which a quarter note lasts.
 
         Returns:
-            An an instance of this object parsed from ``line``.
+            An an instance of this object initialized from ``data``.
 
         Raises:
-            RegexNotMatchError: If the mixed-into class' ``_regex`` does not match ``line``.
             ValueError: If ``prev_event.tick`` is not less than the tick value parsed from
                 ``line``.
         """
-
-        data = cls.ParsedData.from_chart_line(line)
 
         bpm_whole_part_str, bpm_decimal_part_str = data.raw_bpm[:-3], data.raw_bpm[-3:]
         bpm_whole_part = int(bpm_whole_part_str) if bpm_whole_part_str != "" else 0
@@ -405,7 +429,7 @@ class BPMEvent(Event):
 
     @typing.final
     @dataclasses.dataclass
-    class ParsedData(object):
+    class ParsedData(Event.ParsedData):
         tick: int
         raw_bpm: str
 
@@ -416,6 +440,17 @@ class BPMEvent(Event):
 
         @classmethod
         def from_chart_line(cls: Type[BPMEvent.ParsedDataT], line: str) -> BPMEvent.ParsedDataT:
+            """Attempt to construct this object from a ``.chart`` line.
+
+            Args:
+                line: A string, most likely from a Moonscraper ``.chart``.
+
+            Returns:
+                An an instance of this object initialized from ``line``.
+
+            Raises:
+                RegexNotMatchError: If the mixed-into class' ``_regex`` does not match ``line``.
+            """
             m = cls._regex_prog.match(line)
             if not m:
                 raise RegexNotMatchError(cls._regex, line)

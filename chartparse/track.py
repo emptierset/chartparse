@@ -10,93 +10,157 @@ and :class:`~chartparse.globalevents.GlobalEventsTrack` are considered to be eve
 
 from __future__ import annotations
 
+import collections
+import logging
 import typing
-from collections.abc import Callable, Iterable
-from typing import Optional, Union
+from collections.abc import Callable, Iterable, Sequence
+from typing import Final, Optional, Type
 
+import chartparse.globalevents
+import chartparse.instrument
+import chartparse.sync
 from chartparse.datastructures import ImmutableSortedList
-from chartparse.event import EventT, TimestampAtTickSupporter
+from chartparse.event import Event, TimestampAtTickSupporter
 from chartparse.exceptions import ProgrammerError, RegexNotMatchError
-from chartparse.sync import BPMEvent
+
+logger = logging.getLogger(__name__)
+_unparsable_line_msg_tmpl: Final[str] = "unparsable line: '{}'"
+
+
+def parse_data_from_chart_lines(
+    types: Sequence[Type[Event]],
+    lines: Iterable[str],
+) -> dict[Type[Event], list[Event.ParsedData]]:
+    # NOTE: This function is more efficient if the types in `types` are ordered in descending
+    # frequency. That is, because it chooses the first type that matches, users should put the more
+    # common ones first.
+    d: collections.defaultdict[Type[Event], list[Event.ParsedData]] = collections.defaultdict(list)
+    for line in lines:
+        for t in types:
+            try:
+                data = t.ParsedData.from_chart_line(line)
+                d[t].append(data)
+                break
+            except RegexNotMatchError:
+                continue
+        else:
+            logger.warning(_unparsable_line_msg_tmpl.format(line))
+    return d
 
 
 @typing.overload
-def parse_events_from_chart_lines(
-    chart_lines: Iterable[str],
-    from_chart_line_fn: Callable[[str, Optional[BPMEvent], int], BPMEvent],
+def parse_events_from_data(
+    datas: Iterable[chartparse.sync.BPMEvent.ParsedData],
+    from_data_fn: Callable[
+        [
+            chartparse.sync.BPMEvent.ParsedData,
+            Optional[chartparse.sync.BPMEvent],
+            int,
+        ],
+        chartparse.sync.BPMEvent,
+    ],
     resolution: int,
     /,
-) -> ImmutableSortedList[BPMEvent]:
+) -> ImmutableSortedList[chartparse.sync.BPMEvent]:
     ...  # pragma: no cover
 
 
 @typing.overload
-def parse_events_from_chart_lines(
-    chart_lines: Iterable[str],
-    from_chart_line_fn: Callable[[str, Optional[EventT], TimestampAtTickSupporter], EventT],
+def parse_events_from_data(
+    datas: Iterable[chartparse.sync.TimeSignatureEvent.ParsedData],
+    from_data_fn: Callable[
+        [
+            chartparse.sync.TimeSignatureEvent.ParsedData,
+            Optional[chartparse.sync.TimeSignatureEvent],
+            TimestampAtTickSupporter,
+        ],
+        chartparse.sync.TimeSignatureEvent,
+    ],
     tatter: TimestampAtTickSupporter,
     /,
-) -> ImmutableSortedList[EventT]:
+) -> ImmutableSortedList[chartparse.sync.TimeSignatureEvent]:
     ...  # pragma: no cover
 
 
-def parse_events_from_chart_lines(
-    chart_lines: Iterable[str],
-    from_chart_line_fn: Union[
-        Callable[[str, Optional[BPMEvent], int], BPMEvent],
-        Callable[[str, Optional[EventT], TimestampAtTickSupporter], EventT],
+@typing.overload
+def parse_events_from_data(
+    datas: Iterable[chartparse.globalevents.SectionEvent.ParsedData],
+    from_data_fn: Callable[
+        [
+            chartparse.globalevents.SectionEvent.ParsedData,
+            Optional[chartparse.globalevents.SectionEvent],
+            TimestampAtTickSupporter,
+        ],
+        chartparse.globalevents.SectionEvent,
     ],
-    resolution_or_tatter: Union[int, TimestampAtTickSupporter],
+    tatter: TimestampAtTickSupporter,
     /,
-) -> Union[ImmutableSortedList[BPMEvent], ImmutableSortedList[EventT]]:
-    # TODO: figure out how overload works with autodoc.
-    """Attempt to obtain a ``Event`` from each element of ``chart_lines``.
+) -> ImmutableSortedList[chartparse.globalevents.SectionEvent]:
+    ...  # pragma: no cover
 
-    Args:
-        chart_lines: An iterable of strings, most likely from a Moonscraper ``.chart``.
-        from_chart_line_fn: A function that, when applied to each element of ``chart_lines``,
-            either returns a :class:`~chartparse.event.Event` or raises
-            :class:`~chartparse.exceptions.RegexNotMatchError`.
-        resolution_or_tatter: Either the resolution of the chart, or an object that can be used to
-            get a timestamp at a particular tick.
 
-    Returns:
-        A :class:`~chartparse.datastructures.ImmutableSortedList` of
-        :class:`~chartparse.event.Event` objects obtained by calling ``from_chart_line_fn`` on
-        each element of ``chart_lines``.
-    """
+@typing.overload
+def parse_events_from_data(
+    datas: Iterable[chartparse.globalevents.LyricEvent.ParsedData],
+    from_data_fn: Callable[
+        [
+            chartparse.globalevents.LyricEvent.ParsedData,
+            Optional[chartparse.globalevents.LyricEvent],
+            TimestampAtTickSupporter,
+        ],
+        chartparse.globalevents.LyricEvent,
+    ],
+    tatter: TimestampAtTickSupporter,
+    /,
+) -> ImmutableSortedList[chartparse.globalevents.LyricEvent]:
+    ...  # pragma: no cover
 
-    # TODO: Create _parse_events_from_chart_line_impl, which takes a Type argument and uses it
-    # to narrow the Union types of the other parameters.
-    if isinstance(resolution_or_tatter, int):
-        resolution = resolution_or_tatter
-        from_chart_line_fn = typing.cast(
-            Callable[[str, Optional[BPMEvent], int], BPMEvent], from_chart_line_fn
-        )
-        bpm_events: list[BPMEvent] = []
-        for line in chart_lines:
-            prev_bpm_event = bpm_events[-1] if bpm_events else None
-            assert prev_bpm_event is None or isinstance(prev_bpm_event, BPMEvent)
-            try:
-                bpm_event = from_chart_line_fn(line, prev_bpm_event, resolution)
-            except RegexNotMatchError:
-                # TODO: Figure out how to log which lines are uncovered by any parser.
-                continue
-            bpm_events.append(bpm_event)
-        return ImmutableSortedList(bpm_events, already_sorted=True)
+
+@typing.overload
+def parse_events_from_data(
+    datas: Iterable[chartparse.globalevents.TextEvent.ParsedData],
+    from_data_fn: Callable[
+        [
+            chartparse.globalevents.TextEvent.ParsedData,
+            Optional[chartparse.globalevents.TextEvent],
+            TimestampAtTickSupporter,
+        ],
+        chartparse.globalevents.TextEvent,
+    ],
+    tatter: TimestampAtTickSupporter,
+    /,
+) -> ImmutableSortedList[chartparse.globalevents.TextEvent]:
+    ...  # pragma: no cover
+
+
+@typing.overload
+def parse_events_from_data(
+    datas: Iterable[chartparse.instrument.StarPowerEvent.ParsedData],
+    from_data_fn: Callable[
+        [
+            chartparse.instrument.StarPowerEvent.ParsedData,
+            Optional[chartparse.instrument.StarPowerEvent],
+            TimestampAtTickSupporter,
+        ],
+        chartparse.instrument.StarPowerEvent,
+    ],
+    tatter: TimestampAtTickSupporter,
+    /,
+) -> ImmutableSortedList[chartparse.instrument.StarPowerEvent]:
+    ...  # pragma: no cover
+
+
+# TODO: rename to build_events_from_data
+def parse_events_from_data(datas, from_data_fn, resolution_or_tatter, /):
+    events = []
+    for data in datas:
+        prev_event = events[-1] if events else None
+        event = from_data_fn(data, prev_event, resolution_or_tatter)
+        events.append(event)
+    if isinstance(resolution_or_tatter, int):  # using BPMEvent.ParsedData
+        # In this case, BPMEvents must already be in increasing tick order, by definition.
+        return ImmutableSortedList(events, already_sorted=True)
     elif isinstance(resolution_or_tatter, TimestampAtTickSupporter):
-        tatter = resolution_or_tatter
-        from_chart_line_fn = typing.cast(
-            Callable[[str, Optional[EventT], TimestampAtTickSupporter], EventT], from_chart_line_fn
-        )
-        events: list[EventT] = []
-        for line in chart_lines:
-            prev_event = events[-1] if events else None
-            try:
-                event = from_chart_line_fn(line, prev_event, tatter)
-            except RegexNotMatchError:
-                continue
-            events.append(event)
         return ImmutableSortedList(events, key=lambda e: e.tick)
     else:
         raise ProgrammerError  # pragma: no cover

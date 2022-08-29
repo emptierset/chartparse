@@ -120,10 +120,10 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
         metadata = Metadata.from_chart_lines(sections[Metadata.section_name])
         sync_track = SyncTrack.from_chart_lines(
-            metadata.resolution, sections[SyncTrack.section_name]
+            metadata.resolution, sections[SyncTrack.section_name]()
         )
         global_events_track = GlobalEventsTrack.from_chart_lines(
-            sections[GlobalEventsTrack.section_name], sync_track
+            sections[GlobalEventsTrack.section_name](), sync_track
         )
 
         instrument_track_name_to_instrument_difficulty_pair: dict[
