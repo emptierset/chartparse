@@ -21,6 +21,7 @@ class Comparable(Protocol):
 
 
 T = TypeVar("T")
+T_co = TypeVar("T_co", covariant=True)
 
 ComparableT = TypeVar("ComparableT", bound=Comparable)
 """A type for comparable values."""

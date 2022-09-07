@@ -13,11 +13,10 @@ from collections.abc import Callable, Iterable, Iterator, Sequence
 from typing import Literal, Union
 
 from chartparse.exceptions import ProgrammerError
-from chartparse.hints import ComparableT, T
+from chartparse.hints import ComparableT, T_co
 
 
-# TODO: ImmutableList can likely be made covariant.
-class ImmutableList(Sequence[T]):
+class ImmutableList(Sequence[T_co]):
     """A ``list`` equivalent that cannot be mutated.
 
     .. automethod:: __getitem__
@@ -31,11 +30,11 @@ class ImmutableList(Sequence[T]):
 
     # This is conceptually Final, but annotating it as such causes a mypy error due to the type
     # variable.
-    _seq: Sequence[T]
+    _seq: Sequence[T_co]
 
     length: int
 
-    def __init__(self, xs: Iterable[T]):
+    def __init__(self, xs: Iterable[T_co]):
         if isinstance(xs, Sequence):
             self._seq = xs
             self.length = len(xs)
@@ -44,17 +43,17 @@ class ImmutableList(Sequence[T]):
             self.length = len(self._seq)
 
     @typing.overload
-    def __getitem__(self, index: int) -> T:
+    def __getitem__(self, index: int) -> T_co:
         ...  # pragma: no cover
 
     @typing.overload
-    def __getitem__(self, index: slice) -> Sequence[T]:
+    def __getitem__(self, index: slice) -> Sequence[T_co]:
         ...  # pragma: no cover
 
-    def __getitem__(self, index: Union[int, slice]) -> Union[T, Sequence[T]]:
+    def __getitem__(self, index: Union[int, slice]) -> Union[T_co, Sequence[T_co]]:
         return self._seq[index]
 
-    def __iter__(self) -> Iterator[T]:
+    def __iter__(self) -> Iterator[T_co]:
         return iter(self._seq)
 
     def __repr__(self) -> str:
@@ -66,7 +65,7 @@ class ImmutableList(Sequence[T]):
     def __contains__(self, obj: object) -> bool:
         return obj in self._seq
 
-    def __reversed__(self) -> Iterator[T]:
+    def __reversed__(self) -> Iterator[T_co]:
         return reversed(self._seq)
 
     def __eq__(self, other: object) -> bool:
@@ -77,10 +76,8 @@ class ImmutableList(Sequence[T]):
         return NotImplemented
 
 
-# TODO: ImmutableSortedList can likely be made covariant. Does it need to be, if it inherits from
-# a covariant type?
 @typing.final
-class ImmutableSortedList(ImmutableList[T]):
+class ImmutableSortedList(ImmutableList[T_co]):
     """A ``list`` equivalent that cannot be mutated and is sorted during initialization."""
 
     @typing.overload
@@ -92,11 +89,11 @@ class ImmutableSortedList(ImmutableList[T]):
         ...  # pragma: no cover
 
     @typing.overload
-    def __init__(self, xs: Iterable[T], *, already_sorted: Literal[True]) -> None:
+    def __init__(self, xs: Iterable[T_co], *, already_sorted: Literal[True]) -> None:
         ...  # pragma: no cover
 
     @typing.overload
-    def __init__(self, xs: Iterable[T], *, key: Callable[[T], ComparableT]) -> None:
+    def __init__(self, xs: Iterable[T_co], *, key: Callable[[T_co], ComparableT]) -> None:
         ...  # pragma: no cover
 
     def __init__(self, xs, *, key=None, already_sorted=False) -> None:
