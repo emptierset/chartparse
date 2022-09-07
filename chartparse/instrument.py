@@ -256,7 +256,7 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         """
 
         star_power_data = cls._parse_data_from_chart_lines(iterator_getter())
-        star_power_events = chartparse.track.parse_events_from_data(
+        star_power_events = chartparse.track.build_events_from_data(
             star_power_data,
             StarPowerEvent.from_parsed_data,
             tatter,

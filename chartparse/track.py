@@ -49,7 +49,7 @@ def parse_data_from_chart_lines(
 
 
 @typing.overload
-def parse_events_from_data(
+def build_events_from_data(
     datas: Iterable[chartparse.sync.BPMEvent.ParsedData],
     from_data_fn: Callable[
         [
@@ -66,7 +66,7 @@ def parse_events_from_data(
 
 
 @typing.overload
-def parse_events_from_data(
+def build_events_from_data(
     datas: Iterable[chartparse.sync.TimeSignatureEvent.ParsedData],
     from_data_fn: Callable[
         [
@@ -83,7 +83,7 @@ def parse_events_from_data(
 
 
 @typing.overload
-def parse_events_from_data(
+def build_events_from_data(
     datas: Iterable[chartparse.globalevents.SectionEvent.ParsedData],
     from_data_fn: Callable[
         [
@@ -100,7 +100,7 @@ def parse_events_from_data(
 
 
 @typing.overload
-def parse_events_from_data(
+def build_events_from_data(
     datas: Iterable[chartparse.globalevents.LyricEvent.ParsedData],
     from_data_fn: Callable[
         [
@@ -117,7 +117,7 @@ def parse_events_from_data(
 
 
 @typing.overload
-def parse_events_from_data(
+def build_events_from_data(
     datas: Iterable[chartparse.globalevents.TextEvent.ParsedData],
     from_data_fn: Callable[
         [
@@ -134,7 +134,7 @@ def parse_events_from_data(
 
 
 @typing.overload
-def parse_events_from_data(
+def build_events_from_data(
     datas: Iterable[chartparse.instrument.StarPowerEvent.ParsedData],
     from_data_fn: Callable[
         [
@@ -150,8 +150,7 @@ def parse_events_from_data(
     ...  # pragma: no cover
 
 
-# TODO: rename to build_events_from_data
-def parse_events_from_data(datas, from_data_fn, resolution_or_tatter, /):
+def build_events_from_data(datas, from_data_fn, resolution_or_tatter, /):
     events = []
     for data in datas:
         prev_event = events[-1] if events else None

@@ -57,8 +57,8 @@ class TestInstrumentTrack(object):
                 "_parse_data_from_chart_lines",
                 return_value=pytest.defaults.star_power_event_parsed_datas,
             )
-            mock_parse_events = mocker.patch(
-                "chartparse.track.parse_events_from_data",
+            mock_build_events = mocker.patch(
+                "chartparse.track.build_events_from_data",
                 return_value=pytest.defaults.star_power_events,
             )
             spy_init = mocker.spy(InstrumentTrack, "__init__")
@@ -72,7 +72,7 @@ class TestInstrumentTrack(object):
             mock_parse_note_events.assert_called_once_with(
                 minimal_string_iterator_getter(), pytest.defaults.star_power_events, default_tatter
             )
-            mock_parse_events.assert_called_once_with(
+            mock_build_events.assert_called_once_with(
                 pytest.defaults.star_power_event_parsed_datas,
                 StarPowerEvent.from_parsed_data,
                 default_tatter,

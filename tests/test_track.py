@@ -2,14 +2,14 @@ import pytest
 
 import chartparse.track
 from chartparse.exceptions import RegexNotMatchError
-from chartparse.track import parse_events_from_data, parse_data_from_chart_lines
+from chartparse.track import build_events_from_data, parse_data_from_chart_lines
 from chartparse.sync import BPMEvent
 
 from tests.helpers.fruit import Fruit
 from tests.helpers.log import LogChecker
 
 
-class TestParseEventsFromData(object):
+class TestBuildEventsFromData(object):
     @pytest.mark.parametrize(
         "from_data_return_value,want",
         [
@@ -39,7 +39,7 @@ class TestParseEventsFromData(object):
         else:
             resolution_or_tatter = default_tatter
 
-        got = parse_events_from_data(
+        got = build_events_from_data(
             pytest.invalid_chart_lines, from_data_fn_mock, resolution_or_tatter
         )
 

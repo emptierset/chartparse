@@ -93,7 +93,7 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
         time_signature_data, bpm_data = cls._parse_data_from_chart_lines(lines)
 
-        bpm_events = chartparse.track.parse_events_from_data(
+        bpm_events = chartparse.track.build_events_from_data(
             bpm_data,
             BPMEvent.from_parsed_data,
             resolution,
@@ -114,7 +114,7 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
         tatter = TimestampAtTicker(resolution)
 
-        time_signature_events = chartparse.track.parse_events_from_data(
+        time_signature_events = chartparse.track.build_events_from_data(
             time_signature_data, TimeSignatureEvent.from_parsed_data, tatter
         )
 

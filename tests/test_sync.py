@@ -71,8 +71,8 @@ class TestSyncTrack(object):
                     pytest.defaults.bpm_event_parsed_datas,
                 ),
             )
-            mock_parse_events = mocker.patch(
-                "chartparse.track.parse_events_from_data",
+            mock_build_events = mocker.patch(
+                "chartparse.track.build_events_from_data",
                 side_effect=[
                     pytest.defaults.bpm_events,
                     pytest.defaults.time_signature_events,
@@ -82,7 +82,7 @@ class TestSyncTrack(object):
             _ = SyncTrack.from_chart_lines(pytest.defaults.resolution, pytest.invalid_chart_lines)
 
             mock_parse_data.assert_called_once_with(pytest.invalid_chart_lines)
-            mock_parse_events.assert_has_calls(
+            mock_build_events.assert_has_calls(
                 [
                     unittest.mock.call(
                         pytest.defaults.bpm_event_parsed_datas,

@@ -83,17 +83,17 @@ class GlobalEventsTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
         text_data, section_data, lyric_data = cls._parse_data_from_chart_lines(lines)
 
-        text_events = chartparse.track.parse_events_from_data(
+        text_events = chartparse.track.build_events_from_data(
             text_data,
             TextEvent.from_parsed_data,
             tatter,
         )
-        section_events = chartparse.track.parse_events_from_data(
+        section_events = chartparse.track.build_events_from_data(
             section_data,
             SectionEvent.from_parsed_data,
             tatter,
         )
-        lyric_events = chartparse.track.parse_events_from_data(
+        lyric_events = chartparse.track.build_events_from_data(
             lyric_data,
             LyricEvent.from_parsed_data,
             tatter,
