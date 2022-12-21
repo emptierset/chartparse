@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pytest
 
 from chartparse.exceptions import MissingRequiredField, RegexNotMatchError, ProgrammerError, raise_

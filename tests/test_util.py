@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from chartparse.util import DictPropertiesEqMixin, AllValuesGettableEnum
 from chartparse.datastructures import ImmutableList
 

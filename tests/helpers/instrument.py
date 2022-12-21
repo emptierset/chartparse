@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pytest
 
 from chartparse.instrument import StarPowerEvent, NoteEvent, SpecialEvent, InstrumentTrack
