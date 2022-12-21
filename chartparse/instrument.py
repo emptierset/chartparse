@@ -147,6 +147,7 @@ class Note(Enum):
 
 
 @typing.final
+@functools.total_ordering
 class NoteTrackIndex(AllValuesGettableEnum):
     """The integer in a line in a Moonscraper ``.chart`` file's instrument track."""
 
@@ -165,6 +166,11 @@ class NoteTrackIndex(AllValuesGettableEnum):
     BLUE = 3
     ORANGE = 4
     OPEN = 7
+
+    def __lt__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value < other.value
+        return NotImplemented  # pragma: no cover
 
 
 # TODO: create newtype (?) for bytearray for note array.
