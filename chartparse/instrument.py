@@ -317,7 +317,8 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             )
             events.append(event)
 
-        # This is already sorted because we iterate over `sorted(note_arrays.keys())`.
+        # TODO: Is this still already sorted? Can we perhaps define `datas` further
+        # up the call hierarchy as an ImmutableSortedList, so it's straightforward?
         return ImmutableSortedList(events, already_sorted=True)
 
     @classmethod
@@ -386,6 +387,7 @@ class StarPowerData(DictPropertiesEqMixin):
     star_power_event_index: int
 
 
+# TODO: See what happens if we specify five Optional[int]s, rather than ...
 SustainTupleT = tuple[Optional[int], ...]
 """A 5-element tuple representing the sustain value of each note lane for nonuniform sustains.
 
