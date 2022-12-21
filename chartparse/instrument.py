@@ -705,10 +705,10 @@ class SpecialEvent(Event):
 
     ParsedDataT = TypeVar("ParsedDataT", bound="ParsedData")
 
-    @dataclasses.dataclass
+    @dataclasses.dataclass(kw_only=True)
     class ParsedData(Event.ParsedData):
-        tick: int
         sustain: int
+        """The duration in ticks of the event represented by this data."""
 
         _regex: ClassVar[str]
         _regex_prog: ClassVar[Pattern[str]]
@@ -737,7 +737,7 @@ class SpecialEvent(Event):
             if not m:
                 raise RegexNotMatchError(cls._regex, line)
             tick, sustain = int(m.group(1)), int(m.group(2))
-            return cls(tick, sustain)
+            return cls(tick=tick, sustain=sustain)
 
 
 @typing.final
@@ -745,7 +745,7 @@ class StarPowerEvent(SpecialEvent):
     """An event representing star power starting at some tick and lasting for some duration."""
 
     @typing.final
-    @dataclasses.dataclass
+    @dataclasses.dataclass(kw_only=True)
     class ParsedData(SpecialEvent.ParsedData):
         _index_regex = r"2"
         _regex = SpecialEvent.ParsedData._regex_template.format(_index_regex)
@@ -756,3 +756,6 @@ class StarPowerEvent(SpecialEvent):
 
 
 # TODO: Support S 64 ## (Rock Band drum fills)
+
+
+# TODO: Support E textherewithoutspaces ("track events") within InstrumentTracks.

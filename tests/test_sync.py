@@ -130,15 +130,17 @@ class TestSyncTrack(object):
         )
         def test_impl(self, tick, want_timestamp, want_proximal_bpm_event_index):
             resolution = 100
-            event0 = BPMEvent.from_parsed_data(BPMEvent.ParsedData(0, "60000"), None, resolution)
+            event0 = BPMEvent.from_parsed_data(
+                BPMEvent.ParsedData(tick=0, raw_bpm="60000"), None, resolution
+            )
             event1 = BPMEvent.from_parsed_data(
-                BPMEvent.ParsedData(100, "120000"), event0, resolution
+                BPMEvent.ParsedData(tick=100, raw_bpm="120000"), event0, resolution
             )
             event2 = BPMEvent.from_parsed_data(
-                BPMEvent.ParsedData(400, "180000"), event1, resolution
+                BPMEvent.ParsedData(tick=400, raw_bpm="180000"), event1, resolution
             )
             event3 = BPMEvent.from_parsed_data(
-                BPMEvent.ParsedData(800, "90000"), event2, resolution
+                BPMEvent.ParsedData(tick=800, raw_bpm="90000"), event2, resolution
             )
             test_bpm_events = AlreadySortedImmutableSortedList([event0, event1, event2, event3])
 

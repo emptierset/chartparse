@@ -189,9 +189,8 @@ class GlobalEvent(Event):
 
     ParsedDataT = TypeVar("ParsedDataT", bound="ParsedData")
 
-    @dataclasses.dataclass
+    @dataclasses.dataclass(kw_only=True)
     class ParsedData(Event.ParsedData):
-        tick: int
         value: str
 
         _regex: ClassVar[str]
@@ -221,7 +220,7 @@ class GlobalEvent(Event):
             if not m:
                 raise RegexNotMatchError(cls._regex, line)
             tick, value = int(m.group(1)), m.group(2)
-            return cls(tick, value)
+            return cls(tick=tick, value=value)
 
 
 @typing.final
@@ -229,7 +228,7 @@ class TextEvent(GlobalEvent):
     """A :class:`~chartparse.globalevents.GlobalEvent` that stores freeform text event data."""
 
     @typing.final
-    @dataclasses.dataclass
+    @dataclasses.dataclass(kw_only=True)
     class ParsedData(GlobalEvent.ParsedData):
         _value_regex = r"([^ ]*?)"
         _regex = GlobalEvent.ParsedData._regex_template.format(_value_regex)
@@ -244,7 +243,7 @@ class SectionEvent(GlobalEvent):
     """
 
     @typing.final
-    @dataclasses.dataclass
+    @dataclasses.dataclass(kw_only=True)
     class ParsedData(GlobalEvent.ParsedData):
         _value_regex = r"section (.*?)"
         _regex = GlobalEvent.ParsedData._regex_template.format(_value_regex)
@@ -259,7 +258,7 @@ class LyricEvent(GlobalEvent):
     """
 
     @typing.final
-    @dataclasses.dataclass
+    @dataclasses.dataclass(kw_only=True)
     class ParsedData(GlobalEvent.ParsedData):
         _value_regex = "lyric (.*?)"
         _regex = GlobalEvent.ParsedData._regex_template.format(_value_regex)

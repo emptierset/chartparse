@@ -296,9 +296,8 @@ class TimeSignatureEvent(Event):
     ParsedDataT = TypeVar("ParsedDataT", bound="ParsedData")
 
     @typing.final
-    @dataclasses.dataclass
+    @dataclasses.dataclass(kw_only=True)
     class ParsedData(Event.ParsedData):
-        tick: int
         upper: int
         lower: Optional[int]
 
@@ -331,7 +330,7 @@ class TimeSignatureEvent(Event):
                 lower = int(m.group(3))
             except TypeError:
                 lower = None
-            return cls(tick, upper, lower)
+            return cls(tick=tick, upper=upper, lower=lower)
 
 
 BPMEventT = TypeVar("BPMEventT", bound="BPMEvent")
@@ -428,9 +427,8 @@ class BPMEvent(Event):
     ParsedDataT = TypeVar("ParsedDataT", bound="ParsedData")
 
     @typing.final
-    @dataclasses.dataclass
+    @dataclasses.dataclass(kw_only=True)
     class ParsedData(Event.ParsedData):
-        tick: int
         raw_bpm: str
 
         # Match 1: Tick
@@ -455,4 +453,4 @@ class BPMEvent(Event):
             if not m:
                 raise RegexNotMatchError(cls._regex, line)
             tick, raw_bpm = int(m.group(1)), m.group(2)
-            return cls(tick, raw_bpm)
+            return cls(tick=tick, raw_bpm=raw_bpm)

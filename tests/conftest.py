@@ -55,7 +55,7 @@ _default_bpm = 120.000
 _default_raw_bpm = str(int(_default_bpm * 1000))
 _default_bpm_event = BPMEvent(_default_tick, _default_timestamp, _default_bpm)
 _default_bpm_events = ImmutableSortedList([_default_bpm_event], already_sorted=True)
-_default_bpm_event_parsed_data = BPMEvent.ParsedData(_default_tick, _default_bpm)
+_default_bpm_event_parsed_data = BPMEvent.ParsedData(tick=_default_tick, raw_bpm=_default_raw_bpm)
 _default_bpm_event_parsed_datas = [_default_bpm_event_parsed_data]
 
 _default_upper_time_signature_numeral = 4
@@ -69,9 +69,9 @@ _default_time_signature_event = TimeSignatureEvent(
 )
 _default_time_signature_events = [_default_time_signature_event]
 _default_time_signature_event_parsed_data = TimeSignatureEvent.ParsedData(
-    _default_tick,
-    _default_upper_time_signature_numeral,
-    _default_lower_time_signature_numeral,
+    tick=_default_tick,
+    upper=_default_upper_time_signature_numeral,
+    lower=_default_lower_time_signature_numeral,
 )
 _default_time_signature_event_parsed_datas = [_default_time_signature_event_parsed_data]
 
@@ -79,14 +79,16 @@ _default_global_event_value = "default_global_event_value"
 _default_global_event = GlobalEvent(_default_tick, _default_timestamp, _default_global_event_value)
 _default_global_events = [_default_global_event]
 _default_global_event_parsed_data = GlobalEvent.ParsedData(
-    _default_tick, _default_global_event_value
+    tick=_default_tick, value=_default_global_event_value
 )
 _default_global_event_parsed_datas = [_default_global_event_parsed_data]
 
 _default_text_event_value = "default_text_event_value"
 _default_text_event = TextEvent(_default_tick, _default_timestamp, _default_text_event_value)
 _default_text_events = [_default_text_event]
-_default_text_event_parsed_data = TextEvent.ParsedData(_default_tick, _default_text_event_value)
+_default_text_event_parsed_data = TextEvent.ParsedData(
+    tick=_default_tick, value=_default_text_event_value
+)
 _default_text_event_parsed_datas = [_default_text_event_parsed_data]
 
 _default_section_event_value = "default_section_event_value"
@@ -95,14 +97,16 @@ _default_section_event = SectionEvent(
 )
 _default_section_events = [_default_section_event]
 _default_section_event_parsed_data = SectionEvent.ParsedData(
-    _default_tick, _default_section_event_value
+    tick=_default_tick, value=_default_section_event_value
 )
 _default_section_event_parsed_datas = [_default_section_event_parsed_data]
 
 _default_lyric_event_value = "default_lyric_event_value"
 _default_lyric_event = LyricEvent(_default_tick, _default_timestamp, _default_lyric_event_value)
 _default_lyric_events = [_default_lyric_event]
-_default_lyric_event_parsed_data = LyricEvent.ParsedData(_default_tick, _default_lyric_event_value)
+_default_lyric_event_parsed_data = LyricEvent.ParsedData(
+    tick=_default_tick, value=_default_lyric_event_value
+)
 _default_lyric_event_parsed_datas = [_default_lyric_event_parsed_data]
 
 
@@ -123,7 +127,9 @@ _default_note_events = [_default_note_event]
 
 _default_star_power_event = StarPowerEvent(_default_tick, _default_timestamp, _default_sustain)
 _default_star_power_events = ImmutableSortedList([_default_star_power_event], already_sorted=True)
-_default_star_power_event_parsed_data = StarPowerEvent.ParsedData(_default_tick, _default_sustain)
+_default_star_power_event_parsed_data = StarPowerEvent.ParsedData(
+    tick=_default_tick, sustain=_default_sustain
+)
 _default_star_power_event_parsed_datas = [_default_star_power_event_parsed_data]
 
 _default_name = "Song Name"
@@ -175,6 +181,7 @@ class Defaults(object):
     proximal_bpm_event_index: ...
     proximal_star_power_event_index: ...
 
+    # TODO: Remove redundant "default" from names.
     default_tatter_timestamp: ...
     default_tatter_index: ...
 
