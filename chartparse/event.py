@@ -18,7 +18,8 @@ from chartparse.util import DictPropertiesEqMixin, DictReprMixin
 
 @typing.runtime_checkable
 class TimestampAtTickSupporter(Protocol):
-    resolution: int
+    @property
+    def resolution(self) -> int: ...
 
     def timestamp_at_tick(
         self, tick: int, proximal_bpm_event_index: int = ...
