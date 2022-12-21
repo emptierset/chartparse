@@ -4,7 +4,7 @@ import dataclasses
 import pytest
 
 import chartparse.track
-from chartparse.exceptions import RegexNotMatchError
+from chartparse.event import Event
 from chartparse.track import build_events_from_data, parse_data_from_chart_lines
 from chartparse.sync import BPMEvent
 
@@ -51,27 +51,56 @@ class TestBuildEventsFromData(object):
 
 
 class TestParseDataFromChartLines(object):
-    def test(self):
-        class AppleReturner(object):
-            class ParsedData(object):
-                def from_chart_line(_line):
-                    return Fruit.APPLE
+    @dataclasses.dataclass
+    class ParsedData(Event.ParsedData):
+        fruit: Fruit
 
-        class RegexNotMatchErrorRaiser(object):
-            class ParsedData(object):
-                def from_chart_line(_line):
-                    raise RegexNotMatchError(pytest.unmatchable_regex, pytest.invalid_chart_line)
+        @classmethod
+        def from_chart_line(cls, line):
+            return cls(tick=int(line), fruit=Fruit(int(line)))
 
-        got = parse_data_from_chart_lines(
-            (RegexNotMatchErrorRaiser, AppleReturner), pytest.invalid_chart_lines
-        )
-        want = {AppleReturner: [Fruit.APPLE]}
+    @dataclasses.dataclass
+    class CoalescableParsedData(ParsedData, Event.CoalescableParsedData):
+        def coalesce_from_other(self, other):
+            self.fruit = Fruit(other.fruit.value + self.fruit.value)
 
+    @pytest.mark.parametrize(
+        "types,lines,want",
+        [
+            pytest.param(
+                (ParsedData,),
+                ["0", "1"],
+                {
+                    ParsedData: [
+                        ParsedData(tick=0, fruit=Fruit(0)),
+                        ParsedData(tick=1, fruit=Fruit(1)),
+                    ]
+                },
+                id="two_typical_events",
+            ),
+            pytest.param(
+                (CoalescableParsedData,),
+                ["2", "2"],
+                {
+                    CoalescableParsedData: [
+                        CoalescableParsedData(tick=2, fruit=Fruit(4)),
+                    ]
+                },
+                id="two_coalesced_events",
+            ),
+        ],
+    )
+    def test(self, types, lines, want):
+        got = parse_data_from_chart_lines(types, lines)
         assert got == want
+
+    def test_simultaneous_uncoalescable_events(self):
+        with pytest.raises(ValueError):
+            _ = parse_data_from_chart_lines((self.ParsedData,), ["0", "0"])
 
     def test_no_suitable_parsers(self, mocker, caplog):
         _ = parse_data_from_chart_lines(tuple(), pytest.invalid_chart_lines)
         logchecker = LogChecker(caplog)
         logchecker.assert_contains_string_in_one_line(
-            chartparse.track._unparsable_line_msg_tmpl.format(pytest.invalid_chart_line)
+            chartparse.track._unparsable_line_msg_tmpl.format(pytest.invalid_chart_line, [])
         )

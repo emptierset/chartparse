@@ -23,6 +23,7 @@ from chartparse.globalevents import (
 from chartparse.instrument import (
     InstrumentTrack,
     NoteEvent,
+    StarPowerData,
     StarPowerEvent,
     SpecialEvent,
     Instrument,
@@ -114,6 +115,7 @@ _default_difficulty = Difficulty.EXPERT
 _default_instrument = Instrument.GUITAR
 _default_section_name = _default_difficulty.value + _default_instrument.value
 _default_sustain = 0  # ticks
+_default_sustain_list = [0, None, None, None, None]
 
 _default_note = Note.G
 _default_note_instrument_track_index = InstrumentTrack._min_note_instrument_track_index
@@ -124,6 +126,12 @@ _default_note_event = NoteEvent(
     _default_tick, _default_timestamp, _default_timestamp, _default_note, _default_hopo_state
 )
 _default_note_events = [_default_note_event]
+_default_note_event_parsed_data = NoteEvent.ParsedData(
+    tick=_default_tick,
+    sustain=_default_sustain,
+    note_array=_default_note.value,
+)
+_default_note_event_parsed_datas = [_default_note_event_parsed_data]
 
 _default_star_power_event = StarPowerEvent(_default_tick, _default_timestamp, _default_sustain)
 _default_star_power_events = ImmutableSortedList([_default_star_power_event], already_sorted=True)
@@ -173,6 +181,7 @@ class Defaults(object):
 
     tick: ...
     sustain: ...
+    sustain_list: ...
 
     timestamp: ...
 
@@ -254,9 +263,12 @@ class Defaults(object):
 
     hopo_state: ...
 
+    note_instrument_track_index: ...
     note: ...
     note_event: ...
     note_events: ...
+    note_event_parsed_data: ...
+    note_event_parsed_datas: ...
 
     star_power_event: ...
     star_power_events: ...
@@ -272,6 +284,7 @@ def pytest_configure():
         filepath=_default_filepath,
         tick=_default_tick,
         sustain=_default_sustain,
+        sustain_list=_default_sustain_list,
         timestamp=_default_timestamp,
         seconds=_default_seconds,
         proximal_bpm_event_index=_default_proximal_bpm_event_index,
@@ -341,9 +354,12 @@ def pytest_configure():
         difficulty=_default_difficulty,
         section_name=_default_section_name,
         hopo_state=_default_hopo_state,
+        note_instrument_track_index=_default_note_instrument_track_index,
         note=_default_note,
         note_event=_default_note_event,
         note_events=_default_note_events,
+        note_event_parsed_data=_default_note_event_parsed_data,
+        note_event_parsed_datas=_default_note_event_parsed_datas,
         star_power_event=_default_star_power_event,
         star_power_events=_default_star_power_events,
         star_power_event_parsed_data=_default_star_power_event_parsed_data,
@@ -367,6 +383,18 @@ def default_tatter(mocker):
             return _default_tatter_timestamp, _default_tatter_bpm_event_index
 
     return FakeTimestampAtTicker(_default_resolution)
+
+
+@pytest.fixture
+def minimal_compute_hopo_state_mock(mocker):
+    return mocker.patch.object(NoteEvent, "_compute_hopo_state", return_value=_default_hopo_state)
+
+
+@pytest.fixture
+def minimal_compute_star_power_data_mock(mocker):
+    return mocker.patch.object(
+        NoteEvent, "_compute_star_power_data", return_value=(StarPowerData(0), 0)
+    )
 
 
 @pytest.fixture
@@ -489,6 +517,11 @@ def default_instrument_track():
 @pytest.fixture
 def bare_note_event():
     return NoteEvent.__new__(NoteEvent)
+
+
+@pytest.fixture
+def bare_note_event_parsed_data():
+    return NoteEvent.ParsedData.__new__(NoteEvent.ParsedData)
 
 
 @pytest.fixture

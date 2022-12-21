@@ -34,7 +34,7 @@ def TimeSignatureEventWithDefaults(
 def TimeSignatureEventParsedDataWithDefaults(
     *, tick=pytest.defaults.tick, upper=pytest.defaults.upper_time_signature_numeral, lower=None
 ):
-    return TimeSignatureEvent.ParsedData(tick, upper, lower)
+    return TimeSignatureEvent.ParsedData(tick=tick, upper=upper, lower=lower)
 
 
 def BPMEventWithDefaults(
@@ -52,4 +52,4 @@ def BPMEventParsedDataWithDefaults(
     tick=pytest.defaults.tick,
     raw_bpm=pytest.defaults.raw_bpm,
 ):
-    return BPMEvent.ParsedData(tick, raw_bpm)
+    return BPMEvent.ParsedData(tick=tick, raw_bpm=raw_bpm)

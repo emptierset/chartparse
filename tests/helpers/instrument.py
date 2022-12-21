@@ -73,3 +73,20 @@ def NoteEventWithDefaults(
         star_power_data=star_power_data,
         proximal_bpm_event_index=proximal_bpm_event_index,
     )
+
+
+def NoteEventParsedDataWithDefaults(
+    *,
+    tick=pytest.defaults.tick,
+    note_array=pytest.defaults.note.value,
+    sustain=pytest.defaults.sustain_list,
+    is_forced=False,
+    is_tap=False,
+):
+    return NoteEvent.ParsedData(
+        tick=tick,
+        note_array=note_array,
+        sustain=sustain,
+        is_forced=is_forced,
+        is_tap=is_tap,
+    )

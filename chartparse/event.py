@@ -11,13 +11,9 @@ import abc
 import dataclasses
 import datetime
 import typing
-from typing import Final, Protocol, Type, TypeVar
+from typing import Final, Generic, Protocol, Type, TypeVar
 
 from chartparse.util import DictPropertiesEqMixin, DictReprMixin
-
-EventT = TypeVar("EventT", bound="Event")
-
-ParsedDataT = TypeVar("ParsedDataT", bound="Event.ParsedData")
 
 
 @typing.runtime_checkable
@@ -70,7 +66,21 @@ class Event(DictPropertiesEqMixin, DictReprMixin):
     # NOTE: ignored mypy here per https://stackoverflow.com/a/70999704/6041556.
     @dataclasses.dataclass  # type: ignore[misc]
     class ParsedData(abc.ABC):
+        tick: int
+        """The tick at which the event represented by this data occurs."""
+
+        _SelfT = TypeVar("_SelfT", bound="Event.ParsedData")
+
         @classmethod
         @abc.abstractmethod
-        def from_chart_line(cls: Type[ParsedDataT], line: str) -> ParsedDataT:
+        def from_chart_line(cls: Type[_SelfT], line: str) -> _SelfT:
+            ...  # pragma: no cover
+
+    CoalescableParsedDataT = TypeVar("CoalescableParsedDataT", bound="CoalescableParsedData")
+
+    # NOTE: ignored mypy here per https://stackoverflow.com/a/70999704/6041556.
+    @dataclasses.dataclass  # type: ignore[misc]
+    class CoalescableParsedData(ParsedData, Generic[CoalescableParsedDataT]):
+        @abc.abstractmethod
+        def coalesce_from_other(self, other: Event.CoalescableParsedDataT) -> None:
             ...  # pragma: no cover

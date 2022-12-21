@@ -69,7 +69,8 @@ class RegexNotMatchError(Exception):
 class ProgrammerError(Exception):
     """Raised in branches that should be unreachable.
 
-    Oftentimes, these branches must exist to satisfy mypy.
+    Oftentimes, these branches must exist to satisfy mypy. If this error is raised, it indicates
+    a fundamental issue with the code that should have been caught during review.
     """
 
     message: Final[str] = "should be impossible"

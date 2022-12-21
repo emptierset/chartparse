@@ -147,7 +147,7 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
                 track = InstrumentTrack.from_chart_lines(
                     instrument,
                     difficulty,
-                    iterator_getter,
+                    iterator_getter(),
                     sync_track,
                 )
                 instrument_tracks[instrument][difficulty] = track

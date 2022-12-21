@@ -20,12 +20,10 @@ from typing import Final, Optional, Pattern, Type, TypeVar
 
 import chartparse.tick
 import chartparse.track
-from chartparse.datastructures import ImmutableList, ImmutableSortedList
+from chartparse.datastructures import ImmutableSortedList
 from chartparse.event import Event, TimestampAtTickSupporter
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.util import DictPropertiesEqMixin, DictReprTruncatedSequencesMixin
-
-SyncTrackT = TypeVar("SyncTrackT", bound="SyncTrack")
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +43,8 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
     section_name: Final[str] = "SyncTrack"
     """The name of this track's section in a ``.chart`` file."""
+
+    _SelfT = TypeVar("_SelfT", bound="SyncTrack")
 
     def __init__(
         self,
@@ -77,10 +77,10 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
     @classmethod
     def from_chart_lines(
-        cls: Type[SyncTrackT],
+        cls: Type[_SelfT],
         resolution: int,
         lines: Iterable[str],
-    ) -> SyncTrackT:
+    ) -> _SelfT:
         """Initializes instance attributes by parsing an iterable of strings.
 
         Args:
@@ -122,19 +122,19 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
     @classmethod
     def _parse_data_from_chart_lines(
-        cls: Type[SyncTrackT],
+        cls: Type[_SelfT],
         lines: Iterable[str],
-    ) -> tuple[ImmutableList[TimeSignatureEvent.ParsedData], ImmutableList[BPMEvent.ParsedData]]:
+    ) -> tuple[list[TimeSignatureEvent.ParsedData], list[BPMEvent.ParsedData]]:
         parsed_data = chartparse.track.parse_data_from_chart_lines(
-            (BPMEvent, TimeSignatureEvent), lines
+            (BPMEvent.ParsedData, TimeSignatureEvent.ParsedData), lines
         )
         time_signature_data = typing.cast(
-            ImmutableList[TimeSignatureEvent.ParsedData],
-            parsed_data[TimeSignatureEvent],
+            list[TimeSignatureEvent.ParsedData],
+            parsed_data[TimeSignatureEvent.ParsedData],
         )
         bpm_data = typing.cast(
-            ImmutableList[BPMEvent.ParsedData],
-            parsed_data[BPMEvent],
+            list[BPMEvent.ParsedData],
+            parsed_data[BPMEvent.ParsedData],
         )
         return time_signature_data, bpm_data
 
@@ -225,9 +225,6 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             return index_of_last_event
 
 
-TimeSignatureEventT = TypeVar("TimeSignatureEventT", bound="TimeSignatureEvent")
-
-
 @typing.final
 class TimeSignatureEvent(Event):
     """An event representing a time signature change at a particular tick."""
@@ -239,6 +236,8 @@ class TimeSignatureEvent(Event):
     """The number indicating the note value that represents one beat."""
 
     _default_lower_numeral: Final[int] = 4
+
+    _SelfT = TypeVar("_SelfT", bound="TimeSignatureEvent")
 
     def __init__(
         self,
@@ -256,11 +255,11 @@ class TimeSignatureEvent(Event):
 
     @classmethod
     def from_parsed_data(
-        cls: Type[TimeSignatureEventT],
+        cls: Type[_SelfT],
         data: TimeSignatureEvent.ParsedData,
-        prev_event: Optional[TimeSignatureEventT],
+        prev_event: Optional[_SelfT],
         tatter: TimestampAtTickSupporter,
-    ) -> TimeSignatureEventT:
+    ) -> _SelfT:
         """Obtain an instance of this object from parsed data.
 
         Args:
@@ -293,8 +292,6 @@ class TimeSignatureEvent(Event):
         to_join.append(f": {self.upper_numeral}/{self.lower_numeral}")
         return "".join(to_join)
 
-    ParsedDataT = TypeVar("ParsedDataT", bound="ParsedData")
-
     @typing.final
     @dataclasses.dataclass(kw_only=True)
     class ParsedData(Event.ParsedData):
@@ -307,10 +304,10 @@ class TimeSignatureEvent(Event):
         _regex: Final[str] = r"^\s*?(\d+?) = TS (\d+?)(?: (\d+?))?\s*?$"
         _regex_prog: Final[Pattern[str]] = re.compile(_regex)
 
+        _SelfT = TypeVar("_SelfT", bound="TimeSignatureEvent.ParsedData")
+
         @classmethod
-        def from_chart_line(
-            cls: Type[TimeSignatureEvent.ParsedDataT], line: str
-        ) -> TimeSignatureEvent.ParsedDataT:
+        def from_chart_line(cls: Type[_SelfT], line: str) -> _SelfT:
             """Attempt to construct this object from a ``.chart`` line.
 
             Args:
@@ -333,15 +330,14 @@ class TimeSignatureEvent(Event):
             return cls(tick=tick, upper=upper, lower=lower)
 
 
-BPMEventT = TypeVar("BPMEventT", bound="BPMEvent")
-
-
 @typing.final
 class BPMEvent(Event):
     """An event representing a BPM (beats per minute) change at a particular tick."""
 
     bpm: Final[float]
     """The beats per minute value. Must not have more than 3 decimal places."""
+
+    _SelfT = TypeVar("_SelfT", bound="BPMEvent")
 
     def __init__(
         self,
@@ -362,11 +358,11 @@ class BPMEvent(Event):
 
     @classmethod
     def from_parsed_data(
-        cls: Type[BPMEventT],
+        cls: Type[_SelfT],
         data: BPMEvent.ParsedData,
-        prev_event: Optional[BPMEventT],
+        prev_event: Optional[_SelfT],
         resolution: int,
-    ) -> BPMEventT:
+    ) -> _SelfT:
         """Obtain an instance of this object from parsed data.
 
         Args:
@@ -424,8 +420,6 @@ class BPMEvent(Event):
         to_join.append(f": {self.bpm} BPM")
         return "".join(to_join)
 
-    ParsedDataT = TypeVar("ParsedDataT", bound="ParsedData")
-
     @typing.final
     @dataclasses.dataclass(kw_only=True)
     class ParsedData(Event.ParsedData):
@@ -436,8 +430,10 @@ class BPMEvent(Event):
         _regex: Final[str] = r"^\s*?(\d+?) = B (\d+?)\s*?$"
         _regex_prog: Final[Pattern[str]] = re.compile(_regex)
 
+        _SelfT = TypeVar("_SelfT", bound="BPMEvent.ParsedData")
+
         @classmethod
-        def from_chart_line(cls: Type[BPMEvent.ParsedDataT], line: str) -> BPMEvent.ParsedDataT:
+        def from_chart_line(cls: Type[_SelfT], line: str) -> _SelfT:
             """Attempt to construct this object from a ``.chart`` line.
 
             Args:

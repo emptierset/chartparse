@@ -19,7 +19,6 @@ from collections.abc import Iterable, Sequence
 from typing import ClassVar, Final, Optional, Pattern, Type, TypeVar
 
 import chartparse.track
-from chartparse.datastructures import ImmutableList
 from chartparse.event import Event, TimestampAtTickSupporter
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.util import DictPropertiesEqMixin, DictReprTruncatedSequencesMixin
@@ -105,25 +104,25 @@ class GlobalEventsTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         cls: Type[GlobalEventsTrackT],
         lines: Iterable[str],
     ) -> tuple[
-        ImmutableList[TextEvent.ParsedData],
-        ImmutableList[SectionEvent.ParsedData],
-        ImmutableList[LyricEvent.ParsedData],
+        list[TextEvent.ParsedData],
+        list[SectionEvent.ParsedData],
+        list[LyricEvent.ParsedData],
     ]:
         parsed_data = chartparse.track.parse_data_from_chart_lines(
-            (LyricEvent, SectionEvent, TextEvent),
+            (LyricEvent.ParsedData, SectionEvent.ParsedData, TextEvent.ParsedData),
             lines,
         )
         text_data = typing.cast(
-            ImmutableList[TextEvent.ParsedData],
-            parsed_data[TextEvent],
+            list[TextEvent.ParsedData],
+            parsed_data[TextEvent.ParsedData],
         )
         section_data = typing.cast(
-            ImmutableList[SectionEvent.ParsedData],
-            parsed_data[SectionEvent],
+            list[SectionEvent.ParsedData],
+            parsed_data[SectionEvent.ParsedData],
         )
         lyric_data = typing.cast(
-            ImmutableList[LyricEvent.ParsedData],
-            parsed_data[LyricEvent],
+            list[LyricEvent.ParsedData],
+            parsed_data[LyricEvent.ParsedData],
         )
         return text_data, section_data, lyric_data
 

@@ -24,27 +24,57 @@ from chartparse.event import Event, TimestampAtTickSupporter
 from chartparse.exceptions import ProgrammerError, RegexNotMatchError
 
 logger = logging.getLogger(__name__)
-_unparsable_line_msg_tmpl: Final[str] = "unparsable line: '{}'"
+_unparsable_line_msg_tmpl: Final[str] = 'unparsable line: "{}" for types {}'
 
 
 def parse_data_from_chart_lines(
-    types: Sequence[Type[Event]],
+    types: Sequence[Type[Event.ParsedData]],
     lines: Iterable[str],
-) -> dict[Type[Event], list[Event.ParsedData]]:
-    # NOTE: This function is more efficient if the types in `types` are ordered in descending
-    # frequency. That is, because it chooses the first type that matches, users should put the more
-    # common ones first.
-    d: collections.defaultdict[Type[Event], list[Event.ParsedData]] = collections.defaultdict(list)
+) -> dict[Type[Event.ParsedData], list[Event.ParsedData]]:
+    """Convert one or more chart lines into parsed data, and partition by type.
+
+    Args:
+        types: The types to which we should attempt to map each string in ``lines``. This function
+            is more efficient if the types in `types` are ordered in descending frequency. That is,
+            because it chooses the first type that matches, users should put the more common ones
+            first.
+        lines: An iterable of strings most likely from a Moonscraper ``.chart``.
+
+    Returns:
+        A dictionary mapping each type in ``types`` to a list of datas that were parsed into that
+        type from lines in ``lines``. In reality, this maps ``Type[t]`` to ``list[t]`` for each
+        ``t`` in ``types``, but this cannot be represented in mypy. Callers of this function will
+        need to manually narrow types of the the dictionary entries they care about, most likely
+        using ``typing.cast``.
+
+    Raises:
+        ValueError: If two parsed datas occur at the same tick and are not typed of the same
+            subclass of :class:`~chartparse.event.Event.CoalescableParsedData`.
+    """
+    d: collections.defaultdict[
+        Type[Event.ParsedData], list[Event.ParsedData]
+    ] = collections.defaultdict(list)
     for line in lines:
         for t in types:
             try:
-                data = t.ParsedData.from_chart_line(line)
-                d[t].append(data)
-                break
+                data = t.from_chart_line(line)
             except RegexNotMatchError:
                 continue
+            prev_data = d[t][-1] if d[t] else None
+            if prev_data is None or prev_data.tick != data.tick:
+                d[t].append(data)
+            elif isinstance(prev_data, Event.CoalescableParsedData):
+                # TODO: Optimize this to precompute which types are coalescable.
+                # This cast is safe because each element of d[t] is the same type.
+                prev_data.coalesce_from_other(typing.cast(Event.CoalescableParsedData, data))
+            else:
+                raise ValueError(
+                    f"cannot handle additional parsed data of type {t} at tick {data.tick}"
+                )
+            break
         else:
-            logger.warning(_unparsable_line_msg_tmpl.format(line))
+            logger.warning(_unparsable_line_msg_tmpl.format(line, [t.__qualname__ for t in types]))
+
     return d
 
 

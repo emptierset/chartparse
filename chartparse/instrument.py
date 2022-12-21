@@ -10,7 +10,6 @@ You should not need to create any of this module's objects manually; please inst
 
 from __future__ import annotations
 
-import collections
 import dataclasses
 import datetime
 import enum
@@ -18,14 +17,14 @@ import functools
 import logging
 import re
 import typing
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from enum import Enum
-from typing import ClassVar, Final, Optional, Pattern, Type, TypeVar, Union
+from typing import ClassVar, Final, Optional, Pattern, Type, TypeVar
 
 import chartparse.tick
 import chartparse.track
-from chartparse.datastructures import ImmutableList, ImmutableSortedList
+from chartparse.datastructures import ImmutableSortedList
 from chartparse.event import Event, TimestampAtTickSupporter
 from chartparse.exceptions import ProgrammerError, RegexNotMatchError
 from chartparse.tick import NoteDuration
@@ -36,8 +35,6 @@ from chartparse.util import (
 )
 
 logger = logging.getLogger(__name__)
-
-InstrumentTrackT = TypeVar("InstrumentTrackT", bound="InstrumentTrack")
 
 
 @typing.final
@@ -68,6 +65,9 @@ class Instrument(AllValuesGettableEnum):
     DRUMS = "Drums"
     GHL_GUITAR = "GHLGuitar"  # Guitar (Guitar Hero: Live)
     GHL_BASS = "GHLBass"  # Bass (Guitar Hero: Live)
+
+
+NoteT = TypeVar("NoteT", bound="Note")
 
 
 @typing.final
@@ -203,7 +203,7 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     _forced_instrument_track_index = 5
     _tap_instrument_track_index = 6
 
-    _unhandled_note_track_index_log_msg_tmpl: Final[str] = "unhandled note track index {}"
+    _SelfT = TypeVar("_SelfT", bound="InstrumentTrack")
 
     def __init__(
         self,
@@ -241,48 +241,50 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
     @classmethod
     def from_chart_lines(
-        cls: Type[InstrumentTrackT],
+        cls: Type[_SelfT],
         instrument: Instrument,
         difficulty: Difficulty,
-        iterator_getter: Callable[[], Iterable[str]],
+        lines: Iterable[str],
         tatter: TimestampAtTickSupporter,
-    ) -> InstrumentTrackT:
+    ) -> _SelfT:
         """Initializes instance attributes by parsing an iterable of strings.
 
         Args:
             instrument: The instrument to which this track corresponds.
             difficulty: This track's difficulty setting.
-            iterator_getter: The iterable of strings returned by this strings is most likely from a
-                Moonscraper ``.chart``. Must be a function so the strings can be iterated over
-                multiple times, if necessary.
+            lines: An iterable of strings most likely from a Moonscraper ``.chart``.
             tatter: An object that can be used to get a timestamp at a particular tick.
 
         Returns:
-            An ``InstrumentTrack`` parsed from the strings returned by ``iterator_getter``.
+            An ``InstrumentTrack`` parsed from ``line``.
         """
 
-        star_power_data = cls._parse_data_from_chart_lines(iterator_getter())
+        note_data, star_power_data = cls._parse_data_from_chart_lines(lines)
         star_power_events = chartparse.track.build_events_from_data(
             star_power_data,
             StarPowerEvent.from_parsed_data,
             tatter,
         )
-        note_events = cls._parse_note_events_from_chart_lines(
-            iterator_getter(), star_power_events, tatter
-        )
+        note_events = cls._build_note_events_from_data(note_data, star_power_events, tatter)
         return cls(tatter.resolution, instrument, difficulty, note_events, star_power_events)
 
     @classmethod
     def _parse_data_from_chart_lines(
-        cls: Type[InstrumentTrackT],
+        cls: Type[_SelfT],
         lines: Iterable[str],
-    ) -> ImmutableList[StarPowerEvent.ParsedData]:
-        parsed_data = chartparse.track.parse_data_from_chart_lines((StarPowerEvent,), lines)
-        star_power_data = typing.cast(
-            ImmutableList[StarPowerEvent.ParsedData],
-            parsed_data[StarPowerEvent],
+    ) -> tuple[list[NoteEvent.ParsedData], list[StarPowerEvent.ParsedData]]:
+        parsed_data = chartparse.track.parse_data_from_chart_lines(
+            (NoteEvent.ParsedData, StarPowerEvent.ParsedData), lines
         )
-        return star_power_data
+        note_data = typing.cast(
+            list[NoteEvent.ParsedData],
+            parsed_data[NoteEvent.ParsedData],
+        )
+        star_power_data = typing.cast(
+            list[StarPowerEvent.ParsedData],
+            parsed_data[StarPowerEvent.ParsedData],
+        )
+        return note_data, star_power_data
 
     def __str__(self) -> str:  # pragma: no cover
         return (
@@ -294,27 +296,19 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         )
 
     @classmethod
-    def _parse_note_events_from_chart_lines(
+    def _build_note_events_from_data(
         cls,
-        chart_lines: Iterable[str],
+        datas: Iterable[NoteEvent.ParsedData],
         star_power_events: ImmutableSortedList[StarPowerEvent],
         tatter: TimestampAtTickSupporter,
     ) -> ImmutableSortedList[NoteEvent]:
-        note_arrays, sustain_lists, is_taps, is_forceds = cls._parse_tick_dicts_from_chart_lines(
-            chart_lines
-        )
-
         proximal_bpm_event_index = 0
         star_power_event_index = 0
         events: list[NoteEvent] = []
-        for note_tick in sorted(note_arrays.keys()):
+        for data in datas:
             previous_event = events[-1] if events else None
             event, proximal_bpm_event_index, star_power_event_index = NoteEvent.from_parsed_data(
-                note_tick,
-                note_arrays[note_tick],
-                tuple(sustain_lists[note_tick]),
-                is_taps[note_tick],
-                is_forceds[note_tick],
+                data,
                 previous_event,
                 star_power_events,
                 tatter,
@@ -326,61 +320,6 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         # TODO: Is this still already sorted? Can we perhaps define `datas` further
         # up the call hierarchy as an ImmutableSortedList, so it's straightforward?
         return ImmutableSortedList(events, already_sorted=True)
-
-    @classmethod
-    def _parse_tick_dicts_from_chart_lines(
-        cls,
-        chart_lines: Iterable[str],
-    ) -> tuple[
-        collections.defaultdict[int, bytearray],
-        collections.defaultdict[int, list[Optional[int]]],
-        collections.defaultdict[int, bool],
-        collections.defaultdict[int, bool],
-    ]:
-        note_arrays: collections.defaultdict[int, bytearray] = collections.defaultdict(
-            lambda: bytearray(5)
-        )
-        sustain_lists: collections.defaultdict[int, list[Optional[int]]] = collections.defaultdict(
-            lambda: [None] * 5
-        )
-        is_taps = collections.defaultdict(bool)
-        is_forceds = collections.defaultdict(bool)
-
-        for line in chart_lines:
-            m = NoteEvent._regex_prog.match(line)
-            if not m:
-                continue
-            tick, note_index, sustain = int(m.group(1)), int(m.group(2)), int(m.group(3))
-            if (
-                InstrumentTrack._min_note_instrument_track_index
-                <= note_index
-                <= InstrumentTrack._max_note_instrument_track_index
-            ):
-                note_arrays[tick][note_index] = 1
-                sustain_lists[tick][note_index] = sustain
-            elif note_index == InstrumentTrack._open_instrument_track_index:
-                # Because `note_arrays` is a defaultdict, simply accessing it at `tick` is
-                # sufficient to conjure a bytearray representing an open note.
-                note_arrays[tick]
-                sustain_lists[tick]
-            elif note_index == InstrumentTrack._tap_instrument_track_index:
-                is_taps[tick] = True
-            elif note_index == InstrumentTrack._forced_instrument_track_index:
-                is_forceds[tick] = True
-            else:  # pragma: no cover
-                # TODO: Once _parse_note_events_from_chart_lines has its own unit tests, cover this
-                # branch.
-                logger.warning(cls._unhandled_note_track_index_log_msg_tmpl.format(note_index))
-
-        return note_arrays, sustain_lists, is_taps, is_forceds
-
-
-@typing.final
-@dataclasses.dataclass
-class NoteEventParsedData(object):
-    tick: int
-    note_index: int
-    sustain: int
 
 
 @typing.final
@@ -402,11 +341,28 @@ An element is ``None`` if and only if the corresponding note lane is inactive. I
 ``0`` element represents an unsustained note in unison with a sustained note.
 """
 
-ComplexNoteSustainT = Union[int, SustainTupleT]
-"""A sustain value that can capture multiple coinciding notes with different sustain values.
+SustainListT = list[Optional[int]]
+"""A 5-element tuple representing the sustain value of each note lane for nonuniform sustains.
+
+An element is ``None`` if and only if the corresponding note lane is inactive. If an element is
+``0``, then there must be at least one other non-``0``, non-``None`` element; this is because that
+``0`` element represents an unsustained note in unison with a sustained note.
+"""
+
+# TODO: Migrate simple Unions to use 3.10 pipe syntax.
+ComplexSustainT = int | SustainTupleT
+"""An immutable sustain value representing multiple coinciding notes with different sustain values.
 
 If this value is an ``int``, it means that all active note lanes at this tick value are sustained
 for the same number of ticks. If this value is ``0``, then none of the note lanes are active.
+"""
+
+ComplexSustainListT = int | SustainListT
+"""A mutable sustain value representing multiple coinciding notes with different sustain values.
+
+If this value is an ``int``, it means that all active note lanes at this tick value are sustained
+for the same number of ticks. If this value is ``[None, None, None, None, None]``, then none of the
+note lanes are active.
 """
 
 
@@ -439,7 +395,7 @@ class NoteEvent(Event):
     note: Final[Note]
     """The note lane(s) that are active."""
 
-    sustain: Final[ComplexNoteSustainT]
+    sustain: Final[ComplexSustainT]
     """Information about this note event's sustain value."""
 
     end_timestamp: Final[datetime.timedelta]
@@ -454,16 +410,6 @@ class NoteEvent(Event):
     If this is ``None``, then the note is not a star power note.
     """
 
-    # This regex matches a single "N" line within a instrument track section,
-    # but this class should be used to represent all of the notes at a
-    # particular tick. This means that you might need to consolidate multiple
-    # "N" lines into a single NoteEvent, e.g. for chords.
-    # Match 1: Tick
-    # Match 2: Note index
-    # Match 3: Sustain (ticks)
-    _regex: Final[str] = r"^\s*?(\d+?) = N (\d+?) (\d+?)\s*?$"
-    _regex_prog: Final[Pattern[str]] = re.compile(_regex)
-
     def __init__(
         self,
         tick: int,
@@ -471,7 +417,7 @@ class NoteEvent(Event):
         end_timestamp: datetime.timedelta,
         note: Note,
         hopo_state: HOPOState,
-        sustain: ComplexNoteSustainT = 0,
+        sustain: ComplexSustainT = 0,
         star_power_data: Optional[StarPowerData] = None,
         proximal_bpm_event_index: int = 0,
     ) -> None:
@@ -484,77 +430,94 @@ class NoteEvent(Event):
 
     @functools.cached_property
     def longest_sustain(self) -> int:
-        if isinstance(self.sustain, int):
-            return self.sustain
-        elif isinstance(self.sustain, tuple):
-            if all(s is None for s in self.sustain):
+        """The length of the longest sustained note in this event.
+
+        It's possible for different notes to have different sustain values at the same tick.
+        """
+        return self._longest_sustain(self.sustain)
+
+    @staticmethod
+    def _longest_sustain(sustain: ComplexSustainT) -> int:
+        if isinstance(sustain, int):
+            return sustain
+        elif isinstance(sustain, tuple):
+            if all(s is None for s in sustain):
                 raise ValueError("all sustain values are `None`")
-            return max(s for s in self.sustain if s is not None)
+            return max(s for s in sustain if s is not None)
         else:
             raise ProgrammerError  # pragma: no cover
 
     @functools.cached_property
     def end_tick(self) -> int:
-        return self.tick + self.longest_sustain
+        """The tick immediately after this note ends."""
+        return self._end_tick(self.tick, self.longest_sustain)
+
+    @staticmethod
+    def _end_tick(tick: int, sustain: int) -> int:
+        return tick + sustain
 
     @classmethod
     def from_parsed_data(
         cls: Type[NoteEventT],
-        tick: int,
-        note_array: bytearray,
-        sustain: SustainTupleT,
-        is_tap: bool,
-        is_forced: bool,
-        previous_event: Optional[NoteEvent],
+        data: NoteEvent.ParsedData,
+        prev_event: Optional[NoteEvent],
         star_power_events: ImmutableSortedList[StarPowerEvent],
         tatter: TimestampAtTickSupporter,
         proximal_bpm_event_index: int = 0,
         star_power_event_index: int = 0,
     ) -> tuple[NoteEventT, int, int]:
-        note = Note(note_array)
+        note = Note(data.note_array)
 
         timestamp, proximal_bpm_event_index = tatter.timestamp_at_tick(
-            tick, proximal_bpm_event_index=proximal_bpm_event_index
+            data.tick, proximal_bpm_event_index=proximal_bpm_event_index
         )
 
         hopo_state = NoteEvent._compute_hopo_state(
             tatter.resolution,
-            tick,
+            data.tick,
             note,
-            is_tap,
-            is_forced,
-            previous_event,
+            data.is_tap,
+            data.is_forced,
+            prev_event,
         )
 
         star_power_data, star_power_event_index = NoteEvent._compute_star_power_data(
-            tick, star_power_events, proximal_star_power_event_index=star_power_event_index
+            data.tick, star_power_events, proximal_star_power_event_index=star_power_event_index
         )
 
+        sustain = data.immutable_sustain
+        if sustain is None:
+            raise ValueError("sustain must not be None")
+
+        longest_sustain = cls._longest_sustain(sustain)
+        end_tick = cls._end_tick(data.tick, longest_sustain)
         end_timestamp, _ = tatter.timestamp_at_tick(
-            tick, proximal_bpm_event_index=proximal_bpm_event_index
+            end_tick, proximal_bpm_event_index=proximal_bpm_event_index
         )
 
         event = cls(
-            tick,
+            data.tick,
             timestamp,
             end_timestamp,
             note,
             hopo_state,
             sustain=sustain,
-            proximal_bpm_event_index=proximal_bpm_event_index,
             star_power_data=star_power_data,
+            proximal_bpm_event_index=proximal_bpm_event_index,
         )
         return event, proximal_bpm_event_index, star_power_event_index
 
     @staticmethod
     @functools.lru_cache
-    def _refine_sustain(sustain: ComplexNoteSustainT) -> ComplexNoteSustainT:
-        if isinstance(sustain, tuple):
-            if all(d is None or d == 0 for d in sustain):
-                return 0
-            first_non_none_sustain = next(d for d in sustain if d is not None)
-            if all(d is None or d == first_non_none_sustain for d in sustain):
-                return first_non_none_sustain
+    # sustains tend to have similar-ish values, so lru_cache should help out here.
+    def _refine_sustain(sustain: ComplexSustainT) -> ComplexSustainT:
+        if isinstance(sustain, int):
+            return sustain
+        if all(d is None or d == 0 for d in sustain):
+            return 0
+        first_non_none_sustain = next(d for d in sustain if d is not None)
+        if all(d is None or d == first_non_none_sustain for d in sustain):
+            return first_non_none_sustain
         return sustain
 
     @staticmethod
@@ -640,8 +603,141 @@ class NoteEvent(Event):
 
         return "".join(to_join)
 
+    ParsedDataT = TypeVar("ParsedDataT", bound="ParsedData")
 
-SpecialEventT = TypeVar("SpecialEventT", bound="SpecialEvent")
+    @dataclasses.dataclass(kw_only=True)
+    class ParsedData(Event.CoalescableParsedData[ParsedDataT]):
+        note_array: bytearray
+        """The note lane(s) active in the event represented by this data.
+
+        This is basically a mutable :class:`~chartparse.instrument.Note`, since this type is
+        coalescable.
+        """
+
+        sustain: Optional[ComplexSustainListT]
+        """The durations in ticks of the active lanes in the event represented by this data."""
+
+        is_tap: bool = False
+        """Whether the note in this event is a tap note."""
+
+        is_forced: bool = False
+        """Whether the note in this event is a forced HOPO/strum."""
+
+        # This regex matches a single "N" line within a instrument track section,
+        # but this class should be used to represent all of the notes at a
+        # particular tick. This means that you might need to consolidate multiple
+        # "N" lines into a single NoteEvent, e.g. for chords.
+        # Match 1: Tick
+        # Match 2: Note index
+        # Match 3: Sustain (ticks)
+        _regex: Final[str] = r"^\s*?(\d+?) = N ([0-7]) (\d+?)\s*?$"
+        _regex_prog: Final[Pattern[str]] = re.compile(_regex)
+
+        _unhandled_note_track_index_log_msg_tmpl: Final[
+            str
+        ] = "unhandled note track index {} at tick {}"
+
+        # _SelfT = TypeVar("_SelfT", bound="NoteEvent.ParsedData")
+
+        @functools.cached_property
+        def immutable_sustain(self) -> Optional[ComplexSustainT]:
+            """The value of ``sustain``, but converted to an immutable type if necessary."""
+            if self.sustain is None:
+                return None
+            elif isinstance(self.sustain, int):
+                return self.sustain
+            else:
+                return tuple(self.sustain)
+
+        @classmethod
+        def from_chart_line(cls: Type[NoteEvent.ParsedDataT], line: str) -> NoteEvent.ParsedDataT:
+            """Attempt to construct this object from a ``.chart`` line.
+
+            Args:
+                line: A string, most likely from a Moonscraper ``.chart``.
+
+            Returns:
+                An an instance of this object initialized from ``line``.
+
+            Raises:
+                RegexNotMatchError: If the mixed-into class' ``_regex`` does not match ``line``.
+            """
+            m = cls._regex_prog.match(line)
+            if not m:
+                raise RegexNotMatchError(cls._regex, line)
+            parsed_tick, parsed_note_index, parsed_sustain = (
+                int(m.group(1)),
+                int(m.group(2)),
+                int(m.group(3)),
+            )
+            note_track_index = NoteTrackIndex(parsed_note_index)
+
+            note_array = bytearray(5)
+            sustain: Optional[ComplexSustainListT] = None
+            is_forced = False
+            is_tap = False
+            # type ignored here because mypy does not understand that this enum
+            # uses functools.total_ordering.
+            if NoteTrackIndex.GREEN <= note_track_index <= NoteTrackIndex.ORANGE:  # type: ignore
+                note_array[parsed_note_index] = 1
+                sustain = [None] * 5
+                sustain[parsed_note_index] = parsed_sustain
+            elif note_track_index == NoteTrackIndex.OPEN:
+                sustain = parsed_sustain
+            elif note_track_index == NoteTrackIndex.FORCED:
+                is_forced = True
+            elif note_track_index == NoteTrackIndex.TAP:
+                is_tap = True
+            else:  # pragma: no cover
+                # Not reachable if regex does its job.
+                logger.warning(
+                    cls._unhandled_note_track_index_log_msg_tmpl.format(
+                        note_track_index, parsed_tick
+                    )
+                )
+            return cls(
+                tick=parsed_tick,
+                note_array=note_array,
+                sustain=sustain,
+                is_forced=is_forced,
+                is_tap=is_tap,
+            )
+
+        # TODO: This can be optimized by instead creating a class to represent
+        # the data from a single line. i.e. they can specify:
+        # - exactly one of the six notes, or a force or tap flag.
+        # - and exactly one Optional sustain value.
+        def coalesce_from_other(self, other: NoteEvent.ParsedDataT) -> None:
+            """Merge the contents of another data into this one.
+
+            Args:
+                other: another subclass of :class:`~chartparse.event.Event.ParsedData` of the same
+                type.
+
+            Raises:
+                ValueError: if this data or the other data has an ``int`` typed ``sustain``. This
+                    is because an ``int`` value in this field means that it represents an open
+                    note, and it is nonsensical for an open note to overlap another concrete note.
+            """
+            if other.sustain is not None:
+                if self.sustain is None:
+                    self.sustain = other.sustain
+                elif isinstance(self.sustain, int) or isinstance(other.sustain, int):
+                    # both not None after the first branch
+                    raise ValueError("open note cannot coincide with other notes")
+                else:
+                    # merge first present sustain value from ``other``
+                    for i, s in enumerate(other.sustain):
+                        if s is not None:
+                            self.sustain[i] = s
+
+            # merge first present note value from ``other``
+            for i, n in enumerate(other.note_array):
+                if n:
+                    self.note_array[i] = 1
+
+            self.is_forced = self.is_forced or other.is_forced
+            self.is_tap = self.is_tap or other.is_tap
 
 
 class SpecialEvent(Event):
@@ -657,6 +753,8 @@ class SpecialEvent(Event):
     tick.
     """
 
+    _SelfT = TypeVar("_SelfT", bound="SpecialEvent")
+
     def __init__(
         self,
         tick: int,
@@ -669,15 +767,16 @@ class SpecialEvent(Event):
 
     @functools.cached_property
     def end_tick(self) -> int:
+        """The tick immediately after this event ends."""
         return self.tick + self.sustain
 
     @classmethod
     def from_parsed_data(
-        cls: Type[SpecialEventT],
+        cls: Type[_SelfT],
         data: SpecialEvent.ParsedData,
-        prev_event: Optional[SpecialEventT],
+        prev_event: Optional[_SelfT],
         tatter: TimestampAtTickSupporter,
-    ) -> SpecialEventT:
+    ) -> _SelfT:
         """Obtain an instance of this object from parsed data.
 
         Args:
@@ -709,8 +808,6 @@ class SpecialEvent(Event):
         to_join.append(f": sustain={self.sustain}")
         return "".join(to_join)
 
-    ParsedDataT = TypeVar("ParsedDataT", bound="ParsedData")
-
     @dataclasses.dataclass(kw_only=True)
     class ParsedData(Event.ParsedData):
         sustain: int
@@ -724,10 +821,10 @@ class SpecialEvent(Event):
         _regex_template: Final[str] = r"^\s*?(\d+?) = S {} (\d+?)\s*?$"
         _index_regex: ClassVar[str]
 
+        _SelfT = TypeVar("_SelfT", bound="SpecialEvent.ParsedData")
+
         @classmethod
-        def from_chart_line(
-            cls: Type[SpecialEvent.ParsedDataT], line: str
-        ) -> SpecialEvent.ParsedDataT:
+        def from_chart_line(cls: Type[_SelfT], line: str) -> _SelfT:
             """Attempt to construct this object from a ``.chart`` line.
 
             Args:
