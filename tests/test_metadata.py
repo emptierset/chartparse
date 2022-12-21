@@ -62,7 +62,7 @@ class TestFromChartLines(object):
             f'  KeysStream = "{pytest.defaults.keys_stream}"',
             f'  CrowdStream = "{pytest.defaults.crowd_stream}"',
         ]
-        metadata = Metadata.from_chart_lines(lambda: iter(lines))
+        metadata = Metadata.from_chart_lines(lines)
         assert metadata.name == pytest.defaults.name
         assert metadata.artist == pytest.defaults.artist
         assert metadata.charter == pytest.defaults.charter
@@ -90,4 +90,4 @@ class TestFromChartLines(object):
 
     def test_missing_resolution(self):
         with pytest.raises(MissingRequiredField):
-            _ = Metadata.from_chart_lines(lambda: iter([]))
+            _ = Metadata.from_chart_lines([])

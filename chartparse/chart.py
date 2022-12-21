@@ -24,7 +24,7 @@ import itertools
 import logging
 import re
 import typing
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Iterable, Sequence
 from pathlib import Path
 from typing import Final, Optional, TextIO
 
@@ -120,10 +120,10 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
         metadata = Metadata.from_chart_lines(sections[Metadata.section_name])
         sync_track = SyncTrack.from_chart_lines(
-            metadata.resolution, sections[SyncTrack.section_name]()
+            metadata.resolution, sections[SyncTrack.section_name]
         )
         global_events_track = GlobalEventsTrack.from_chart_lines(
-            sections[GlobalEventsTrack.section_name](), sync_track
+            sections[GlobalEventsTrack.section_name], sync_track
         )
 
         instrument_track_name_to_instrument_difficulty_pair: dict[
@@ -139,7 +139,7 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         instrument_tracks: collections.defaultdict[
             Instrument, dict[Difficulty, InstrumentTrack]
         ] = collections.defaultdict(dict)
-        for section_name, iterator_getter in sections.items():
+        for section_name, section_lines in sections.items():
             if section_name in instrument_track_name_to_instrument_difficulty_pair:
                 instrument, difficulty = instrument_track_name_to_instrument_difficulty_pair[
                     section_name
@@ -147,7 +147,7 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
                 track = InstrumentTrack.from_chart_lines(
                     instrument,
                     difficulty,
-                    iterator_getter(),
+                    section_lines,
                     sync_track,
                 )
                 instrument_tracks[instrument][difficulty] = track
@@ -162,8 +162,8 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     @classmethod
     # TODO: change this to return iterators directly. That is, they don't need to be reiterable, so
     # no need for Callables.
-    def _find_sections(cls, lines: Iterable[str]) -> dict[str, Callable[[], Iterable[str]]]:
-        sections: dict[str, Callable[[], Iterable[str]]] = dict()
+    def _find_sections(cls, lines: Iterable[str]) -> dict[str, Iterable[str]]:
+        sections: dict[str, Iterable[str]] = dict()
         curr_section_name = None
         curr_first_line_index = None
         curr_last_line_index = None
@@ -177,14 +177,9 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
                 curr_first_line_index = i + 1
             elif line == "}":
                 curr_last_line_index = i - 1
-                # Set default values for x and y so their current values are
-                # captured, rather than references to these local variables.
-                iterator_getter = (
-                    lambda x=curr_first_line_index, y=curr_last_line_index: itertools.islice(
-                        lines, x, y + 1
-                    )
+                sections[curr_section_name] = itertools.islice(
+                    lines, curr_first_line_index, curr_last_line_index + 1
                 )
-                sections[curr_section_name] = iterator_getter
                 curr_section_name = None
                 curr_first_line_index = None
                 curr_last_line_index = None

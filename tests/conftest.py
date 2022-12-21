@@ -397,11 +397,6 @@ def minimal_compute_star_power_data_mock(mocker):
     )
 
 
-@pytest.fixture
-def minimal_string_iterator_getter(invalid_chart_line):
-    return lambda: [invalid_chart_line]
-
-
 @pytest.fixture(
     params=[
         # Base events

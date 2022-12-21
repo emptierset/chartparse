@@ -402,17 +402,15 @@ class Metadata(DictPropertiesEqMixin, DictReprMixin):
             self.crowd_stream = crowd_stream
 
     @classmethod
-    def from_chart_lines(
-        cls: Type[MetadataT], iterator_getter: Callable[[], Iterable[str]]
-    ) -> MetadataT:
+    def from_chart_lines(cls: Type[MetadataT], lines_iter: Iterable[str]) -> MetadataT:
         """Initializes instance attributes by parsing an iterable of strings.
 
         Args:
-            iterator_getter: The iterable of strings returned by this is most likely from a
-                Moonscraper ``.chart``. Must be a function so the strings can be iterated over
-                multiple times, if necessary.
+            lines: An iterable of strings most likely from a Moonscraper ``.chart``.
         """
         kwargs: _FieldValuesDict = dict()
+
+        lines = list(lines_iter)
 
         def set_kwarg(
             field_name: SnakeCaseFieldNameT,
@@ -435,7 +433,7 @@ class Metadata(DictPropertiesEqMixin, DictReprMixin):
 
         def parse_all_lines_for_field(field_name: SnakeCaseFieldNameT) -> FieldValueT:
             regex_prog = _field_parsing_specs[field_name].regex_prog
-            for line in iterator_getter():
+            for line in lines:
                 m = regex_prog.match(line)
                 if m:
                     return _field_parsing_specs[field_name].processing_fn(m.group(1))

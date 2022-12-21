@@ -52,7 +52,6 @@ class TestChart(object):
         def test(
             self,
             mocker,
-            minimal_string_iterator_getter,
             default_chart,
             default_metadata,
             default_global_events_track,
@@ -63,10 +62,10 @@ class TestChart(object):
                 Chart,
                 "_find_sections",
                 return_value={
-                    "Song": minimal_string_iterator_getter,
-                    "Events": minimal_string_iterator_getter,
-                    "SyncTrack": minimal_string_iterator_getter,
-                    "ExpertSingle": minimal_string_iterator_getter,
+                    "Song": pytest.invalid_chart_lines,
+                    "Events": pytest.invalid_chart_lines,
+                    "SyncTrack": pytest.invalid_chart_lines,
+                    "ExpertSingle": pytest.invalid_chart_lines,
                 },
             )
             mocker.patch.object(Metadata, "from_chart_lines", return_value=default_metadata)
@@ -123,8 +122,8 @@ class TestChart(object):
 
             def validate_lines(section_name, want_lines):
                 assert section_name in sections
-                lines_getter = sections[section_name]
-                assert list(lines_getter()) == want_lines
+                lines = sections[section_name]
+                assert list(lines) == want_lines
 
             validate_lines(
                 "Events",
