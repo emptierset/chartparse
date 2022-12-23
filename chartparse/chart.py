@@ -23,10 +23,9 @@ import datetime
 import itertools
 import logging
 import re
-import typing
+import typing as typ
 from collections.abc import Iterable, Sequence
 from pathlib import Path
-from typing import Final, Optional, TextIO
 
 import chartparse.tick
 from chartparse.exceptions import ProgrammerError, RegexNotMatchError
@@ -42,7 +41,7 @@ logger = logging.getLogger(__name__)
 _max_timedelta = datetime.datetime.max - datetime.datetime.min
 
 
-@typing.final
+@typ.final
 class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     """A Clone Hero / Moonscraper chart and its relevant gameplay data.
 
@@ -51,19 +50,19 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     a ``Chart`` from a file, you should instead use :meth:`~chartparse.chart.Chart.from_file`.
     """
 
-    metadata: Final[Metadata]
+    metadata: typ.Final[Metadata]
     """The chart's metadata, such as song title or charter name."""
 
-    global_events_track: Final[GlobalEventsTrack]
+    global_events_track: typ.Final[GlobalEventsTrack]
     """Contains the chart's :class:`~chartparse.globalevents.GlobalEvent` objects"""
 
-    sync_track: Final[SyncTrack]
+    sync_track: typ.Final[SyncTrack]
     """Contains the chart's sync-related events."""
 
-    instrument_tracks: Final[dict[Instrument, dict[Difficulty, InstrumentTrack]]]
+    instrument_tracks: typ.Final[dict[Instrument, dict[Difficulty, InstrumentTrack]]]
     """Contains all of the chart's :class:`~chartparse.instrument.InstrumentTrack` objects."""
 
-    _unhandled_section_log_msg_tmpl: Final[str] = "unhandled section titled '{}'"
+    _unhandled_section_log_msg_tmpl: typ.Final[str] = "unhandled section titled '{}'"
 
     def __init__(
         self,
@@ -93,14 +92,14 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         with open(path, "r", encoding="utf-8-sig") as f:
             return Chart.from_file(f)
 
-    _required_sections: Final[list[str]] = [
+    _required_sections: typ.Final[list[str]] = [
         Metadata.section_name,
         SyncTrack.section_name,
         GlobalEventsTrack.section_name,
     ]
 
     @classmethod
-    def from_file(cls, fp: TextIO) -> Chart:
+    def from_file(cls, fp: typ.TextIO) -> Chart:
         """Given a file object, parses its contents and returns a new Chart.
 
         Args:
@@ -130,7 +129,7 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             str, tuple[Instrument, Difficulty]
         ] = {
             d + i: (Instrument(i), Difficulty(d))
-            for i, d in typing.cast(
+            for i, d in typ.cast(
                 Iterable[tuple[str, str]],
                 itertools.product(Instrument.all_values(), Difficulty.all_values()),
             )
@@ -192,12 +191,12 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         self,
         instrument: Instrument,
         difficulty: Difficulty,
-        start_time: Optional[datetime.timedelta] = None,
-        end_time: Optional[datetime.timedelta] = None,
-        start_tick: Optional[int] = None,
-        end_tick: Optional[int] = None,
-        start_seconds: Optional[float] = None,
-        end_seconds: Optional[float] = None,
+        start_time: typ.Optional[datetime.timedelta] = None,
+        end_time: typ.Optional[datetime.timedelta] = None,
+        start_tick: typ.Optional[int] = None,
+        end_tick: typ.Optional[int] = None,
+        start_seconds: typ.Optional[float] = None,
+        end_seconds: typ.Optional[float] = None,
     ) -> float:
         """Returns the average notes per second over the input interval.
 
@@ -265,7 +264,7 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
                 self.sync_track.timestamp_at_tick(end_tick, self.metadata.resolution)[0]
                 if end_tick is not None
                 # ValueError is raised above if there are no NoteEvents.
-                else typing.cast(datetime.timedelta, track.last_note_end_timestamp)
+                else typ.cast(datetime.timedelta, track.last_note_end_timestamp)
             )
         elif start_time is not None:
             lower_bound = start_time if start_time is not None else datetime.timedelta(0)
@@ -273,7 +272,7 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             upper_bound = (
                 end_time
                 if end_time is not None
-                else typing.cast(datetime.timedelta, track.last_note_end_timestamp)
+                else typ.cast(datetime.timedelta, track.last_note_end_timestamp)
             )
         elif start_seconds is not None:
             lower_bound = (
@@ -285,7 +284,7 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
                 datetime.timedelta(seconds=end_seconds)
                 if end_seconds is not None
                 # ValueError is raised above if there are no NoteEvents.
-                else typing.cast(datetime.timedelta, track.last_note_end_timestamp)
+                else typ.cast(datetime.timedelta, track.last_note_end_timestamp)
             )
         else:  # pragma: no cover
             raise ProgrammerError

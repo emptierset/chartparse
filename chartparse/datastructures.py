@@ -8,9 +8,8 @@
 from __future__ import annotations
 
 import bisect
-import typing
+import typing as typ
 from collections.abc import Callable, Iterable, Sequence
-from typing import Literal, Union
 
 from chartparse.exceptions import ProgrammerError
 from chartparse.hints import ComparableT, T_co
@@ -39,15 +38,15 @@ class ImmutableList(Sequence[T_co]):
             self._seq = list(xs)
             self.length = len(self._seq)
 
-    @typing.overload
+    @typ.overload
     def __getitem__(self, index: int) -> T_co:
         ...  # pragma: no cover
 
-    @typing.overload
+    @typ.overload
     def __getitem__(self, index: slice) -> Sequence[T_co]:
         ...  # pragma: no cover
 
-    def __getitem__(self, index: Union[int, slice]) -> Union[T_co, Sequence[T_co]]:
+    def __getitem__(self, index: typ.Union[int, slice]) -> typ.Union[T_co, Sequence[T_co]]:
         return self._seq[index]
 
     def __repr__(self) -> str:
@@ -64,23 +63,23 @@ class ImmutableList(Sequence[T_co]):
         return NotImplemented
 
 
-@typing.final
+@typ.final
 class ImmutableSortedList(ImmutableList[T_co]):
     """A ``list`` equivalent that cannot be mutated and is sorted during initialization."""
 
-    @typing.overload
+    @typ.overload
     def __init__(self, xs: Iterable[ComparableT]) -> None:
         ...  # pragma: no cover
 
-    @typing.overload
+    @typ.overload
     def __init__(self, xs: Iterable[ComparableT], *, already_sorted: bool) -> None:
         ...  # pragma: no cover
 
-    @typing.overload
-    def __init__(self, xs: Iterable[T_co], *, already_sorted: Literal[True]) -> None:
+    @typ.overload
+    def __init__(self, xs: Iterable[T_co], *, already_sorted: typ.Literal[True]) -> None:
         ...  # pragma: no cover
 
-    @typing.overload
+    @typ.overload
     def __init__(self, xs: Iterable[T_co], *, key: Callable[[T_co], ComparableT]) -> None:
         ...  # pragma: no cover
 

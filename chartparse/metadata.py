@@ -12,14 +12,13 @@ from __future__ import annotations
 
 import enum
 import re
-import typing
+import typing as typ
 from collections.abc import Callable, Iterable
-from typing import Final, Literal, Optional, Pattern, Type, TypedDict, TypeVar, Union
 
 from chartparse.exceptions import MissingRequiredField, RegexNotMatchError, raise_
 from chartparse.util import DictPropertiesEqMixin, DictReprMixin
 
-SnakeCaseFieldNameT = Literal[
+SnakeCaseFieldNameT = typ.Literal[
     "resolution",
     "offset",
     "player2",
@@ -46,7 +45,7 @@ SnakeCaseFieldNameT = Literal[
     "crowd_stream",
 ]
 
-PascalCaseFieldNameT = Literal[
+PascalCaseFieldNameT = typ.Literal[
     "Resolution",
     "Offset",
     "Player2",
@@ -73,7 +72,7 @@ PascalCaseFieldNameT = Literal[
     "CrowdStream",
 ]
 
-FieldValueT = Union[int, str, "Player2Instrument"]
+FieldValueT = typ.Union[int, str, "Player2Instrument"]
 
 FieldValueParserT = Callable[[str], FieldValueT]
 
@@ -86,7 +85,7 @@ class Player2Instrument(enum.Enum):
     RHYTHM = "rhythm"
 
 
-class _FieldValuesDict(TypedDict, total=False):
+class _FieldValuesDict(typ.TypedDict, total=False):
     resolution: int
     offset: int
     player2: Player2Instrument
@@ -117,7 +116,7 @@ class _FieldParsingSpec(object):
     """A bundle of data necessary to parse a field from a ``.chart`` file."""
 
     regex: str
-    regex_prog: Pattern[str]
+    regex_prog: typ.Pattern[str]
 
     # Cannot actually be annotated as an instance attribute directly due to longstanding mypy bug:
     # https://github.com/python/mypy/issues/708.
@@ -142,7 +141,7 @@ class _FieldParsingSpec(object):
         return "".join(to_join)
 
 
-@typing.final
+@typ.final
 class _IntFieldSpec(_FieldParsingSpec):
     def __init__(self, field_name: PascalCaseFieldNameT) -> None:
         super().__init__(self.make_int_field_regex(field_name), int)
@@ -152,7 +151,7 @@ class _IntFieldSpec(_FieldParsingSpec):
         return _FieldParsingSpec.make_field_regex(field_name, r"\d+?", False)
 
 
-@typing.final
+@typ.final
 class _MultiwordStrFieldSpec(_FieldParsingSpec):
     def __init__(self, field_name: PascalCaseFieldNameT) -> None:
         super().__init__(self.make_multiword_str_field_regex(field_name), str)
@@ -162,7 +161,7 @@ class _MultiwordStrFieldSpec(_FieldParsingSpec):
         return _FieldParsingSpec.make_field_regex(field_name, r".+?", True)
 
 
-@typing.final
+@typ.final
 class _QuotelessStrFieldSpec(_FieldParsingSpec):
     def __init__(
         self,
@@ -176,7 +175,7 @@ class _QuotelessStrFieldSpec(_FieldParsingSpec):
         return _FieldParsingSpec.make_field_regex(field_name, r'[^"]+?', False)
 
 
-class _FieldParsingSpecDict(TypedDict):
+class _FieldParsingSpecDict(typ.TypedDict):
     resolution: _FieldParsingSpec
     offset: _FieldParsingSpec
     player2: _FieldParsingSpec
@@ -230,42 +229,42 @@ _field_parsing_specs: _FieldParsingSpecDict = {
     "crowd_stream": _MultiwordStrFieldSpec("CrowdStream"),
 }
 
-MetadataT = TypeVar("MetadataT", bound="Metadata")
+MetadataT = typ.TypeVar("MetadataT", bound="Metadata")
 
 
-@typing.final
+@typ.final
 class Metadata(DictPropertiesEqMixin, DictReprMixin):
     """All of a :class:`~chartparse.chart.Chart` object's metadata."""
 
-    section_name: Final[str] = "Song"
+    section_name: typ.Final[str] = "Song"
     """The name of this track's section in a ``.chart`` file."""
 
-    resolution: Final[int]
+    resolution: typ.Final[int]
     """The number of ticks for which a quarter note lasts."""
 
-    offset: Final[int]
+    offset: typ.Final[int]
     """The number of seconds in time before tick 0 is reached.
 
     This is a legacy field and should most likely be ignored.
     """
 
-    player2: Final[Player2Instrument]
+    player2: typ.Final[Player2Instrument]
     """The instrument type of the co-op guitar chart in Guitar Hero 3."""
 
-    difficulty: Final[int]
+    difficulty: typ.Final[int]
     """The perceived difficulty to play the chart.
 
     This is often referred to as "intensity".
     """
 
-    preview_start: Final[int]
+    preview_start: typ.Final[int]
     """The number of seconds into the song at which the song preview should start.
 
     Might not actually be seconds. Typically, ``preview_start_time`` in ``song.ini`` is respected
     for Clone Hero instead.
     """
 
-    preview_end: Final[int]
+    preview_end: typ.Final[int]
     """The number of seconds into the song at which the song preview should end.
 
     Might not actually be seconds. Clone Hero just plays a preview of a particular length starting
@@ -273,62 +272,62 @@ class Metadata(DictPropertiesEqMixin, DictReprMixin):
     Guitar Hero.
     """
 
-    genre: Final[str]
+    genre: typ.Final[str]
     """The genre of the chart's song."""
 
-    media_type: Final[str]
+    media_type: typ.Final[str]
     """The type of media from which the chart's song originates."""
 
-    name: Final[str]
+    name: typ.Final[str]
     """The name of the chart's song."""
 
-    artist: Final[str]
+    artist: typ.Final[str]
     """The name of the chart's song's artist."""
 
-    charter: Final[str]
+    charter: typ.Final[str]
     """The user who made this chart."""
 
-    album: Final[str]
+    album: typ.Final[str]
     """The name of the chart's song's album."""
 
-    year: Final[str]
+    year: typ.Final[str]
     """The year the chart's song came out.
 
     This is formatted as, e.g. ", 2018" because it saved time when importing into GHTCP (Guitar
     Hero Three Control Panel).
     """
 
-    music_stream: Final[str]
+    music_stream: typ.Final[str]
     """The filename of the main music audio file."""
 
-    guitar_stream: Final[str]
+    guitar_stream: typ.Final[str]
     """The filename of the guitar audio file."""
 
-    rhythm_stream: Final[str]
+    rhythm_stream: typ.Final[str]
     """The filename of the rhythm audio file."""
 
-    bass_stream: Final[str]
+    bass_stream: typ.Final[str]
     """The filename of the bass audio file."""
 
-    drum_stream: Final[str]
+    drum_stream: typ.Final[str]
     """The filename of the drum audio file."""
 
-    drum2_stream: Final[str]
+    drum2_stream: typ.Final[str]
     """The filename of the drum2 audio file."""
 
-    drum3_stream: Final[str]
+    drum3_stream: typ.Final[str]
     """The filename of the drum3 audio file."""
 
-    drum4_stream: Final[str]
+    drum4_stream: typ.Final[str]
     """The filename of the drum4 audio file."""
 
-    vocal_stream: Final[str]
+    vocal_stream: typ.Final[str]
     """The filename of the vocal audio file."""
 
-    keys_stream: Final[str]
+    keys_stream: typ.Final[str]
     """The filename of the keys audio file."""
 
-    crowd_stream: Final[str]
+    crowd_stream: typ.Final[str]
     """The filename of the crowd audio file."""
 
     def __init__(
@@ -341,22 +340,22 @@ class Metadata(DictPropertiesEqMixin, DictReprMixin):
         preview_end: int = 0,
         genre: str = "rock",
         media_type: str = "cd",
-        name: Optional[str] = None,
-        artist: Optional[str] = None,
-        charter: Optional[str] = None,
-        album: Optional[str] = None,
-        year: Optional[str] = None,
-        music_stream: Optional[str] = None,
-        guitar_stream: Optional[str] = None,
-        rhythm_stream: Optional[str] = None,
-        bass_stream: Optional[str] = None,
-        drum_stream: Optional[str] = None,
-        drum2_stream: Optional[str] = None,
-        drum3_stream: Optional[str] = None,
-        drum4_stream: Optional[str] = None,
-        vocal_stream: Optional[str] = None,
-        keys_stream: Optional[str] = None,
-        crowd_stream: Optional[str] = None,
+        name: typ.Optional[str] = None,
+        artist: typ.Optional[str] = None,
+        charter: typ.Optional[str] = None,
+        album: typ.Optional[str] = None,
+        year: typ.Optional[str] = None,
+        music_stream: typ.Optional[str] = None,
+        guitar_stream: typ.Optional[str] = None,
+        rhythm_stream: typ.Optional[str] = None,
+        bass_stream: typ.Optional[str] = None,
+        drum_stream: typ.Optional[str] = None,
+        drum2_stream: typ.Optional[str] = None,
+        drum3_stream: typ.Optional[str] = None,
+        drum4_stream: typ.Optional[str] = None,
+        vocal_stream: typ.Optional[str] = None,
+        keys_stream: typ.Optional[str] = None,
+        crowd_stream: typ.Optional[str] = None,
     ) -> None:
         """Initializes all instance attributes."""
 
@@ -402,7 +401,7 @@ class Metadata(DictPropertiesEqMixin, DictReprMixin):
             self.crowd_stream = crowd_stream
 
     @classmethod
-    def from_chart_lines(cls: Type[MetadataT], lines_iter: Iterable[str]) -> MetadataT:
+    def from_chart_lines(cls: type[MetadataT], lines_iter: Iterable[str]) -> MetadataT:
         """Initializes instance attributes by parsing an iterable of strings.
 
         Args:
@@ -414,7 +413,7 @@ class Metadata(DictPropertiesEqMixin, DictReprMixin):
 
         def set_kwarg(
             field_name: SnakeCaseFieldNameT,
-            regex_not_match_callback: Optional[Callable[[], None]] = None,
+            regex_not_match_callback: typ.Optional[Callable[[], None]] = None,
         ) -> None:
             maybe_set_kwarg(
                 field_name,
@@ -423,7 +422,7 @@ class Metadata(DictPropertiesEqMixin, DictReprMixin):
 
         def maybe_set_kwarg(
             field_name: SnakeCaseFieldNameT,
-            regex_not_match_callback: Optional[Callable[[], None]] = None,
+            regex_not_match_callback: typ.Optional[Callable[[], None]] = None,
         ) -> None:
             try:
                 kwargs[field_name] = parse_all_lines_for_field(field_name)

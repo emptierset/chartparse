@@ -12,9 +12,8 @@ from __future__ import annotations
 
 import collections
 import logging
-import typing
+import typing as typ
 from collections.abc import Callable, Iterable, Sequence
-from typing import Final, Optional, Type
 
 import chartparse.globalevents
 import chartparse.instrument
@@ -24,13 +23,13 @@ from chartparse.event import Event, TimestampAtTickSupporter
 from chartparse.exceptions import ProgrammerError, RegexNotMatchError
 
 logger = logging.getLogger(__name__)
-_unparsable_line_msg_tmpl: Final[str] = 'unparsable line: "{}" for types {}'
+_unparsable_line_msg_tmpl: typ.Final[str] = 'unparsable line: "{}" for types {}'
 
 
 def parse_data_from_chart_lines(
-    types: Sequence[Type[Event.ParsedData]],
+    types: Sequence[type[Event.ParsedData]],
     lines: Iterable[str],
-) -> dict[Type[Event.ParsedData], list[Event.ParsedData]]:
+) -> dict[type[Event.ParsedData], list[Event.ParsedData]]:
     """Convert one or more chart lines into parsed data, and partition by type.
 
     Args:
@@ -52,7 +51,7 @@ def parse_data_from_chart_lines(
             subclass of :class:`~chartparse.event.Event.CoalescableParsedData`.
     """
     d: collections.defaultdict[
-        Type[Event.ParsedData], list[Event.ParsedData]
+        type[Event.ParsedData], list[Event.ParsedData]
     ] = collections.defaultdict(list)
     for line in lines:
         for t in types:
@@ -66,7 +65,7 @@ def parse_data_from_chart_lines(
             elif isinstance(prev_data, Event.CoalescableParsedData):
                 # TODO: Optimize this to precompute which types are coalescable.
                 # This cast is safe because each element of d[t] is the same type.
-                prev_data.coalesce_from_other(typing.cast(Event.CoalescableParsedData, data))
+                prev_data.coalesce_from_other(typ.cast(Event.CoalescableParsedData, data))
             else:
                 raise ValueError(
                     f"cannot handle additional parsed data of type {t} at tick {data.tick}"
@@ -78,13 +77,13 @@ def parse_data_from_chart_lines(
     return d
 
 
-@typing.overload
+@typ.overload
 def build_events_from_data(
     datas: Iterable[chartparse.sync.BPMEvent.ParsedData],
     from_data_fn: Callable[
         [
             chartparse.sync.BPMEvent.ParsedData,
-            Optional[chartparse.sync.BPMEvent],
+            typ.Optional[chartparse.sync.BPMEvent],
             int,
         ],
         chartparse.sync.BPMEvent,
@@ -95,13 +94,13 @@ def build_events_from_data(
     ...  # pragma: no cover
 
 
-@typing.overload
+@typ.overload
 def build_events_from_data(
     datas: Iterable[chartparse.sync.TimeSignatureEvent.ParsedData],
     from_data_fn: Callable[
         [
             chartparse.sync.TimeSignatureEvent.ParsedData,
-            Optional[chartparse.sync.TimeSignatureEvent],
+            typ.Optional[chartparse.sync.TimeSignatureEvent],
             TimestampAtTickSupporter,
         ],
         chartparse.sync.TimeSignatureEvent,
@@ -112,13 +111,13 @@ def build_events_from_data(
     ...  # pragma: no cover
 
 
-@typing.overload
+@typ.overload
 def build_events_from_data(
     datas: Iterable[chartparse.globalevents.SectionEvent.ParsedData],
     from_data_fn: Callable[
         [
             chartparse.globalevents.SectionEvent.ParsedData,
-            Optional[chartparse.globalevents.SectionEvent],
+            typ.Optional[chartparse.globalevents.SectionEvent],
             TimestampAtTickSupporter,
         ],
         chartparse.globalevents.SectionEvent,
@@ -129,13 +128,13 @@ def build_events_from_data(
     ...  # pragma: no cover
 
 
-@typing.overload
+@typ.overload
 def build_events_from_data(
     datas: Iterable[chartparse.globalevents.LyricEvent.ParsedData],
     from_data_fn: Callable[
         [
             chartparse.globalevents.LyricEvent.ParsedData,
-            Optional[chartparse.globalevents.LyricEvent],
+            typ.Optional[chartparse.globalevents.LyricEvent],
             TimestampAtTickSupporter,
         ],
         chartparse.globalevents.LyricEvent,
@@ -146,13 +145,13 @@ def build_events_from_data(
     ...  # pragma: no cover
 
 
-@typing.overload
+@typ.overload
 def build_events_from_data(
     datas: Iterable[chartparse.globalevents.TextEvent.ParsedData],
     from_data_fn: Callable[
         [
             chartparse.globalevents.TextEvent.ParsedData,
-            Optional[chartparse.globalevents.TextEvent],
+            typ.Optional[chartparse.globalevents.TextEvent],
             TimestampAtTickSupporter,
         ],
         chartparse.globalevents.TextEvent,
@@ -163,13 +162,13 @@ def build_events_from_data(
     ...  # pragma: no cover
 
 
-@typing.overload
+@typ.overload
 def build_events_from_data(
     datas: Iterable[chartparse.instrument.StarPowerEvent.ParsedData],
     from_data_fn: Callable[
         [
             chartparse.instrument.StarPowerEvent.ParsedData,
-            Optional[chartparse.instrument.StarPowerEvent],
+            typ.Optional[chartparse.instrument.StarPowerEvent],
             TimestampAtTickSupporter,
         ],
         chartparse.instrument.StarPowerEvent,

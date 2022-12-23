@@ -7,9 +7,8 @@
 
 from __future__ import annotations
 
-import typing
+import typing as typ
 from collections.abc import Collection
-from typing import Final, Union
 
 
 def raise_(ex: Exception) -> None:
@@ -21,12 +20,12 @@ def raise_(ex: Exception) -> None:
     raise ex
 
 
-@typing.final
+@typ.final
 class MissingRequiredField(Exception):
     """Raised when a required :class:`~chartparse.metadata.Metadata` could not be parsed."""
 
-    field_name: Final[str]
-    message: Final[str]
+    field_name: typ.Final[str]
+    message: typ.Final[str]
 
     def __init__(self, field_name: str) -> None:
         self.field_name = field_name
@@ -34,26 +33,26 @@ class MissingRequiredField(Exception):
         super().__init__(self.message)
 
 
-@typing.final
+@typ.final
 class RegexNotMatchError(Exception):
     """Raised when a regex failed to match."""
 
-    regex: Final[str]
-    message: Final[str]
+    regex: typ.Final[str]
+    message: typ.Final[str]
 
-    @typing.overload
+    @typ.overload
     def __init__(self, regex: str) -> None:
         ...  # pragma: no cover
 
-    @typing.overload
+    @typ.overload
     def __init__(self, regex: str, s: str) -> None:
         ...  # pragma: no cover
 
-    @typing.overload
+    @typ.overload
     def __init__(self, regex: str, s: Collection[str]) -> None:
         ...  # pragma: no cover
 
-    def __init__(self, regex: str, s: Union[None, str, Collection[str]] = None) -> None:
+    def __init__(self, regex: str, s: typ.Union[None, str, Collection[str]] = None) -> None:
         if s is None:
             message = f"regex '{regex}' failed to match"
         elif isinstance(s, str):
@@ -65,7 +64,7 @@ class RegexNotMatchError(Exception):
         self.message = message
 
 
-@typing.final
+@typ.final
 class ProgrammerError(Exception):
     """Raised in branches that should be unreachable.
 
@@ -73,7 +72,7 @@ class ProgrammerError(Exception):
     a fundamental issue with the code that should have been caught during review.
     """
 
-    message: Final[str] = "should be impossible"
+    message: typ.Final[str] = "should be impossible"
 
     def __init__(self) -> None:
         super().__init__(self.message)

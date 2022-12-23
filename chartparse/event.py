@@ -10,14 +10,13 @@ from __future__ import annotations
 import abc
 import dataclasses
 import datetime
-import typing
-from typing import Final, Generic, Protocol, Type, TypeVar
+import typing as typ
 
 from chartparse.util import DictPropertiesEqMixin, DictReprMixin
 
 
-@typing.runtime_checkable
-class TimestampAtTickSupporter(Protocol):
+@typ.runtime_checkable
+class TimestampAtTickSupporter(typ.Protocol):
     @property
     def resolution(self) -> int:
         ...  # pragma: no cover
@@ -35,13 +34,13 @@ class Event(DictPropertiesEqMixin, DictReprMixin):
     attractive ``__str__`` representation.
     """
 
-    tick: Final[int]
+    tick: typ.Final[int]
     """The tick at which this event occurs."""
 
-    timestamp: Final[datetime.timedelta]
+    timestamp: typ.Final[datetime.timedelta]
     """The timestamp when this event occurs."""
 
-    _proximal_bpm_event_index: Final[int]
+    _proximal_bpm_event_index: typ.Final[int]
 
     def __init__(
         self,
@@ -71,18 +70,18 @@ class Event(DictPropertiesEqMixin, DictReprMixin):
         tick: int
         """The tick at which the event represented by this data occurs."""
 
-        _SelfT = TypeVar("_SelfT", bound="Event.ParsedData")
+        _SelfT = typ.TypeVar("_SelfT", bound="Event.ParsedData")
 
         @classmethod
         @abc.abstractmethod
-        def from_chart_line(cls: Type[_SelfT], line: str) -> _SelfT:
+        def from_chart_line(cls: type[_SelfT], line: str) -> _SelfT:
             ...  # pragma: no cover
 
-    CoalescableParsedDataT = TypeVar("CoalescableParsedDataT", bound="CoalescableParsedData")
+    CoalescableParsedDataT = typ.TypeVar("CoalescableParsedDataT", bound="CoalescableParsedData")
 
     # NOTE: ignored mypy here per https://stackoverflow.com/a/70999704/6041556.
     @dataclasses.dataclass  # type: ignore[misc]
-    class CoalescableParsedData(ParsedData, Generic[CoalescableParsedDataT]):
+    class CoalescableParsedData(ParsedData, typ.Generic[CoalescableParsedDataT]):
         @abc.abstractmethod
         def coalesce_from_other(self, other: Event.CoalescableParsedDataT) -> None:
             ...  # pragma: no cover

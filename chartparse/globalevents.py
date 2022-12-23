@@ -14,37 +14,36 @@ import dataclasses
 import datetime
 import logging
 import re
-import typing
+import typing as typ
 from collections.abc import Iterable, Sequence
-from typing import ClassVar, Final, Optional, Pattern, Type, TypeVar
 
 import chartparse.track
 from chartparse.event import Event, TimestampAtTickSupporter
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.util import DictPropertiesEqMixin, DictReprTruncatedSequencesMixin
 
-GlobalEventsTrackT = TypeVar("GlobalEventsTrackT", bound="GlobalEventsTrack")
+GlobalEventsTrackT = typ.TypeVar("GlobalEventsTrackT", bound="GlobalEventsTrack")
 
 logger = logging.getLogger(__name__)
 
 
-@typing.final
+@typ.final
 class GlobalEventsTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     """A :class:`~chartparse.chart.Chart`'s :class:`~chartparse.globalevents.GlobalEvent`\\ s."""
 
-    resolution: Final[int]
+    resolution: typ.Final[int]
     """The number of ticks for which a quarter note lasts."""
 
-    text_events: Final[Sequence[TextEvent]]
+    text_events: typ.Final[Sequence[TextEvent]]
     """A ``GlobalEventTrack``'s ``TextEvent``\\ s."""
 
-    section_events: Final[Sequence[SectionEvent]]
+    section_events: typ.Final[Sequence[SectionEvent]]
     """A ``GlobalEventTrack``'s ``SectionEvent``\\ s."""
 
-    lyric_events: Final[Sequence[LyricEvent]]
+    lyric_events: typ.Final[Sequence[LyricEvent]]
     """A ``GlobalEventTrack``'s ``LyricEvent``\\ s."""
 
-    section_name: Final[str] = "Events"
+    section_name: typ.Final[str] = "Events"
     """The name of this track's section in a ``.chart`` file."""
 
     def __init__(
@@ -66,7 +65,7 @@ class GlobalEventsTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
     @classmethod
     def from_chart_lines(
-        cls: Type[GlobalEventsTrackT],
+        cls: type[GlobalEventsTrackT],
         lines: Iterable[str],
         tatter: TimestampAtTickSupporter,
     ) -> GlobalEventsTrackT:
@@ -101,7 +100,7 @@ class GlobalEventsTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
     @classmethod
     def _parse_data_from_chart_lines(
-        cls: Type[GlobalEventsTrackT],
+        cls: type[GlobalEventsTrackT],
         lines: Iterable[str],
     ) -> tuple[
         list[TextEvent.ParsedData],
@@ -112,22 +111,22 @@ class GlobalEventsTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             (LyricEvent.ParsedData, SectionEvent.ParsedData, TextEvent.ParsedData),
             lines,
         )
-        text_data = typing.cast(
+        text_data = typ.cast(
             list[TextEvent.ParsedData],
             parsed_data[TextEvent.ParsedData],
         )
-        section_data = typing.cast(
+        section_data = typ.cast(
             list[SectionEvent.ParsedData],
             parsed_data[SectionEvent.ParsedData],
         )
-        lyric_data = typing.cast(
+        lyric_data = typ.cast(
             list[LyricEvent.ParsedData],
             parsed_data[LyricEvent.ParsedData],
         )
         return text_data, section_data, lyric_data
 
 
-GlobalEventT = TypeVar("GlobalEventT", bound="GlobalEvent")
+GlobalEventT = typ.TypeVar("GlobalEventT", bound="GlobalEvent")
 
 
 class GlobalEvent(Event):
@@ -141,7 +140,7 @@ class GlobalEvent(Event):
     method.
     """
 
-    value: Final[str]
+    value: typ.Final[str]
     """The data that this event stores."""
 
     def __init__(
@@ -157,9 +156,9 @@ class GlobalEvent(Event):
 
     @classmethod
     def from_parsed_data(
-        cls: Type[GlobalEventT],
+        cls: type[GlobalEventT],
         data: GlobalEvent.ParsedData,
-        prev_event: Optional[GlobalEventT],
+        prev_event: typ.Optional[GlobalEventT],
         tatter: TimestampAtTickSupporter,
     ) -> GlobalEventT:
         """Obtain an instance of this object from parsed data.
@@ -186,23 +185,23 @@ class GlobalEvent(Event):
         to_join.append(f': "{self.value}"')
         return "".join(to_join)
 
-    ParsedDataT = TypeVar("ParsedDataT", bound="ParsedData")
+    ParsedDataT = typ.TypeVar("ParsedDataT", bound="ParsedData")
 
     @dataclasses.dataclass(kw_only=True)
     class ParsedData(Event.ParsedData):
         value: str
 
-        _regex: ClassVar[str]
-        _regex_prog: ClassVar[Pattern[str]]
+        _regex: typ.ClassVar[str]
+        _regex_prog: typ.ClassVar[typ.Pattern[str]]
 
         # Match 1: Tick
         # Match 2: Event value (to be added by subclass via _value_regex)
-        _regex_template: Final[str] = r"^\s*?(\d+?) = E \"{}\"\s*?$"
-        _value_regex: ClassVar[str]
+        _regex_template: typ.Final[str] = r"^\s*?(\d+?) = E \"{}\"\s*?$"
+        _value_regex: typ.ClassVar[str]
 
         @classmethod
         def from_chart_line(
-            cls: Type[GlobalEvent.ParsedDataT], line: str
+            cls: type[GlobalEvent.ParsedDataT], line: str
         ) -> GlobalEvent.ParsedDataT:
             """Attempt to construct this object from a ``.chart`` line.
 
@@ -222,11 +221,11 @@ class GlobalEvent(Event):
             return cls(tick=tick, value=value)
 
 
-@typing.final
+@typ.final
 class TextEvent(GlobalEvent):
     """A :class:`~chartparse.globalevents.GlobalEvent` that stores freeform text event data."""
 
-    @typing.final
+    @typ.final
     @dataclasses.dataclass(kw_only=True)
     class ParsedData(GlobalEvent.ParsedData):
         _value_regex = r"([^ ]*?)"
@@ -234,14 +233,14 @@ class TextEvent(GlobalEvent):
         _regex_prog = re.compile(_regex)
 
 
-@typing.final
+@typ.final
 class SectionEvent(GlobalEvent):
     """A :class:`~chartparse.globalevents.GlobalEvent` that signifies a new section.
 
     The event's ``value`` attribute contains the section's name.
     """
 
-    @typing.final
+    @typ.final
     @dataclasses.dataclass(kw_only=True)
     class ParsedData(GlobalEvent.ParsedData):
         _value_regex = r"section (.*?)"
@@ -249,14 +248,14 @@ class SectionEvent(GlobalEvent):
         _regex_prog = re.compile(_regex)
 
 
-@typing.final
+@typ.final
 class LyricEvent(GlobalEvent):
     """A :class:`~chartparse.globalevents.GlobalEvent` that signifies a new section.
 
     The event's ``value`` attribute contains the lyric's text, typically a single syllable's worth.
     """
 
-    @typing.final
+    @typ.final
     @dataclasses.dataclass(kw_only=True)
     class ParsedData(GlobalEvent.ParsedData):
         _value_regex = "lyric (.*?)"

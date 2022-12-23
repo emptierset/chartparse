@@ -7,11 +7,11 @@
 
 from __future__ import annotations
 
-import typing
+import typing as typ
 from enum import Enum
 
 
-@typing.final
+@typ.final
 class NoteDuration(Enum):
     """The note durations supported by Moonscraper.
 
