@@ -345,7 +345,6 @@ An element is ``None`` if and only if the corresponding note lane is inactive. I
 ``0`` element represents an unsustained note in unison with a sustained note.
 """
 
-# TODO: Migrate simple Unions to use 3.10 pipe syntax.
 ComplexSustainT = int | SustainTupleT
 """An immutable sustain value representing multiple coinciding notes with different sustain values.
 

@@ -159,8 +159,6 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     _section_name_regex_prog = re.compile(_section_name_regex)
 
     @classmethod
-    # TODO: change this to return iterators directly. That is, they don't need to be reiterable, so
-    # no need for Callables.
     def _find_sections(cls, lines: Iterable[str]) -> dict[str, Iterable[str]]:
         sections: dict[str, Iterable[str]] = dict()
         curr_section_name = None
