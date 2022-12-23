@@ -277,7 +277,7 @@ class TimeSignatureEvent(Event):
         return "".join(to_join)
 
     @typ.final
-    @dataclasses.dataclass(kw_only=True)
+    @dataclasses.dataclass(kw_only=True, frozen=True)
     class ParsedData(Event.ParsedData):
         _SelfT = typ.TypeVar("_SelfT", bound="TimeSignatureEvent.ParsedData")
 
@@ -405,7 +405,7 @@ class BPMEvent(Event):
         return "".join(to_join)
 
     @typ.final
-    @dataclasses.dataclass(kw_only=True)
+    @dataclasses.dataclass(kw_only=True, frozen=True)
     class ParsedData(Event.ParsedData):
         _SelfT = typ.TypeVar("_SelfT", bound="BPMEvent.ParsedData")
 

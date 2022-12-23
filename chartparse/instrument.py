@@ -18,7 +18,6 @@ import logging
 import re
 import typing as typ
 from collections.abc import Iterable, Sequence
-from dataclasses import dataclass
 from enum import Enum
 
 import chartparse.tick
@@ -308,7 +307,7 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
 
 @typ.final
-@dataclass
+@dataclasses.dataclass(frozen=True)
 class StarPowerData(DictPropertiesEqMixin):
     """Star power related info for a :class:`~chartparse.instrument.NoteEvent`."""
 
@@ -586,12 +585,12 @@ class NoteEvent(Event):
 
         return "".join(to_join)
 
-    ParsedDataT = typ.TypeVar("ParsedDataT", bound="ParsedData")
-
-    @dataclasses.dataclass(kw_only=True)
+    @dataclasses.dataclass(kw_only=True, frozen=True)
     class ParsedData(Event.CoalescableParsedData):
         _SelfT = typ.TypeVar("_SelfT", bound="NoteEvent.ParsedData")
 
+        # TODO: This doesn't need to be mutable anymore because coalescing no longer involves
+        # mutation.
         note_array: bytearray
         """The note lane(s) active in the event represented by this data.
 
@@ -599,6 +598,8 @@ class NoteEvent(Event):
         coalescable.
         """
 
+        # TODO: This doesn't need to be mutable anymore because coalescing no longer involves
+        # mutation.
         sustain: ComplexSustainListT | None
         """The durations in ticks of the active lanes in the event represented by this data."""
 
@@ -622,6 +623,8 @@ class NoteEvent(Event):
             str
         ] = "unhandled note track index {} at tick {}"
 
+        # TODO: This might not need to exist anymore because coalescing no longer involves
+        # mutation.
         @functools.cached_property
         def immutable_sustain(self) -> ComplexSustainT | None:
             """The value of ``sustain``, but converted to an immutable type if necessary."""
@@ -815,7 +818,7 @@ class SpecialEvent(Event):
         to_join.append(f": sustain={self.sustain}")
         return "".join(to_join)
 
-    @dataclasses.dataclass(kw_only=True)
+    @dataclasses.dataclass(kw_only=True, frozen=True)
     class ParsedData(Event.ParsedData):
         _SelfT = typ.TypeVar("_SelfT", bound="SpecialEvent.ParsedData")
 
@@ -855,7 +858,7 @@ class StarPowerEvent(SpecialEvent):
     """An event representing star power starting at some tick and lasting for some duration."""
 
     @typ.final
-    @dataclasses.dataclass(kw_only=True)
+    @dataclasses.dataclass(kw_only=True, frozen=True)
     class ParsedData(SpecialEvent.ParsedData):
         _index_regex = r"2"
         _regex = SpecialEvent.ParsedData._regex_template.format(_index_regex)

@@ -176,7 +176,7 @@ class GlobalEvent(Event):
         to_join.append(f': "{self.value}"')
         return "".join(to_join)
 
-    @dataclasses.dataclass(kw_only=True)
+    @dataclasses.dataclass(kw_only=True, frozen=True)
     class ParsedData(Event.ParsedData):
         _SelfT = typ.TypeVar("_SelfT", bound="GlobalEvent.ParsedData")
 
@@ -215,7 +215,7 @@ class TextEvent(GlobalEvent):
     """A :class:`~chartparse.globalevents.GlobalEvent` that stores freeform text event data."""
 
     @typ.final
-    @dataclasses.dataclass(kw_only=True)
+    @dataclasses.dataclass(kw_only=True, frozen=True)
     class ParsedData(GlobalEvent.ParsedData):
         _value_regex = r"([^ ]*?)"
         _regex = GlobalEvent.ParsedData._regex_template.format(_value_regex)
@@ -230,7 +230,7 @@ class SectionEvent(GlobalEvent):
     """
 
     @typ.final
-    @dataclasses.dataclass(kw_only=True)
+    @dataclasses.dataclass(kw_only=True, frozen=True)
     class ParsedData(GlobalEvent.ParsedData):
         _value_regex = r"section (.*?)"
         _regex = GlobalEvent.ParsedData._regex_template.format(_value_regex)
@@ -245,7 +245,7 @@ class LyricEvent(GlobalEvent):
     """
 
     @typ.final
-    @dataclasses.dataclass(kw_only=True)
+    @dataclasses.dataclass(kw_only=True, frozen=True)
     class ParsedData(GlobalEvent.ParsedData):
         _value_regex = "lyric (.*?)"
         _regex = GlobalEvent.ParsedData._regex_template.format(_value_regex)

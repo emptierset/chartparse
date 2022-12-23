@@ -65,7 +65,7 @@ class Event(DictPropertiesEqMixin, DictReprMixin):
         return "".join(to_join)
 
     # NOTE: ignored mypy here per https://stackoverflow.com/a/70999704/6041556.
-    @dataclasses.dataclass  # type: ignore[misc]
+    @dataclasses.dataclass(frozen=True)  # type: ignore[misc]
     class ParsedData(abc.ABC):
         tick: int
         """The tick at which the event represented by this data occurs."""
@@ -78,7 +78,7 @@ class Event(DictPropertiesEqMixin, DictReprMixin):
             ...  # pragma: no cover
 
     # NOTE: ignored mypy here per https://stackoverflow.com/a/70999704/6041556.
-    @dataclasses.dataclass  # type: ignore[misc]
+    @dataclasses.dataclass(frozen=True)  # type: ignore[misc]
     class CoalescableParsedData(ParsedData):
         _SelfT = typ.TypeVar("_SelfT", bound="Event.CoalescableParsedData")
 

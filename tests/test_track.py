@@ -51,7 +51,7 @@ class TestBuildEventsFromData(object):
 
 
 class TestParseDataFromChartLines(object):
-    @dataclasses.dataclass
+    @dataclasses.dataclass(frozen=True)
     class ParsedData(Event.ParsedData):
         fruit: Fruit
 
@@ -59,7 +59,7 @@ class TestParseDataFromChartLines(object):
         def from_chart_line(cls, line):
             return cls(tick=int(line), fruit=Fruit(int(line)))
 
-    @dataclasses.dataclass
+    @dataclasses.dataclass(frozen=True)
     class CoalescableParsedData(ParsedData, Event.CoalescableParsedData):
         @classmethod
         def coalesced(cls, dest, src):

@@ -793,7 +793,7 @@ class TestNoteEvent(object):
                 ],
             )
             def test(self, bare_note_event_parsed_data, sustain, want):
-                bare_note_event_parsed_data.sustain = sustain
+                bare_note_event_parsed_data.__dict__["sustain"] = sustain
                 got = bare_note_event_parsed_data.immutable_sustain
                 assert got == want
 
