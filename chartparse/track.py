@@ -63,8 +63,10 @@ def parse_data_from_chart_lines(
                 d[t].append(data)
             elif isinstance(prev_data, Event.CoalescableParsedData):
                 # TODO: Optimize this to precompute which types are coalescable.
-                # This cast is safe because each element of d[t] is the same type.
-                prev_data.coalesce_from_other(typ.cast(Event.CoalescableParsedData, data))
+                # Each element of d[t] is always of the same type.
+                assert isinstance(data, Event.CoalescableParsedData)
+                prev_data = prev_data.coalesced(prev_data, data)
+                d[t][-1] = prev_data
             else:
                 raise ValueError(
                     f"cannot handle additional parsed data of type {t} at tick {data.tick}"

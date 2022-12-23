@@ -797,7 +797,7 @@ class TestNoteEvent(object):
                 got = bare_note_event_parsed_data.immutable_sustain
                 assert got == want
 
-        class TestCoalesceFromOther(object):
+        class TestCoalesced(object):
             @pytest.mark.parametrize(
                 "sustain_dest,sustain_src,want",
                 [
@@ -814,8 +814,7 @@ class TestNoteEvent(object):
             def test_sustain(self, sustain_dest, sustain_src, want):
                 dest = NoteEventParsedDataWithDefaults(sustain=sustain_dest)
                 src = NoteEventParsedDataWithDefaults(sustain=sustain_src)
-                dest.coalesce_from_other(src)
-                got = dest.sustain
+                got = NoteEvent.ParsedData.coalesced(dest, src).sustain
                 assert got == want
 
             @pytest.mark.parametrize(
@@ -829,13 +828,12 @@ class TestNoteEvent(object):
                 with pytest.raises(ValueError):
                     dest = NoteEventParsedDataWithDefaults(sustain=sustain_dest)
                     src = NoteEventParsedDataWithDefaults(sustain=sustain_src)
-                    dest.coalesce_from_other(src)
+                    _ = NoteEvent.ParsedData.coalesced(dest, src)
 
             def test_note_array(self):
                 dest = NoteEventParsedDataWithDefaults(note_array=bytearray((1, 0, 0, 0, 0)))
                 src = NoteEventParsedDataWithDefaults(note_array=bytearray((0, 1, 0, 0, 0)))
-                dest.coalesce_from_other(src)
-                got = dest.note_array
+                got = NoteEvent.ParsedData.coalesced(dest, src).note_array
                 want = bytearray((1, 1, 0, 0, 0))
                 assert got == want
 
@@ -851,8 +849,7 @@ class TestNoteEvent(object):
             def test_is_forced(self, is_forced_dest, is_forced_src, want):
                 dest = NoteEventParsedDataWithDefaults(is_forced=is_forced_dest)
                 src = NoteEventParsedDataWithDefaults(is_forced=is_forced_src)
-                dest.coalesce_from_other(src)
-                got = dest.is_forced
+                got = NoteEvent.ParsedData.coalesced(dest, src).is_forced
                 assert got == want
 
             @pytest.mark.parametrize(
@@ -867,8 +864,7 @@ class TestNoteEvent(object):
             def test_is_tap(self, is_tap_dest, is_tap_src, want):
                 dest = NoteEventParsedDataWithDefaults(is_tap=is_tap_dest)
                 src = NoteEventParsedDataWithDefaults(is_tap=is_tap_src)
-                dest.coalesce_from_other(src)
-                got = dest.is_tap
+                got = NoteEvent.ParsedData.coalesced(dest, src).is_tap
                 assert got == want
 
     class TestComputeStarPowerData(object):

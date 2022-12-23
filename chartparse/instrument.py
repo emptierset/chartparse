@@ -597,7 +597,7 @@ class NoteEvent(Event):
     ParsedDataT = typ.TypeVar("ParsedDataT", bound="ParsedData")
 
     @dataclasses.dataclass(kw_only=True)
-    class ParsedData(Event.CoalescableParsedData[ParsedDataT]):
+    class ParsedData(Event.CoalescableParsedData):
         _SelfT = typ.TypeVar("_SelfT", bound="NoteEvent.ParsedData")
 
         note_array: bytearray
@@ -698,37 +698,61 @@ class NoteEvent(Event):
         # the data from a single line. i.e. they can specify:
         # - exactly one of the six notes, or a force or tap flag.
         # - and exactly one Optional sustain value.
-        def coalesce_from_other(self, other: _SelfT) -> None:
-            """Merge the contents of another data into this one.
+        @classmethod
+        def coalesced(cls: type[_SelfT], dest: _SelfT, src: _SelfT) -> _SelfT:
+            """Return a copy of `dest` with `src`'s values merged into it.
 
             Args:
-                other: another subclass of :class:`~chartparse.event.Event.ParsedData` of the same
-                type.
+                dest: A `NoteEvent.ParsedData`.
+                src: A `NoteEvent.ParsedData`.
+
+            Returns:
+                A copy of `dest` with `src`'s values merged into it.
 
             Raises:
                 ValueError: if this data or the other data has an ``int`` typed ``sustain``. This
                     is because an ``int`` value in this field means that it represents an open
                     note, and it is nonsensical for an open note to overlap another concrete note.
             """
-            if other.sustain is not None:
-                if self.sustain is None:
-                    self.sustain = other.sustain
-                elif isinstance(self.sustain, int) or isinstance(other.sustain, int):
-                    # both not None after the first branch
-                    raise ValueError("open note cannot coincide with other notes")
-                else:
-                    # merge first present sustain value from ``other``
-                    for i, s in enumerate(other.sustain):
-                        if s is not None:
-                            self.sustain[i] = s
+            coalesced_is_forced = dest.is_forced or src.is_forced
+            coalesced_is_tap = dest.is_tap or src.is_tap
+            print(coalesced_is_tap)
 
-            # merge first present note value from ``other``
-            for i, n in enumerate(other.note_array):
+            return cls(
+                tick=dest.tick,
+                sustain=cls._coalesced_sustain(dest.sustain, src.sustain),
+                note_array=cls._coalesced_note_array(dest.note_array, src.note_array),
+                is_forced=coalesced_is_forced,
+                is_tap=coalesced_is_tap,
+            )
+
+        @staticmethod
+        def _coalesced_sustain(
+            dest: ComplexSustainListT | None, src: ComplexSustainListT | None
+        ) -> ComplexSustainListT | None:
+            if src is None:
+                return dest
+            elif dest is None:
+                return src
+            elif isinstance(dest, int) or isinstance(src, int):
+                # If both aren't None, then one of them being int (i.e. open) is problematic.
+                raise ValueError("open note cannot coincide with other notes")
+            coalesced = list(dest)
+            # merge present sustain values from ``src``.
+            # TODO: Should it be an error if dest[i] and src[i] are both present?
+            for i, s in enumerate(src):
+                if s is not None:
+                    coalesced[i] = s
+            return coalesced
+
+        @staticmethod
+        def _coalesced_note_array(dest: bytearray, src: bytearray) -> bytearray:
+            coalesced = bytearray(dest)
+            # merge all present note values from ``src``.
+            for i, n in enumerate(src):
                 if n:
-                    self.note_array[i] = 1
-
-            self.is_forced = self.is_forced or other.is_forced
-            self.is_tap = self.is_tap or other.is_tap
+                    coalesced[i] = 1
+            return coalesced
 
 
 class SpecialEvent(Event):

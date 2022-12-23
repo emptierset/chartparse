@@ -61,8 +61,9 @@ class TestParseDataFromChartLines(object):
 
     @dataclasses.dataclass
     class CoalescableParsedData(ParsedData, Event.CoalescableParsedData):
-        def coalesce_from_other(self, other):
-            self.fruit = Fruit(other.fruit.value + self.fruit.value)
+        @classmethod
+        def coalesced(cls, dest, src):
+            return cls(tick=dest.tick, fruit=Fruit(src.fruit.value + dest.fruit.value))
 
     @pytest.mark.parametrize(
         "types,lines,want",
