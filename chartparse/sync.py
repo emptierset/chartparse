@@ -126,15 +126,7 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         parsed_data = chartparse.track.parse_data_from_chart_lines(
             (BPMEvent.ParsedData, TimeSignatureEvent.ParsedData), lines
         )
-        time_signature_data = typ.cast(
-            list[TimeSignatureEvent.ParsedData],
-            parsed_data[TimeSignatureEvent.ParsedData],
-        )
-        bpm_data = typ.cast(
-            list[BPMEvent.ParsedData],
-            parsed_data[BPMEvent.ParsedData],
-        )
-        return time_signature_data, bpm_data
+        return parsed_data[TimeSignatureEvent.ParsedData], parsed_data[BPMEvent.ParsedData]
 
     def timestamp_at_tick(
         self, tick: int, proximal_bpm_event_index: int = 0

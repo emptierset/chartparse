@@ -25,10 +25,22 @@ logger = logging.getLogger(__name__)
 _unparsable_line_msg_tmpl: typ.Final[str] = 'unparsable line: "{}" for types {}'
 
 
+class ParsedDataDict(collections.defaultdict):
+    def __init__(self):
+        super().__init__(list)
+
+    def __getitem__(self, k: type[Event.ParsedData._SelfT]) -> list[Event.ParsedData._SelfT]:
+        return super().__getitem__(k)
+
+    def __setitem__(
+        self, k: type[Event.ParsedData._SelfT], v: list[Event.ParsedData._SelfT]
+    ) -> None:
+        return super().__setitem__(k, v)
+
+
 def parse_data_from_chart_lines(
-    types: Sequence[type[Event.ParsedData]],
-    lines: Iterable[str],
-) -> dict[type[Event.ParsedData], list[Event.ParsedData]]:
+    types: Sequence[type[Event.ParsedData]], lines: Iterable[str]
+) -> ParsedDataDict:
     """Convert one or more chart lines into parsed data, and partition by type.
 
     Args:
@@ -40,18 +52,13 @@ def parse_data_from_chart_lines(
 
     Returns:
         A dictionary mapping each type in ``types`` to a list of datas that were parsed into that
-        type from lines in ``lines``. In reality, this maps ``Type[t]`` to ``list[t]`` for each
-        ``t`` in ``types``, but this cannot be represented in mypy. Callers of this function will
-        need to manually narrow types of the the dictionary entries they care about, most likely
-        using ``typing.cast``.
+        type from lines in ``lines``.
 
     Raises:
         ValueError: If two parsed datas occur at the same tick and are not typed of the same
             subclass of :class:`~chartparse.event.Event.CoalescableParsedData`.
     """
-    d: collections.defaultdict[
-        type[Event.ParsedData], list[Event.ParsedData]
-    ] = collections.defaultdict(list)
+    d = ParsedDataDict()
     for line in lines:
         for t in types:
             try:
@@ -61,12 +68,12 @@ def parse_data_from_chart_lines(
             prev_data = d[t][-1] if d[t] else None
             if prev_data is None or prev_data.tick != data.tick:
                 d[t].append(data)
-            elif isinstance(prev_data, Event.CoalescableParsedData):
-                # TODO: Optimize this to precompute which types are coalescable.
+            elif isinstance(data, Event.CoalescableParsedData) and isinstance(
+                prev_data, Event.CoalescableParsedData
+            ):
                 # Each element of d[t] is always of the same type.
-                assert isinstance(data, Event.CoalescableParsedData)
-                prev_data = prev_data.coalesced(prev_data, data)
-                d[t][-1] = prev_data
+                d[t][-1] = prev_data.coalesced(prev_data, data)
+                # TODO: Optimize this to precompute which types are coalescable.
             else:
                 raise ValueError(
                     f"cannot handle additional parsed data of type {t} at tick {data.tick}"

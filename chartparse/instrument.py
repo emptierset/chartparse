@@ -271,15 +271,7 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         parsed_data = chartparse.track.parse_data_from_chart_lines(
             (NoteEvent.ParsedData, StarPowerEvent.ParsedData), lines
         )
-        note_data = typ.cast(
-            list[NoteEvent.ParsedData],
-            parsed_data[NoteEvent.ParsedData],
-        )
-        star_power_data = typ.cast(
-            list[StarPowerEvent.ParsedData],
-            parsed_data[StarPowerEvent.ParsedData],
-        )
-        return note_data, star_power_data
+        return parsed_data[NoteEvent.ParsedData], parsed_data[StarPowerEvent.ParsedData]
 
     def __str__(self) -> str:  # pragma: no cover
         return (

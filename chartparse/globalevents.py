@@ -111,19 +111,11 @@ class GlobalEventsTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             (LyricEvent.ParsedData, SectionEvent.ParsedData, TextEvent.ParsedData),
             lines,
         )
-        text_data = typ.cast(
-            list[TextEvent.ParsedData],
+        return (
             parsed_data[TextEvent.ParsedData],
-        )
-        section_data = typ.cast(
-            list[SectionEvent.ParsedData],
             parsed_data[SectionEvent.ParsedData],
-        )
-        lyric_data = typ.cast(
-            list[LyricEvent.ParsedData],
             parsed_data[LyricEvent.ParsedData],
         )
-        return text_data, section_data, lyric_data
 
 
 class GlobalEvent(Event):
