@@ -43,8 +43,16 @@ blackcheck:        ## Check code format using black.
 isort:             ## Format code using isort.
 	$(ENV_PREFIX)isort --line-length 99 chartparse/
 
+.PHONY: autoflake
+autoflake:         ## Remove unused imports using autoflake.
+	$(ENV_PREFIX)autoflake -ri chartparse/ tests/
+
+.PHONY: autoflakeall
+autoflakeall:         ## Remove all unused imports using autoflake.
+	$(ENV_PREFIX)autoflake --remove-all-unused-imports -ri chartparse/ tests/
+
 .PHONY: fmt
-fmt: isort black   ## Format code using isort and black.
+fmt: isort black autoflake  ## Format code using isort, black, and autoflake.
 
 .PHONY: flake
 flake:             ## Run pep8 linter.
