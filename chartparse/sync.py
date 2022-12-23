@@ -256,7 +256,7 @@ class TimeSignatureEvent(Event):
     def from_parsed_data(
         cls: type[_SelfT],
         data: TimeSignatureEvent.ParsedData,
-        prev_event: typ.Optional[_SelfT],
+        prev_event: _SelfT | None,
         tatter: TimestampAtTickSupporter,
     ) -> _SelfT:
         """Obtain an instance of this object from parsed data.
@@ -295,7 +295,7 @@ class TimeSignatureEvent(Event):
     @dataclasses.dataclass(kw_only=True)
     class ParsedData(Event.ParsedData):
         upper: int
-        lower: typ.Optional[int]
+        lower: int | None
 
         # Match 1: Tick
         # Match 2: Upper numeral
@@ -359,7 +359,7 @@ class BPMEvent(Event):
     def from_parsed_data(
         cls: type[_SelfT],
         data: BPMEvent.ParsedData,
-        prev_event: typ.Optional[_SelfT],
+        prev_event: _SelfT | None,
         resolution: int,
     ) -> _SelfT:
         """Obtain an instance of this object from parsed data.

@@ -191,12 +191,12 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         self,
         instrument: Instrument,
         difficulty: Difficulty,
-        start_time: typ.Optional[datetime.timedelta] = None,
-        end_time: typ.Optional[datetime.timedelta] = None,
-        start_tick: typ.Optional[int] = None,
-        end_tick: typ.Optional[int] = None,
-        start_seconds: typ.Optional[float] = None,
-        end_seconds: typ.Optional[float] = None,
+        start_time: datetime.timedelta | None = None,
+        end_time: datetime.timedelta | None = None,
+        start_tick: int | None = None,
+        end_tick: int | None = None,
+        start_seconds: float | None = None,
+        end_seconds: float | None = None,
     ) -> float:
         """Returns the average notes per second over the input interval.
 

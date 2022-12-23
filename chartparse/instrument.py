@@ -228,7 +228,7 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         return self.difficulty.value + self.instrument.value
 
     @functools.cached_property
-    def last_note_end_timestamp(self) -> typ.Optional[datetime.timedelta]:
+    def last_note_end_timestamp(self) -> datetime.timedelta | None:
         """The timestamp at which the :attr:`~chartparse.instrument.NoteEvent.sustain` value of the
         last :class:`~chartparse.instrument.NoteEvent` ends.
 
@@ -332,7 +332,7 @@ class StarPowerData(DictPropertiesEqMixin):
 
 
 # TODO: See what happens if we specify five Optional[int]s, rather than ...
-SustainTupleT = tuple[typ.Optional[int], ...]
+SustainTupleT = tuple[int | None, ...]
 """A 5-element tuple representing the sustain value of each note lane for nonuniform sustains.
 
 An element is ``None`` if and only if the corresponding note lane is inactive. If an element is
@@ -340,7 +340,7 @@ An element is ``None`` if and only if the corresponding note lane is inactive. I
 ``0`` element represents an unsustained note in unison with a sustained note.
 """
 
-SustainListT = list[typ.Optional[int]]
+SustainListT = list[int | None]
 """A 5-element tuple representing the sustain value of each note lane for nonuniform sustains.
 
 An element is ``None`` if and only if the corresponding note lane is inactive. If an element is
@@ -403,7 +403,7 @@ class NoteEvent(Event):
     hopo_state: typ.Final[HOPOState]
     """Whether the note is a strum, a HOPO, or a tap note."""
 
-    star_power_data: typ.Final[typ.Optional[StarPowerData]]
+    star_power_data: typ.Final[StarPowerData | None]
     """Information associated with star power for this note.
 
     If this is ``None``, then the note is not a star power note.
@@ -417,7 +417,7 @@ class NoteEvent(Event):
         note: Note,
         hopo_state: HOPOState,
         sustain: ComplexSustainT = 0,
-        star_power_data: typ.Optional[StarPowerData] = None,
+        star_power_data: StarPowerData | None = None,
         proximal_bpm_event_index: int = 0,
     ) -> None:
         super().__init__(tick, timestamp, proximal_bpm_event_index=proximal_bpm_event_index)
@@ -459,7 +459,7 @@ class NoteEvent(Event):
     def from_parsed_data(
         cls: type[NoteEventT],
         data: NoteEvent.ParsedData,
-        prev_event: typ.Optional[NoteEvent],
+        prev_event: NoteEvent | None,
         star_power_events: ImmutableSortedList[StarPowerEvent],
         tatter: TimestampAtTickSupporter,
         proximal_bpm_event_index: int = 0,
@@ -526,7 +526,7 @@ class NoteEvent(Event):
         note: Note,
         is_tap: bool,
         is_forced: bool,
-        previous: typ.Optional[NoteEvent],
+        previous: NoteEvent | None,
     ) -> HOPOState:
         if is_forced and previous is None:
             raise ValueError("cannot force the first note in a chart")
@@ -562,7 +562,7 @@ class NoteEvent(Event):
         star_power_events: ImmutableSortedList[StarPowerEvent],
         *,
         proximal_star_power_event_index: int = 0,
-    ) -> tuple[typ.Optional[StarPowerData], int]:
+    ) -> tuple[StarPowerData | None, int]:
         if not star_power_events:
             return None, 0
 
@@ -613,7 +613,7 @@ class NoteEvent(Event):
         coalescable.
         """
 
-        sustain: typ.Optional[ComplexSustainListT]
+        sustain: ComplexSustainListT | None
         """The durations in ticks of the active lanes in the event represented by this data."""
 
         is_tap: bool = False
@@ -639,7 +639,7 @@ class NoteEvent(Event):
         # _SelfT = typ.TypeVar("_SelfT", bound="NoteEvent.ParsedData")
 
         @functools.cached_property
-        def immutable_sustain(self) -> typ.Optional[ComplexSustainT]:
+        def immutable_sustain(self) -> ComplexSustainT | None:
             """The value of ``sustain``, but converted to an immutable type if necessary."""
             if self.sustain is None:
                 return None
@@ -672,7 +672,7 @@ class NoteEvent(Event):
             note_track_index = NoteTrackIndex(parsed_note_index)
 
             note_array = bytearray(5)
-            sustain: typ.Optional[ComplexSustainListT] = None
+            sustain: ComplexSustainListT | None = None
             is_forced = False
             is_tap = False
             # type ignored here because mypy does not understand that this enum
@@ -773,7 +773,7 @@ class SpecialEvent(Event):
     def from_parsed_data(
         cls: type[_SelfT],
         data: SpecialEvent.ParsedData,
-        prev_event: typ.Optional[_SelfT],
+        prev_event: _SelfT | None,
         tatter: TimestampAtTickSupporter,
     ) -> _SelfT:
         """Obtain an instance of this object from parsed data.

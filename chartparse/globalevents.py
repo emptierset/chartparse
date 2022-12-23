@@ -158,7 +158,7 @@ class GlobalEvent(Event):
     def from_parsed_data(
         cls: type[GlobalEventT],
         data: GlobalEvent.ParsedData,
-        prev_event: typ.Optional[GlobalEventT],
+        prev_event: GlobalEventT | None,
         tatter: TimestampAtTickSupporter,
     ) -> GlobalEventT:
         """Obtain an instance of this object from parsed data.

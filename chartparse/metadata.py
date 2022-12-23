@@ -340,22 +340,22 @@ class Metadata(DictPropertiesEqMixin, DictReprMixin):
         preview_end: int = 0,
         genre: str = "rock",
         media_type: str = "cd",
-        name: typ.Optional[str] = None,
-        artist: typ.Optional[str] = None,
-        charter: typ.Optional[str] = None,
-        album: typ.Optional[str] = None,
-        year: typ.Optional[str] = None,
-        music_stream: typ.Optional[str] = None,
-        guitar_stream: typ.Optional[str] = None,
-        rhythm_stream: typ.Optional[str] = None,
-        bass_stream: typ.Optional[str] = None,
-        drum_stream: typ.Optional[str] = None,
-        drum2_stream: typ.Optional[str] = None,
-        drum3_stream: typ.Optional[str] = None,
-        drum4_stream: typ.Optional[str] = None,
-        vocal_stream: typ.Optional[str] = None,
-        keys_stream: typ.Optional[str] = None,
-        crowd_stream: typ.Optional[str] = None,
+        name: str | None = None,
+        artist: str | None = None,
+        charter: str | None = None,
+        album: str | None = None,
+        year: str | None = None,
+        music_stream: str | None = None,
+        guitar_stream: str | None = None,
+        rhythm_stream: str | None = None,
+        bass_stream: str | None = None,
+        drum_stream: str | None = None,
+        drum2_stream: str | None = None,
+        drum3_stream: str | None = None,
+        drum4_stream: str | None = None,
+        vocal_stream: str | None = None,
+        keys_stream: str | None = None,
+        crowd_stream: str | None = None,
     ) -> None:
         """Initializes all instance attributes."""
 
@@ -413,7 +413,7 @@ class Metadata(DictPropertiesEqMixin, DictReprMixin):
 
         def set_kwarg(
             field_name: SnakeCaseFieldNameT,
-            regex_not_match_callback: typ.Optional[Callable[[], None]] = None,
+            regex_not_match_callback: Callable[[], None] | None = None,
         ) -> None:
             maybe_set_kwarg(
                 field_name,
@@ -422,7 +422,7 @@ class Metadata(DictPropertiesEqMixin, DictReprMixin):
 
         def maybe_set_kwarg(
             field_name: SnakeCaseFieldNameT,
-            regex_not_match_callback: typ.Optional[Callable[[], None]] = None,
+            regex_not_match_callback: Callable[[], None] | None = None,
         ) -> None:
             try:
                 kwargs[field_name] = parse_all_lines_for_field(field_name)

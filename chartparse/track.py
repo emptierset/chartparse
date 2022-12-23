@@ -83,7 +83,7 @@ def build_events_from_data(
     from_data_fn: Callable[
         [
             chartparse.sync.BPMEvent.ParsedData,
-            typ.Optional[chartparse.sync.BPMEvent],
+            chartparse.sync.BPMEvent | None,
             int,
         ],
         chartparse.sync.BPMEvent,
@@ -100,7 +100,7 @@ def build_events_from_data(
     from_data_fn: Callable[
         [
             chartparse.sync.TimeSignatureEvent.ParsedData,
-            typ.Optional[chartparse.sync.TimeSignatureEvent],
+            chartparse.sync.TimeSignatureEvent | None,
             TimestampAtTickSupporter,
         ],
         chartparse.sync.TimeSignatureEvent,
@@ -117,7 +117,7 @@ def build_events_from_data(
     from_data_fn: Callable[
         [
             chartparse.globalevents.SectionEvent.ParsedData,
-            typ.Optional[chartparse.globalevents.SectionEvent],
+            chartparse.globalevents.SectionEvent | None,
             TimestampAtTickSupporter,
         ],
         chartparse.globalevents.SectionEvent,
@@ -134,7 +134,7 @@ def build_events_from_data(
     from_data_fn: Callable[
         [
             chartparse.globalevents.LyricEvent.ParsedData,
-            typ.Optional[chartparse.globalevents.LyricEvent],
+            chartparse.globalevents.LyricEvent | None,
             TimestampAtTickSupporter,
         ],
         chartparse.globalevents.LyricEvent,
@@ -151,7 +151,7 @@ def build_events_from_data(
     from_data_fn: Callable[
         [
             chartparse.globalevents.TextEvent.ParsedData,
-            typ.Optional[chartparse.globalevents.TextEvent],
+            chartparse.globalevents.TextEvent | None,
             TimestampAtTickSupporter,
         ],
         chartparse.globalevents.TextEvent,
@@ -168,7 +168,7 @@ def build_events_from_data(
     from_data_fn: Callable[
         [
             chartparse.instrument.StarPowerEvent.ParsedData,
-            typ.Optional[chartparse.instrument.StarPowerEvent],
+            chartparse.instrument.StarPowerEvent | None,
             TimestampAtTickSupporter,
         ],
         chartparse.instrument.StarPowerEvent,
