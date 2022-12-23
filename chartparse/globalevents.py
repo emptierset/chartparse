@@ -22,14 +22,14 @@ from chartparse.event import Event, TimestampAtTickSupporter
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.util import DictPropertiesEqMixin, DictReprTruncatedSequencesMixin
 
-GlobalEventsTrackT = typ.TypeVar("GlobalEventsTrackT", bound="GlobalEventsTrack")
-
 logger = logging.getLogger(__name__)
 
 
 @typ.final
 class GlobalEventsTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     """A :class:`~chartparse.chart.Chart`'s :class:`~chartparse.globalevents.GlobalEvent`\\ s."""
+
+    _SelfT = typ.TypeVar("_SelfT", bound="GlobalEventsTrack")
 
     resolution: typ.Final[int]
     """The number of ticks for which a quarter note lasts."""
@@ -65,10 +65,10 @@ class GlobalEventsTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
     @classmethod
     def from_chart_lines(
-        cls: type[GlobalEventsTrackT],
+        cls: type[_SelfT],
         lines: Iterable[str],
         tatter: TimestampAtTickSupporter,
-    ) -> GlobalEventsTrackT:
+    ) -> _SelfT:
         """Initializes instance attributes by parsing an iterable of strings.
 
         Args:
@@ -100,7 +100,7 @@ class GlobalEventsTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
     @classmethod
     def _parse_data_from_chart_lines(
-        cls: type[GlobalEventsTrackT],
+        cls: type[_SelfT],
         lines: Iterable[str],
     ) -> tuple[
         list[TextEvent.ParsedData],
@@ -126,9 +126,6 @@ class GlobalEventsTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         return text_data, section_data, lyric_data
 
 
-GlobalEventT = typ.TypeVar("GlobalEventT", bound="GlobalEvent")
-
-
 class GlobalEvent(Event):
     """An event in a :class:`~chartparse.globalevents.GlobalEventsTrack`.
 
@@ -139,6 +136,8 @@ class GlobalEvent(Event):
     Subclasses should define ``_regex_prog`` and can be instantiated with their ``from_chart_line``
     method.
     """
+
+    _SelfT = typ.TypeVar("_SelfT", bound="GlobalEvent")
 
     value: typ.Final[str]
     """The data that this event stores."""
@@ -156,11 +155,11 @@ class GlobalEvent(Event):
 
     @classmethod
     def from_parsed_data(
-        cls: type[GlobalEventT],
+        cls: type[_SelfT],
         data: GlobalEvent.ParsedData,
-        prev_event: GlobalEventT | None,
+        prev_event: _SelfT | None,
         tatter: TimestampAtTickSupporter,
-    ) -> GlobalEventT:
+    ) -> _SelfT:
         """Obtain an instance of this object from parsed data.
 
         Args:
@@ -185,10 +184,10 @@ class GlobalEvent(Event):
         to_join.append(f': "{self.value}"')
         return "".join(to_join)
 
-    ParsedDataT = typ.TypeVar("ParsedDataT", bound="ParsedData")
-
     @dataclasses.dataclass(kw_only=True)
     class ParsedData(Event.ParsedData):
+        _SelfT = typ.TypeVar("_SelfT", bound="GlobalEvent.ParsedData")
+
         value: str
 
         _regex: typ.ClassVar[str]
@@ -200,9 +199,7 @@ class GlobalEvent(Event):
         _value_regex: typ.ClassVar[str]
 
         @classmethod
-        def from_chart_line(
-            cls: type[GlobalEvent.ParsedDataT], line: str
-        ) -> GlobalEvent.ParsedDataT:
+        def from_chart_line(cls: type[_SelfT], line: str) -> _SelfT:
             """Attempt to construct this object from a ``.chart`` line.
 
             Args:

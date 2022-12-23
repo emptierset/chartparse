@@ -65,9 +65,6 @@ class Instrument(AllValuesGettableEnum):
     GHL_BASS = "GHLBass"  # Bass (Guitar Hero: Live)
 
 
-NoteT = typ.TypeVar("NoteT", bound="Note")
-
-
 @typ.final
 class Note(Enum):
     """The note lane(s) to which a :class:`~chartparse.instrument.NoteEvent` corresponds."""
@@ -176,6 +173,8 @@ class NoteTrackIndex(AllValuesGettableEnum):
 
 @typ.final
 class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
+    _SelfT = typ.TypeVar("_SelfT", bound="InstrumentTrack")
+
     """All of the instrument-related events for one (instrument, difficulty) pair."""
 
     resolution: typ.Final[int]
@@ -200,8 +199,6 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     _open_instrument_track_index = 7
     _forced_instrument_track_index = 5
     _tap_instrument_track_index = 6
-
-    _SelfT = typ.TypeVar("_SelfT", bound="InstrumentTrack")
 
     def __init__(
         self,
@@ -371,9 +368,6 @@ class HOPOState(Enum):
     TAP = 2
 
 
-NoteEventT = typ.TypeVar("NoteEventT", bound="NoteEvent")
-
-
 @typ.final
 class NoteEvent(Event):
     """An event representing all of the notes at a particular tick.
@@ -386,6 +380,8 @@ class NoteEvent(Event):
     It is a HOPO. Other valid flags are ``T`` (for "tap") and ``S`` (for "strum").
 
     """
+
+    _SelfT = typ.TypeVar("_SelfT", bound="NoteEvent")
 
     note: typ.Final[Note]
     """The note lane(s) that are active."""
@@ -453,14 +449,14 @@ class NoteEvent(Event):
 
     @classmethod
     def from_parsed_data(
-        cls: type[NoteEventT],
+        cls: type[_SelfT],
         data: NoteEvent.ParsedData,
         prev_event: NoteEvent | None,
         star_power_events: Sequence[StarPowerEvent],
         tatter: TimestampAtTickSupporter,
         proximal_bpm_event_index: int = 0,
         star_power_event_index: int = 0,
-    ) -> tuple[NoteEventT, int, int]:
+    ) -> tuple[_SelfT, int, int]:
         note = Note(data.note_array)
 
         timestamp, proximal_bpm_event_index = tatter.timestamp_at_tick(
@@ -602,6 +598,8 @@ class NoteEvent(Event):
 
     @dataclasses.dataclass(kw_only=True)
     class ParsedData(Event.CoalescableParsedData[ParsedDataT]):
+        _SelfT = typ.TypeVar("_SelfT", bound="NoteEvent.ParsedData")
+
         note_array: bytearray
         """The note lane(s) active in the event represented by this data.
 
@@ -632,8 +630,6 @@ class NoteEvent(Event):
             str
         ] = "unhandled note track index {} at tick {}"
 
-        # _SelfT = typ.TypeVar("_SelfT", bound="NoteEvent.ParsedData")
-
         @functools.cached_property
         def immutable_sustain(self) -> ComplexSustainT | None:
             """The value of ``sustain``, but converted to an immutable type if necessary."""
@@ -645,7 +641,7 @@ class NoteEvent(Event):
                 return tuple(self.sustain)
 
         @classmethod
-        def from_chart_line(cls: type[NoteEvent.ParsedDataT], line: str) -> NoteEvent.ParsedDataT:
+        def from_chart_line(cls: type[_SelfT], line: str) -> _SelfT:
             """Attempt to construct this object from a ``.chart`` line.
 
             Args:
@@ -702,7 +698,7 @@ class NoteEvent(Event):
         # the data from a single line. i.e. they can specify:
         # - exactly one of the six notes, or a force or tap flag.
         # - and exactly one Optional sustain value.
-        def coalesce_from_other(self, other: NoteEvent.ParsedDataT) -> None:
+        def coalesce_from_other(self, other: _SelfT) -> None:
             """Merge the contents of another data into this one.
 
             Args:
@@ -741,14 +737,14 @@ class SpecialEvent(Event):
     This is typically used only as a base class for more specialized subclasses.
     """
 
+    _SelfT = typ.TypeVar("_SelfT", bound="SpecialEvent")
+
     sustain: typ.Final[int]
     """The number of ticks for which this event is sustained.
 
     This event does _not_ overlap events at ``tick + sustain``; it ends immediately before that
     tick.
     """
-
-    _SelfT = typ.TypeVar("_SelfT", bound="SpecialEvent")
 
     def __init__(
         self,
@@ -805,6 +801,8 @@ class SpecialEvent(Event):
 
     @dataclasses.dataclass(kw_only=True)
     class ParsedData(Event.ParsedData):
+        _SelfT = typ.TypeVar("_SelfT", bound="SpecialEvent.ParsedData")
+
         sustain: int
         """The duration in ticks of the event represented by this data."""
 
@@ -815,8 +813,6 @@ class SpecialEvent(Event):
         # Match 2: Sustain (ticks)
         _regex_template: typ.Final[str] = r"^\s*?(\d+?) = S {} (\d+?)\s*?$"
         _index_regex: typ.ClassVar[str]
-
-        _SelfT = typ.TypeVar("_SelfT", bound="SpecialEvent.ParsedData")
 
         @classmethod
         def from_chart_line(cls: type[_SelfT], line: str) -> _SelfT:

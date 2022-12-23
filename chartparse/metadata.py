@@ -229,11 +229,11 @@ _field_parsing_specs: _FieldParsingSpecDict = {
     "crowd_stream": _MultiwordStrFieldSpec("CrowdStream"),
 }
 
-MetadataT = typ.TypeVar("MetadataT", bound="Metadata")
-
 
 @typ.final
 class Metadata(DictPropertiesEqMixin, DictReprMixin):
+    _SelfT = typ.TypeVar("_SelfT", bound="Metadata")
+
     """All of a :class:`~chartparse.chart.Chart` object's metadata."""
 
     section_name: typ.Final[str] = "Song"
@@ -401,7 +401,7 @@ class Metadata(DictPropertiesEqMixin, DictReprMixin):
             self.crowd_stream = crowd_stream
 
     @classmethod
-    def from_chart_lines(cls: type[MetadataT], lines_iter: Iterable[str]) -> MetadataT:
+    def from_chart_lines(cls: type[_SelfT], lines_iter: Iterable[str]) -> _SelfT:
         """Initializes instance attributes by parsing an iterable of strings.
 
         Args:

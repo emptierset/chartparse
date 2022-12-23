@@ -30,6 +30,8 @@ logger = logging.getLogger(__name__)
 class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     """All of a :class:`~chartparse.chart.Chart` object's tempo-mapping related events."""
 
+    _SelfT = typ.TypeVar("_SelfT", bound="SyncTrack")
+
     resolution: typ.Final[int]
     """The number of ticks for which a quarter note lasts."""
 
@@ -41,8 +43,6 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
     section_name: typ.Final[str] = "SyncTrack"
     """The name of this track's section in a ``.chart`` file."""
-
-    _SelfT = typ.TypeVar("_SelfT", bound="SyncTrack")
 
     def __init__(
         self,
@@ -221,6 +221,8 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 class TimeSignatureEvent(Event):
     """An event representing a time signature change at a particular tick."""
 
+    _SelfT = typ.TypeVar("_SelfT", bound="TimeSignatureEvent")
+
     upper_numeral: typ.Final[int]
     """The number indicating how many beats constitute a bar."""
 
@@ -228,8 +230,6 @@ class TimeSignatureEvent(Event):
     """The number indicating the note value that represents one beat."""
 
     _default_lower_numeral: typ.Final[int] = 4
-
-    _SelfT = typ.TypeVar("_SelfT", bound="TimeSignatureEvent")
 
     def __init__(
         self,
@@ -287,6 +287,8 @@ class TimeSignatureEvent(Event):
     @typ.final
     @dataclasses.dataclass(kw_only=True)
     class ParsedData(Event.ParsedData):
+        _SelfT = typ.TypeVar("_SelfT", bound="TimeSignatureEvent.ParsedData")
+
         upper: int
         lower: int | None
 
@@ -295,8 +297,6 @@ class TimeSignatureEvent(Event):
         # Match 3: Lower numeral (optional; assumed to be 4 if absent)
         _regex: typ.Final[str] = r"^\s*?(\d+?) = TS (\d+?)(?: (\d+?))?\s*?$"
         _regex_prog: typ.Final[typ.Pattern[str]] = re.compile(_regex)
-
-        _SelfT = typ.TypeVar("_SelfT", bound="TimeSignatureEvent.ParsedData")
 
         @classmethod
         def from_chart_line(cls: type[_SelfT], line: str) -> _SelfT:
@@ -326,10 +326,10 @@ class TimeSignatureEvent(Event):
 class BPMEvent(Event):
     """An event representing a BPM (beats per minute) change at a particular tick."""
 
+    _SelfT = typ.TypeVar("_SelfT", bound="BPMEvent")
+
     bpm: typ.Final[float]
     """The beats per minute value. Must not have more than 3 decimal places."""
-
-    _SelfT = typ.TypeVar("_SelfT", bound="BPMEvent")
 
     def __init__(
         self,
@@ -415,14 +415,14 @@ class BPMEvent(Event):
     @typ.final
     @dataclasses.dataclass(kw_only=True)
     class ParsedData(Event.ParsedData):
+        _SelfT = typ.TypeVar("_SelfT", bound="BPMEvent.ParsedData")
+
         raw_bpm: str
 
         # Match 1: Tick
         # Match 2: BPM (the last 3 digits are the decimal places)
         _regex: typ.Final[str] = r"^\s*?(\d+?) = B (\d+?)\s*?$"
         _regex_prog: typ.Final[typ.Pattern[str]] = re.compile(_regex)
-
-        _SelfT = typ.TypeVar("_SelfT", bound="BPMEvent.ParsedData")
 
         @classmethod
         def from_chart_line(cls: type[_SelfT], line: str) -> _SelfT:
