@@ -19,7 +19,6 @@ from collections.abc import Iterable, Sequence
 
 import chartparse.tick
 import chartparse.track
-from chartparse.datastructures import ImmutableSortedList
 from chartparse.event import Event, TimestampAtTickSupporter
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.util import DictPropertiesEqMixin, DictReprTruncatedSequencesMixin
@@ -37,7 +36,7 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     time_signature_events: typ.Final[Sequence[TimeSignatureEvent]]
     """A ``SyncTrack``'s ``TimeSignatureEvent``\\ s."""
 
-    bpm_events: typ.Final[ImmutableSortedList[BPMEvent]]
+    bpm_events: typ.Final[Sequence[BPMEvent]]
     """A ``SyncTrack``'s ``BPMEvent``\\ s."""
 
     section_name: typ.Final[str] = "SyncTrack"
@@ -49,7 +48,7 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         self,
         resolution: int,
         time_signature_events: Sequence[TimeSignatureEvent],
-        bpm_events: ImmutableSortedList[BPMEvent],
+        bpm_events: Sequence[BPMEvent],
     ):
         """Instantiates and validates all instance attributes.
 
@@ -165,7 +164,7 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
     @staticmethod
     def _timestamp_at_tick(
-        bpm_events: ImmutableSortedList[BPMEvent],
+        bpm_events: Sequence[BPMEvent],
         tick: int,
         resolution: int,
         proximal_bpm_event_index: int = 0,
@@ -190,12 +189,12 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
     @staticmethod
     def _index_of_proximal_bpm_event(
-        bpm_events: ImmutableSortedList[BPMEvent], tick: int, proximal_bpm_event_index: int = 0
+        bpm_events: Sequence[BPMEvent], tick: int, proximal_bpm_event_index: int = 0
     ) -> int:
         if not bpm_events:
             raise ValueError("bpm_events must not be empty")
 
-        index_of_last_event = bpm_events.length - 1
+        index_of_last_event = len(bpm_events) - 1
         if proximal_bpm_event_index > index_of_last_event:
             raise ValueError(
                 f"there are no BPMEvents at or after index {proximal_bpm_event_index} in "
@@ -208,20 +207,14 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
                 f"input tick {tick} precedes tick value of first BPMEvent ({first_event.tick})"
             )
 
-        use_binary_search = False
-        if use_binary_search:  # pragma: no cover
-            return bpm_events.find_le(
-                tick, lo=proximal_bpm_event_index, hi=bpm_events.length, key=lambda e: e.tick
-            )
-        else:
-            # Do NOT iterate over last BPMEvent, since it has no next event.
-            for index in range(proximal_bpm_event_index, index_of_last_event):
-                if bpm_events[index + 1].tick > tick:
-                    return index
+        # Do NOT iterate over last BPMEvent, since it has no next event.
+        for index in range(proximal_bpm_event_index, index_of_last_event):
+            if bpm_events[index + 1].tick > tick:
+                return index
 
-            # If none of the previous BPMEvents are proximal, the last event is proximal by
-            # definition.
-            return index_of_last_event
+        # If none of the previous BPMEvents are proximal, the last event is proximal by
+        # definition.
+        return index_of_last_event
 
 
 @typ.final

@@ -11,7 +11,6 @@ import math
 import pytest
 
 from chartparse.chart import Chart
-from chartparse.datastructures import ImmutableSortedList
 from chartparse.event import Event
 from chartparse.globalevents import (
     GlobalEventsTrack,
@@ -55,7 +54,7 @@ _default_tatter_bpm_event_index = 47
 _default_bpm = 120.000
 _default_raw_bpm = str(int(_default_bpm * 1000))
 _default_bpm_event = BPMEvent(_default_tick, _default_timestamp, _default_bpm)
-_default_bpm_events = ImmutableSortedList([_default_bpm_event], already_sorted=True)
+_default_bpm_events = [_default_bpm_event]
 _default_bpm_event_parsed_data = BPMEvent.ParsedData(tick=_default_tick, raw_bpm=_default_raw_bpm)
 _default_bpm_event_parsed_datas = [_default_bpm_event_parsed_data]
 
@@ -134,7 +133,7 @@ _default_note_event_parsed_data = NoteEvent.ParsedData(
 _default_note_event_parsed_datas = [_default_note_event_parsed_data]
 
 _default_star_power_event = StarPowerEvent(_default_tick, _default_timestamp, _default_sustain)
-_default_star_power_events = ImmutableSortedList([_default_star_power_event], already_sorted=True)
+_default_star_power_events = [_default_star_power_event]
 _default_star_power_event_parsed_data = StarPowerEvent.ParsedData(
     tick=_default_tick, sustain=_default_sustain
 )

@@ -20,7 +20,6 @@ from chartparse.instrument import (
 from chartparse.tick import NoteDuration
 
 import tests.helpers.tick
-from tests.helpers.datastructures import AlreadySortedImmutableSortedList
 from tests.helpers.instrument import (
     InstrumentTrackWithDefaults,
     StarPowerEventWithDefaults,
@@ -878,37 +877,31 @@ class TestNoteEvent(object):
             [
                 pytest.param(
                     pytest.defaults.tick,
-                    AlreadySortedImmutableSortedList([]),
+                    [],
                     None,
                     0,
                     id="empty_star_power_events",
                 ),
                 pytest.param(
                     0,
-                    AlreadySortedImmutableSortedList(
-                        [StarPowerEventWithDefaults(tick=100, sustain=10)]
-                    ),
+                    [StarPowerEventWithDefaults(tick=100, sustain=10)],
                     None,
                     0,
                     id="tick_not_in_event",
                 ),
                 pytest.param(
                     10,
-                    AlreadySortedImmutableSortedList(
-                        [
-                            StarPowerEventWithDefaults(tick=0, sustain=10),
-                            StarPowerEventWithDefaults(tick=100, sustain=10),
-                        ]
-                    ),
+                    [
+                        StarPowerEventWithDefaults(tick=0, sustain=10),
+                        StarPowerEventWithDefaults(tick=100, sustain=10),
+                    ],
                     None,
                     1,
                     id="tick_not_in_event_with_noninitial_candidate_index",
                 ),
                 pytest.param(
                     0,
-                    AlreadySortedImmutableSortedList(
-                        [StarPowerEventWithDefaults(tick=0, sustain=10)]
-                    ),
+                    [StarPowerEventWithDefaults(tick=0, sustain=10)],
                     StarPowerData(
                         star_power_event_index=pytest.defaults.proximal_star_power_event_index
                     ),
@@ -917,12 +910,10 @@ class TestNoteEvent(object):
                 ),
                 pytest.param(
                     100,
-                    AlreadySortedImmutableSortedList(
-                        [
-                            StarPowerEventWithDefaults(tick=0, sustain=10),
-                            StarPowerEventWithDefaults(tick=100, sustain=10),
-                        ]
-                    ),
+                    [
+                        StarPowerEventWithDefaults(tick=0, sustain=10),
+                        StarPowerEventWithDefaults(tick=100, sustain=10),
+                    ],
                     StarPowerData(star_power_event_index=1),
                     1,
                     id="tick_in_event_with_noninitial_candidate_index",

@@ -18,7 +18,6 @@ from collections.abc import Callable, Iterable, Sequence
 import chartparse.globalevents
 import chartparse.instrument
 import chartparse.sync
-from chartparse.datastructures import ImmutableSortedList
 from chartparse.event import Event, TimestampAtTickSupporter
 from chartparse.exceptions import ProgrammerError, RegexNotMatchError
 
@@ -90,7 +89,7 @@ def build_events_from_data(
     ],
     resolution: int,
     /,
-) -> ImmutableSortedList[chartparse.sync.BPMEvent]:
+) -> list[chartparse.sync.BPMEvent]:
     ...  # pragma: no cover
 
 
@@ -107,7 +106,7 @@ def build_events_from_data(
     ],
     tatter: TimestampAtTickSupporter,
     /,
-) -> ImmutableSortedList[chartparse.sync.TimeSignatureEvent]:
+) -> list[chartparse.sync.TimeSignatureEvent]:
     ...  # pragma: no cover
 
 
@@ -124,7 +123,7 @@ def build_events_from_data(
     ],
     tatter: TimestampAtTickSupporter,
     /,
-) -> ImmutableSortedList[chartparse.globalevents.SectionEvent]:
+) -> list[chartparse.globalevents.SectionEvent]:
     ...  # pragma: no cover
 
 
@@ -141,7 +140,7 @@ def build_events_from_data(
     ],
     tatter: TimestampAtTickSupporter,
     /,
-) -> ImmutableSortedList[chartparse.globalevents.LyricEvent]:
+) -> list[chartparse.globalevents.LyricEvent]:
     ...  # pragma: no cover
 
 
@@ -158,7 +157,7 @@ def build_events_from_data(
     ],
     tatter: TimestampAtTickSupporter,
     /,
-) -> ImmutableSortedList[chartparse.globalevents.TextEvent]:
+) -> list[chartparse.globalevents.TextEvent]:
     ...  # pragma: no cover
 
 
@@ -175,7 +174,7 @@ def build_events_from_data(
     ],
     tatter: TimestampAtTickSupporter,
     /,
-) -> ImmutableSortedList[chartparse.instrument.StarPowerEvent]:
+) -> list[chartparse.instrument.StarPowerEvent]:
     ...  # pragma: no cover
 
 
@@ -187,8 +186,8 @@ def build_events_from_data(datas, from_data_fn, resolution_or_tatter, /):
         events.append(event)
     if isinstance(resolution_or_tatter, int):  # using BPMEvent.ParsedData
         # In this case, BPMEvents must already be in increasing tick order, by definition.
-        return ImmutableSortedList(events, already_sorted=True)
+        return events
     elif isinstance(resolution_or_tatter, TimestampAtTickSupporter):
-        return ImmutableSortedList(events, key=lambda e: e.tick)
+        return sorted(events, key=lambda e: e.tick)
     else:
         raise ProgrammerError  # pragma: no cover

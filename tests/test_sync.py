@@ -8,7 +8,6 @@ from chartparse.event import Event
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.sync import SyncTrack, BPMEvent, TimeSignatureEvent
 
-from tests.helpers.datastructures import AlreadySortedImmutableSortedList
 from tests.helpers.lines import generate_bpm as generate_bpm_line
 from tests.helpers.lines import generate_time_signature as generate_time_signature_line
 from tests.helpers.sync import (
@@ -144,7 +143,7 @@ class TestSyncTrack(object):
             event3 = BPMEvent.from_parsed_data(
                 BPMEvent.ParsedData(tick=800, raw_bpm="90000"), event2, resolution
             )
-            test_bpm_events = AlreadySortedImmutableSortedList([event0, event1, event2, event3])
+            test_bpm_events = [event0, event1, event2, event3]
 
             got_timestamp, got_proximal_bpm_event_index = SyncTrack._timestamp_at_tick(
                 test_bpm_events, tick, resolution
@@ -157,46 +156,38 @@ class TestSyncTrack(object):
             "bpm_events,tick,want",
             [
                 pytest.param(
-                    AlreadySortedImmutableSortedList(
-                        [
-                            BPMEventWithDefaults(tick=0),
-                            BPMEventWithDefaults(tick=100),
-                        ],
-                    ),
+                    [
+                        BPMEventWithDefaults(tick=0),
+                        BPMEventWithDefaults(tick=100),
+                    ],
                     0,
                     0,
                     id="tick_coincides_with_first_event",
                 ),
                 pytest.param(
-                    AlreadySortedImmutableSortedList(
-                        [
-                            BPMEventWithDefaults(tick=0),
-                            BPMEventWithDefaults(tick=100),
-                        ],
-                    ),
+                    [
+                        BPMEventWithDefaults(tick=0),
+                        BPMEventWithDefaults(tick=100),
+                    ],
                     50,
                     0,
                     id="tick_between_first_and_second_events",
                 ),
                 pytest.param(
-                    AlreadySortedImmutableSortedList(
-                        [
-                            BPMEventWithDefaults(tick=0),
-                            BPMEventWithDefaults(tick=100),
-                            BPMEventWithDefaults(tick=200),
-                        ],
-                    ),
+                    [
+                        BPMEventWithDefaults(tick=0),
+                        BPMEventWithDefaults(tick=100),
+                        BPMEventWithDefaults(tick=200),
+                    ],
                     150,
                     1,
                     id="tick_between_second_and_third_events",
                 ),
                 pytest.param(
-                    AlreadySortedImmutableSortedList(
-                        [
-                            BPMEventWithDefaults(tick=0),
-                            BPMEventWithDefaults(tick=1),
-                        ],
-                    ),
+                    [
+                        BPMEventWithDefaults(tick=0),
+                        BPMEventWithDefaults(tick=1),
+                    ],
                     2,
                     1,
                     id="tick_after_last_event",
@@ -211,28 +202,26 @@ class TestSyncTrack(object):
             "bpm_events,tick,proximal_bpm_event_index",
             [
                 pytest.param(
-                    AlreadySortedImmutableSortedList([]),
+                    [],
                     0,
                     0,
                     id="no_bpm_events",
                 ),
                 pytest.param(
-                    AlreadySortedImmutableSortedList([BPMEventWithDefaults()]),
+                    [BPMEventWithDefaults()],
                     0,
                     1,
                     id="proximal_bpm_event_index_after_last_bpm_event",
                 ),
                 pytest.param(
-                    AlreadySortedImmutableSortedList(
-                        [
-                            BPMEventWithDefaults(
-                                tick=0,
-                            ),
-                            BPMEventWithDefaults(
-                                tick=100,
-                            ),
-                        ],
-                    ),
+                    [
+                        BPMEventWithDefaults(
+                            tick=0,
+                        ),
+                        BPMEventWithDefaults(
+                            tick=100,
+                        ),
+                    ],
                     50,
                     1,
                     id="input_tick_before_tick_at_proximal_bpm_event_index",

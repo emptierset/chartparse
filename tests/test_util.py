@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from chartparse.util import DictPropertiesEqMixin, AllValuesGettableEnum
-from chartparse.datastructures import ImmutableList
 
 
 class TestDictPropertiesEqMixin(object):
@@ -53,9 +52,7 @@ class TestAllValuesGettableEnum(object):
 
     class TestAllValues(object):
         def test(self):
-            assert TestAllValuesGettableEnum.TrinketEnum.all_values() == ImmutableList([1, 2])
+            assert TestAllValuesGettableEnum.TrinketEnum.all_values() == [1, 2]
 
         def test_does_not_get_aliases(self):
-            assert TestAllValuesGettableEnum.TrinketEnumWithAlias.all_values() == ImmutableList(
-                [1, 2]
-            )
+            assert TestAllValuesGettableEnum.TrinketEnumWithAlias.all_values() == [1, 2]

@@ -23,7 +23,6 @@ from enum import Enum
 
 import chartparse.tick
 import chartparse.track
-from chartparse.datastructures import ImmutableSortedList
 from chartparse.event import Event, TimestampAtTickSupporter
 from chartparse.exceptions import ProgrammerError, RegexNotMatchError
 from chartparse.tick import NoteDuration
@@ -193,7 +192,7 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     note_events: typ.Final[Sequence[NoteEvent]]
     """An (instrument, difficulty) pair's ``NoteEvent`` objects."""
 
-    star_power_events: typ.Final[ImmutableSortedList[StarPowerEvent]]
+    star_power_events: typ.Final[Sequence[StarPowerEvent]]
     """An (instrument, difficulty) pair's ``StarPowerEvent`` objects."""
 
     _min_note_instrument_track_index = 0
@@ -210,7 +209,7 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         instrument: Instrument,
         difficulty: Difficulty,
         note_events: Sequence[NoteEvent],
-        star_power_events: ImmutableSortedList[StarPowerEvent],
+        star_power_events: Sequence[StarPowerEvent],
     ) -> None:
         """Instantiates all instance attributes."""
         if resolution <= 0:
@@ -298,9 +297,9 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     def _build_note_events_from_data(
         cls,
         datas: Iterable[NoteEvent.ParsedData],
-        star_power_events: ImmutableSortedList[StarPowerEvent],
+        star_power_events: Sequence[StarPowerEvent],
         tatter: TimestampAtTickSupporter,
-    ) -> ImmutableSortedList[NoteEvent]:
+    ) -> list[NoteEvent]:
         proximal_bpm_event_index = 0
         star_power_event_index = 0
         events: list[NoteEvent] = []
@@ -316,9 +315,7 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             )
             events.append(event)
 
-        # TODO: Is this still already sorted? Can we perhaps define `datas` further
-        # up the call hierarchy as an ImmutableSortedList, so it's straightforward?
-        return ImmutableSortedList(events, already_sorted=True)
+        return events
 
 
 @typ.final
@@ -460,7 +457,7 @@ class NoteEvent(Event):
         cls: type[NoteEventT],
         data: NoteEvent.ParsedData,
         prev_event: NoteEvent | None,
-        star_power_events: ImmutableSortedList[StarPowerEvent],
+        star_power_events: Sequence[StarPowerEvent],
         tatter: TimestampAtTickSupporter,
         proximal_bpm_event_index: int = 0,
         star_power_event_index: int = 0,
@@ -559,20 +556,20 @@ class NoteEvent(Event):
     @staticmethod
     def _compute_star_power_data(
         tick: int,
-        star_power_events: ImmutableSortedList[StarPowerEvent],
+        star_power_events: Sequence[StarPowerEvent],
         *,
         proximal_star_power_event_index: int = 0,
     ) -> tuple[StarPowerData | None, int]:
         if not star_power_events:
             return None, 0
 
-        if proximal_star_power_event_index >= star_power_events.length:
+        if proximal_star_power_event_index >= len(star_power_events):
             raise ValueError(
                 "there are no StarPowerEvents at or after index "
                 f"{proximal_star_power_event_index} in star_power_events"
             )
 
-        for candidate_index in range(proximal_star_power_event_index, star_power_events.length):
+        for candidate_index in range(proximal_star_power_event_index, len(star_power_events)):
             if not star_power_events[candidate_index].tick_is_after_event(tick):
                 break
 
