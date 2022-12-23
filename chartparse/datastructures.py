@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import bisect
 import typing
-from collections.abc import Callable, Iterable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from typing import Literal, Union
 
 from chartparse.exceptions import ProgrammerError
@@ -20,11 +20,8 @@ class ImmutableList(Sequence[T_co]):
     """A ``list`` equivalent that cannot be mutated.
 
     .. automethod:: __getitem__
-    .. automethod:: __iter__
     .. automethod:: __repr__
     .. automethod:: __len__
-    .. automethod:: __contains__
-    .. automethod:: __reversed__
     .. automethod:: __eq__
     """
 
@@ -53,20 +50,11 @@ class ImmutableList(Sequence[T_co]):
     def __getitem__(self, index: Union[int, slice]) -> Union[T_co, Sequence[T_co]]:
         return self._seq[index]
 
-    def __iter__(self) -> Iterator[T_co]:
-        return iter(self._seq)
-
     def __repr__(self) -> str:
         return repr(self._seq)  # pragma: no cover
 
     def __len__(self) -> int:
         return self.length
-
-    def __contains__(self, obj: object) -> bool:
-        return obj in self._seq
-
-    def __reversed__(self) -> Iterator[T_co]:
-        return reversed(self._seq)
 
     def __eq__(self, other: object) -> bool:
         if type(other) is list:
