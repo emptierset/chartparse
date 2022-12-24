@@ -321,20 +321,19 @@ class StarPowerData(DictPropertiesEqMixin):
     star_power_event_index: int
 
 
-# TODO: See what happens if we specify five Optional[int]s, rather than ...
-SustainTupleT = tuple[int | None, ...]
+SustainTupleT = tuple[int | None, int | None, int | None, int | None, int | None]
 """A 5-element tuple representing the sustain value of each note lane for nonuniform sustains.
 
 An element is ``None`` if and only if the corresponding note lane is inactive. If an element is
-``0``, then there must be at least one other non-``0``, non-``None`` element; this is because that
+``0``, then there will be at least one other non-``0``, non-``None`` element; this is because that
 ``0`` element represents an unsustained note in unison with a sustained note.
 """
 
 _SustainListT = list[int | None]
-"""A 5-element tuple representing the sustain value of each note lane for nonuniform sustains.
+"""A 5-element list representing the sustain value of each note lane for nonuniform sustains.
 
 An element is ``None`` if and only if the corresponding note lane is inactive. If an element is
-``0``, then there must be at least one other non-``0``, non-``None`` element; this is because that
+``0``, then there will be at least one other non-``0``, non-``None`` element; this is because that
 ``0`` element represents an unsustained note in unison with a sustained note.
 """
 
@@ -666,7 +665,16 @@ class NoteEvent(Event):
 
             sustain: ComplexSustainT | None
             if isinstance(mutable_sustain, list):
-                sustain = tuple(mutable_sustain)
+                # This level of manual indexing is required because mypy does not allow type narrowing
+                # based on len checks. That is, even if we assert that len(coalesced) == 5, mypy does
+                # not understand that it becomes a tuple of type 5-tuple.
+                sustain = (
+                    mutable_sustain[0],
+                    mutable_sustain[1],
+                    mutable_sustain[2],
+                    mutable_sustain[3],
+                    mutable_sustain[4],
+                )
             else:
                 sustain = mutable_sustain
 
@@ -726,7 +734,10 @@ class NoteEvent(Event):
             for i, s in enumerate(src):
                 if s is not None:
                     coalesced[i] = s
-            return tuple(coalesced)
+            # This level of manual indexing is required because mypy does not allow type narrowing
+            # based on len checks. That is, even if we assert that len(coalesced) == 5, mypy does
+            # not understand that it becomes a tuple of type 5-tuple.
+            return (coalesced[0], coalesced[1], coalesced[2], coalesced[3], coalesced[4])
 
 
 class SpecialEvent(Event):
