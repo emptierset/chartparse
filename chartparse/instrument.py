@@ -142,6 +142,7 @@ class Note(Enum):
 
     @staticmethod
     def coalesced(a: Note, b: Note) -> Note:
+        """Returns a `Note` with all of the lanes active in the inputs."""
         return Note(bytearray([1 if aa or bb else 0 for aa, bb in zip(a.value, b.value)]))
 
 
@@ -170,9 +171,6 @@ class NoteTrackIndex(AllValuesGettableEnum):
         if self.__class__ is other.__class__:
             return self.value < other.value
         return NotImplemented  # pragma: no cover
-
-
-# TODO: create newtype (?) for bytearray for note array.
 
 
 @typ.final
@@ -329,6 +327,26 @@ An element is ``None`` if and only if the corresponding note lane is inactive. I
 ``0`` element represents an unsustained note in unison with a sustained note.
 """
 
+
+def coalesced_sustain_tuple(dest: SustainTupleT, src: SustainTupleT) -> SustainTupleT:
+    """Return a copy of `dest` with `src`'s values merged into it.
+
+    Args:
+        dest: A `SustainTupleT`.
+        src: A `SustainTupleT`.
+
+    Returns:
+        A copy of `dest` with `src`'s values merged into it where `dest` lacks them.
+    """
+    # This cast is necessary because mypy does not allow type narrowing based on len
+    # checks. That is, even if we assert that len(coalesced) == 5, mypy does not understand
+    # that it becomes a tuple of type 5-tuple.
+    return typ.cast(
+        SustainTupleT,
+        tuple(src_s if dest_s is None else dest_s for dest_s, src_s in zip(dest, src)),
+    )
+
+
 _SustainListT = list[int | None]
 """A 5-element list representing the sustain value of each note lane for nonuniform sustains.
 
@@ -343,6 +361,34 @@ ComplexSustainT = int | SustainTupleT
 If this value is an ``int``, it means that all active note lanes at this tick value are sustained
 for the same number of ticks. If this value is ``0``, then none of the note lanes are active.
 """
+
+
+def coalesced_complex_sustain(
+    dest: ComplexSustainT | None, src: ComplexSustainT | None
+) -> ComplexSustainT | None:
+    """Return a copy of `dest` with `src`'s values merged into it.
+
+    Args:
+        dest: A `ComplexSustainTupleT`.
+        src: A `ComplexSustainTupleT`.
+
+    Returns:
+        A copy of `dest` with `src`'s values merged into it where `dest` lacks them.
+
+    Raises:
+        ValueError: if this data or the other data has an ``int`` typed ``sustain``. This
+            is because an ``int`` value in this field means that it represents an open
+            note, and it is nonsensical for an open note to overlap another concrete note.
+    """
+    if src is None:
+        return dest
+    elif dest is None:
+        return src
+    elif isinstance(dest, int) or isinstance(src, int):
+        # If both aren't None, then either of them being int (i.e. open) is problematic.
+        raise ValueError("open note cannot coincide with other notes")
+    return coalesced_sustain_tuple(dest, src)
+
 
 _ComplexSustainListT = int | _SustainListT
 """A mutable sustain value representing multiple coinciding notes with different sustain values.
@@ -665,16 +711,10 @@ class NoteEvent(Event):
 
             sustain: ComplexSustainT | None
             if isinstance(mutable_sustain, list):
-                # This level of manual indexing is required because mypy does not allow type narrowing
-                # based on len checks. That is, even if we assert that len(coalesced) == 5, mypy does
-                # not understand that it becomes a tuple of type 5-tuple.
-                sustain = (
-                    mutable_sustain[0],
-                    mutable_sustain[1],
-                    mutable_sustain[2],
-                    mutable_sustain[3],
-                    mutable_sustain[4],
-                )
+                # This cast is necessary because mypy does not allow type narrowing based on len
+                # checks. That is, even if we assert that len(coalesced) == 5, mypy does not
+                # understand that it becomes a tuple of type 5-tuple.
+                sustain = typ.cast(ComplexSustainT, tuple(mutable_sustain))
             else:
                 sustain = mutable_sustain
 
@@ -699,45 +739,24 @@ class NoteEvent(Event):
                 src: A `NoteEvent.ParsedData`.
 
             Returns:
-                A copy of `dest` with `src`'s values merged into it.
+                A copy of `dest` with `src`'s values merged into it where `dest` lacks them.
 
             Raises:
                 ValueError: if this data or the other data has an ``int`` typed ``sustain``. This
                     is because an ``int`` value in this field means that it represents an open
                     note, and it is nonsensical for an open note to overlap another concrete note.
             """
+            coalesced_sustain = coalesced_complex_sustain(dest.sustain, src.sustain)
+            coalesced_note = Note.coalesced(dest.note, src.note)
             coalesced_is_forced = dest.is_forced or src.is_forced
             coalesced_is_tap = dest.is_tap or src.is_tap
-
             return cls(
                 tick=dest.tick,
-                sustain=cls._coalesced_sustain(dest.sustain, src.sustain),
-                note=Note.coalesced(dest.note, src.note),
+                sustain=coalesced_sustain,
+                note=coalesced_note,
                 is_forced=coalesced_is_forced,
                 is_tap=coalesced_is_tap,
             )
-
-        @staticmethod
-        def _coalesced_sustain(
-            dest: ComplexSustainT | None, src: ComplexSustainT | None
-        ) -> ComplexSustainT | None:
-            if src is None:
-                return dest
-            elif dest is None:
-                return src
-            elif isinstance(dest, int) or isinstance(src, int):
-                # If both aren't None, then one of them being int (i.e. open) is problematic.
-                raise ValueError("open note cannot coincide with other notes")
-            coalesced = list(dest)
-            # merge present sustain values from ``src``.
-            # TODO: Should it be an error if dest[i] and src[i] are both present?
-            for i, s in enumerate(src):
-                if s is not None:
-                    coalesced[i] = s
-            # This level of manual indexing is required because mypy does not allow type narrowing
-            # based on len checks. That is, even if we assert that len(coalesced) == 5, mypy does
-            # not understand that it becomes a tuple of type 5-tuple.
-            return (coalesced[0], coalesced[1], coalesced[2], coalesced[3], coalesced[4])
 
 
 class SpecialEvent(Event):
