@@ -384,7 +384,7 @@ class TestNoteEvent(object):
             )
 
             want_proximal_bpm_event_index = 22
-            unrefined_sustain = [100, None, None, None, None]
+            unrefined_sustain = (100, None, None, None, None)
             data = NoteEventParsedDataWithDefaults(sustain=unrefined_sustain)
 
             spy_init = mocker.spy(NoteEvent, "__init__")
@@ -428,7 +428,7 @@ class TestNoteEvent(object):
                 pytest.defaults.default_tatter_timestamp,
                 pytest.defaults.note,
                 want_hopo_state,
-                sustain=data.immutable_sustain,
+                sustain=data.sustain,
                 proximal_bpm_event_index=pytest.defaults.default_tatter_index,
                 star_power_data=want_star_power_data,
             )
@@ -691,7 +691,7 @@ class TestNoteEvent(object):
                 (
                     "note_track_index,"
                     "sustain_ticks,"
-                    "want_note_array,"
+                    "want_note,"
                     "want_sustain,"
                     "want_is_forced,"
                     "want_is_tap"
@@ -700,8 +700,8 @@ class TestNoteEvent(object):
                     pytest.param(
                         NoteTrackIndex.YELLOW,
                         sustain_ticks,
-                        bytearray((0, 0, 1, 0, 0)),
-                        [None, None, sustain_ticks, None, None],
+                        Note(bytearray((0, 0, 1, 0, 0))),
+                        (None, None, sustain_ticks, None, None),
                         False,
                         False,
                         id="normal_note",
@@ -709,7 +709,7 @@ class TestNoteEvent(object):
                     pytest.param(
                         NoteTrackIndex.OPEN,
                         sustain_ticks,
-                        bytearray((0, 0, 0, 0, 0)),
+                        Note(bytearray((0, 0, 0, 0, 0))),
                         sustain_ticks,
                         False,
                         False,
@@ -718,7 +718,7 @@ class TestNoteEvent(object):
                     pytest.param(
                         NoteTrackIndex.FORCED,
                         0,
-                        bytearray((0, 0, 0, 0, 0)),
+                        Note(bytearray((0, 0, 0, 0, 0))),
                         None,
                         True,
                         False,
@@ -727,7 +727,7 @@ class TestNoteEvent(object):
                     pytest.param(
                         NoteTrackIndex.TAP,
                         0,
-                        bytearray((0, 0, 0, 0, 0)),
+                        Note(bytearray((0, 0, 0, 0, 0))),
                         None,
                         False,
                         True,
@@ -739,7 +739,7 @@ class TestNoteEvent(object):
                 self,
                 note_track_index,
                 sustain_ticks,
-                want_note_array,
+                want_note,
                 want_sustain,
                 want_is_forced,
                 want_is_tap,
@@ -749,13 +749,13 @@ class TestNoteEvent(object):
                 )
                 want = NoteEvent.ParsedData(
                     tick=self.tick,
-                    note_array=want_note_array,
+                    note=want_note,
                     sustain=want_sustain,
                     is_forced=want_is_forced,
                     is_tap=want_is_tap,
                 )
                 assert got.tick == want.tick
-                assert got.note_array == want.note_array
+                assert got.note == want.note
                 assert got.sustain == want.sustain
                 assert got.is_forced == want.is_forced
                 assert got.is_tap == want.is_tap
@@ -788,13 +788,13 @@ class TestNoteEvent(object):
                     pytest.param(None, None, id="None"),
                     pytest.param(1, 1, id="int"),
                     pytest.param(
-                        [None, 1, None, None, None], (None, 1, None, None, None), id="list"
+                        (None, 1, None, None, None), (None, 1, None, None, None), id="list"
                     ),
                 ],
             )
             def test(self, bare_note_event_parsed_data, sustain, want):
                 bare_note_event_parsed_data.__dict__["sustain"] = sustain
-                got = bare_note_event_parsed_data.immutable_sustain
+                got = bare_note_event_parsed_data.sustain
                 assert got == want
 
         class TestCoalesced(object):
@@ -804,9 +804,9 @@ class TestNoteEvent(object):
                     pytest.param(100, None, 100, id="other_None"),
                     pytest.param(None, 100, 100, id="self_None"),
                     pytest.param(
-                        [100, None, None, None, None],
-                        [None, 100, None, None, None],
-                        [100, 100, None, None, None],
+                        (100, None, None, None, None),
+                        (None, 100, None, None, None),
+                        (100, 100, None, None, None),
                         id="both_list",
                     ),
                 ],
@@ -830,11 +830,11 @@ class TestNoteEvent(object):
                     src = NoteEventParsedDataWithDefaults(sustain=sustain_src)
                     _ = NoteEvent.ParsedData.coalesced(dest, src)
 
-            def test_note_array(self):
-                dest = NoteEventParsedDataWithDefaults(note_array=bytearray((1, 0, 0, 0, 0)))
-                src = NoteEventParsedDataWithDefaults(note_array=bytearray((0, 1, 0, 0, 0)))
-                got = NoteEvent.ParsedData.coalesced(dest, src).note_array
-                want = bytearray((1, 1, 0, 0, 0))
+            def test_note(self):
+                dest = NoteEventParsedDataWithDefaults(note=Note(bytearray((1, 0, 0, 0, 0))))
+                src = NoteEventParsedDataWithDefaults(note=Note(bytearray((0, 1, 0, 0, 0))))
+                got = NoteEvent.ParsedData.coalesced(dest, src).note
+                want = Note(bytearray((1, 1, 0, 0, 0)))
                 assert got == want
 
             @pytest.mark.parametrize(

@@ -68,6 +68,7 @@ class Instrument(AllValuesGettableEnum):
 class Note(Enum):
     """The note lane(s) to which a :class:`~chartparse.instrument.NoteEvent` corresponds."""
 
+    # TODO: optimization: Are bytearrays really better than plain tuples here?
     P = bytearray((0, 0, 0, 0, 0))
     G = bytearray((1, 0, 0, 0, 0))
     GR = bytearray((1, 1, 0, 0, 0))
@@ -138,6 +139,10 @@ class Note(Enum):
         """Returns whether this ``Note`` has multiple active lanes."""
 
         return sum(self.value) > 1
+
+    @staticmethod
+    def coalesced(a: Note, b: Note) -> Note:
+        return Note(bytearray([1 if aa or bb else 0 for aa, bb in zip(a.value, b.value)]))
 
 
 @typ.final
@@ -325,7 +330,7 @@ An element is ``None`` if and only if the corresponding note lane is inactive. I
 ``0`` element represents an unsustained note in unison with a sustained note.
 """
 
-SustainListT = list[int | None]
+_SustainListT = list[int | None]
 """A 5-element tuple representing the sustain value of each note lane for nonuniform sustains.
 
 An element is ``None`` if and only if the corresponding note lane is inactive. If an element is
@@ -334,13 +339,13 @@ An element is ``None`` if and only if the corresponding note lane is inactive. I
 """
 
 ComplexSustainT = int | SustainTupleT
-"""An immutable sustain value representing multiple coinciding notes with different sustain values.
+"""An sustain value representing multiple coinciding notes with different sustain values.
 
 If this value is an ``int``, it means that all active note lanes at this tick value are sustained
 for the same number of ticks. If this value is ``0``, then none of the note lanes are active.
 """
 
-ComplexSustainListT = int | SustainListT
+_ComplexSustainListT = int | _SustainListT
 """A mutable sustain value representing multiple coinciding notes with different sustain values.
 
 If this value is an ``int``, it means that all active note lanes at this tick value are sustained
@@ -448,8 +453,6 @@ class NoteEvent(Event):
         proximal_bpm_event_index: int = 0,
         star_power_event_index: int = 0,
     ) -> tuple[_SelfT, int, int]:
-        note = Note(data.note_array)
-
         timestamp, proximal_bpm_event_index = tatter.timestamp_at_tick(
             data.tick, proximal_bpm_event_index=proximal_bpm_event_index
         )
@@ -457,7 +460,7 @@ class NoteEvent(Event):
         hopo_state = NoteEvent._compute_hopo_state(
             tatter.resolution,
             data.tick,
-            note,
+            data.note,
             data.is_tap,
             data.is_forced,
             prev_event,
@@ -467,11 +470,10 @@ class NoteEvent(Event):
             data.tick, star_power_events, proximal_star_power_event_index=star_power_event_index
         )
 
-        sustain = data.immutable_sustain
-        if sustain is None:
+        if data.sustain is None:
             raise ValueError("sustain must not be None")
 
-        longest_sustain = cls._longest_sustain(sustain)
+        longest_sustain = cls._longest_sustain(data.sustain)
         end_tick = cls._end_tick(data.tick, longest_sustain)
         end_timestamp, _ = tatter.timestamp_at_tick(
             end_tick, proximal_bpm_event_index=proximal_bpm_event_index
@@ -481,9 +483,9 @@ class NoteEvent(Event):
             data.tick,
             timestamp,
             end_timestamp,
-            note,
+            data.note,
             hopo_state,
-            sustain=sustain,
+            sustain=data.sustain,
             star_power_data=star_power_data,
             proximal_bpm_event_index=proximal_bpm_event_index,
         )
@@ -589,18 +591,10 @@ class NoteEvent(Event):
     class ParsedData(Event.CoalescableParsedData):
         _SelfT = typ.TypeVar("_SelfT", bound="NoteEvent.ParsedData")
 
-        # TODO: This doesn't need to be mutable anymore because coalescing no longer involves
-        # mutation.
-        note_array: bytearray
-        """The note lane(s) active in the event represented by this data.
+        note: Note
+        """The note lane(s) active in the event represented by this data."""
 
-        This is basically a mutable :class:`~chartparse.instrument.Note`, since this type is
-        coalescable.
-        """
-
-        # TODO: This doesn't need to be mutable anymore because coalescing no longer involves
-        # mutation.
-        sustain: ComplexSustainListT | None
+        sustain: ComplexSustainT | None
         """The durations in ticks of the active lanes in the event represented by this data."""
 
         is_tap: bool = False
@@ -622,18 +616,6 @@ class NoteEvent(Event):
         _unhandled_note_track_index_log_msg_tmpl: typ.Final[
             str
         ] = "unhandled note track index {} at tick {}"
-
-        # TODO: This might not need to exist anymore because coalescing no longer involves
-        # mutation.
-        @functools.cached_property
-        def immutable_sustain(self) -> ComplexSustainT | None:
-            """The value of ``sustain``, but converted to an immutable type if necessary."""
-            if self.sustain is None:
-                return None
-            elif isinstance(self.sustain, int):
-                return self.sustain
-            else:
-                return tuple(self.sustain)
 
         @classmethod
         def from_chart_line(cls: type[_SelfT], line: str) -> _SelfT:
@@ -659,17 +641,17 @@ class NoteEvent(Event):
             note_track_index = NoteTrackIndex(parsed_note_index)
 
             note_array = bytearray(5)
-            sustain: ComplexSustainListT | None = None
+            mutable_sustain: _ComplexSustainListT | None = None
             is_forced = False
             is_tap = False
             # type ignored here because mypy does not understand that this enum
             # uses functools.total_ordering.
             if NoteTrackIndex.GREEN <= note_track_index <= NoteTrackIndex.ORANGE:  # type: ignore
                 note_array[parsed_note_index] = 1
-                sustain = [None] * 5
-                sustain[parsed_note_index] = parsed_sustain
+                mutable_sustain = [None] * 5
+                mutable_sustain[parsed_note_index] = parsed_sustain
             elif note_track_index == NoteTrackIndex.OPEN:
-                sustain = parsed_sustain
+                mutable_sustain = parsed_sustain
             elif note_track_index == NoteTrackIndex.FORCED:
                 is_forced = True
             elif note_track_index == NoteTrackIndex.TAP:
@@ -681,9 +663,16 @@ class NoteEvent(Event):
                         note_track_index, parsed_tick
                     )
                 )
+
+            sustain: ComplexSustainT | None
+            if isinstance(mutable_sustain, list):
+                sustain = tuple(mutable_sustain)
+            else:
+                sustain = mutable_sustain
+
             return cls(
                 tick=parsed_tick,
-                note_array=note_array,
+                note=Note(note_array),
                 sustain=sustain,
                 is_forced=is_forced,
                 is_tap=is_tap,
@@ -711,20 +700,19 @@ class NoteEvent(Event):
             """
             coalesced_is_forced = dest.is_forced or src.is_forced
             coalesced_is_tap = dest.is_tap or src.is_tap
-            print(coalesced_is_tap)
 
             return cls(
                 tick=dest.tick,
                 sustain=cls._coalesced_sustain(dest.sustain, src.sustain),
-                note_array=cls._coalesced_note_array(dest.note_array, src.note_array),
+                note=Note.coalesced(dest.note, src.note),
                 is_forced=coalesced_is_forced,
                 is_tap=coalesced_is_tap,
             )
 
         @staticmethod
         def _coalesced_sustain(
-            dest: ComplexSustainListT | None, src: ComplexSustainListT | None
-        ) -> ComplexSustainListT | None:
+            dest: ComplexSustainT | None, src: ComplexSustainT | None
+        ) -> ComplexSustainT | None:
             if src is None:
                 return dest
             elif dest is None:
@@ -738,16 +726,7 @@ class NoteEvent(Event):
             for i, s in enumerate(src):
                 if s is not None:
                     coalesced[i] = s
-            return coalesced
-
-        @staticmethod
-        def _coalesced_note_array(dest: bytearray, src: bytearray) -> bytearray:
-            coalesced = bytearray(dest)
-            # merge all present note values from ``src``.
-            for i, n in enumerate(src):
-                if n:
-                    coalesced[i] = 1
-            return coalesced
+            return tuple(coalesced)
 
 
 class SpecialEvent(Event):

@@ -128,7 +128,7 @@ _default_note_events = [_default_note_event]
 _default_note_event_parsed_data = NoteEvent.ParsedData(
     tick=_default_tick,
     sustain=_default_sustain,
-    note_array=_default_note.value,
+    note=_default_note,
 )
 _default_note_event_parsed_datas = [_default_note_event_parsed_data]
 
