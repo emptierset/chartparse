@@ -127,13 +127,7 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
         instrument_track_name_to_instrument_difficulty_pair: dict[
             str, tuple[Instrument, Difficulty]
-        ] = {
-            d + i: (Instrument(i), Difficulty(d))
-            for i, d in typ.cast(
-                Iterable[tuple[str, str]],
-                itertools.product(Instrument.all_values(), Difficulty.all_values()),
-            )
-        }
+        ] = {d.value + i.value: (i, d) for i, d in itertools.product(Instrument, Difficulty)}
 
         instrument_tracks: collections.defaultdict[
             Instrument, dict[Difficulty, InstrumentTrack]
