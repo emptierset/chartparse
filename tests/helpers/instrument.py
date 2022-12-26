@@ -78,15 +78,11 @@ def NoteEventWithDefaults(
 def NoteEventParsedDataWithDefaults(
     *,
     tick=pytest.defaults.tick,
-    note=pytest.defaults.note,
+    note_track_index=pytest.defaults.note_track_index,
     sustain=pytest.defaults.sustain_list,
-    is_forced=False,
-    is_tap=False,
 ):
     return NoteEvent.ParsedData(
         tick=tick,
-        note=note,
+        note_track_index=note_track_index,
         sustain=sustain,
-        is_forced=is_forced,
-        is_tap=is_tap,
     )

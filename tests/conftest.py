@@ -22,6 +22,7 @@ from chartparse.globalevents import (
 from chartparse.instrument import (
     InstrumentTrack,
     NoteEvent,
+    NoteTrackIndex,
     StarPowerData,
     StarPowerEvent,
     SpecialEvent,
@@ -115,9 +116,10 @@ _default_instrument = Instrument.GUITAR
 _default_section_name = _default_difficulty.value + _default_instrument.value
 _default_sustain = 0  # ticks
 _default_sustain_list = [0, None, None, None, None]
+_default_sustain_tuple = (0, None, None, None, None)
 
 _default_note = Note.G
-_default_note_instrument_track_index = InstrumentTrack._min_note_instrument_track_index
+_default_note_track_index = NoteTrackIndex.G
 
 _default_hopo_state = HOPOState.STRUM
 
@@ -128,7 +130,7 @@ _default_note_events = [_default_note_event]
 _default_note_event_parsed_data = NoteEvent.ParsedData(
     tick=_default_tick,
     sustain=_default_sustain,
-    note=_default_note,
+    note_track_index=_default_note_track_index,
 )
 _default_note_event_parsed_datas = [_default_note_event_parsed_data]
 
@@ -181,6 +183,7 @@ class Defaults(object):
     tick: ...
     sustain: ...
     sustain_list: ...
+    sustain_tuple: ...
 
     timestamp: ...
 
@@ -262,7 +265,7 @@ class Defaults(object):
 
     hopo_state: ...
 
-    note_instrument_track_index: ...
+    note_track_index: ...
     note: ...
     note_event: ...
     note_events: ...
@@ -284,6 +287,7 @@ def pytest_configure():
         tick=_default_tick,
         sustain=_default_sustain,
         sustain_list=_default_sustain_list,
+        sustain_tuple=_default_sustain_tuple,
         timestamp=_default_timestamp,
         seconds=_default_seconds,
         proximal_bpm_event_index=_default_proximal_bpm_event_index,
@@ -353,7 +357,7 @@ def pytest_configure():
         difficulty=_default_difficulty,
         section_name=_default_section_name,
         hopo_state=_default_hopo_state,
-        note_instrument_track_index=_default_note_instrument_track_index,
+        note_track_index=_default_note_track_index,
         note=_default_note,
         note_event=_default_note_event,
         note_events=_default_note_events,

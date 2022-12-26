@@ -59,12 +59,6 @@ class TestParseDataFromChartLines(object):
         def from_chart_line(cls, line):
             return cls(tick=int(line), fruit=Fruit(int(line)))
 
-    @dataclasses.dataclass(kw_only=True, frozen=True)
-    class CoalescableParsedData(ParsedData, Event.CoalescableParsedData):
-        @classmethod
-        def coalesced(cls, dest, src):
-            return cls(tick=dest.tick, fruit=Fruit(src.fruit.value + dest.fruit.value))
-
     @pytest.mark.parametrize(
         "types,lines,want",
         [
@@ -79,25 +73,11 @@ class TestParseDataFromChartLines(object):
                 },
                 id="two_typical_events",
             ),
-            pytest.param(
-                (CoalescableParsedData,),
-                ["2", "2"],
-                {
-                    CoalescableParsedData: [
-                        CoalescableParsedData(tick=2, fruit=Fruit(4)),
-                    ]
-                },
-                id="two_coalesced_events",
-            ),
         ],
     )
     def test(self, types, lines, want):
         got = parse_data_from_chart_lines(types, lines)
         assert got == want
-
-    def test_simultaneous_uncoalescable_events(self):
-        with pytest.raises(ValueError):
-            _ = parse_data_from_chart_lines((self.ParsedData,), ["0", "0"])
 
     def test_no_suitable_parsers(self, mocker, caplog):
         _ = parse_data_from_chart_lines(tuple(), pytest.invalid_chart_lines)

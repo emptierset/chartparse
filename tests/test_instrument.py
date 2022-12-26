@@ -5,6 +5,7 @@ import pytest
 import re
 import unittest.mock
 
+import chartparse.instrument
 from chartparse.event import Event
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.instrument import (
@@ -30,6 +31,88 @@ from tests.helpers.instrument import (
 )
 from tests.helpers.lines import generate_note as generate_note_line
 from tests.helpers.lines import generate_star_power as generate_star_power_line
+
+
+class TestNote(object):
+    class TestFromParsedData(object):
+        @pytest.mark.parametrize(
+            "data,want",
+            [
+                pytest.param(
+                    NoteEventParsedDataWithDefaults(note_track_index=NoteTrackIndex.G),
+                    Note.G,
+                    id="single_data",
+                ),
+                pytest.param(
+                    [
+                        NoteEventParsedDataWithDefaults(note_track_index=NoteTrackIndex.G),
+                        NoteEventParsedDataWithDefaults(note_track_index=NoteTrackIndex.R),
+                    ],
+                    Note.GR,
+                    id="multiple_data",
+                ),
+            ],
+        )
+        def test(self, data, want):
+            got = Note.from_parsed_data(data)
+            assert got == want
+
+
+class TestNoteTrackIndex(object):
+    class TestTotalOrdering(object):
+        assert NoteTrackIndex.G < NoteTrackIndex.R
+        assert NoteTrackIndex.G <= NoteTrackIndex.R
+        assert NoteTrackIndex.R >= NoteTrackIndex.G
+        assert NoteTrackIndex.R > NoteTrackIndex.G
+        assert NoteTrackIndex.G == NoteTrackIndex.G
+        assert NoteTrackIndex.G != NoteTrackIndex.R
+
+
+class TestComplexSustainFromParsedData(object):
+    @pytest.mark.parametrize(
+        "data, want",
+        [
+            pytest.param(
+                [
+                    NoteEventParsedDataWithDefaults(
+                        note_track_index=NoteTrackIndex.OPEN, sustain=100
+                    )
+                ],
+                100,
+                id="open",
+            ),
+            pytest.param(
+                [NoteEventParsedDataWithDefaults(note_track_index=NoteTrackIndex.TAP)],
+                0,
+                id="no_note_data",
+            ),
+            pytest.param(
+                [
+                    NoteEventParsedDataWithDefaults(
+                        note_track_index=NoteTrackIndex.G, sustain=100
+                    ),
+                    NoteEventParsedDataWithDefaults(
+                        note_track_index=NoteTrackIndex.R, sustain=100
+                    ),
+                ],
+                100,
+                id="same_length_notes_return_int_sustain",
+            ),
+            pytest.param(
+                [
+                    NoteEventParsedDataWithDefaults(
+                        note_track_index=NoteTrackIndex.G, sustain=100
+                    ),
+                    NoteEventParsedDataWithDefaults(note_track_index=NoteTrackIndex.R, sustain=50),
+                ],
+                (100, 50, None, None, None),
+                id="variable_length_notes_return_tuple_sustain",
+            ),
+        ],
+    )
+    def test(self, data, want):
+        got = chartparse.instrument.complex_sustain_from_parsed_data(data)
+        assert got == want
 
 
 class TestInstrumentTrack(object):
@@ -333,22 +416,17 @@ class TestNoteEvent(object):
             want_end_timestamp = datetime.timedelta(1)
             want_star_power_data = StarPowerData(2)
             want_sustain = 3
-            input_sustain = 4
             want_proximal_bpm_event_index = 5
             want_note = Note.ORANGE
             want_hopo_state = HOPOState.TAP
 
             spy_init = mocker.spy(Event, "__init__")
 
-            mock_refine_sustain = mocker.patch.object(
-                NoteEvent, "_refine_sustain", return_value=want_sustain
-            )
-
             got = NoteEventWithDefaults(
                 end_timestamp=want_end_timestamp,
                 note=want_note,
                 hopo_state=want_hopo_state,
-                sustain=input_sustain,
+                sustain=want_sustain,
                 star_power_data=want_star_power_data,
                 proximal_bpm_event_index=want_proximal_bpm_event_index,
             )
@@ -360,8 +438,6 @@ class TestNoteEvent(object):
                 want_proximal_bpm_event_index,
             )
 
-            mock_refine_sustain.assert_called_once_with(input_sustain)
-
             assert got.end_timestamp == want_end_timestamp
             assert got.note == want_note
             assert got.sustain == want_sustain
@@ -369,23 +445,73 @@ class TestNoteEvent(object):
             assert got.star_power_data == want_star_power_data
 
     class TestFromParsedData(object):
-        def test(self, mocker, default_tatter):
-            want_hopo_state = HOPOState.STRUM
+        @pytest.mark.parametrize(
+            (
+                "data,"
+                "want_tick,"
+                "want_sustain,"
+                "want_note,"
+                "want_hopo_state,"
+                "want_star_power_data,"
+                "want_star_power_event_index,"
+                "want_proximal_bpm_event_index"
+            ),
+            [
+                pytest.param(
+                    NoteEventParsedDataWithDefaults(
+                        tick=1, note_track_index=NoteTrackIndex.G, sustain=100
+                    ),
+                    1,
+                    100,
+                    Note.G,
+                    HOPOState.STRUM,
+                    StarPowerData(5),
+                    11,
+                    22,
+                    id="single_data",
+                ),
+                pytest.param(
+                    [
+                        NoteEventParsedDataWithDefaults(
+                            tick=1, note_track_index=NoteTrackIndex.G, sustain=100
+                        ),
+                        NoteEventParsedDataWithDefaults(
+                            tick=1, note_track_index=NoteTrackIndex.R, sustain=50
+                        ),
+                    ],
+                    1,
+                    (100, 50, None, None, None),
+                    Note.GR,
+                    HOPOState.STRUM,
+                    StarPowerData(5),
+                    11,
+                    22,
+                    id="multiple_data",
+                ),
+            ],
+        )
+        def test(
+            self,
+            mocker,
+            default_tatter,
+            data,
+            want_tick,
+            want_sustain,
+            want_note,
+            want_hopo_state,
+            want_star_power_data,
+            want_star_power_event_index,
+            want_proximal_bpm_event_index,
+        ):
             mock_compute_hopo_state = mocker.patch.object(
                 NoteEvent, "_compute_hopo_state", return_value=want_hopo_state
             )
 
-            want_star_power_data = StarPowerData(5)
-            want_star_power_event_index = 11
             mock_compute_star_power_data = mocker.patch.object(
                 NoteEvent,
                 "_compute_star_power_data",
                 return_value=(want_star_power_data, want_star_power_event_index),
             )
-
-            want_proximal_bpm_event_index = 22
-            unrefined_sustain = (100, None, None, None, None)
-            data = NoteEventParsedDataWithDefaults(sustain=unrefined_sustain)
 
             spy_init = mocker.spy(NoteEvent, "__init__")
 
@@ -401,92 +527,44 @@ class TestNoteEvent(object):
             default_tatter.spy.assert_has_calls(
                 [
                     unittest.mock.call(
-                        pytest.defaults.tick,
+                        want_tick,
                         proximal_bpm_event_index=want_proximal_bpm_event_index,
                     ),
                     unittest.mock.call(
-                        pytest.defaults.tick + 100,
+                        # technically tick+sustain, but annoying because it requires mocking or
+                        # calling _end_tick.
+                        unittest.mock.ANY,
                         proximal_bpm_event_index=pytest.defaults.default_tatter_index,
                     ),
                 ],
             )
 
             mock_compute_hopo_state.assert_called_once_with(
-                default_tatter.resolution, data.tick, pytest.defaults.note, False, False, None
+                default_tatter.resolution,
+                want_tick,
+                want_note,
+                False,
+                False,
+                None,
             )
 
             mock_compute_star_power_data.assert_called_once_with(
-                pytest.defaults.tick,
+                want_tick,
                 pytest.defaults.star_power_events,
                 proximal_star_power_event_index=want_star_power_event_index,
             )
 
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self
-                pytest.defaults.tick,
+                want_tick,
                 pytest.defaults.default_tatter_timestamp,
                 pytest.defaults.default_tatter_timestamp,
-                pytest.defaults.note,
+                want_note,
                 want_hopo_state,
-                sustain=data.sustain,
+                sustain=want_sustain,
                 proximal_bpm_event_index=pytest.defaults.default_tatter_index,
                 star_power_data=want_star_power_data,
             )
-
-        def test_sustain_none(
-            self,
-            mocker,
-            default_tatter,
-            minimal_compute_hopo_state_mock,
-            minimal_compute_star_power_data_mock,
-        ):
-            with pytest.raises(ValueError):
-                _ = NoteEvent.from_parsed_data(
-                    NoteEventParsedDataWithDefaults(sustain=None),
-                    None,
-                    pytest.defaults.star_power_events,
-                    default_tatter,
-                )
-
-    class TestRefineSustain(object):
-        @pytest.mark.parametrize(
-            "sustain, want",
-            [
-                pytest.param(
-                    (None, None, None, None, None),
-                    0,
-                    id="all_none",
-                ),
-                pytest.param(
-                    (0, 0, 0, 0, 0),
-                    0,
-                    id="all_zero",
-                ),
-                pytest.param(
-                    (0, 0, None, None, None),
-                    0,
-                    id="all_none_or_zero",
-                ),
-                pytest.param(
-                    (100, None, None, 100, None),
-                    100,
-                    id="all_the_same",
-                ),
-                pytest.param(
-                    100,
-                    100,
-                    id="int_pass_through",
-                ),
-                pytest.param(
-                    (100, 0, None, None, None),
-                    (100, 0, None, None, None),
-                    id="list_pass_through",
-                ),
-            ],
-        )
-        def test(self, sustain, want):
-            got = NoteEvent._refine_sustain(sustain)
-            assert got == want
 
     class TestComputeHOPOState(object):
         @pytest.mark.parametrize(
@@ -688,77 +766,46 @@ class TestNoteEvent(object):
             sustain_ticks = 3
 
             @pytest.mark.parametrize(
-                (
-                    "note_track_index,"
-                    "sustain_ticks,"
-                    "want_note,"
-                    "want_sustain,"
-                    "want_is_forced,"
-                    "want_is_tap"
-                ),
+                ("want_note_track_index," "want_sustain,"),
                 [
                     pytest.param(
                         NoteTrackIndex.YELLOW,
                         sustain_ticks,
-                        Note(bytearray((0, 0, 1, 0, 0))),
-                        (None, None, sustain_ticks, None, None),
-                        False,
-                        False,
                         id="normal_note",
                     ),
                     pytest.param(
                         NoteTrackIndex.OPEN,
                         sustain_ticks,
-                        Note(bytearray((0, 0, 0, 0, 0))),
-                        sustain_ticks,
-                        False,
-                        False,
                         id="open_note",
                     ),
                     pytest.param(
                         NoteTrackIndex.FORCED,
                         0,
-                        Note(bytearray((0, 0, 0, 0, 0))),
-                        None,
-                        True,
-                        False,
                         id="forced_note",
                     ),
                     pytest.param(
                         NoteTrackIndex.TAP,
                         0,
-                        Note(bytearray((0, 0, 0, 0, 0))),
-                        None,
-                        False,
-                        True,
                         id="tap_note",
                     ),
                 ],
             )
             def test(
                 self,
-                note_track_index,
-                sustain_ticks,
-                want_note,
+                want_note_track_index,
                 want_sustain,
-                want_is_forced,
-                want_is_tap,
             ):
                 got = NoteEvent.ParsedData.from_chart_line(
-                    f"T {self.tick} I {note_track_index.value} S {sustain_ticks}"
+                    f"T {self.tick} I {want_note_track_index.value} S {want_sustain}"
                 )
                 want = NoteEvent.ParsedData(
                     tick=self.tick,
-                    note=want_note,
+                    note_track_index=want_note_track_index,
                     sustain=want_sustain,
-                    is_forced=want_is_forced,
-                    is_tap=want_is_tap,
                 )
                 assert got.tick == want.tick
-                assert got.note == want.note
+                assert got.note_track_index == want.note_track_index
                 assert got.sustain == want.sustain
-                assert got.is_forced == want.is_forced
-                assert got.is_tap == want.is_tap
 
             def test_no_match(self, invalid_chart_line, default_tatter):
                 with pytest.raises(RegexNotMatchError):
@@ -795,76 +842,6 @@ class TestNoteEvent(object):
             def test(self, bare_note_event_parsed_data, sustain, want):
                 bare_note_event_parsed_data.__dict__["sustain"] = sustain
                 got = bare_note_event_parsed_data.sustain
-                assert got == want
-
-        class TestCoalesced(object):
-            @pytest.mark.parametrize(
-                "sustain_dest,sustain_src,want",
-                [
-                    pytest.param(100, None, 100, id="other_None"),
-                    pytest.param(None, 100, 100, id="self_None"),
-                    pytest.param(
-                        (100, None, None, None, None),
-                        (None, 100, None, None, None),
-                        (100, 100, None, None, None),
-                        id="both_list",
-                    ),
-                ],
-            )
-            def test_sustain(self, sustain_dest, sustain_src, want):
-                dest = NoteEventParsedDataWithDefaults(sustain=sustain_dest)
-                src = NoteEventParsedDataWithDefaults(sustain=sustain_src)
-                got = NoteEvent.ParsedData.coalesced(dest, src).sustain
-                assert got == want
-
-            @pytest.mark.parametrize(
-                "sustain_dest,sustain_src",
-                [
-                    pytest.param(100, [100, None, None, None, None], id="self_open"),
-                    pytest.param([100, None, None, None, None], 100, id="other_open"),
-                ],
-            )
-            def test_sustain_merge_open_raises(self, sustain_dest, sustain_src):
-                with pytest.raises(ValueError):
-                    dest = NoteEventParsedDataWithDefaults(sustain=sustain_dest)
-                    src = NoteEventParsedDataWithDefaults(sustain=sustain_src)
-                    _ = NoteEvent.ParsedData.coalesced(dest, src)
-
-            def test_note(self):
-                dest = NoteEventParsedDataWithDefaults(note=Note(bytearray((1, 0, 0, 0, 0))))
-                src = NoteEventParsedDataWithDefaults(note=Note(bytearray((0, 1, 0, 0, 0))))
-                got = NoteEvent.ParsedData.coalesced(dest, src).note
-                want = Note(bytearray((1, 1, 0, 0, 0)))
-                assert got == want
-
-            @pytest.mark.parametrize(
-                "is_forced_dest,is_forced_src,want",
-                [
-                    pytest.param(True, False, True, id="self_forced"),
-                    pytest.param(False, True, True, id="self_forced"),
-                    pytest.param(False, False, False, id="neither_forced"),
-                    pytest.param(True, True, True, id="both_forced"),
-                ],
-            )
-            def test_is_forced(self, is_forced_dest, is_forced_src, want):
-                dest = NoteEventParsedDataWithDefaults(is_forced=is_forced_dest)
-                src = NoteEventParsedDataWithDefaults(is_forced=is_forced_src)
-                got = NoteEvent.ParsedData.coalesced(dest, src).is_forced
-                assert got == want
-
-            @pytest.mark.parametrize(
-                "is_tap_dest,is_tap_src,want",
-                [
-                    pytest.param(True, False, True, id="self_tap"),
-                    pytest.param(False, True, True, id="self_tap"),
-                    pytest.param(False, False, False, id="neither_tap"),
-                    pytest.param(True, True, True, id="both_tap"),
-                ],
-            )
-            def test_is_tap(self, is_tap_dest, is_tap_src, want):
-                dest = NoteEventParsedDataWithDefaults(is_tap=is_tap_dest)
-                src = NoteEventParsedDataWithDefaults(is_tap=is_tap_src)
-                got = NoteEvent.ParsedData.coalesced(dest, src).is_tap
                 assert got == want
 
     class TestComputeStarPowerData(object):

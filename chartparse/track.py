@@ -38,19 +38,6 @@ class ParsedDataDict(collections.defaultdict):
         return super().__setitem__(k, v)
 
 
-class _PrevDataDict(collections.defaultdict):
-    def __init__(self):
-        super().__init__(lambda: None)
-
-    def __getitem__(self, k: type[Event.ParsedData._SelfT]) -> Event.ParsedData._SelfT | None:
-        return super().__getitem__(k)
-
-    def __setitem__(
-        self, k: type[Event.ParsedData._SelfT], v: Event.ParsedData._SelfT | None
-    ) -> None:
-        return super().__setitem__(k, v)
-
-
 def parse_data_from_chart_lines(
     types: Sequence[type[Event.ParsedData]], lines: Iterable[str]
 ) -> ParsedDataDict:
@@ -66,39 +53,18 @@ def parse_data_from_chart_lines(
     Returns:
         A dictionary mapping each type in ``types`` to a list of datas that were parsed into that
         type from lines in ``lines``.
-
-    Raises:
-        ValueError: If two parsed datas occur at the same tick and are not typed of the same
-            subclass of :class:`~chartparse.event.Event.CoalescableParsedData`.
     """
     d = ParsedDataDict()
-    pd = _PrevDataDict()
     for line in lines:
         for t in types:
             try:
                 data = t.from_chart_line(line)
             except RegexNotMatchError:
                 continue
-            prev_data = pd[t]
-            if prev_data is None or prev_data.tick != data.tick:
-                d[t].append(data)
-                pd[t] = data
-            elif isinstance(data, Event.CoalescableParsedData) and isinstance(
-                prev_data, Event.CoalescableParsedData
-            ):
-                merged_prev_data = prev_data.coalesced(prev_data, data)
-                d[t][-1] = merged_prev_data
-                pd[t] = merged_prev_data
-                # TODO: Optimize this to precompute which types are coalescable, if it's an
-                # actually useful speedup.
-            else:
-                raise ValueError(
-                    f"cannot handle additional parsed data of type {t} at tick {data.tick}"
-                )
+            d[t].append(data)
             break
         else:
             logger.warning(_unparsable_line_msg_tmpl.format(line, [t.__qualname__ for t in types]))
-
     return d
 
 

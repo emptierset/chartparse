@@ -76,13 +76,3 @@ class Event(DictPropertiesEqMixin, DictReprMixin):
         @abc.abstractmethod
         def from_chart_line(cls: type[_SelfT], line: str) -> _SelfT:
             ...  # pragma: no cover
-
-    # NOTE: ignored mypy here per https://stackoverflow.com/a/70999704/6041556.
-    @dataclasses.dataclass(kw_only=True, frozen=True)  # type: ignore[misc]
-    class CoalescableParsedData(ParsedData):
-        _SelfT = typ.TypeVar("_SelfT", bound="Event.CoalescableParsedData")
-
-        @classmethod
-        @abc.abstractmethod
-        def coalesced(cls: type[_SelfT], dest: _SelfT, src: _SelfT) -> _SelfT:
-            ...  # pragma: no cover

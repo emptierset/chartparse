@@ -23,7 +23,7 @@ from enum import Enum
 import chartparse.tick
 import chartparse.track
 from chartparse.event import Event, TimestampAtTickSupporter
-from chartparse.exceptions import ProgrammerError, RegexNotMatchError
+from chartparse.exceptions import RegexNotMatchError
 from chartparse.tick import NoteDuration
 from chartparse.util import (
     AllValuesGettableEnum,
@@ -67,6 +67,8 @@ class Instrument(AllValuesGettableEnum):
 @typ.final
 class Note(Enum):
     """The note lane(s) to which a :class:`~chartparse.instrument.NoteEvent` corresponds."""
+
+    _SelfT = typ.TypeVar("_SelfT", bound="Note")
 
     # TODO: optimization: Are bytearrays really better than plain tuples here?
     P = bytearray((0, 0, 0, 0, 0))
@@ -140,16 +142,35 @@ class Note(Enum):
 
         return sum(self.value) > 1
 
-    @staticmethod
-    def coalesced(a: Note, b: Note) -> Note:
-        """Returns a `Note` with all of the lanes active in the inputs."""
-        return Note(bytearray([1 if aa or bb else 0 for aa, bb in zip(a.value, b.value)]))
+    @classmethod
+    def from_parsed_data(
+        cls: type[_SelfT], data: NoteEvent.ParsedData | Sequence[NoteEvent.ParsedData]
+    ) -> _SelfT:
+        """Returns the ``Note`` represented by one or more ``NoteEvent.ParsedData``s.
+
+        Args:
+            data: The data or datas whose note track indices should be examined.
+
+        Returns:
+            The ``Note`` represented by ``datas``.
+        """
+        datas = data if isinstance(data, Sequence) else [data]
+
+        arr = bytearray(5)
+        for d in datas:
+            try:
+                arr[d.note_track_index.value] = 1
+            except IndexError:
+                pass
+        return cls(arr)
 
 
 @typ.final
 @functools.total_ordering
 class NoteTrackIndex(AllValuesGettableEnum):
     """The integer in a line in a Moonscraper ``.chart`` file's instrument track."""
+
+    _SelfT = typ.TypeVar("_SelfT", bound="NoteTrackIndex")
 
     G = 0
     R = 1
@@ -171,6 +192,10 @@ class NoteTrackIndex(AllValuesGettableEnum):
         if self.__class__ is other.__class__:
             return self.value < other.value
         return NotImplemented  # pragma: no cover
+
+    def is_5_note(self) -> bool:
+        """Returns whether this is one of the five "normal" note indices."""
+        return NoteTrackIndex.G.value <= self.value <= NoteTrackIndex.O.value
 
 
 @typ.final
@@ -287,17 +312,27 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     @classmethod
     def _build_note_events_from_data(
         cls,
-        datas: Iterable[NoteEvent.ParsedData],
+        datas: Sequence[NoteEvent.ParsedData],
         star_power_events: Sequence[StarPowerEvent],
         tatter: TimestampAtTickSupporter,
     ) -> list[NoteEvent]:
         proximal_bpm_event_index = 0
         star_power_event_index = 0
         events: list[NoteEvent] = []
-        for data in datas:
+        i = 0
+        num_datas = len(datas)
+        while i < num_datas:
             previous_event = events[-1] if events else None
+
+            # Find all datas with the same tick value. Because the input is expected to be sorted
+            # by tick value, these such datas should always be in a contiguous block.
+            left = i
+            while i + 1 < num_datas and datas[i + 1].tick == datas[i].tick:
+                i += 1
+            right = i + 1
+
             event, proximal_bpm_event_index, star_power_event_index = NoteEvent.from_parsed_data(
-                data,
+                datas[left:right],
                 previous_event,
                 star_power_events,
                 tatter,
@@ -305,6 +340,7 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
                 star_power_event_index=star_power_event_index,
             )
             events.append(event)
+            i += 1
 
         return events
 
@@ -328,25 +364,6 @@ An element is ``None`` if and only if the corresponding note lane is inactive. I
 """
 
 
-def coalesced_sustain_tuple(dest: SustainTupleT, src: SustainTupleT) -> SustainTupleT:
-    """Return a copy of `dest` with `src`'s values merged into it.
-
-    Args:
-        dest: A `SustainTupleT`.
-        src: A `SustainTupleT`.
-
-    Returns:
-        A copy of `dest` with `src`'s values merged into it where `dest` lacks them.
-    """
-    # This cast is necessary because mypy does not allow type narrowing based on len
-    # checks. That is, even if we assert that len(coalesced) == 5, mypy does not understand
-    # that it becomes a tuple of type 5-tuple.
-    return typ.cast(
-        SustainTupleT,
-        tuple(src_s if dest_s is None else dest_s for dest_s, src_s in zip(dest, src)),
-    )
-
-
 _SustainListT = list[int | None]
 """A 5-element list representing the sustain value of each note lane for nonuniform sustains.
 
@@ -363,40 +380,37 @@ for the same number of ticks. If this value is ``0``, then none of the note lane
 """
 
 
-def coalesced_complex_sustain(
-    dest: ComplexSustainT | None, src: ComplexSustainT | None
-) -> ComplexSustainT | None:
-    """Return a copy of `dest` with `src`'s values merged into it.
+def complex_sustain_from_parsed_data(
+    data: NoteEvent.ParsedData | Sequence[NoteEvent.ParsedData],
+) -> ComplexSustainT:
+    """Returns a ComplexSustainT incorporating multiple ParsedDatas.
+
+    If ``data`` has multiple elements, one or more of which correspond to open notes, this
+    function's behavior is undefined.
 
     Args:
-        dest: A `ComplexSustainTupleT`.
-        src: A `ComplexSustainTupleT`.
+        data: The data or datas whose sustain values should be coalesced.
 
     Returns:
-        A copy of `dest` with `src`'s values merged into it where `dest` lacks them.
-
-    Raises:
-        ValueError: if this data or the other data has an ``int`` typed ``sustain``. This
-            is because an ``int`` value in this field means that it represents an open
-            note, and it is nonsensical for an open note to overlap another concrete note.
+        The sustain values of ``datas`` coalesced into a single ComplexSustainT.
     """
-    if src is None:
-        return dest
-    elif dest is None:
-        return src
-    elif isinstance(dest, int) or isinstance(src, int):
-        # If both aren't None, then either of them being int (i.e. open) is problematic.
-        raise ValueError("open note cannot coincide with other notes")
-    return coalesced_sustain_tuple(dest, src)
+    datas = data if isinstance(data, Sequence) else [data]
 
+    if datas[0].note_track_index == NoteTrackIndex.OPEN:
+        return datas[0].sustain
 
-_ComplexSustainListT = int | _SustainListT
-"""A mutable sustain value representing multiple coinciding notes with different sustain values.
+    sustain_list: _SustainListT = [None] * 5
+    for d in filter(lambda d: d.note_track_index.is_5_note(), datas):
+        sustain_list[d.note_track_index.value] = d.sustain
 
-If this value is an ``int``, it means that all active note lanes at this tick value are sustained
-for the same number of ticks. If this value is ``[None, None, None, None, None]``, then none of the
-note lanes are active.
-"""
+    if all(s is None for s in sustain_list):
+        return 0
+
+    first_non_none_sustain = next(s for s in sustain_list if s is not None)
+    if all(d is None or d == first_non_none_sustain for d in sustain_list):
+        return first_non_none_sustain
+
+    return typ.cast(ComplexSustainT, tuple(sustain_list))
 
 
 @typ.final
@@ -457,7 +471,7 @@ class NoteEvent(Event):
         self.end_timestamp = end_timestamp
         self.note = note
         self.hopo_state = hopo_state
-        self.sustain = self._refine_sustain(sustain)
+        self.sustain = sustain
         self.star_power_data = star_power_data
 
     @functools.cached_property
@@ -472,12 +486,9 @@ class NoteEvent(Event):
     def _longest_sustain(sustain: ComplexSustainT) -> int:
         if isinstance(sustain, int):
             return sustain
-        elif isinstance(sustain, tuple):
-            if all(s is None for s in sustain):
-                raise ValueError("all sustain values are `None`")
-            return max(s for s in sustain if s is not None)
-        else:
-            raise ProgrammerError  # pragma: no cover
+        if all(s is None for s in sustain):
+            raise ValueError("all sustain values are `None`")
+        return max(s for s in sustain if s is not None)
 
     @functools.cached_property
     def end_tick(self) -> int:
@@ -491,63 +502,74 @@ class NoteEvent(Event):
     @classmethod
     def from_parsed_data(
         cls: type[_SelfT],
-        data: NoteEvent.ParsedData,
+        data: NoteEvent.ParsedData | Sequence[NoteEvent.ParsedData],
         prev_event: NoteEvent | None,
         star_power_events: Sequence[StarPowerEvent],
         tatter: TimestampAtTickSupporter,
         proximal_bpm_event_index: int = 0,
         star_power_event_index: int = 0,
     ) -> tuple[_SelfT, int, int]:
+        """Obtain an instance of this object from parsed data.
+
+        This function assumes that, if there are multiple input datas, they all have the same
+        ``tick`` value. If they do not, this function's behavior is undefined.
+
+        Args:
+            data: The data necessary to create an event. Most likely from a Moonscraper ``.chart``.
+            prev_event: The event with the largest tick value less than that of the input data.
+            star_power_events: All ``StarPowerEvent``s.
+            tatter: An object that can be used to get a timestamp at a particular tick.
+            proximal_bpm_event_index: The index of the ``BPMEvent`` with the largest tick value
+                smaller than that of this event. For optimization only.
+            star_power_event_index: The index of the ``StarPowerEvent`` with the largest tick value
+                smaller than that of this event. For optimization only.
+
+        Returns:
+            An instance of this object initialized from the input parsed data, along with the index
+            of the latest ``BPMEvent`` and ``StarPowerEvent`` not after this event
+        """
+        datas = data if isinstance(data, Sequence) else [data]
+
+        tick = datas[0].tick
+        note = Note.from_parsed_data(data)
+        sustain = complex_sustain_from_parsed_data(data)
+        is_tap = any(d.note_track_index == NoteTrackIndex.TAP for d in datas)
+        is_forced = any(d.note_track_index == NoteTrackIndex.FORCED for d in datas)
+
         timestamp, proximal_bpm_event_index = tatter.timestamp_at_tick(
-            data.tick, proximal_bpm_event_index=proximal_bpm_event_index
+            tick, proximal_bpm_event_index=proximal_bpm_event_index
         )
 
         hopo_state = NoteEvent._compute_hopo_state(
             tatter.resolution,
-            data.tick,
-            data.note,
-            data.is_tap,
-            data.is_forced,
+            tick,
+            note,
+            is_tap,
+            is_forced,
             prev_event,
         )
 
         star_power_data, star_power_event_index = NoteEvent._compute_star_power_data(
-            data.tick, star_power_events, proximal_star_power_event_index=star_power_event_index
+            tick, star_power_events, proximal_star_power_event_index=star_power_event_index
         )
 
-        if data.sustain is None:
-            raise ValueError("sustain must not be None")
-
-        longest_sustain = cls._longest_sustain(data.sustain)
-        end_tick = cls._end_tick(data.tick, longest_sustain)
+        longest_sustain = cls._longest_sustain(sustain)
+        end_tick = cls._end_tick(tick, longest_sustain)
         end_timestamp, _ = tatter.timestamp_at_tick(
             end_tick, proximal_bpm_event_index=proximal_bpm_event_index
         )
 
         event = cls(
-            data.tick,
+            tick,
             timestamp,
             end_timestamp,
-            data.note,
+            note,
             hopo_state,
-            sustain=data.sustain,
+            sustain=sustain,
             star_power_data=star_power_data,
             proximal_bpm_event_index=proximal_bpm_event_index,
         )
         return event, proximal_bpm_event_index, star_power_event_index
-
-    @staticmethod
-    @functools.lru_cache
-    # sustains tend to have similar-ish values, so lru_cache should help out here.
-    def _refine_sustain(sustain: ComplexSustainT) -> ComplexSustainT:
-        if isinstance(sustain, int):
-            return sustain
-        if all(d is None or d == 0 for d in sustain):
-            return 0
-        first_non_none_sustain = next(d for d in sustain if d is not None)
-        if all(d is None or d == first_non_none_sustain for d in sustain):
-            return first_non_none_sustain
-        return sustain
 
     @staticmethod
     def _compute_hopo_state(
@@ -632,21 +654,16 @@ class NoteEvent(Event):
 
         return "".join(to_join)
 
+    # TODO: Hide _private attributes from repr.
     @dataclasses.dataclass(kw_only=True, frozen=True)
-    class ParsedData(Event.CoalescableParsedData):
+    class ParsedData(Event.ParsedData):
         _SelfT = typ.TypeVar("_SelfT", bound="NoteEvent.ParsedData")
 
-        note: Note
-        """The note lane(s) active in the event represented by this data."""
+        note_track_index: NoteTrackIndex
+        """The note lane active on this chart line."""
 
-        sustain: ComplexSustainT | None
-        """The durations in ticks of the active lanes in the event represented by this data."""
-
-        is_tap: bool = False
-        """Whether the note in this event is a tap note."""
-
-        is_forced: bool = False
-        """Whether the note in this event is a forced HOPO/strum."""
+        sustain: int
+        """The duration in ticks of the active lane in the event represented by this data."""
 
         # This regex matches a single "N" line within a instrument track section,
         # but this class should be used to represent all of the notes at a
@@ -684,78 +701,10 @@ class NoteEvent(Event):
                 int(m.group(3)),
             )
             note_track_index = NoteTrackIndex(parsed_note_index)
-
-            note_array = bytearray(5)
-            mutable_sustain: _ComplexSustainListT | None = None
-            is_forced = False
-            is_tap = False
-            # type ignored here because mypy does not understand that this enum
-            # uses functools.total_ordering.
-            if NoteTrackIndex.GREEN <= note_track_index <= NoteTrackIndex.ORANGE:  # type: ignore
-                note_array[parsed_note_index] = 1
-                mutable_sustain = [None] * 5
-                mutable_sustain[parsed_note_index] = parsed_sustain
-            elif note_track_index == NoteTrackIndex.OPEN:
-                mutable_sustain = parsed_sustain
-            elif note_track_index == NoteTrackIndex.FORCED:
-                is_forced = True
-            elif note_track_index == NoteTrackIndex.TAP:
-                is_tap = True
-            else:  # pragma: no cover
-                # Not reachable if regex does its job.
-                logger.warning(
-                    cls._unhandled_note_track_index_log_msg_tmpl.format(
-                        note_track_index, parsed_tick
-                    )
-                )
-
-            sustain: ComplexSustainT | None
-            if isinstance(mutable_sustain, list):
-                # This cast is necessary because mypy does not allow type narrowing based on len
-                # checks. That is, even if we assert that len(coalesced) == 5, mypy does not
-                # understand that it becomes a tuple of type 5-tuple.
-                sustain = typ.cast(ComplexSustainT, tuple(mutable_sustain))
-            else:
-                sustain = mutable_sustain
-
             return cls(
                 tick=parsed_tick,
-                note=Note(note_array),
-                sustain=sustain,
-                is_forced=is_forced,
-                is_tap=is_tap,
-            )
-
-        # TODO: This can be optimized by instead creating a class to represent
-        # the data from a single line. i.e. they can specify:
-        # - exactly one of the six notes, or a force or tap flag.
-        # - and exactly one Optional sustain value.
-        @classmethod
-        def coalesced(cls: type[_SelfT], dest: _SelfT, src: _SelfT) -> _SelfT:
-            """Return a copy of `dest` with `src`'s values merged into it.
-
-            Args:
-                dest: A `NoteEvent.ParsedData`.
-                src: A `NoteEvent.ParsedData`.
-
-            Returns:
-                A copy of `dest` with `src`'s values merged into it where `dest` lacks them.
-
-            Raises:
-                ValueError: if this data or the other data has an ``int`` typed ``sustain``. This
-                    is because an ``int`` value in this field means that it represents an open
-                    note, and it is nonsensical for an open note to overlap another concrete note.
-            """
-            coalesced_sustain = coalesced_complex_sustain(dest.sustain, src.sustain)
-            coalesced_note = Note.coalesced(dest.note, src.note)
-            coalesced_is_forced = dest.is_forced or src.is_forced
-            coalesced_is_tap = dest.is_tap or src.is_tap
-            return cls(
-                tick=dest.tick,
-                sustain=coalesced_sustain,
-                note=coalesced_note,
-                is_forced=coalesced_is_forced,
-                is_tap=coalesced_is_tap,
+                note_track_index=note_track_index,
+                sustain=parsed_sustain,
             )
 
 
