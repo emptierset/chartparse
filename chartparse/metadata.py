@@ -72,17 +72,17 @@ PascalCaseFieldNameT = typ.Literal[
     "CrowdStream",
 ]
 
-FieldValueT = typ.Union[int, str, "Player2Instrument"]
-
-FieldValueParserT = Callable[[str], FieldValueT]
-
-
 @enum.unique
 class Player2Instrument(enum.Enum):
     """The instrument type of the co-op guitar chart in Guitar Hero 3."""
 
     BASS = "bass"
     RHYTHM = "rhythm"
+
+
+FieldValueT = int | str | Player2Instrument
+
+FieldValueParserT = Callable[[str], FieldValueT]
 
 
 class _FieldValuesDict(typ.TypedDict, total=False):

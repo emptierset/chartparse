@@ -22,6 +22,7 @@ from chartparse.event import Event, TimestampAtTickSupporter
 from chartparse.exceptions import ProgrammerError, RegexNotMatchError
 
 logger = logging.getLogger(__name__)
+
 _unparsable_line_msg_tmpl: typ.Final[str] = 'unparsable line: "{}" for types {}'
 
 

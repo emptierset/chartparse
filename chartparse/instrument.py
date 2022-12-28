@@ -356,17 +356,13 @@ class StarPowerData(DictPropertiesEqMixin):
     star_power_event_index: int
 
 
-SustainTupleT = tuple[int | None, int | None, int | None, int | None, int | None]
+_SustainListT = typ.NewType("_SustainListT", list[int | None])
+"""A mutable SustainTupleT."""
+
+SustainTupleT = typ.NewType(
+    "SustainTupleT", tuple[int | None, int | None, int | None, int | None, int | None]
+)
 """A 5-element tuple representing the sustain value of each note lane for nonuniform sustains.
-
-An element is ``None`` if and only if the corresponding note lane is inactive. If an element is
-``0``, then there will be at least one other non-``0``, non-``None`` element; this is because that
-``0`` element represents an unsustained note in unison with a sustained note.
-"""
-
-
-_SustainListT = list[int | None]
-"""A 5-element list representing the sustain value of each note lane for nonuniform sustains.
 
 An element is ``None`` if and only if the corresponding note lane is inactive. If an element is
 ``0``, then there will be at least one other non-``0``, non-``None`` element; this is because that
@@ -400,7 +396,7 @@ def complex_sustain_from_parsed_data(
     if datas[0].note_track_index == NoteTrackIndex.OPEN:
         return datas[0].sustain
 
-    sustain_list: _SustainListT = [None] * 5
+    sustain_list = _SustainListT([None] * 5)
     for d in filter(lambda d: d.note_track_index.is_5_note(), datas):
         sustain_list[d.note_track_index.value] = d.sustain
 
