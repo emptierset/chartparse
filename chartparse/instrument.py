@@ -711,7 +711,6 @@ class SpecialEvent(Event):
     This is typically used only as a base class for more specialized subclasses.
     """
 
-    # TODO: Make all _SelfT final.
     _SelfT = typ.TypeVar("_SelfT", bound="SpecialEvent")
 
     sustain: typ.Final[int]
