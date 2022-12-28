@@ -69,7 +69,7 @@ class Instrument(AllValuesGettableEnum):
 class Note(Enum):
     """The note lane(s) to which a :class:`~chartparse.instrument.NoteEvent` corresponds."""
 
-    _SelfT = typ.TypeVar("_SelfT", bound="Note")
+    _Self = typ.TypeVar("_Self", bound="Note")
 
     # TODO: optimization: Are bytearrays really better than plain tuples here?
     P = bytearray((0, 0, 0, 0, 0))
@@ -145,8 +145,8 @@ class Note(Enum):
 
     @classmethod
     def from_parsed_data(
-        cls: type[_SelfT], data: NoteEvent.ParsedData | Sequence[NoteEvent.ParsedData]
-    ) -> _SelfT:
+        cls: type[_Self], data: NoteEvent.ParsedData | Sequence[NoteEvent.ParsedData]
+    ) -> _Self:
         """Returns the ``Note`` represented by one or more ``NoteEvent.ParsedData``s.
 
         Args:
@@ -171,7 +171,7 @@ class Note(Enum):
 class NoteTrackIndex(AllValuesGettableEnum):
     """The integer in a line in a Moonscraper ``.chart`` file's instrument track."""
 
-    _SelfT = typ.TypeVar("_SelfT", bound="NoteTrackIndex")
+    _Self = typ.TypeVar("_Self", bound="NoteTrackIndex")
 
     G = 0
     R = 1
@@ -203,7 +203,7 @@ class NoteTrackIndex(AllValuesGettableEnum):
 class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     """All of the instrument-related events for one (instrument, difficulty) pair."""
 
-    _SelfT = typ.TypeVar("_SelfT", bound="InstrumentTrack")
+    _Self = typ.TypeVar("_Self", bound="InstrumentTrack")
 
     resolution: typ.Final[int]
     """The number of ticks for which a quarter note lasts."""
@@ -264,12 +264,12 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
     @classmethod
     def from_chart_lines(
-        cls: type[_SelfT],
+        cls: type[_Self],
         instrument: Instrument,
         difficulty: Difficulty,
         lines: Iterable[str],
         tatter: TimestampAtTickSupporter,
-    ) -> _SelfT:
+    ) -> _Self:
         """Initializes instance attributes by parsing an iterable of strings.
 
         Args:
@@ -293,7 +293,7 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
     @classmethod
     def _parse_data_from_chart_lines(
-        cls: type[_SelfT],
+        cls: type[_Self],
         lines: Iterable[str],
     ) -> tuple[list[NoteEvent.ParsedData], list[StarPowerEvent.ParsedData]]:
         parsed_data = chartparse.track.parse_data_from_chart_lines(
@@ -356,11 +356,11 @@ class StarPowerData(DictPropertiesEqMixin):
     star_power_event_index: int
 
 
-_SustainListT = typ.NewType("_SustainListT", list[int | None])
-"""A mutable SustainTupleT."""
+_SustainList = typ.NewType("_SustainList", list[int | None])
+"""A mutable SustainTuple."""
 
-SustainTupleT = typ.NewType(
-    "SustainTupleT", tuple[int | None, int | None, int | None, int | None, int | None]
+SustainTuple = typ.NewType(
+    "SustainTuple", tuple[int | None, int | None, int | None, int | None, int | None]
 )
 """A 5-element tuple representing the sustain value of each note lane for nonuniform sustains.
 
@@ -369,7 +369,7 @@ An element is ``None`` if and only if the corresponding note lane is inactive. I
 ``0`` element represents an unsustained note in unison with a sustained note.
 """
 
-ComplexSustainT = int | SustainTupleT
+ComplexSustain = int | SustainTuple
 """An sustain value representing multiple coinciding notes with different sustain values.
 
 If this value is an ``int``, it means that all active note lanes at this tick value are sustained
@@ -379,8 +379,8 @@ for the same number of ticks. If this value is ``0``, then none of the note lane
 
 def complex_sustain_from_parsed_data(
     data: NoteEvent.ParsedData | Sequence[NoteEvent.ParsedData],
-) -> ComplexSustainT:
-    """Returns a ComplexSustainT incorporating multiple ParsedDatas.
+) -> ComplexSustain:
+    """Returns a ComplexSustain incorporating multiple ParsedDatas.
 
     If ``data`` has multiple elements, one or more of which correspond to open notes, this
     function's behavior is undefined.
@@ -389,14 +389,14 @@ def complex_sustain_from_parsed_data(
         data: The data or datas whose sustain values should be coalesced.
 
     Returns:
-        The sustain values of ``datas`` coalesced into a single ComplexSustainT.
+        The sustain values of ``datas`` coalesced into a single ComplexSustain.
     """
     datas = data if isinstance(data, Sequence) else [data]
 
     if datas[0].note_track_index == NoteTrackIndex.OPEN:
         return datas[0].sustain
 
-    sustain_list = _SustainListT([None] * 5)
+    sustain_list = _SustainList([None] * 5)
     for d in filter(lambda d: d.note_track_index.is_5_note(), datas):
         sustain_list[d.note_track_index.value] = d.sustain
 
@@ -407,7 +407,7 @@ def complex_sustain_from_parsed_data(
     if all(d is None or d == first_non_none_sustain for d in sustain_list):
         return first_non_none_sustain
 
-    return typ.cast(ComplexSustainT, tuple(sustain_list))
+    return typ.cast(ComplexSustain, tuple(sustain_list))
 
 
 @typ.final
@@ -433,12 +433,12 @@ class NoteEvent(Event):
 
     """
 
-    _SelfT = typ.TypeVar("_SelfT", bound="NoteEvent")
+    _Self = typ.TypeVar("_Self", bound="NoteEvent")
 
     note: typ.Final[Note]
     """The note lane(s) that are active."""
 
-    sustain: typ.Final[ComplexSustainT]
+    sustain: typ.Final[ComplexSustain]
     """Information about this note event's sustain value."""
 
     end_timestamp: typ.Final[datetime.timedelta]
@@ -460,7 +460,7 @@ class NoteEvent(Event):
         end_timestamp: datetime.timedelta,
         note: Note,
         hopo_state: HOPOState,
-        sustain: ComplexSustainT = 0,
+        sustain: ComplexSustain = 0,
         star_power_data: StarPowerData | None = None,
         proximal_bpm_event_index: int = 0,
     ) -> None:
@@ -480,7 +480,7 @@ class NoteEvent(Event):
         return self._longest_sustain(self.sustain)
 
     @staticmethod
-    def _longest_sustain(sustain: ComplexSustainT) -> int:
+    def _longest_sustain(sustain: ComplexSustain) -> int:
         if isinstance(sustain, int):
             return sustain
         if all(s is None for s in sustain):
@@ -498,14 +498,14 @@ class NoteEvent(Event):
 
     @classmethod
     def from_parsed_data(
-        cls: type[_SelfT],
+        cls: type[_Self],
         data: NoteEvent.ParsedData | Sequence[NoteEvent.ParsedData],
         prev_event: NoteEvent | None,
         star_power_events: Sequence[StarPowerEvent],
         tatter: TimestampAtTickSupporter,
         proximal_bpm_event_index: int = 0,
         star_power_event_index: int = 0,
-    ) -> tuple[_SelfT, int, int]:
+    ) -> tuple[_Self, int, int]:
         """Obtain an instance of this object from parsed data.
 
         This function assumes that, if there are multiple input datas, they all have the same
@@ -653,7 +653,7 @@ class NoteEvent(Event):
 
     @dataclasses.dataclass(kw_only=True, frozen=True, repr=False)
     class ParsedData(Event.ParsedData, DictReprMixin):
-        _SelfT = typ.TypeVar("_SelfT", bound="NoteEvent.ParsedData")
+        _Self = typ.TypeVar("_Self", bound="NoteEvent.ParsedData")
 
         note_track_index: NoteTrackIndex
         """The note lane active on this chart line."""
@@ -673,7 +673,7 @@ class NoteEvent(Event):
         ] = "unhandled note track index {} at tick {}"
 
         @classmethod
-        def from_chart_line(cls: type[_SelfT], line: str) -> _SelfT:
+        def from_chart_line(cls: type[_Self], line: str) -> _Self:
             """Attempt to construct this object from a ``.chart`` line.
 
             Args:
@@ -707,7 +707,7 @@ class SpecialEvent(Event):
     This is typically used only as a base class for more specialized subclasses.
     """
 
-    _SelfT = typ.TypeVar("_SelfT", bound="SpecialEvent")
+    _Self = typ.TypeVar("_Self", bound="SpecialEvent")
 
     sustain: typ.Final[int]
     """The number of ticks for which this event is sustained.
@@ -733,11 +733,11 @@ class SpecialEvent(Event):
 
     @classmethod
     def from_parsed_data(
-        cls: type[_SelfT],
+        cls: type[_Self],
         data: SpecialEvent.ParsedData,
-        prev_event: _SelfT | None,
+        prev_event: _Self | None,
         tatter: TimestampAtTickSupporter,
-    ) -> _SelfT:
+    ) -> _Self:
         """Obtain an instance of this object from parsed data.
 
         Args:
@@ -771,7 +771,7 @@ class SpecialEvent(Event):
 
     @dataclasses.dataclass(kw_only=True, frozen=True, repr=False)
     class ParsedData(Event.ParsedData, DictReprMixin):
-        _SelfT = typ.TypeVar("_SelfT", bound="SpecialEvent.ParsedData")
+        _Self = typ.TypeVar("_Self", bound="SpecialEvent.ParsedData")
 
         sustain: int
         """The duration in ticks of the event represented by this data."""
@@ -785,7 +785,7 @@ class SpecialEvent(Event):
         _index_regex: typ.ClassVar[str]
 
         @classmethod
-        def from_chart_line(cls: type[_SelfT], line: str) -> _SelfT:
+        def from_chart_line(cls: type[_Self], line: str) -> _Self:
             """Attempt to construct this object from a ``.chart`` line.
 
             Args:

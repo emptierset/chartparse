@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     """All of a :class:`~chartparse.chart.Chart` object's tempo-mapping related events."""
 
-    _SelfT = typ.TypeVar("_SelfT", bound="SyncTrack")
+    _Self = typ.TypeVar("_Self", bound="SyncTrack")
 
     resolution: typ.Final[int]
     """The number of ticks for which a quarter note lasts."""
@@ -75,10 +75,10 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
     @classmethod
     def from_chart_lines(
-        cls: type[_SelfT],
+        cls: type[_Self],
         resolution: int,
         lines: Iterable[str],
-    ) -> _SelfT:
+    ) -> _Self:
         """Initializes instance attributes by parsing an iterable of strings.
 
         Args:
@@ -120,7 +120,7 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
     @classmethod
     def _parse_data_from_chart_lines(
-        cls: type[_SelfT],
+        cls: type[_Self],
         lines: Iterable[str],
     ) -> tuple[list[TimeSignatureEvent.ParsedData], list[BPMEvent.ParsedData]]:
         parsed_data = chartparse.track.parse_data_from_chart_lines(
@@ -213,7 +213,7 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 class TimeSignatureEvent(Event):
     """An event representing a time signature change at a particular tick."""
 
-    _SelfT = typ.TypeVar("_SelfT", bound="TimeSignatureEvent")
+    _Self = typ.TypeVar("_Self", bound="TimeSignatureEvent")
 
     upper_numeral: typ.Final[int]
     """The number indicating how many beats constitute a bar."""
@@ -239,11 +239,11 @@ class TimeSignatureEvent(Event):
 
     @classmethod
     def from_parsed_data(
-        cls: type[_SelfT],
+        cls: type[_Self],
         data: TimeSignatureEvent.ParsedData,
-        prev_event: _SelfT | None,
+        prev_event: _Self | None,
         tatter: TimestampAtTickSupporter,
-    ) -> _SelfT:
+    ) -> _Self:
         """Obtain an instance of this object from parsed data.
 
         Args:
@@ -279,7 +279,7 @@ class TimeSignatureEvent(Event):
     @typ.final
     @dataclasses.dataclass(kw_only=True, frozen=True, repr=False)
     class ParsedData(Event.ParsedData, DictReprMixin):
-        _SelfT = typ.TypeVar("_SelfT", bound="TimeSignatureEvent.ParsedData")
+        _Self = typ.TypeVar("_Self", bound="TimeSignatureEvent.ParsedData")
 
         upper: int
         lower: int | None
@@ -291,7 +291,7 @@ class TimeSignatureEvent(Event):
         _regex_prog: typ.Final[typ.Pattern[str]] = re.compile(_regex)
 
         @classmethod
-        def from_chart_line(cls: type[_SelfT], line: str) -> _SelfT:
+        def from_chart_line(cls: type[_Self], line: str) -> _Self:
             """Attempt to construct this object from a ``.chart`` line.
 
             Args:
@@ -318,7 +318,7 @@ class TimeSignatureEvent(Event):
 class BPMEvent(Event):
     """An event representing a BPM (beats per minute) change at a particular tick."""
 
-    _SelfT = typ.TypeVar("_SelfT", bound="BPMEvent")
+    _Self = typ.TypeVar("_Self", bound="BPMEvent")
 
     bpm: typ.Final[float]
     """The beats per minute value. Must not have more than 3 decimal places."""
@@ -342,11 +342,11 @@ class BPMEvent(Event):
 
     @classmethod
     def from_parsed_data(
-        cls: type[_SelfT],
+        cls: type[_Self],
         data: BPMEvent.ParsedData,
-        prev_event: _SelfT | None,
+        prev_event: _Self | None,
         resolution: int,
-    ) -> _SelfT:
+    ) -> _Self:
         """Obtain an instance of this object from parsed data.
 
         Args:
@@ -407,7 +407,7 @@ class BPMEvent(Event):
     @typ.final
     @dataclasses.dataclass(kw_only=True, frozen=True, repr=False)
     class ParsedData(Event.ParsedData, DictReprMixin):
-        _SelfT = typ.TypeVar("_SelfT", bound="BPMEvent.ParsedData")
+        _Self = typ.TypeVar("_Self", bound="BPMEvent.ParsedData")
 
         raw_bpm: str
 
@@ -417,7 +417,7 @@ class BPMEvent(Event):
         _regex_prog: typ.Final[typ.Pattern[str]] = re.compile(_regex)
 
         @classmethod
-        def from_chart_line(cls: type[_SelfT], line: str) -> _SelfT:
+        def from_chart_line(cls: type[_Self], line: str) -> _Self:
             """Attempt to construct this object from a ``.chart`` line.
 
             Args:

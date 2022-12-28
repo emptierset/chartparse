@@ -30,11 +30,11 @@ class ParsedDataDict(collections.defaultdict):
     def __init__(self):
         super().__init__(list)
 
-    def __getitem__(self, k: type[Event.ParsedData._SelfT]) -> list[Event.ParsedData._SelfT]:
+    def __getitem__(self, k: type[Event.ParsedData._Self]) -> list[Event.ParsedData._Self]:
         return super().__getitem__(k)
 
     def __setitem__(
-        self, k: type[Event.ParsedData._SelfT], v: list[Event.ParsedData._SelfT]
+        self, k: type[Event.ParsedData._Self], v: list[Event.ParsedData._Self]
     ) -> None:
         return super().__setitem__(k, v)
 

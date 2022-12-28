@@ -18,7 +18,7 @@ from collections.abc import Callable, Iterable
 from chartparse.exceptions import MissingRequiredField, RegexNotMatchError, raise_
 from chartparse.util import DictPropertiesEqMixin, DictReprMixin
 
-SnakeCaseFieldNameT = typ.Literal[
+SnakeCaseFieldName = typ.Literal[
     "resolution",
     "offset",
     "player2",
@@ -45,7 +45,7 @@ SnakeCaseFieldNameT = typ.Literal[
     "crowd_stream",
 ]
 
-PascalCaseFieldNameT = typ.Literal[
+PascalCaseFieldName = typ.Literal[
     "Resolution",
     "Offset",
     "Player2",
@@ -72,6 +72,7 @@ PascalCaseFieldNameT = typ.Literal[
     "CrowdStream",
 ]
 
+
 @enum.unique
 class Player2Instrument(enum.Enum):
     """The instrument type of the co-op guitar chart in Guitar Hero 3."""
@@ -80,9 +81,9 @@ class Player2Instrument(enum.Enum):
     RHYTHM = "rhythm"
 
 
-FieldValueT = int | str | Player2Instrument
+FieldValue = int | str | Player2Instrument
 
-FieldValueParserT = Callable[[str], FieldValueT]
+FieldValueParser = Callable[[str], FieldValue]
 
 
 class _FieldValuesDict(typ.TypedDict, total=False):
@@ -120,16 +121,16 @@ class _FieldParsingSpec(object):
 
     # Cannot actually be annotated as an instance attribute directly due to longstanding mypy bug:
     # https://github.com/python/mypy/issues/708.
-    # processing_fn: FieldValueParserT
+    # processing_fn: FieldValueParser
 
-    def __init__(self, regex: str, processing_fn: FieldValueParserT) -> None:
+    def __init__(self, regex: str, processing_fn: FieldValueParser) -> None:
         self.regex = regex
         self.regex_prog = re.compile(self.regex)
         self.processing_fn = processing_fn
 
     @staticmethod
     def make_field_regex(
-        field_name: PascalCaseFieldNameT, value_regex: str, is_value_quoted: bool
+        field_name: PascalCaseFieldName, value_regex: str, is_value_quoted: bool
     ) -> str:
         to_join = [rf"^\s*?{field_name} = "]
         if is_value_quoted:
@@ -143,21 +144,21 @@ class _FieldParsingSpec(object):
 
 @typ.final
 class _IntFieldSpec(_FieldParsingSpec):
-    def __init__(self, field_name: PascalCaseFieldNameT) -> None:
+    def __init__(self, field_name: PascalCaseFieldName) -> None:
         super().__init__(self.make_int_field_regex(field_name), int)
 
     @staticmethod
-    def make_int_field_regex(field_name: PascalCaseFieldNameT) -> str:
+    def make_int_field_regex(field_name: PascalCaseFieldName) -> str:
         return _FieldParsingSpec.make_field_regex(field_name, r"\d+?", False)
 
 
 @typ.final
 class _MultiwordStrFieldSpec(_FieldParsingSpec):
-    def __init__(self, field_name: PascalCaseFieldNameT) -> None:
+    def __init__(self, field_name: PascalCaseFieldName) -> None:
         super().__init__(self.make_multiword_str_field_regex(field_name), str)
 
     @staticmethod
-    def make_multiword_str_field_regex(field_name: PascalCaseFieldNameT) -> str:
+    def make_multiword_str_field_regex(field_name: PascalCaseFieldName) -> str:
         return _FieldParsingSpec.make_field_regex(field_name, r".+?", True)
 
 
@@ -165,13 +166,13 @@ class _MultiwordStrFieldSpec(_FieldParsingSpec):
 class _QuotelessStrFieldSpec(_FieldParsingSpec):
     def __init__(
         self,
-        field_name: PascalCaseFieldNameT,
-        processing_fn: FieldValueParserT,
+        field_name: PascalCaseFieldName,
+        processing_fn: FieldValueParser,
     ) -> None:
         super().__init__(self.make_quoteless_str_field_regex(field_name), processing_fn)
 
     @staticmethod
-    def make_quoteless_str_field_regex(field_name: PascalCaseFieldNameT) -> str:
+    def make_quoteless_str_field_regex(field_name: PascalCaseFieldName) -> str:
         return _FieldParsingSpec.make_field_regex(field_name, r'[^"]+?', False)
 
 
@@ -232,7 +233,7 @@ _field_parsing_specs: _FieldParsingSpecDict = {
 
 @typ.final
 class Metadata(DictPropertiesEqMixin, DictReprMixin):
-    _SelfT = typ.TypeVar("_SelfT", bound="Metadata")
+    _Self = typ.TypeVar("_Self", bound="Metadata")
 
     """All of a :class:`~chartparse.chart.Chart` object's metadata."""
 
@@ -401,7 +402,7 @@ class Metadata(DictPropertiesEqMixin, DictReprMixin):
             self.crowd_stream = crowd_stream
 
     @classmethod
-    def from_chart_lines(cls: type[_SelfT], lines_iter: Iterable[str]) -> _SelfT:
+    def from_chart_lines(cls: type[_Self], lines_iter: Iterable[str]) -> _Self:
         """Initializes instance attributes by parsing an iterable of strings.
 
         Args:
@@ -412,7 +413,7 @@ class Metadata(DictPropertiesEqMixin, DictReprMixin):
         lines = list(lines_iter)
 
         def set_kwarg(
-            field_name: SnakeCaseFieldNameT,
+            field_name: SnakeCaseFieldName,
             regex_not_match_callback: Callable[[], None] | None = None,
         ) -> None:
             maybe_set_kwarg(
@@ -421,7 +422,7 @@ class Metadata(DictPropertiesEqMixin, DictReprMixin):
             )
 
         def maybe_set_kwarg(
-            field_name: SnakeCaseFieldNameT,
+            field_name: SnakeCaseFieldName,
             regex_not_match_callback: Callable[[], None] | None = None,
         ) -> None:
             try:
@@ -430,7 +431,7 @@ class Metadata(DictPropertiesEqMixin, DictReprMixin):
                 if regex_not_match_callback is not None:
                     regex_not_match_callback()
 
-        def parse_all_lines_for_field(field_name: SnakeCaseFieldNameT) -> FieldValueT:
+        def parse_all_lines_for_field(field_name: SnakeCaseFieldName) -> FieldValue:
             regex_prog = _field_parsing_specs[field_name].regex_prog
             for line in lines:
                 m = regex_prog.match(line)
