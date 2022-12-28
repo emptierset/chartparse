@@ -20,7 +20,7 @@ from collections.abc import Iterable, Sequence
 import chartparse.track
 from chartparse.event import Event, TimestampAtTickSupporter
 from chartparse.exceptions import RegexNotMatchError
-from chartparse.util import DictPropertiesEqMixin, DictReprTruncatedSequencesMixin
+from chartparse.util import DictPropertiesEqMixin, DictReprMixin, DictReprTruncatedSequencesMixin
 
 logger = logging.getLogger(__name__)
 
@@ -176,8 +176,8 @@ class GlobalEvent(Event):
         to_join.append(f': "{self.value}"')
         return "".join(to_join)
 
-    @dataclasses.dataclass(kw_only=True, frozen=True)
-    class ParsedData(Event.ParsedData):
+    @dataclasses.dataclass(kw_only=True, frozen=True, repr=False)
+    class ParsedData(Event.ParsedData, DictReprMixin):
         _SelfT = typ.TypeVar("_SelfT", bound="GlobalEvent.ParsedData")
 
         value: str
@@ -215,8 +215,8 @@ class TextEvent(GlobalEvent):
     """A :class:`~chartparse.globalevents.GlobalEvent` that stores freeform text event data."""
 
     @typ.final
-    @dataclasses.dataclass(kw_only=True, frozen=True)
-    class ParsedData(GlobalEvent.ParsedData):
+    @dataclasses.dataclass(kw_only=True, frozen=True, repr=False)
+    class ParsedData(GlobalEvent.ParsedData, DictReprMixin):
         _value_regex = r"([^ ]*?)"
         _regex = GlobalEvent.ParsedData._regex_template.format(_value_regex)
         _regex_prog = re.compile(_regex)
@@ -230,8 +230,8 @@ class SectionEvent(GlobalEvent):
     """
 
     @typ.final
-    @dataclasses.dataclass(kw_only=True, frozen=True)
-    class ParsedData(GlobalEvent.ParsedData):
+    @dataclasses.dataclass(kw_only=True, frozen=True, repr=False)
+    class ParsedData(GlobalEvent.ParsedData, DictReprMixin):
         _value_regex = r"section (.*?)"
         _regex = GlobalEvent.ParsedData._regex_template.format(_value_regex)
         _regex_prog = re.compile(_regex)
@@ -245,8 +245,8 @@ class LyricEvent(GlobalEvent):
     """
 
     @typ.final
-    @dataclasses.dataclass(kw_only=True, frozen=True)
-    class ParsedData(GlobalEvent.ParsedData):
+    @dataclasses.dataclass(kw_only=True, frozen=True, repr=False)
+    class ParsedData(GlobalEvent.ParsedData, DictReprMixin):
         _value_regex = "lyric (.*?)"
         _regex = GlobalEvent.ParsedData._regex_template.format(_value_regex)
         _regex_prog = re.compile(_regex)

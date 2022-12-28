@@ -803,9 +803,7 @@ class TestNoteEvent(object):
                     note_track_index=want_note_track_index,
                     sustain=want_sustain,
                 )
-                assert got.tick == want.tick
-                assert got.note_track_index == want.note_track_index
-                assert got.sustain == want.sustain
+                assert got == want
 
             def test_no_match(self, invalid_chart_line, default_tatter):
                 with pytest.raises(RegexNotMatchError):

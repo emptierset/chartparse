@@ -28,6 +28,7 @@ from chartparse.tick import NoteDuration
 from chartparse.util import (
     AllValuesGettableEnum,
     DictPropertiesEqMixin,
+    DictReprMixin,
     DictReprTruncatedSequencesMixin,
 )
 
@@ -200,9 +201,9 @@ class NoteTrackIndex(AllValuesGettableEnum):
 
 @typ.final
 class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
-    _SelfT = typ.TypeVar("_SelfT", bound="InstrumentTrack")
-
     """All of the instrument-related events for one (instrument, difficulty) pair."""
+
+    _SelfT = typ.TypeVar("_SelfT", bound="InstrumentTrack")
 
     resolution: typ.Final[int]
     """The number of ticks for which a quarter note lasts."""
@@ -654,9 +655,8 @@ class NoteEvent(Event):
 
         return "".join(to_join)
 
-    # TODO: Hide _private attributes from repr.
-    @dataclasses.dataclass(kw_only=True, frozen=True)
-    class ParsedData(Event.ParsedData):
+    @dataclasses.dataclass(kw_only=True, frozen=True, repr=False)
+    class ParsedData(Event.ParsedData, DictReprMixin):
         _SelfT = typ.TypeVar("_SelfT", bound="NoteEvent.ParsedData")
 
         note_track_index: NoteTrackIndex
@@ -665,10 +665,7 @@ class NoteEvent(Event):
         sustain: int
         """The duration in ticks of the active lane in the event represented by this data."""
 
-        # This regex matches a single "N" line within a instrument track section,
-        # but this class should be used to represent all of the notes at a
-        # particular tick. This means that you might need to consolidate multiple
-        # "N" lines into a single NoteEvent, e.g. for chords.
+        # This regex matches a single "N" line within a instrument track section.
         # Match 1: Tick
         # Match 2: Note index
         # Match 3: Sustain (ticks)
@@ -714,6 +711,7 @@ class SpecialEvent(Event):
     This is typically used only as a base class for more specialized subclasses.
     """
 
+    # TODO: Make all _SelfT final.
     _SelfT = typ.TypeVar("_SelfT", bound="SpecialEvent")
 
     sustain: typ.Final[int]
@@ -776,8 +774,8 @@ class SpecialEvent(Event):
         to_join.append(f": sustain={self.sustain}")
         return "".join(to_join)
 
-    @dataclasses.dataclass(kw_only=True, frozen=True)
-    class ParsedData(Event.ParsedData):
+    @dataclasses.dataclass(kw_only=True, frozen=True, repr=False)
+    class ParsedData(Event.ParsedData, DictReprMixin):
         _SelfT = typ.TypeVar("_SelfT", bound="SpecialEvent.ParsedData")
 
         sustain: int
@@ -816,8 +814,8 @@ class StarPowerEvent(SpecialEvent):
     """An event representing star power starting at some tick and lasting for some duration."""
 
     @typ.final
-    @dataclasses.dataclass(kw_only=True, frozen=True)
-    class ParsedData(SpecialEvent.ParsedData):
+    @dataclasses.dataclass(kw_only=True, frozen=True, repr=False)
+    class ParsedData(SpecialEvent.ParsedData, DictReprMixin):
         _index_regex = r"2"
         _regex = SpecialEvent.ParsedData._regex_template.format(_index_regex)
         _regex_prog = re.compile(_regex)

@@ -21,7 +21,7 @@ import chartparse.tick
 import chartparse.track
 from chartparse.event import Event, TimestampAtTickSupporter
 from chartparse.exceptions import RegexNotMatchError
-from chartparse.util import DictPropertiesEqMixin, DictReprTruncatedSequencesMixin
+from chartparse.util import DictPropertiesEqMixin, DictReprMixin, DictReprTruncatedSequencesMixin
 
 logger = logging.getLogger(__name__)
 
@@ -277,8 +277,8 @@ class TimeSignatureEvent(Event):
         return "".join(to_join)
 
     @typ.final
-    @dataclasses.dataclass(kw_only=True, frozen=True)
-    class ParsedData(Event.ParsedData):
+    @dataclasses.dataclass(kw_only=True, frozen=True, repr=False)
+    class ParsedData(Event.ParsedData, DictReprMixin):
         _SelfT = typ.TypeVar("_SelfT", bound="TimeSignatureEvent.ParsedData")
 
         upper: int
@@ -405,8 +405,8 @@ class BPMEvent(Event):
         return "".join(to_join)
 
     @typ.final
-    @dataclasses.dataclass(kw_only=True, frozen=True)
-    class ParsedData(Event.ParsedData):
+    @dataclasses.dataclass(kw_only=True, frozen=True, repr=False)
+    class ParsedData(Event.ParsedData, DictReprMixin):
         _SelfT = typ.TypeVar("_SelfT", bound="BPMEvent.ParsedData")
 
         raw_bpm: str

@@ -23,10 +23,16 @@ class DictPropertiesEqMixin(object):
 
 
 class DictReprMixin(object):
-    """A mixin implementing ``__repr__`` by dumping ``__dict__()``."""
+    """A mixin implementing ``__repr__`` by dumping ``__dict__()``.
+
+    Additionally, this ignores class attributes, since they (typically) do not change and are
+    therefore uninteresting.
+    """
 
     def __repr__(self) -> str:  # pragma: no cover
-        return f"{type(self).__name__}({str(self.__dict__)[1:-1]})"
+        instance_attrs = {k: v for k, v in self.__dict__.items() if not hasattr(self.__class__, k)}
+        return f"{type(self).__name__}({str(instance_attrs)[1:-1]})"
+        # return f"{type(self).__name__}({str(self.__dict__.items())[1:-1]})"
 
 
 class DictReprTruncatedSequencesMixin(object):
@@ -37,11 +43,16 @@ class DictReprTruncatedSequencesMixin(object):
     more than 1 element will be represented as such::
 
         ["foo", ... 4 more elements]
+
+    Additionally, this ignores class attributes, since they (typically) do not change and are
+    therefore uninteresting.
     """
 
     def __repr__(self) -> str:  # pragma: no cover
+        instance_attrs = {k: v for k, v in self.__dict__.items() if not hasattr(self.__class__, k)}
+
         items = []
-        for k, v in self.__dict__.items():
+        for k, v in instance_attrs.items():
             item = f"'{k}': "
             if isinstance(v, Sequence) and len(v) > 1:
                 item += f"[{v[0]}, ... {len(v)-1} more elements]"
