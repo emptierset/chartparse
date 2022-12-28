@@ -119,9 +119,7 @@ class _FieldParsingSpec(object):
     regex: str
     regex_prog: typ.Pattern[str]
 
-    # Cannot actually be annotated as an instance attribute directly due to longstanding mypy bug:
-    # https://github.com/python/mypy/issues/708.
-    # processing_fn: FieldValueParser
+    processing_fn: FieldValueParser
 
     def __init__(self, regex: str, processing_fn: FieldValueParser) -> None:
         self.regex = regex
