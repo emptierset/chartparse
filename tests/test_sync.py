@@ -6,16 +6,19 @@ import unittest.mock
 
 from chartparse.event import Event
 from chartparse.exceptions import RegexNotMatchError
-from chartparse.sync import SyncTrack, BPMEvent, TimeSignatureEvent
+from chartparse.sync import SyncTrack, BPMEvent, TimeSignatureEvent, AnchorEvent
 
 from tests.helpers.lines import generate_bpm as generate_bpm_line
 from tests.helpers.lines import generate_time_signature as generate_time_signature_line
+from tests.helpers.lines import generate_anchor_event as generate_anchor_line
 from tests.helpers.sync import (
     TimeSignatureEventWithDefaults,
     TimeSignatureEventParsedDataWithDefaults,
     BPMEventWithDefaults,
     BPMEventParsedDataWithDefaults,
     SyncTrackWithDefaults,
+    AnchorEventWithDefaults,
+    AnchorEventParsedDataWithDefaults,
 )
 
 
@@ -25,6 +28,7 @@ class TestSyncTrack(object):
             got = SyncTrackWithDefaults()
             assert got.time_signature_events == pytest.defaults.time_signature_events
             assert got.bpm_events == pytest.defaults.bpm_events
+            assert got.anchor_events == pytest.defaults.anchor_events
 
         def test_non_positive_resolution(self):
             with pytest.raises(ValueError):
@@ -70,6 +74,7 @@ class TestSyncTrack(object):
                 return_value=(
                     pytest.defaults.time_signature_event_parsed_datas,
                     pytest.defaults.bpm_event_parsed_datas,
+                    pytest.defaults.anchor_event_parsed_datas,
                 ),
             )
             mock_build_events = mocker.patch(
@@ -77,6 +82,7 @@ class TestSyncTrack(object):
                 side_effect=[
                     pytest.defaults.bpm_events,
                     pytest.defaults.time_signature_events,
+                    pytest.defaults.anchor_events,
                 ],
             )
             spy_init = mocker.spy(SyncTrack, "__init__")
@@ -95,6 +101,10 @@ class TestSyncTrack(object):
                         TimeSignatureEvent.from_parsed_data,
                         unittest.mock.ANY,  # ignore object conjured locally
                     ),
+                    unittest.mock.call(
+                        pytest.defaults.anchor_event_parsed_datas,
+                        AnchorEvent.from_parsed_data,
+                    ),
                 ]
             )
             spy_init.assert_called_once_with(
@@ -102,6 +112,7 @@ class TestSyncTrack(object):
                 pytest.defaults.resolution,
                 pytest.defaults.time_signature_events,
                 pytest.defaults.bpm_events,
+                pytest.defaults.anchor_events,
             )
 
     class TestTimestampAtTick(object):
@@ -441,3 +452,40 @@ class TestBPMEvent(object):
             def test_no_match(self):
                 with pytest.raises(RegexNotMatchError):
                     _ = BPMEvent.ParsedData.from_chart_line(pytest.invalid_chart_line)
+
+
+class TestAnchorEvent(object):
+    class TestInit(object):
+        def test(self, mocker):
+            spy_init = mocker.spy(Event, "__init__")
+
+            _ = AnchorEventWithDefaults()
+
+            spy_init.assert_called_once_with(
+                unittest.mock.ANY,  # ignore self
+                pytest.defaults.tick,
+                pytest.defaults.timestamp,
+            )
+
+    class TestFromParsedData(object):
+        def test(self, mocker):
+            spy_init = mocker.spy(AnchorEvent, "__init__")
+
+            data = AnchorEventParsedDataWithDefaults()
+            _ = AnchorEvent.from_parsed_data(data)
+
+            spy_init.assert_called_once_with(
+                unittest.mock.ANY, pytest.defaults.tick, pytest.defaults.timestamp  # ignore self
+            )
+
+    class TestParsedData(object):
+        class TestFromChartLine(object):
+            def test(self):
+                line = generate_anchor_line(pytest.defaults.tick, pytest.defaults.microseconds)
+                got = AnchorEvent.ParsedData.from_chart_line(line)
+                assert got.tick == pytest.defaults.tick
+                assert got.microseconds == pytest.defaults.microseconds
+
+            def test_no_match(self, invalid_chart_line):
+                with pytest.raises(RegexNotMatchError):
+                    _ = AnchorEvent.ParsedData.from_chart_line(invalid_chart_line)

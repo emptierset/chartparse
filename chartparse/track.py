@@ -71,6 +71,15 @@ def parse_data_from_chart_lines(
 
 @typ.overload
 def build_events_from_data(
+    datas: Iterable[chartparse.sync.AnchorEvent.ParsedData],
+    from_data_fn: Callable[[chartparse.sync.AnchorEvent.ParsedData], chartparse.sync.AnchorEvent],
+    /,
+) -> list[chartparse.sync.AnchorEvent]:
+    ...  # pragma: no cover
+
+
+@typ.overload
+def build_events_from_data(
     datas: Iterable[chartparse.sync.BPMEvent.ParsedData],
     from_data_fn: Callable[
         [
@@ -86,6 +95,7 @@ def build_events_from_data(
     ...  # pragma: no cover
 
 
+# TODO: Import things by name, not fully qualified.
 @typ.overload
 def build_events_from_data(
     datas: Iterable[chartparse.sync.TimeSignatureEvent.ParsedData],
@@ -171,16 +181,23 @@ def build_events_from_data(
     ...  # pragma: no cover
 
 
-def build_events_from_data(datas, from_data_fn, resolution_or_tatter, /):
+def build_events_from_data(datas, from_data_fn, resolution_or_tatter_or_None=None, /):
     events = []
     for data in datas:
-        prev_event = events[-1] if events else None
-        event = from_data_fn(data, prev_event, resolution_or_tatter)
-        events.append(event)
-    if isinstance(resolution_or_tatter, int):  # using BPMEvent.ParsedData
+        if isinstance(data, chartparse.sync.AnchorEvent.ParsedData):
+            event = from_data_fn(data)
+            events.append(event)
+        else:
+            prev_event = events[-1] if events else None
+            event = from_data_fn(data, prev_event, resolution_or_tatter_or_None)
+            events.append(event)
+    if isinstance(resolution_or_tatter_or_None, int) or resolution_or_tatter_or_None is None:
+        # Using BPMEvent.ParsedData or AnchorEvent.ParsedData.
         # In this case, BPMEvents must already be in increasing tick order, by definition.
         return events
-    elif isinstance(resolution_or_tatter, TimestampAtTickSupporter):
+    elif isinstance(resolution_or_tatter_or_None, TimestampAtTickSupporter):
+        # TODO: Should we instead optionally validate a chart, which allows us to assume everything
+        # is sorted? etc.
         return sorted(events, key=lambda e: e.tick)
     else:
         raise ProgrammerError  # pragma: no cover

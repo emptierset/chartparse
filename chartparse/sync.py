@@ -41,6 +41,9 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     bpm_events: typ.Final[Sequence[BPMEvent]]
     """A ``SyncTrack``'s ``BPMEvent``\\ s."""
 
+    anchor_events: typ.Final[Sequence[AnchorEvent]]
+    """A ``SyncTrack``'s ``AnchorEvent``\\ s."""
+
     section_name: typ.Final[str] = "SyncTrack"
     """The name of this track's section in a ``.chart`` file."""
 
@@ -49,6 +52,7 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         resolution: int,
         time_signature_events: Sequence[TimeSignatureEvent],
         bpm_events: Sequence[BPMEvent],
+        anchor_events: Sequence[AnchorEvent],
     ):
         """Instantiates and validates all instance attributes.
 
@@ -72,6 +76,7 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         self.resolution = resolution
         self.time_signature_events = time_signature_events
         self.bpm_events = bpm_events
+        self.anchor_events = anchor_events
 
     @classmethod
     def from_chart_lines(
@@ -89,7 +94,7 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             A ``SyncTrack`` parsed from ``lines``.
         """
 
-        time_signature_data, bpm_data = cls._parse_data_from_chart_lines(lines)
+        time_signature_data, bpm_data, anchor_data = cls._parse_data_from_chart_lines(lines)
 
         bpm_events = chartparse.track.build_events_from_data(
             bpm_data,
@@ -97,11 +102,9 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             resolution,
         )
 
+        @dataclasses.dataclass(frozen=True, kw_only=True)
         class TimestampAtTicker(object):
-            resolution: typ.Final[int]
-
-            def __init__(self, resolution: int):
-                self.resolution = resolution
+            resolution: int
 
             def timestamp_at_tick(
                 self, tick: int, proximal_bpm_event_index: int = 0
@@ -110,23 +113,35 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
                     bpm_events, tick, self.resolution, proximal_bpm_event_index
                 )  # pragma: no cover
 
-        tatter = TimestampAtTicker(resolution)
+        tatter = TimestampAtTicker(resolution=resolution)
 
         time_signature_events = chartparse.track.build_events_from_data(
             time_signature_data, TimeSignatureEvent.from_parsed_data, tatter
         )
 
-        return cls(resolution, time_signature_events, bpm_events)
+        anchor_events = chartparse.track.build_events_from_data(
+            anchor_data, AnchorEvent.from_parsed_data
+        )
+
+        return cls(resolution, time_signature_events, bpm_events, anchor_events)
 
     @classmethod
     def _parse_data_from_chart_lines(
         cls: type[_Self],
         lines: Iterable[str],
-    ) -> tuple[list[TimeSignatureEvent.ParsedData], list[BPMEvent.ParsedData]]:
+    ) -> tuple[
+        list[TimeSignatureEvent.ParsedData],
+        list[BPMEvent.ParsedData],
+        list[AnchorEvent.ParsedData],
+    ]:
         parsed_data = chartparse.track.parse_data_from_chart_lines(
-            (BPMEvent.ParsedData, TimeSignatureEvent.ParsedData), lines
+            (BPMEvent.ParsedData, TimeSignatureEvent.ParsedData, AnchorEvent.ParsedData), lines
         )
-        return parsed_data[TimeSignatureEvent.ParsedData], parsed_data[BPMEvent.ParsedData]
+        return (
+            parsed_data[TimeSignatureEvent.ParsedData],
+            parsed_data[BPMEvent.ParsedData],
+            parsed_data[AnchorEvent.ParsedData],
+        )
 
     def timestamp_at_tick(
         self, tick: int, proximal_bpm_event_index: int = 0
@@ -434,3 +449,64 @@ class BPMEvent(Event):
                 raise RegexNotMatchError(cls._regex, line)
             tick, raw_bpm = int(m.group(1)), m.group(2)
             return cls(tick=tick, raw_bpm=raw_bpm)
+
+
+@typ.final
+class AnchorEvent(Event):
+    """An event representing a tick "locked" to a particular timestamp."""
+
+    _Self = typ.TypeVar("_Self", bound="AnchorEvent")
+
+    def __init__(
+        self,
+        tick: int,
+        timestamp: datetime.timedelta,
+    ):
+        """Initializes all instance attributes."""
+
+        super().__init__(tick, timestamp)
+
+    @classmethod
+    def from_parsed_data(cls: type[_Self], data: AnchorEvent.ParsedData) -> _Self:
+        """Obtain an instance of this object from parsed data.
+
+        Args:
+            data: The data necessary to create an event. Most likely from a Moonscraper ``.chart``.
+
+        Returns:
+            An an instance of this object initialized from ``data``.
+        """
+
+        timestamp = datetime.timedelta(microseconds=data.microseconds)
+        return cls(data.tick, timestamp)
+
+    @typ.final
+    @dataclasses.dataclass(kw_only=True, frozen=True, repr=False)
+    class ParsedData(Event.ParsedData, DictReprMixin):
+        _Self = typ.TypeVar("_Self", bound="AnchorEvent.ParsedData")
+
+        microseconds: int
+
+        # Match 1: Tick
+        # Match 2: Microseconds
+        _regex: typ.Final[str] = r"^\s*?(\d+?) = A (\d+?)$"
+        _regex_prog: typ.Final[typ.Pattern[str]] = re.compile(_regex)
+
+        @classmethod
+        def from_chart_line(cls: type[_Self], line: str) -> _Self:
+            """Attempt to construct this object from a ``.chart`` line.
+
+            Args:
+                line: A string, most likely from a Moonscraper ``.chart``.
+
+            Returns:
+                An an instance of this object initialized from ``line``.
+
+            Raises:
+                RegexNotMatchError: If the mixed-into class' ``_regex`` does not match ``line``.
+            """
+            m = cls._regex_prog.match(line)
+            if not m:
+                raise RegexNotMatchError(cls._regex, line)
+            tick, microseconds = int(m.group(1)), int(m.group(2))
+            return cls(tick=tick, microseconds=microseconds)

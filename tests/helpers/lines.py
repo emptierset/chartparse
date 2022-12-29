@@ -12,6 +12,10 @@ def generate_time_signature(tick, upper, lower=None):
         return f"  {tick} = TS {upper}"
 
 
+def generate_anchor_event(tick, microseconds):
+    return f"  {tick} = A {microseconds}"
+
+
 def generate_text_event(tick, value):
     return f'  {tick} = E "{value}"'
 

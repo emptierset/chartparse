@@ -32,7 +32,7 @@ from chartparse.instrument import (
     HOPOState,
 )
 from chartparse.metadata import Metadata, Player2Instrument
-from chartparse.sync import SyncTrack, BPMEvent, TimeSignatureEvent
+from chartparse.sync import SyncTrack, BPMEvent, TimeSignatureEvent, AnchorEvent
 
 
 _invalid_chart_line = "this_line_is_invalid"
@@ -45,6 +45,7 @@ _default_tick = 0
 _default_timestamp = datetime.timedelta(0)
 
 _default_seconds = 0
+_default_microseconds = _default_seconds // 1000000
 
 _default_proximal_bpm_event_index = 0
 _default_proximal_star_power_event_index = 0
@@ -75,6 +76,13 @@ _default_time_signature_event_parsed_data = TimeSignatureEvent.ParsedData(
     lower=_default_lower_time_signature_numeral,
 )
 _default_time_signature_event_parsed_datas = [_default_time_signature_event_parsed_data]
+
+_default_anchor_event = AnchorEvent(_default_tick, _default_timestamp)
+_default_anchor_events = [_default_anchor_event]
+_default_anchor_event_parsed_data = AnchorEvent.ParsedData(
+    tick=_default_tick, microseconds=_default_microseconds
+)
+_default_anchor_event_parsed_datas = [_default_anchor_event_parsed_data]
 
 _default_global_event_value = "default_global_event_value"
 _default_global_event = GlobalEvent(_default_tick, _default_timestamp, _default_global_event_value)
@@ -188,6 +196,7 @@ class Defaults(object):
     timestamp: ...
 
     seconds: ...
+    microseconds: ...
 
     proximal_bpm_event_index: ...
     proximal_star_power_event_index: ...
@@ -242,6 +251,11 @@ class Defaults(object):
     time_signature_event_parsed_data: ...
     time_signature_event_parsed_datas: ...
 
+    anchor_event: ...
+    anchor_events: ...
+    anchor_event_parsed_data: ...
+    anchor_event_parsed_datas: ...
+
     global_event_value: ...
     text_event_value: ...
     section_event_value: ...
@@ -290,6 +304,7 @@ def pytest_configure():
         sustain_tuple=_default_sustain_tuple,
         timestamp=_default_timestamp,
         seconds=_default_seconds,
+        microseconds=_default_microseconds,
         proximal_bpm_event_index=_default_proximal_bpm_event_index,
         proximal_star_power_event_index=_default_proximal_star_power_event_index,
         default_tatter_timestamp=_default_tatter_timestamp,
@@ -337,6 +352,10 @@ def pytest_configure():
         time_signature_events=_default_time_signature_events,
         time_signature_event_parsed_data=_default_time_signature_event_parsed_data,
         time_signature_event_parsed_datas=_default_time_signature_event_parsed_datas,
+        anchor_event=_default_anchor_event,
+        anchor_events=_default_anchor_events,
+        anchor_event_parsed_data=_default_anchor_event_parsed_data,
+        anchor_event_parsed_datas=_default_anchor_event_parsed_datas,
         global_event_value=_default_global_event_value,
         text_event_value=_default_text_event_value,
         text_event=_default_text_event,
@@ -565,7 +584,12 @@ def minimal_sync_track(bare_sync_track):
 
 @pytest.fixture
 def default_sync_track():
-    return SyncTrack(_default_resolution, _default_time_signature_events, _default_bpm_events)
+    return SyncTrack(
+        _default_resolution,
+        _default_time_signature_events,
+        _default_bpm_events,
+        _default_anchor_events,
+    )
 
 
 @pytest.fixture

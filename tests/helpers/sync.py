@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from chartparse.sync import TimeSignatureEvent, BPMEvent, SyncTrack
+from chartparse.sync import TimeSignatureEvent, BPMEvent, SyncTrack, AnchorEvent
 
 
 def SyncTrackWithDefaults(
@@ -10,8 +10,9 @@ def SyncTrackWithDefaults(
     resolution=pytest.defaults.resolution,
     time_signature_events=pytest.defaults.time_signature_events,
     bpm_events=pytest.defaults.bpm_events,
+    anchor_events=pytest.defaults.anchor_events,
 ):
-    return SyncTrack(resolution, time_signature_events, bpm_events)
+    return SyncTrack(resolution, time_signature_events, bpm_events, anchor_events)
 
 
 def TimeSignatureEventWithDefaults(
@@ -53,3 +54,13 @@ def BPMEventParsedDataWithDefaults(
     raw_bpm=pytest.defaults.raw_bpm,
 ):
     return BPMEvent.ParsedData(tick=tick, raw_bpm=raw_bpm)
+
+
+def AnchorEventWithDefaults(*, tick=pytest.defaults.tick, timestamp=pytest.defaults.timestamp):
+    return AnchorEvent(tick, timestamp)
+
+
+def AnchorEventParsedDataWithDefaults(
+    *, tick=pytest.defaults.tick, microseconds=pytest.defaults.microseconds
+):
+    return AnchorEvent.ParsedData(tick=tick, microseconds=microseconds)

@@ -6,7 +6,7 @@ import pytest
 import chartparse.track
 from chartparse.event import Event
 from chartparse.track import build_events_from_data, parse_data_from_chart_lines
-from chartparse.sync import BPMEvent
+from chartparse.sync import BPMEvent, AnchorEvent
 
 from tests.helpers.fruit import Fruit
 from tests.helpers.log import LogChecker
@@ -14,17 +14,25 @@ from tests.helpers.log import LogChecker
 
 class TestBuildEventsFromData(object):
     @pytest.mark.parametrize(
-        "from_data_return_value,want",
+        "data,from_data_return_value,want",
         [
             pytest.param(
+                pytest.defaults.time_signature_event_parsed_data,
                 pytest.defaults.time_signature_event,
                 [pytest.defaults.time_signature_event],
                 id="with_timestamp_getter",
             ),
             pytest.param(
+                pytest.defaults.anchor_event_parsed_data,
+                pytest.defaults.anchor_event,
+                [pytest.defaults.anchor_event],
+                id="with_None",
+            ),
+            pytest.param(
+                pytest.defaults.bpm_event_parsed_data,
                 pytest.defaults.bpm_event,
                 [pytest.defaults.bpm_event],
-                id="without_timestamp_getter",
+                id="with_resolution",
             ),
         ],
     )
@@ -33,21 +41,25 @@ class TestBuildEventsFromData(object):
         mocker,
         invalid_chart_line,
         default_tatter,
+        data,
         from_data_return_value,
         want,
     ):
         from_data_fn_mock = mocker.Mock(return_value=from_data_return_value)
         if isinstance(from_data_return_value, BPMEvent):
-            resolution_or_tatter = pytest.defaults.resolution
+            resolution_or_tatter_or_None = pytest.defaults.resolution
+        elif isinstance(from_data_return_value, AnchorEvent):
+            resolution_or_tatter_or_None = None
         else:
-            resolution_or_tatter = default_tatter
+            resolution_or_tatter_or_None = default_tatter
 
-        got = build_events_from_data(
-            pytest.invalid_chart_lines, from_data_fn_mock, resolution_or_tatter
-        )
+        got = build_events_from_data([data], from_data_fn_mock, resolution_or_tatter_or_None)
 
         assert got == want
-        from_data_fn_mock.assert_called_once_with(invalid_chart_line, None, resolution_or_tatter)
+        if isinstance(from_data_return_value, AnchorEvent):
+            from_data_fn_mock.assert_called_once_with(data)
+        else:
+            from_data_fn_mock.assert_called_once_with(data, None, resolution_or_tatter_or_None)
 
 
 class TestParseDataFromChartLines(object):
