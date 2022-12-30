@@ -72,9 +72,9 @@ class TestNoteTrackIndex(object):
         assert NoteTrackIndex.G != NoteTrackIndex.R
 
 
-class TestComplexSustainFromParsedData(object):
+class TestComplexSustainFromParsedDatas(object):
     @pytest.mark.parametrize(
-        "data, want",
+        "datas, want",
         [
             pytest.param(
                 [
@@ -114,8 +114,8 @@ class TestComplexSustainFromParsedData(object):
             ),
         ],
     )
-    def test(self, data, want):
-        got = chartparse.instrument.complex_sustain_from_parsed_data(data)
+    def test(self, datas, want):
+        got = chartparse.instrument.complex_sustain_from_parsed_datas(datas)
         assert got == want
 
 

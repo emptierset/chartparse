@@ -397,22 +397,18 @@ for the same number of ticks. If this value is ``0``, then none of the note lane
 """
 
 
-def complex_sustain_from_parsed_data(
-    data: NoteEvent.ParsedData | Sequence[NoteEvent.ParsedData],
-) -> ComplexSustain:
+def complex_sustain_from_parsed_datas(datas: Sequence[NoteEvent.ParsedData]) -> ComplexSustain:
     """Returns a ComplexSustain incorporating multiple ParsedDatas.
 
-    If ``data`` has multiple elements, one or more of which correspond to open notes, this
+    If ``datas`` has multiple elements, one or more of which correspond to open notes, this
     function's behavior is undefined.
 
     Args:
-        data: The data or datas whose sustain values should be coalesced.
+        datas: The datas whose sustain values should be coalesced.
 
     Returns:
         The sustain values of ``datas`` coalesced into a single ComplexSustain.
     """
-    datas = data if isinstance(data, Sequence) else [data]
-
     if datas[0].note_track_index == NoteTrackIndex.OPEN:
         return datas[0].sustain
 
@@ -554,7 +550,7 @@ class NoteEvent(Event):
 
         tick = datas[0].tick
         note = Note.from_parsed_data(data)
-        sustain = complex_sustain_from_parsed_data(data)
+        sustain = complex_sustain_from_parsed_datas(datas)
         is_tap = any(d.note_track_index == NoteTrackIndex.TAP for d in datas)
         is_forced = any(d.note_track_index == NoteTrackIndex.FORCED for d in datas)
 
