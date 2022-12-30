@@ -2,7 +2,13 @@ from __future__ import annotations
 
 import pytest
 
-from chartparse.instrument import StarPowerEvent, NoteEvent, SpecialEvent, InstrumentTrack
+from chartparse.instrument import (
+    StarPowerEvent,
+    NoteEvent,
+    SpecialEvent,
+    InstrumentTrack,
+    TrackEvent,
+)
 
 
 def InstrumentTrackWithDefaults(
@@ -12,8 +18,11 @@ def InstrumentTrackWithDefaults(
     difficulty=pytest.defaults.difficulty,
     note_events=pytest.defaults.note_events,
     star_power_events=pytest.defaults.star_power_events,
+    track_events=pytest.defaults.track_events,
 ):
-    return InstrumentTrack(resolution, instrument, difficulty, note_events, star_power_events)
+    return InstrumentTrack(
+        resolution, instrument, difficulty, note_events, star_power_events, track_events
+    )
 
 
 def SpecialEventWithDefaults(
@@ -86,3 +95,21 @@ def NoteEventParsedDataWithDefaults(
         note_track_index=note_track_index,
         sustain=sustain,
     )
+
+
+def TrackEventWithDefaults(
+    *,
+    tick=pytest.defaults.tick,
+    timestamp=pytest.defaults.timestamp,
+    value=pytest.defaults.global_event_value,
+    proximal_bpm_event_index=pytest.defaults.proximal_bpm_event_index,
+):
+    return TrackEvent(tick, timestamp, value, proximal_bpm_event_index=proximal_bpm_event_index)
+
+
+def TrackEventParsedDataWithDefaults(
+    *,
+    tick=pytest.defaults.tick,
+    value=pytest.defaults.track_event_value,
+):
+    return TrackEvent.ParsedData(tick=tick, value=value)

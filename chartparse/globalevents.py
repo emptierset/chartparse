@@ -118,6 +118,7 @@ class GlobalEventsTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         )
 
 
+# TODO: Make this a dataclass (and all events...?).
 class GlobalEvent(Event):
     """An event in a :class:`~chartparse.globalevents.GlobalEventsTrack`.
 

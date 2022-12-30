@@ -23,6 +23,7 @@ from chartparse.instrument import (
     InstrumentTrack,
     NoteEvent,
     NoteTrackIndex,
+    TrackEvent,
     StarPowerData,
     StarPowerEvent,
     SpecialEvent,
@@ -148,6 +149,15 @@ _default_star_power_event_parsed_data = StarPowerEvent.ParsedData(
     tick=_default_tick, sustain=_default_sustain
 )
 _default_star_power_event_parsed_datas = [_default_star_power_event_parsed_data]
+
+_default_track_event_value = "default_track_event_value"
+_default_track_event = TrackEvent(_default_tick, _default_timestamp, _default_sustain)
+_default_track_events = [_default_track_event]
+_default_track_event_parsed_data = TrackEvent.ParsedData(
+    tick=_default_tick,
+    value=_default_track_event_value,
+)
+_default_track_event_parsed_datas = [_default_track_event_parsed_data]
 
 _default_name = "Song Name"
 _default_artist = "Artist Name"
@@ -291,6 +301,12 @@ class Defaults(object):
     star_power_event_parsed_data: ...
     star_power_event_parsed_datas: ...
 
+    track_event_value: ...
+    track_event: ...
+    track_events: ...
+    track_event_parsed_data: ...
+    track_event_parsed_datas: ...
+
 
 def pytest_configure():
     pytest.invalid_chart_line = _invalid_chart_line
@@ -386,6 +402,11 @@ def pytest_configure():
         star_power_events=_default_star_power_events,
         star_power_event_parsed_data=_default_star_power_event_parsed_data,
         star_power_event_parsed_datas=_default_star_power_event_parsed_datas,
+        track_event_value=_default_track_event_value,
+        track_event=_default_track_event,
+        track_events=_default_track_events,
+        track_event_parsed_data=_default_track_event_parsed_data,
+        track_event_parsed_datas=_default_track_event_parsed_datas,
     )
 
 
@@ -528,6 +549,7 @@ def default_instrument_track():
         _default_difficulty,
         _default_note_events,
         _default_star_power_events,
+        _default_track_events,
     )
 
 

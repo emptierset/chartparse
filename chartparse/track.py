@@ -181,6 +181,23 @@ def build_events_from_data(
     ...  # pragma: no cover
 
 
+@typ.overload
+def build_events_from_data(
+    datas: Iterable[chartparse.instrument.TrackEvent.ParsedData],
+    from_data_fn: Callable[
+        [
+            chartparse.instrument.TrackEvent.ParsedData,
+            chartparse.instrument.TrackEvent | None,
+            TimestampAtTickSupporter,
+        ],
+        chartparse.instrument.TrackEvent,
+    ],
+    tatter: TimestampAtTickSupporter,
+    /,
+) -> list[chartparse.instrument.TrackEvent]:
+    ...  # pragma: no cover
+
+
 def build_events_from_data(datas, from_data_fn, resolution_or_tatter_or_None=None, /):
     events = []
     for data in datas:

@@ -12,6 +12,7 @@ def generate_time_signature(tick, upper, lower=None):
         return f"  {tick} = TS {upper}"
 
 
+# TODO: Rename the functions in here to remove the _event suffix.
 def generate_anchor_event(tick, microseconds):
     return f"  {tick} = A {microseconds}"
 
@@ -34,3 +35,7 @@ def generate_note(tick, note, sustain=0):
 
 def generate_star_power(tick, sustain):
     return f"  {tick} = S 2 {sustain}"
+
+
+def generate_track(tick, value):
+    return f"  {tick} = E {value}"

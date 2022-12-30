@@ -12,6 +12,7 @@ from chartparse.instrument import (
     InstrumentTrack,
     StarPowerEvent,
     NoteEvent,
+    TrackEvent,
     StarPowerData,
     HOPOState,
     SpecialEvent,
@@ -28,9 +29,12 @@ from tests.helpers.instrument import (
     NoteEventParsedDataWithDefaults,
     SpecialEventWithDefaults,
     SpecialEventParsedDataWithDefaults,
+    TrackEventWithDefaults,
+    TrackEventParsedDataWithDefaults,
 )
 from tests.helpers.lines import generate_note as generate_note_line
 from tests.helpers.lines import generate_star_power as generate_star_power_line
+from tests.helpers.lines import generate_track as generate_track_line
 
 
 class TestNote(object):
@@ -138,6 +142,7 @@ class TestInstrumentTrack(object):
                 return_value=(
                     pytest.defaults.note_event_parsed_datas,
                     pytest.defaults.star_power_event_parsed_datas,
+                    pytest.defaults.track_event_parsed_datas,
                 ),
             )
             mock_build_note_events = mocker.patch.object(
@@ -147,7 +152,10 @@ class TestInstrumentTrack(object):
             )
             mock_build_events = mocker.patch(
                 "chartparse.track.build_events_from_data",
-                return_value=pytest.defaults.star_power_events,
+                side_effect=[
+                    pytest.defaults.star_power_events,
+                    pytest.defaults.track_events,
+                ],
             )
             spy_init = mocker.spy(InstrumentTrack, "__init__")
             _ = InstrumentTrack.from_chart_lines(
@@ -162,10 +170,19 @@ class TestInstrumentTrack(object):
                 pytest.defaults.star_power_events,
                 default_tatter,
             )
-            mock_build_events.assert_called_once_with(
-                pytest.defaults.star_power_event_parsed_datas,
-                StarPowerEvent.from_parsed_data,
-                default_tatter,
+            mock_build_events.assert_has_calls(
+                [
+                    unittest.mock.call(
+                        pytest.defaults.star_power_event_parsed_datas,
+                        StarPowerEvent.from_parsed_data,
+                        default_tatter,
+                    ),
+                    unittest.mock.call(
+                        pytest.defaults.track_event_parsed_datas,
+                        TrackEvent.from_parsed_data,
+                        default_tatter,
+                    ),
+                ],
             )
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self
@@ -174,6 +191,7 @@ class TestInstrumentTrack(object):
                 pytest.defaults.difficulty,
                 pytest.defaults.note_events,
                 pytest.defaults.star_power_events,
+                pytest.defaults.track_events,
             )
 
         def NoteEventWithDefaultsPlus(**kwargs):
@@ -1070,3 +1088,71 @@ class TestSpecialEvent(object):
 # TODO: Test regex?
 class TestStarPowerEvent(object):
     pass
+
+
+class TestTrackEvent(object):
+    class TestInit(object):
+        def test(self, mocker):
+            want_proximal_bpm_event_index = 1
+            want_value = "value"
+            spy_init = mocker.spy(Event, "__init__")
+
+            got = TrackEventWithDefaults(
+                value=want_value, proximal_bpm_event_index=want_proximal_bpm_event_index
+            )
+
+            spy_init.assert_called_once_with(
+                unittest.mock.ANY,  # ignore self
+                pytest.defaults.tick,
+                pytest.defaults.timestamp,
+                proximal_bpm_event_index=want_proximal_bpm_event_index,
+            )
+            assert got.value == want_value
+
+    class TestFromParsedData(object):
+        @pytest.mark.parametrize(
+            "prev_event",
+            [
+                pytest.param(
+                    None,
+                    id="prev_event_none",
+                ),
+                pytest.param(
+                    TrackEventWithDefaults(proximal_bpm_event_index=1),
+                    id="prev_event_present",
+                ),
+            ],
+        )
+        def test(self, mocker, default_tatter, prev_event):
+            spy_init = mocker.spy(TrackEvent, "__init__")
+
+            _ = TrackEvent.from_parsed_data(
+                TrackEventParsedDataWithDefaults(),
+                prev_event,
+                default_tatter,
+            )
+
+            default_tatter.spy.assert_called_once_with(
+                pytest.defaults.tick,
+                proximal_bpm_event_index=prev_event._proximal_bpm_event_index if prev_event else 0,
+            )
+
+            spy_init.assert_called_once_with(
+                unittest.mock.ANY,  # ignore self
+                pytest.defaults.tick,
+                pytest.defaults.default_tatter_timestamp,
+                pytest.defaults.track_event_value,
+                proximal_bpm_event_index=pytest.defaults.default_tatter_index,
+            )
+
+    class TestParsedData(object):
+        class TestFromChartLine(object):
+            def test(self, mocker):
+                line = generate_track_line(pytest.defaults.tick, pytest.defaults.track_event_value)
+                got = TrackEvent.ParsedData.from_chart_line(line)
+                assert got.tick == pytest.defaults.tick
+                assert got.value == pytest.defaults.track_event_value
+
+            def test_no_match(self, invalid_chart_line):
+                with pytest.raises(RegexNotMatchError):
+                    _ = TrackEvent.ParsedData.from_chart_line(invalid_chart_line)

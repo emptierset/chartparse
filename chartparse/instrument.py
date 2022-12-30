@@ -222,6 +222,9 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     star_power_events: typ.Final[Sequence[StarPowerEvent]]
     """An (instrument, difficulty) pair's ``StarPowerEvent`` objects."""
 
+    track_events: typ.Final[Sequence[TrackEvent]]
+    """An (instrument, difficulty) pair's ``TrackEvent`` objects."""
+
     _min_note_instrument_track_index = 0
     _max_note_instrument_track_index = 4
     _open_instrument_track_index = 7
@@ -235,6 +238,7 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         difficulty: Difficulty,
         note_events: Sequence[NoteEvent],
         star_power_events: Sequence[StarPowerEvent],
+        track_events: Sequence[TrackEvent],
     ) -> None:
         """Instantiates all instance attributes."""
         if resolution <= 0:
@@ -245,6 +249,7 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         self.difficulty = difficulty
         self.note_events = note_events
         self.star_power_events = star_power_events
+        self.track_events = track_events
 
     @functools.cached_property
     def section_name(self) -> str:
@@ -282,24 +287,37 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             An ``InstrumentTrack`` parsed from ``line``.
         """
 
-        note_data, star_power_data = cls._parse_data_from_chart_lines(lines)
+        note_data, star_power_data, track_data = cls._parse_data_from_chart_lines(lines)
         star_power_events = chartparse.track.build_events_from_data(
             star_power_data,
             StarPowerEvent.from_parsed_data,
             tatter,
         )
+        track_events = chartparse.track.build_events_from_data(
+            track_data,
+            TrackEvent.from_parsed_data,
+            tatter,
+        )
         note_events = cls._build_note_events_from_data(note_data, star_power_events, tatter)
-        return cls(tatter.resolution, instrument, difficulty, note_events, star_power_events)
+        return cls(
+            tatter.resolution, instrument, difficulty, note_events, star_power_events, track_events
+        )
 
     @classmethod
     def _parse_data_from_chart_lines(
         cls: type[_Self],
         lines: Iterable[str],
-    ) -> tuple[list[NoteEvent.ParsedData], list[StarPowerEvent.ParsedData]]:
+    ) -> tuple[
+        list[NoteEvent.ParsedData], list[StarPowerEvent.ParsedData], list[TrackEvent.ParsedData]
+    ]:
         parsed_data = chartparse.track.parse_data_from_chart_lines(
-            (NoteEvent.ParsedData, StarPowerEvent.ParsedData), lines
+            (NoteEvent.ParsedData, StarPowerEvent.ParsedData, TrackEvent.ParsedData), lines
         )
-        return parsed_data[NoteEvent.ParsedData], parsed_data[StarPowerEvent.ParsedData]
+        return (
+            parsed_data[NoteEvent.ParsedData],
+            parsed_data[StarPowerEvent.ParsedData],
+            parsed_data[TrackEvent.ParsedData],
+        )
 
     def __str__(self) -> str:  # pragma: no cover
         return (
@@ -701,6 +719,7 @@ class NoteEvent(Event):
             )
 
 
+# TODO: Make this a dataclass.
 class SpecialEvent(Event):
     """Provides a regex template for parsing 'S' style chart lines.
 
@@ -823,3 +842,89 @@ class StarPowerEvent(SpecialEvent):
 
 
 # TODO: Support E textherewithoutspaces ("track events") within InstrumentTracks.
+
+
+# TODO: Make this a dataclass (and all events...?).
+@typ.final
+class TrackEvent(Event):
+    """An event representing arbitrary data at a particular tick.
+
+    This is questionably named, as this Python package refers to the various chart file sections
+    as "tracks". This event only occurs in instrument tracks.
+    """
+
+    _Self = typ.TypeVar("_Self", bound="TrackEvent")
+
+    value: typ.Final[str]
+    """The data that this event stores."""
+
+    def __init__(
+        self,
+        tick: int,
+        timestamp: datetime.timedelta,
+        value: str,
+        proximal_bpm_event_index: int = 0,
+    ) -> None:
+        super().__init__(tick, timestamp, proximal_bpm_event_index=proximal_bpm_event_index)
+        self.value = value
+
+    @classmethod
+    def from_parsed_data(
+        cls: type[_Self],
+        data: TrackEvent.ParsedData,
+        prev_event: _Self | None,
+        tatter: TimestampAtTickSupporter,
+    ) -> _Self:
+        """Obtain an instance of this object from parsed data.
+
+        Args:
+            data: The data necessary to create an event. Most likely from a Moonscraper ``.chart``.
+            prev_event: The event of this type with the greatest ``tick`` value less than that of
+                this event. If this is ``None``, then this must be the first event of this type.
+            tatter: An object that can be used to get a timestamp at a particular tick.
+
+        Returns:
+            An an instance of this object initialized from ``data``.
+        """
+        timestamp, proximal_bpm_event_index = tatter.timestamp_at_tick(
+            data.tick,
+            proximal_bpm_event_index=prev_event._proximal_bpm_event_index if prev_event else 0,
+        )
+        return cls(
+            data.tick, timestamp, data.value, proximal_bpm_event_index=proximal_bpm_event_index
+        )
+
+    def __str__(self) -> str:  # pragma: no cover
+        to_join = [super().__str__()]
+        to_join.append(f': "{self.value}"')
+        return "".join(to_join)
+
+    @dataclasses.dataclass(kw_only=True, frozen=True, repr=False)
+    class ParsedData(Event.ParsedData, DictReprMixin):
+        _Self = typ.TypeVar("_Self", bound="TrackEvent.ParsedData")
+
+        value: str
+
+        # Match 1: Tick
+        # Match 2: Event value (to be added by subclass via _value_regex)
+        _regex: typ.Final[str] = r"^\s*?(\d+?) = E ([^ ]*?)\s*?$"
+        _regex_prog: typ.Final[typ.Pattern[str]] = re.compile(_regex)
+
+        @classmethod
+        def from_chart_line(cls: type[_Self], line: str) -> _Self:
+            """Attempt to construct this object from a ``.chart`` line.
+
+            Args:
+                line: A string, most likely from a Moonscraper ``.chart``.
+
+            Returns:
+                An an instance of this object initialized from ``line``.
+
+            Raises:
+                RegexNotMatchError: If the mixed-into class' ``_regex`` does not match ``line``.
+            """
+            m = cls._regex_prog.match(line)
+            if not m:
+                raise RegexNotMatchError(cls._regex, line)
+            tick, value = int(m.group(1)), m.group(2)
+            return cls(tick=tick, value=value)
