@@ -138,6 +138,7 @@ class Note(Enum):
     BLUE_ORANGE = bytearray((0, 0, 0, 1, 1))
     ORANGE = bytearray((0, 0, 0, 0, 1))
 
+    @functools.lru_cache
     def is_chord(self):
         """Returns whether this ``Note`` has multiple active lanes."""
 
@@ -194,6 +195,7 @@ class NoteTrackIndex(AllValuesGettableEnum):
             return self.value < other.value
         return NotImplemented  # pragma: no cover
 
+    @functools.lru_cache
     def is_5_note(self) -> bool:
         """Returns whether this is one of the five "normal" note indices."""
         return NoteTrackIndex.G.value <= self.value <= NoteTrackIndex.O.value
