@@ -420,14 +420,19 @@ def complex_sustain_from_parsed_data(
     for d in filter(lambda d: d.note_track_index.is_5_note(), datas):
         sustain_list[d.note_track_index.value] = d.sustain
 
-    if all(s is None for s in sustain_list):
+    return _refined_sustain_tuple(tuple(sustain_list))
+
+
+@functools.lru_cache
+def _refined_sustain_tuple(sustain_tuple: SustainTuple) -> ComplexSustain:
+    if all(s is None for s in sustain_tuple):
         return 0
 
-    first_non_none_sustain = next(s for s in sustain_list if s is not None)
-    if all(d is None or d == first_non_none_sustain for d in sustain_list):
+    first_non_none_sustain = next(s for s in sustain_tuple if s is not None)
+    if all(d is None or d == first_non_none_sustain for d in sustain_tuple):
         return first_non_none_sustain
 
-    return typ.cast(ComplexSustain, tuple(sustain_list))
+    return typ.cast(ComplexSustain, tuple(sustain_tuple))
 
 
 @typ.final
