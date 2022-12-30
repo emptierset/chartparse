@@ -321,12 +321,12 @@ class TimeSignatureEvent(Event):
             m = cls._regex_prog.match(line)
             if not m:
                 raise RegexNotMatchError(cls._regex, line)
-            tick, upper = int(m.group(1)), int(m.group(2))
+            raw_tick, raw_upper, raw_lower = m.groups()
             try:
-                lower = int(m.group(3))
+                lower = int(raw_lower)
             except TypeError:
                 lower = None
-            return cls(tick=tick, upper=upper, lower=lower)
+            return cls(tick=int(raw_tick), upper=int(raw_upper), lower=lower)
 
 
 @typ.final
@@ -447,8 +447,8 @@ class BPMEvent(Event):
             m = cls._regex_prog.match(line)
             if not m:
                 raise RegexNotMatchError(cls._regex, line)
-            tick, raw_bpm = int(m.group(1)), m.group(2)
-            return cls(tick=tick, raw_bpm=raw_bpm)
+            raw_tick, raw_bpm = m.groups()
+            return cls(tick=int(raw_tick), raw_bpm=raw_bpm)
 
 
 @typ.final
@@ -508,5 +508,5 @@ class AnchorEvent(Event):
             m = cls._regex_prog.match(line)
             if not m:
                 raise RegexNotMatchError(cls._regex, line)
-            tick, microseconds = int(m.group(1)), int(m.group(2))
-            return cls(tick=tick, microseconds=microseconds)
+            raw_tick, raw_microseconds = m.groups()
+            return cls(tick=int(raw_tick), microseconds=int(raw_microseconds))

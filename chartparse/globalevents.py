@@ -207,8 +207,8 @@ class GlobalEvent(Event):
             m = cls._regex_prog.match(line)
             if not m:
                 raise RegexNotMatchError(cls._regex, line)
-            tick, value = int(m.group(1)), m.group(2)
-            return cls(tick=tick, value=value)
+            raw_tick, raw_value = m.groups()
+            return cls(tick=int(raw_tick), value=raw_value)
 
 
 @typ.final

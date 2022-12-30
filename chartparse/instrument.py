@@ -713,16 +713,12 @@ class NoteEvent(Event):
             m = cls._regex_prog.match(line)
             if not m:
                 raise RegexNotMatchError(cls._regex, line)
-            parsed_tick, parsed_note_index, parsed_sustain = (
-                int(m.group(1)),
-                int(m.group(2)),
-                int(m.group(3)),
-            )
-            note_track_index = NoteTrackIndex(parsed_note_index)
+            raw_tick, raw_note_index, raw_sustain = m.groups()
+            note_track_index = NoteTrackIndex(int(raw_note_index))
             return cls(
-                tick=parsed_tick,
+                tick=int(raw_tick),
                 note_track_index=note_track_index,
-                sustain=parsed_sustain,
+                sustain=int(raw_sustain),
             )
 
 
@@ -826,8 +822,8 @@ class SpecialEvent(Event):
             m = cls._regex_prog.match(line)
             if not m:
                 raise RegexNotMatchError(cls._regex, line)
-            tick, sustain = int(m.group(1)), int(m.group(2))
-            return cls(tick=tick, sustain=sustain)
+            raw_tick, raw_sustain = m.groups()
+            return cls(tick=int(raw_tick), sustain=int(raw_sustain))
 
 
 @typ.final
@@ -933,5 +929,5 @@ class TrackEvent(Event):
             m = cls._regex_prog.match(line)
             if not m:
                 raise RegexNotMatchError(cls._regex, line)
-            tick, value = int(m.group(1)), m.group(2)
-            return cls(tick=tick, value=value)
+            raw_tick, raw_value = m.groups()
+            return cls(tick=int(raw_tick), value=raw_value)
