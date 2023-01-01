@@ -650,7 +650,7 @@ class NoteEvent(Event):
                 break
 
         candidate = star_power_events[candidate_index]
-        if not candidate.tick_is_in_event(tick):
+        if not candidate.tick_is_during_event(tick):
             return None, candidate_index
 
         return StarPowerData(star_power_event_index=candidate_index), candidate_index
@@ -784,10 +784,21 @@ class SpecialEvent(Event):
             data.tick, timestamp, data.sustain, proximal_bpm_event_index=proximal_bpm_event_index
         )
 
-    def tick_is_in_event(self, tick: int) -> bool:
+    def tick_is_during_event(self, tick: int) -> bool:
+        """Returns whether ``tick`` occurs during this event.
+
+        This canonicalizes the fact that, in order to be during an event, a tick value must be
+        greater than or equal to the event's ``tick`` value and less than the event's ``end_tick``
+        value.
+        """
         return self.tick <= tick and not self.tick_is_after_event(tick)
 
     def tick_is_after_event(self, tick: int) -> bool:
+        """Returns whether ``tick`` occurs after this event.
+
+        This canonicalizes the fact that, in order to be after an event, a tick value must be
+        greater than or equal to the event's ``end_tick`` value.
+        """
         return tick >= self.end_tick
 
     def __str__(self) -> str:  # pragma: no cover

@@ -1065,7 +1065,7 @@ class TestSpecialEvent(object):
             got = event.tick_is_after_event(tick)
             assert got == want
 
-    class TestTickIsInEvent(object):
+    class TestTickIsDuringEvent(object):
         @pytest.mark.parametrize(
             "tick,want",
             [
@@ -1081,7 +1081,7 @@ class TestSpecialEvent(object):
         )
         def test(self, tick, want):
             event = SpecialEventWithDefaults(tick=100, sustain=10)
-            got = event.tick_is_in_event(tick)
+            got = event.tick_is_during_event(tick)
             assert got == want
 
 
