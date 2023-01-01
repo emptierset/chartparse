@@ -346,18 +346,18 @@ class TestInstrumentTrack(object):
                             tick=0,
                             note=Note.G,
                             sustain=100,
-                            star_power_data=StarPowerData(0),
+                            star_power_data=StarPowerData(star_power_event_index=0),
                         ),
                         NoteEventWithDefaultsPlus(
                             tick=2000,
                             note=Note.R,
                             sustain=50,
-                            star_power_data=StarPowerData(1),
+                            star_power_data=StarPowerData(star_power_event_index=1),
                         ),
                         NoteEventWithDefaultsPlus(
                             tick=2075,
                             note=Note.YB,
-                            star_power_data=StarPowerData(1),
+                            star_power_data=StarPowerData(star_power_event_index=1),
                         ),
                         NoteEventWithDefaultsPlus(
                             tick=2100,
@@ -432,7 +432,7 @@ class TestNoteEvent(object):
     class TestInit(object):
         def test(self, mocker):
             want_end_timestamp = datetime.timedelta(1)
-            want_star_power_data = StarPowerData(2)
+            want_star_power_data = StarPowerData(star_power_event_index=2)
             want_sustain = 3
             want_proximal_bpm_event_index = 5
             want_note = Note.ORANGE
@@ -483,7 +483,7 @@ class TestNoteEvent(object):
                     100,
                     Note.G,
                     HOPOState.STRUM,
-                    StarPowerData(5),
+                    StarPowerData(star_power_event_index=5),
                     11,
                     22,
                     id="single_data",
@@ -501,7 +501,7 @@ class TestNoteEvent(object):
                     (100, 50, None, None, None),
                     Note.GR,
                     HOPOState.STRUM,
-                    StarPowerData(5),
+                    StarPowerData(star_power_event_index=5),
                     11,
                     22,
                     id="multiple_data",

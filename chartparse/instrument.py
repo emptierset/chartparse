@@ -367,7 +367,7 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
 
 @typ.final
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class StarPowerData(DictPropertiesEqMixin):
     """Star power related info for a :class:`~chartparse.instrument.NoteEvent`."""
 
@@ -650,7 +650,7 @@ class NoteEvent(Event):
         if not candidate.tick_is_in_event(tick):
             return None, candidate_index
 
-        return StarPowerData(candidate_index), candidate_index
+        return StarPowerData(star_power_event_index=candidate_index), candidate_index
 
     def __str__(self) -> str:  # pragma: no cover
         to_join = [super().__str__()]
