@@ -103,7 +103,7 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         )
 
         @dataclasses.dataclass(frozen=True, kw_only=True)
-        class TimestampAtTicker(object):
+        class _TimestampAtTicker(object):
             resolution: int
 
             def timestamp_at_tick(
@@ -113,7 +113,7 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
                     bpm_events, tick, self.resolution, proximal_bpm_event_index
                 )  # pragma: no cover
 
-        tatter = TimestampAtTicker(resolution=resolution)
+        tatter = _TimestampAtTicker(resolution=resolution)
 
         time_signature_events = chartparse.track.build_events_from_data(
             time_signature_data, TimeSignatureEvent.from_parsed_data, tatter
@@ -294,6 +294,11 @@ class TimeSignatureEvent(Event):
     @typ.final
     @dataclasses.dataclass(kw_only=True, frozen=True, repr=False)
     class ParsedData(Event.ParsedData, DictReprMixin):
+        """The data on a single chart line associated with a ``TimeSignatureEvent``.
+
+        This is a ``frozen``, ``kw_only`` dataclass.
+        """
+
         _Self = typ.TypeVar("_Self", bound="TimeSignatureEvent.ParsedData")
 
         upper: int
@@ -422,6 +427,11 @@ class BPMEvent(Event):
     @typ.final
     @dataclasses.dataclass(kw_only=True, frozen=True, repr=False)
     class ParsedData(Event.ParsedData, DictReprMixin):
+        """The data on a single chart line associated with a ``BPMEvent``.
+
+        This is a ``frozen``, ``kw_only`` dataclass.
+        """
+
         _Self = typ.TypeVar("_Self", bound="BPMEvent.ParsedData")
 
         raw_bpm: str
@@ -483,6 +493,11 @@ class AnchorEvent(Event):
     @typ.final
     @dataclasses.dataclass(kw_only=True, frozen=True, repr=False)
     class ParsedData(Event.ParsedData, DictReprMixin):
+        """The data on a single chart line associated with an ``AnchorEvent``.
+
+        This is a ``frozen``, ``kw_only`` dataclass.
+        """
+
         _Self = typ.TypeVar("_Self", bound="AnchorEvent.ParsedData")
 
         microseconds: int

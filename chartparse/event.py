@@ -66,6 +66,11 @@ class Event(DictPropertiesEqMixin, DictReprMixin):
 
     @dataclasses.dataclass(kw_only=True, frozen=True)
     class ParsedData(abc.ABC):
+        """The data on a single chart line associated with an ``Event``.
+
+        This is a ``frozen``, ``kw_only`` dataclass.
+        """
+
         tick: int
         """The tick at which the event represented by this data occurs."""
 

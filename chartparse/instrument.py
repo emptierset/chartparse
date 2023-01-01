@@ -369,7 +369,10 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 @typ.final
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class StarPowerData(DictPropertiesEqMixin):
-    """Star power related info for a :class:`~chartparse.instrument.NoteEvent`."""
+    """Star power related info for a :class:`~chartparse.instrument.NoteEvent`.
+
+    This is a ``frozen``, ``kw_only`` dataclass.
+    """
 
     # This is conceptually Final, but annotating it as such confuses mypy into thinking it should
     # be ClassVar.
@@ -674,6 +677,11 @@ class NoteEvent(Event):
 
     @dataclasses.dataclass(kw_only=True, frozen=True, repr=False)
     class ParsedData(Event.ParsedData, DictReprMixin):
+        """The data on a single chart line associated with a ``NoteEvent``.
+
+        This is a ``frozen``, ``kw_only`` dataclass.
+        """
+
         _Self = typ.TypeVar("_Self", bound="NoteEvent.ParsedData")
 
         note_track_index: NoteTrackIndex
@@ -789,6 +797,11 @@ class SpecialEvent(Event):
 
     @dataclasses.dataclass(kw_only=True, frozen=True, repr=False)
     class ParsedData(Event.ParsedData, DictReprMixin):
+        """The data on a single chart line associated with a ``SpecialEvent``.
+
+        This is a ``frozen``, ``kw_only`` dataclass.
+        """
+
         _Self = typ.TypeVar("_Self", bound="SpecialEvent.ParsedData")
 
         sustain: int
@@ -829,6 +842,11 @@ class StarPowerEvent(SpecialEvent):
     @typ.final
     @dataclasses.dataclass(kw_only=True, frozen=True, repr=False)
     class ParsedData(SpecialEvent.ParsedData, DictReprMixin):
+        """The data on a single chart line associated with a ``StarPowerEvent``.
+
+        This is a ``frozen``, ``kw_only`` dataclass.
+        """
+
         _index_regex = r"2"
         _regex = SpecialEvent.ParsedData._regex_template.format(_index_regex)
         _regex_prog = re.compile(_regex)
@@ -900,6 +918,11 @@ class TrackEvent(Event):
 
     @dataclasses.dataclass(kw_only=True, frozen=True, repr=False)
     class ParsedData(Event.ParsedData, DictReprMixin):
+        """The data on a single chart line associated with a ``TrackEvent``.
+
+        This is a ``frozen``, ``kw_only`` dataclass.
+        """
+
         _Self = typ.TypeVar("_Self", bound="TrackEvent.ParsedData")
 
         value: str

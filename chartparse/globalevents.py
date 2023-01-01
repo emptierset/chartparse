@@ -179,6 +179,11 @@ class GlobalEvent(Event):
 
     @dataclasses.dataclass(kw_only=True, frozen=True, repr=False)
     class ParsedData(Event.ParsedData, DictReprMixin):
+        """The data on a single chart line associated with a ``GlobalEvent``.
+
+        This is a ``frozen``, ``kw_only`` dataclass.
+        """
+
         _Self = typ.TypeVar("_Self", bound="GlobalEvent.ParsedData")
 
         value: str
@@ -218,6 +223,11 @@ class TextEvent(GlobalEvent):
     @typ.final
     @dataclasses.dataclass(kw_only=True, frozen=True, repr=False)
     class ParsedData(GlobalEvent.ParsedData, DictReprMixin):
+        """The data on a single chart line associated with a ``TextEvent``.
+
+        This is a ``frozen``, ``kw_only`` dataclass.
+        """
+
         _value_regex = r"([^ ]*?)"
         _regex = GlobalEvent.ParsedData._regex_template.format(_value_regex)
         _regex_prog = re.compile(_regex)
@@ -233,6 +243,11 @@ class SectionEvent(GlobalEvent):
     @typ.final
     @dataclasses.dataclass(kw_only=True, frozen=True, repr=False)
     class ParsedData(GlobalEvent.ParsedData, DictReprMixin):
+        """The data on a single chart line associated with a ``SectionEvent``.
+
+        This is a ``frozen``, ``kw_only`` dataclass.
+        """
+
         _value_regex = r"section (.*?)"
         _regex = GlobalEvent.ParsedData._regex_template.format(_value_regex)
         _regex_prog = re.compile(_regex)
@@ -248,6 +263,11 @@ class LyricEvent(GlobalEvent):
     @typ.final
     @dataclasses.dataclass(kw_only=True, frozen=True, repr=False)
     class ParsedData(GlobalEvent.ParsedData, DictReprMixin):
+        """The data on a single chart line associated with a ``LyricEvent``.
+
+        This is a ``frozen``, ``kw_only`` dataclass.
+        """
+
         _value_regex = "lyric (.*?)"
         _regex = GlobalEvent.ParsedData._regex_template.format(_value_regex)
         _regex_prog = re.compile(_regex)
