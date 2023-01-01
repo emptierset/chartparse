@@ -64,8 +64,7 @@ class Event(DictPropertiesEqMixin, DictReprMixin):
         to_join.append(f": {as_str}")
         return "".join(to_join)
 
-    # NOTE: ignored mypy here per https://stackoverflow.com/a/70999704/6041556.
-    @dataclasses.dataclass(kw_only=True, frozen=True)  # type: ignore[misc]
+    @dataclasses.dataclass(kw_only=True, frozen=True)
     class ParsedData(abc.ABC):
         tick: int
         """The tick at which the event represented by this data occurs."""
