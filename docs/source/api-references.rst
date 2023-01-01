@@ -59,11 +59,6 @@ chartparse.util module
 
 .. automodule:: chartparse.util
 
-chartparse.datastructures module
---------------------------------
-
-.. automodule:: chartparse.datastructures
-
 chartparse.hints module
 ------------------------------
 
