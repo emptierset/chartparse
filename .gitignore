@@ -146,3 +146,6 @@ dmypy.json
 
 # templates
 .github/templates/*
+
+# macos
+.DS_Store
