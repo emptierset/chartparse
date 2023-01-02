@@ -13,13 +13,17 @@ from __future__ import annotations
 import collections
 import logging
 import typing as typ
-from collections.abc import Callable, Iterable, Sequence
 
-import chartparse.globalevents
-import chartparse.instrument
-import chartparse.sync
 from chartparse.event import Event, TimestampAtTickSupporter
 from chartparse.exceptions import ProgrammerError, RegexNotMatchError
+from chartparse.sync import AnchorEvent
+
+if typ.TYPE_CHECKING:  # pragma: no cover
+    from collections.abc import Callable, Iterable, Sequence
+
+    from chartparse.globalevents import LyricEvent, SectionEvent, TextEvent
+    from chartparse.instrument import StarPowerEvent, TrackEvent
+    from chartparse.sync import BPMEvent, TimeSignatureEvent
 
 logger = logging.getLogger(__name__)
 
@@ -71,137 +75,136 @@ def parse_data_from_chart_lines(
 
 @typ.overload
 def build_events_from_data(
-    datas: Iterable[chartparse.sync.AnchorEvent.ParsedData],
-    from_data_fn: Callable[[chartparse.sync.AnchorEvent.ParsedData], chartparse.sync.AnchorEvent],
+    datas: Iterable[AnchorEvent.ParsedData],
+    from_data_fn: Callable[[AnchorEvent.ParsedData], AnchorEvent],
     /,
-) -> list[chartparse.sync.AnchorEvent]:
+) -> list[AnchorEvent]:
     ...  # pragma: no cover
 
 
 @typ.overload
 def build_events_from_data(
-    datas: Iterable[chartparse.sync.BPMEvent.ParsedData],
+    datas: Iterable[BPMEvent.ParsedData],
     from_data_fn: Callable[
         [
-            chartparse.sync.BPMEvent.ParsedData,
-            chartparse.sync.BPMEvent | None,
+            BPMEvent.ParsedData,
+            BPMEvent | None,
             int,
         ],
-        chartparse.sync.BPMEvent,
+        BPMEvent,
     ],
     resolution: int,
     /,
-) -> list[chartparse.sync.BPMEvent]:
-    ...  # pragma: no cover
-
-
-# TODO: Import things by name, not fully qualified.
-@typ.overload
-def build_events_from_data(
-    datas: Iterable[chartparse.sync.TimeSignatureEvent.ParsedData],
-    from_data_fn: Callable[
-        [
-            chartparse.sync.TimeSignatureEvent.ParsedData,
-            chartparse.sync.TimeSignatureEvent | None,
-            TimestampAtTickSupporter,
-        ],
-        chartparse.sync.TimeSignatureEvent,
-    ],
-    tatter: TimestampAtTickSupporter,
-    /,
-) -> list[chartparse.sync.TimeSignatureEvent]:
+) -> list[BPMEvent]:
     ...  # pragma: no cover
 
 
 @typ.overload
 def build_events_from_data(
-    datas: Iterable[chartparse.globalevents.SectionEvent.ParsedData],
+    datas: Iterable[TimeSignatureEvent.ParsedData],
     from_data_fn: Callable[
         [
-            chartparse.globalevents.SectionEvent.ParsedData,
-            chartparse.globalevents.SectionEvent | None,
+            TimeSignatureEvent.ParsedData,
+            TimeSignatureEvent | None,
             TimestampAtTickSupporter,
         ],
-        chartparse.globalevents.SectionEvent,
+        TimeSignatureEvent,
     ],
     tatter: TimestampAtTickSupporter,
     /,
-) -> list[chartparse.globalevents.SectionEvent]:
+) -> list[TimeSignatureEvent]:
     ...  # pragma: no cover
 
 
 @typ.overload
 def build_events_from_data(
-    datas: Iterable[chartparse.globalevents.LyricEvent.ParsedData],
+    datas: Iterable[SectionEvent.ParsedData],
     from_data_fn: Callable[
         [
-            chartparse.globalevents.LyricEvent.ParsedData,
-            chartparse.globalevents.LyricEvent | None,
+            SectionEvent.ParsedData,
+            SectionEvent | None,
             TimestampAtTickSupporter,
         ],
-        chartparse.globalevents.LyricEvent,
+        SectionEvent,
     ],
     tatter: TimestampAtTickSupporter,
     /,
-) -> list[chartparse.globalevents.LyricEvent]:
+) -> list[SectionEvent]:
     ...  # pragma: no cover
 
 
 @typ.overload
 def build_events_from_data(
-    datas: Iterable[chartparse.globalevents.TextEvent.ParsedData],
+    datas: Iterable[LyricEvent.ParsedData],
     from_data_fn: Callable[
         [
-            chartparse.globalevents.TextEvent.ParsedData,
-            chartparse.globalevents.TextEvent | None,
+            LyricEvent.ParsedData,
+            LyricEvent | None,
             TimestampAtTickSupporter,
         ],
-        chartparse.globalevents.TextEvent,
+        LyricEvent,
     ],
     tatter: TimestampAtTickSupporter,
     /,
-) -> list[chartparse.globalevents.TextEvent]:
+) -> list[LyricEvent]:
     ...  # pragma: no cover
 
 
 @typ.overload
 def build_events_from_data(
-    datas: Iterable[chartparse.instrument.StarPowerEvent.ParsedData],
+    datas: Iterable[TextEvent.ParsedData],
     from_data_fn: Callable[
         [
-            chartparse.instrument.StarPowerEvent.ParsedData,
-            chartparse.instrument.StarPowerEvent | None,
+            TextEvent.ParsedData,
+            TextEvent | None,
             TimestampAtTickSupporter,
         ],
-        chartparse.instrument.StarPowerEvent,
+        TextEvent,
     ],
     tatter: TimestampAtTickSupporter,
     /,
-) -> list[chartparse.instrument.StarPowerEvent]:
+) -> list[TextEvent]:
     ...  # pragma: no cover
 
 
 @typ.overload
 def build_events_from_data(
-    datas: Iterable[chartparse.instrument.TrackEvent.ParsedData],
+    datas: Iterable[StarPowerEvent.ParsedData],
     from_data_fn: Callable[
         [
-            chartparse.instrument.TrackEvent.ParsedData,
-            chartparse.instrument.TrackEvent | None,
+            StarPowerEvent.ParsedData,
+            StarPowerEvent | None,
             TimestampAtTickSupporter,
         ],
-        chartparse.instrument.TrackEvent,
+        StarPowerEvent,
     ],
     tatter: TimestampAtTickSupporter,
     /,
-) -> list[chartparse.instrument.TrackEvent]:
+) -> list[StarPowerEvent]:
+    ...  # pragma: no cover
+
+
+@typ.overload
+def build_events_from_data(
+    datas: Iterable[TrackEvent.ParsedData],
+    from_data_fn: Callable[
+        [
+            TrackEvent.ParsedData,
+            TrackEvent | None,
+            TimestampAtTickSupporter,
+        ],
+        TrackEvent,
+    ],
+    tatter: TimestampAtTickSupporter,
+    /,
+) -> list[TrackEvent]:
     ...  # pragma: no cover
 
 
 def build_events_from_data(datas, from_data_fn, resolution_or_tatter_or_None=None, /):
     events = []
     for data in datas:
-        if isinstance(data, chartparse.sync.AnchorEvent.ParsedData):
+        if isinstance(data, AnchorEvent.ParsedData):
             event = from_data_fn(data)
             events.append(event)
         else:

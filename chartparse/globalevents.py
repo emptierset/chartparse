@@ -14,12 +14,16 @@ import dataclasses
 import logging
 import re
 import typing as typ
-from collections.abc import Iterable, Sequence
 
 import chartparse.track
-from chartparse.event import Event, TimestampAtTickSupporter
+from chartparse.event import Event
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.util import DictPropertiesEqMixin, DictReprMixin, DictReprTruncatedSequencesMixin
+
+if typ.TYPE_CHECKING:  # pragma: no cover
+    from collections.abc import Iterable, Sequence
+
+    from chartparse.event import TimestampAtTickSupporter
 
 logger = logging.getLogger(__name__)
 

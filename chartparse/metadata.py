@@ -14,10 +14,13 @@ import dataclasses
 import enum
 import re
 import typing as typ
-from collections.abc import Callable, Iterable
+from collections.abc import Callable
 
 from chartparse.exceptions import MissingRequiredField, RegexNotMatchError, raise_
 from chartparse.util import DictPropertiesEqMixin, DictReprMixin
+
+if typ.TYPE_CHECKING:  # pragma: no cover
+    from collections.abc import Iterable
 
 SnakeCaseFieldName = typ.Literal[
     "resolution",

@@ -15,13 +15,15 @@ import datetime
 import logging
 import re
 import typing as typ
-from collections.abc import Iterable, Sequence
 
 import chartparse.tick
 import chartparse.track
 from chartparse.event import Event, TimestampAtTickSupporter
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.util import DictPropertiesEqMixin, DictReprMixin, DictReprTruncatedSequencesMixin
+
+if typ.TYPE_CHECKING:  # pragma: no cover
+    from collections.abc import Iterable, Sequence
 
 logger = logging.getLogger(__name__)
 

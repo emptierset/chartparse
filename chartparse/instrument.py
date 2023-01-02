@@ -22,7 +22,7 @@ from enum import Enum
 
 import chartparse.tick
 import chartparse.track
-from chartparse.event import Event, TimestampAtTickSupporter
+from chartparse.event import Event
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.tick import NoteDuration
 from chartparse.util import (
@@ -31,6 +31,9 @@ from chartparse.util import (
     DictReprMixin,
     DictReprTruncatedSequencesMixin,
 )
+
+if typ.TYPE_CHECKING:  # pragma: no cover
+    from chartparse.event import TimestampAtTickSupporter
 
 logger = logging.getLogger(__name__)
 

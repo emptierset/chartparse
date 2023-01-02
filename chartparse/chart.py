@@ -30,10 +30,13 @@ from pathlib import Path
 import chartparse.tick
 from chartparse.exceptions import ProgrammerError, RegexNotMatchError
 from chartparse.globalevents import GlobalEventsTrack
-from chartparse.instrument import Difficulty, Instrument, InstrumentTrack, NoteEvent
+from chartparse.instrument import Difficulty, Instrument, InstrumentTrack
 from chartparse.metadata import Metadata
 from chartparse.sync import SyncTrack
 from chartparse.util import DictPropertiesEqMixin, DictReprTruncatedSequencesMixin
+
+if typ.TYPE_CHECKING:  # pragma: no cover
+    from chartparse.instrument import NoteEvent
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
