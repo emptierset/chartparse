@@ -25,42 +25,34 @@ logger = logging.getLogger(__name__)
 
 
 @typ.final
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class GlobalEventsTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
-    """A :class:`~chartparse.chart.Chart`'s :class:`~chartparse.globalevents.GlobalEvent`\\ s."""
+    """A :class:`~chartparse.chart.Chart`'s :class:`~chartparse.globalevents.GlobalEvent`\\ s.
+
+    This is a ``frozen``, ``kw_only`` dataclass.
+    """
 
     _Self = typ.TypeVar("_Self", bound="GlobalEventsTrack")
 
-    resolution: typ.Final[int]
+    resolution: int
     """The number of ticks for which a quarter note lasts."""
 
-    text_events: typ.Final[Sequence[TextEvent]]
+    text_events: Sequence[TextEvent]
     """A ``GlobalEventTrack``'s ``TextEvent``\\ s."""
 
-    section_events: typ.Final[Sequence[SectionEvent]]
+    section_events: Sequence[SectionEvent]
     """A ``GlobalEventTrack``'s ``SectionEvent``\\ s."""
 
-    lyric_events: typ.Final[Sequence[LyricEvent]]
+    lyric_events: Sequence[LyricEvent]
     """A ``GlobalEventTrack``'s ``LyricEvent``\\ s."""
 
     section_name: typ.Final[str] = "Events"
     """The name of this track's section in a ``.chart`` file."""
 
-    def __init__(
-        self,
-        resolution: int,
-        text_events: Sequence[TextEvent],
-        section_events: Sequence[SectionEvent],
-        lyric_events: Sequence[LyricEvent],
-    ) -> None:
-        """Instantiates all instance attributes."""
-
-        if resolution <= 0:
-            raise ValueError(f"resolution ({resolution}) must be positive")
-
-        self.resolution = resolution
-        self.text_events = text_events
-        self.section_events = section_events
-        self.lyric_events = lyric_events
+    def __post_init__(self) -> None:
+        """Validates all instance attributes."""
+        if self.resolution <= 0:
+            raise ValueError(f"resolution ({self.resolution}) must be positive")
 
     @classmethod
     def from_chart_lines(
@@ -95,7 +87,12 @@ class GlobalEventsTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             LyricEvent.from_parsed_data,
             tatter,
         )
-        return cls(tatter.resolution, text_events, section_events, lyric_events)
+        return cls(
+            resolution=tatter.resolution,
+            text_events=text_events,
+            section_events=section_events,
+            lyric_events=lyric_events,
+        )
 
     @classmethod
     def _parse_data_from_chart_lines(
@@ -127,6 +124,8 @@ class GlobalEvent(Event):
 
     Subclasses should define ``_regex_prog`` and can be instantiated with their ``from_chart_line``
     method.
+
+    This is a ``frozen``, ``kw_only`` dataclass.
     """
 
     _Self = typ.TypeVar("_Self", bound="GlobalEvent")

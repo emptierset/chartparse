@@ -21,7 +21,12 @@ def InstrumentTrackWithDefaults(
     track_events=pytest.defaults.track_events,
 ):
     return InstrumentTrack(
-        resolution, instrument, difficulty, note_events, star_power_events, track_events
+        resolution=resolution,
+        instrument=instrument,
+        difficulty=difficulty,
+        note_events=note_events,
+        star_power_events=star_power_events,
+        track_events=track_events,
     )
 
 

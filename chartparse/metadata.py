@@ -10,6 +10,7 @@ You should not need to create any of this module's objects manually; please inst
 
 from __future__ import annotations
 
+import dataclasses
 import enum
 import re
 import typing as typ
@@ -230,40 +231,44 @@ _field_parsing_specs: _FieldParsingSpecDict = {
 
 
 @typ.final
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class Metadata(DictPropertiesEqMixin, DictReprMixin):
+    """All of a :class:`~chartparse.chart.Chart` object's metadata.
+
+    This is a ``frozen``, ``kw_only`` dataclass.
+    """
+
     _Self = typ.TypeVar("_Self", bound="Metadata")
 
-    """All of a :class:`~chartparse.chart.Chart` object's metadata."""
-
-    section_name: typ.Final[str] = "Song"
+    section_name: typ.ClassVar[str] = "Song"
     """The name of this track's section in a ``.chart`` file."""
 
-    resolution: typ.Final[int]
+    resolution: int
     """The number of ticks for which a quarter note lasts."""
 
-    offset: typ.Final[int]
+    offset: int = 0
     """The number of seconds in time before tick 0 is reached.
 
     This is a legacy field and should most likely be ignored.
     """
 
-    player2: typ.Final[Player2Instrument]
+    player2: Player2Instrument = Player2Instrument.BASS
     """The instrument type of the co-op guitar chart in Guitar Hero 3."""
 
-    difficulty: typ.Final[int]
+    difficulty: int = 0
     """The perceived difficulty to play the chart.
 
     This is often referred to as "intensity".
     """
 
-    preview_start: typ.Final[int]
+    preview_start: int = 0
     """The number of seconds into the song at which the song preview should start.
 
     Might not actually be seconds. Typically, ``preview_start_time`` in ``song.ini`` is respected
     for Clone Hero instead.
     """
 
-    preview_end: typ.Final[int]
+    preview_end: int = 0
     """The number of seconds into the song at which the song preview should end.
 
     Might not actually be seconds. Clone Hero just plays a preview of a particular length starting
@@ -271,133 +276,63 @@ class Metadata(DictPropertiesEqMixin, DictReprMixin):
     Guitar Hero.
     """
 
-    genre: typ.Final[str]
+    genre: str = "rock"
     """The genre of the chart's song."""
 
-    media_type: typ.Final[str]
+    media_type: str = "cd"
     """The type of media from which the chart's song originates."""
 
-    name: typ.Final[str]
+    name: str | None = None
     """The name of the chart's song."""
 
-    artist: typ.Final[str]
+    artist: str | None = None
     """The name of the chart's song's artist."""
 
-    charter: typ.Final[str]
+    charter: str | None = None
     """The user who made this chart."""
 
-    album: typ.Final[str]
+    album: str | None = None
     """The name of the chart's song's album."""
 
-    year: typ.Final[str]
+    year: str | None = None
     """The year the chart's song came out.
 
     This is formatted as, e.g. ", 2018" because it saved time when importing into GHTCP (Guitar
     Hero Three Control Panel).
     """
 
-    music_stream: typ.Final[str]
+    music_stream: str | None = None
     """The filename of the main music audio file."""
 
-    guitar_stream: typ.Final[str]
+    guitar_stream: str | None = None
     """The filename of the guitar audio file."""
 
-    rhythm_stream: typ.Final[str]
+    rhythm_stream: str | None = None
     """The filename of the rhythm audio file."""
 
-    bass_stream: typ.Final[str]
+    bass_stream: str | None = None
     """The filename of the bass audio file."""
 
-    drum_stream: typ.Final[str]
+    drum_stream: str | None = None
     """The filename of the drum audio file."""
 
-    drum2_stream: typ.Final[str]
+    drum2_stream: str | None = None
     """The filename of the drum2 audio file."""
 
-    drum3_stream: typ.Final[str]
+    drum3_stream: str | None = None
     """The filename of the drum3 audio file."""
 
-    drum4_stream: typ.Final[str]
+    drum4_stream: str | None = None
     """The filename of the drum4 audio file."""
 
-    vocal_stream: typ.Final[str]
+    vocal_stream: str | None = None
     """The filename of the vocal audio file."""
 
-    keys_stream: typ.Final[str]
+    keys_stream: str | None = None
     """The filename of the keys audio file."""
 
-    crowd_stream: typ.Final[str]
+    crowd_stream: str | None = None
     """The filename of the crowd audio file."""
-
-    def __init__(
-        self,
-        resolution: int,
-        offset: int = 0,
-        player2: Player2Instrument = Player2Instrument.BASS,
-        difficulty: int = 0,
-        preview_start: int = 0,
-        preview_end: int = 0,
-        genre: str = "rock",
-        media_type: str = "cd",
-        name: str | None = None,
-        artist: str | None = None,
-        charter: str | None = None,
-        album: str | None = None,
-        year: str | None = None,
-        music_stream: str | None = None,
-        guitar_stream: str | None = None,
-        rhythm_stream: str | None = None,
-        bass_stream: str | None = None,
-        drum_stream: str | None = None,
-        drum2_stream: str | None = None,
-        drum3_stream: str | None = None,
-        drum4_stream: str | None = None,
-        vocal_stream: str | None = None,
-        keys_stream: str | None = None,
-        crowd_stream: str | None = None,
-    ) -> None:
-        """Initializes all instance attributes."""
-
-        self.resolution = resolution
-        self.offset = offset
-        self.player2 = player2
-        self.difficulty = difficulty
-        self.preview_start = preview_start
-        self.preview_end = preview_end
-        self.genre = genre
-        self.media_type = media_type
-        if name is not None:
-            self.name = name
-        if artist is not None:
-            self.artist = artist
-        if charter is not None:
-            self.charter = charter
-        if album is not None:
-            self.album = album
-        if year is not None:
-            self.year = year
-        if music_stream is not None:
-            self.music_stream = music_stream
-        if guitar_stream is not None:
-            self.guitar_stream = guitar_stream
-        if rhythm_stream is not None:
-            self.rhythm_stream = rhythm_stream
-        if bass_stream is not None:
-            self.bass_stream = bass_stream
-        if drum_stream is not None:
-            self.drum_stream = drum_stream
-        if drum2_stream is not None:
-            self.drum2_stream = drum2_stream
-        if drum3_stream is not None:
-            self.drum3_stream = drum3_stream
-        if drum4_stream is not None:
-            self.drum4_stream = drum4_stream
-        if vocal_stream is not None:
-            self.vocal_stream = vocal_stream
-        if keys_stream is not None:
-            self.keys_stream = keys_stream
-        if crowd_stream is not None:
-            self.crowd_stream = crowd_stream
 
     @classmethod
     def from_chart_lines(cls: type[_Self], lines_iter: Iterable[str]) -> _Self:

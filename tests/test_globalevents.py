@@ -78,10 +78,10 @@ class TestGlobalEventsTrack(object):
         )
         spy_init.assert_called_once_with(
             unittest.mock.ANY,  # ignore self
-            pytest.defaults.resolution,
-            pytest.defaults.text_events,
-            pytest.defaults.section_events,
-            pytest.defaults.lyric_events,
+            resolution=pytest.defaults.resolution,
+            text_events=pytest.defaults.text_events,
+            section_events=pytest.defaults.section_events,
+            lyric_events=pytest.defaults.lyric_events,
         )
 
 

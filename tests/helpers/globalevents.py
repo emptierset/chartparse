@@ -16,7 +16,12 @@ def GlobalEventsTrackWithDefaults(
     section_events=pytest.defaults.section_events,
     lyric_events=pytest.defaults.lyric_events,
 ):
-    return GlobalEventsTrack(resolution, text_events, section_events, lyric_events)
+    return GlobalEventsTrack(
+        resolution=resolution,
+        text_events=text_events,
+        section_events=section_events,
+        lyric_events=lyric_events,
+    )
 
 
 def GlobalEventWithDefaults(

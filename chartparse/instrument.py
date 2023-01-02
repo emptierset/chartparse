@@ -202,58 +202,47 @@ class NoteTrackIndex(AllValuesGettableEnum):
 
 
 @typ.final
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
-    """All of the instrument-related events for one (instrument, difficulty) pair."""
+    """All of the instrument-related events for one (instrument, difficulty) pair.
+
+    This is a ``frozen``, ``kw_only`` dataclass.
+    """
 
     _Self = typ.TypeVar("_Self", bound="InstrumentTrack")
 
-    resolution: typ.Final[int]
+    resolution: int
     """The number of ticks for which a quarter note lasts."""
 
-    instrument: typ.Final[Instrument]
+    instrument: Instrument
     """The instrument to which this track corresponds."""
 
-    difficulty: typ.Final[Difficulty]
+    difficulty: Difficulty
     """This track's difficulty setting."""
 
     # TODO: All of these sequences of events should probably be individual objects so things like
     # _last_note_timestamp can live more tightly coupled to the actual events.
-    note_events: typ.Final[Sequence[NoteEvent]]
+    note_events: Sequence[NoteEvent]
     """An (instrument, difficulty) pair's ``NoteEvent`` objects."""
 
-    star_power_events: typ.Final[Sequence[StarPowerEvent]]
+    star_power_events: Sequence[StarPowerEvent]
     """An (instrument, difficulty) pair's ``StarPowerEvent`` objects."""
 
-    track_events: typ.Final[Sequence[TrackEvent]]
+    track_events: Sequence[TrackEvent]
     """An (instrument, difficulty) pair's ``TrackEvent`` objects."""
 
     # TODO: This is a hack. Figure out how to generalize this to other instruments, or at _least_
     # load it dynamically from NoteTrackIndex.
-    _min_note_instrument_track_index = 0
-    _max_note_instrument_track_index = 4
-    _open_instrument_track_index = 7
-    _forced_instrument_track_index = 5
-    _tap_instrument_track_index = 6
+    _min_note_instrument_track_index: typ.ClassVar[int] = 0
+    _max_note_instrument_track_index: typ.ClassVar[int] = 4
+    _open_instrument_track_index: typ.ClassVar[int] = 7
+    _forced_instrument_track_index: typ.ClassVar[int] = 5
+    _tap_instrument_track_index: typ.ClassVar[int] = 6
 
-    def __init__(
-        self,
-        resolution: int,
-        instrument: Instrument,
-        difficulty: Difficulty,
-        note_events: Sequence[NoteEvent],
-        star_power_events: Sequence[StarPowerEvent],
-        track_events: Sequence[TrackEvent],
-    ) -> None:
-        """Instantiates all instance attributes."""
-        if resolution <= 0:
-            raise ValueError(f"resolution ({resolution}) must be positive")
-
-        self.resolution = resolution
-        self.instrument = instrument
-        self.difficulty = difficulty
-        self.note_events = note_events
-        self.star_power_events = star_power_events
-        self.track_events = track_events
+    def __post_init__(self):
+        """Validates all instance attributes."""
+        if self.resolution <= 0:
+            raise ValueError(f"resolution ({self.resolution}) must be positive")
 
     @functools.cached_property
     def section_name(self) -> str:
@@ -304,7 +293,12 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         )
         note_events = cls._build_note_events_from_data(note_data, star_power_events, tatter)
         return cls(
-            tatter.resolution, instrument, difficulty, note_events, star_power_events, track_events
+            resolution=tatter.resolution,
+            instrument=instrument,
+            difficulty=difficulty,
+            note_events=note_events,
+            star_power_events=star_power_events,
+            track_events=track_events,
         )
 
     @classmethod
@@ -458,6 +452,7 @@ class NoteEvent(Event):
     This event occurs at tick 816 and timestamp 0:00:02.093750. It is not sustained. It is yellow.
     It is a HOPO. Other valid flags are ``T`` (for "tap") and ``S`` (for "strum").
 
+    This is a ``frozen``, ``kw_only`` dataclass.
     """
 
     _Self = typ.TypeVar("_Self", bound="NoteEvent")
@@ -716,6 +711,8 @@ class SpecialEvent(Event):
     """Provides a regex template for parsing 'S' style chart lines.
 
     This is typically used only as a base class for more specialized subclasses.
+
+    This is a ``frozen``, ``kw_only`` dataclass.
     """
 
     _Self = typ.TypeVar("_Self", bound="SpecialEvent")
@@ -854,6 +851,8 @@ class TrackEvent(Event):
 
     This is questionably named, as this Python package refers to the various chart file sections
     as "tracks". This event only occurs in instrument tracks.
+
+    This is a ``frozen``, ``kw_only`` dataclass.
     """
 
     _Self = typ.TypeVar("_Self", bound="TrackEvent")

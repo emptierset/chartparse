@@ -109,27 +109,13 @@ class TestSyncTrack(object):
             )
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self
-                pytest.defaults.resolution,
-                pytest.defaults.time_signature_events,
-                pytest.defaults.bpm_events,
-                pytest.defaults.anchor_events,
+                resolution=pytest.defaults.resolution,
+                time_signature_events=pytest.defaults.time_signature_events,
+                bpm_events=pytest.defaults.bpm_events,
+                anchor_events=pytest.defaults.anchor_events,
             )
 
     class TestTimestampAtTick(object):
-        def test_wrapper(self, mocker, bare_sync_track):
-            bare_sync_track.resolution = pytest.defaults.resolution
-            bare_sync_track.bpm_events = pytest.defaults.bpm_events
-
-            mock_impl = mocker.patch.object(bare_sync_track, "_timestamp_at_tick")
-
-            _ = bare_sync_track.timestamp_at_tick(pytest.defaults.tick, proximal_bpm_event_index=0)
-            mock_impl.assert_called_once_with(
-                pytest.defaults.bpm_events,
-                pytest.defaults.tick,
-                pytest.defaults.resolution,
-                proximal_bpm_event_index=0,
-            )
-
         @pytest.mark.parametrize(
             "tick,want_timestamp,want_proximal_bpm_event_index",
             [

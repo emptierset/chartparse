@@ -305,9 +305,11 @@ class TestChart(object):
         def test_with_ticks(
             self, mocker, minimal_chart, start_tick, end_tick, want_lower_bound, want_upper_bound
         ):
-            minimal_chart[pytest.defaults.instrument][
-                pytest.defaults.difficulty
-            ].note_events = pytest.defaults.note_events
+            object.__setattr__(
+                minimal_chart[pytest.defaults.instrument][pytest.defaults.difficulty],
+                "note_events",
+                pytest.defaults.note_events,
+            )
 
             mocker.patch.object(
                 InstrumentTrack,
@@ -316,10 +318,17 @@ class TestChart(object):
                 return_value=_max_timedelta,
             )
 
-            mocker.patch.object(
+            # NOTE: This _should_ be mocked as such, but because sync_track is a frozen dataclass,
+            # it cannot be mocked conventionally.
+            # mocker.patch.object(
+            #    minimal_chart.sync_track,
+            #    "timestamp_at_tick",
+            #    side_effect=lambda tick, _resolution: (datetime.timedelta(seconds=tick),),
+            # )
+            object.__setattr__(
                 minimal_chart.sync_track,
                 "timestamp_at_tick",
-                side_effect=lambda tick, _resolution: (datetime.timedelta(seconds=tick),),
+                lambda tick, _resolution: (datetime.timedelta(seconds=tick),),
             )
             spy = mocker.spy(minimal_chart, "_notes_per_second")
             _ = minimal_chart.notes_per_second(
@@ -330,6 +339,12 @@ class TestChart(object):
             )
             spy.assert_called_once_with(
                 pytest.defaults.note_events, want_lower_bound, want_upper_bound
+            )
+
+            # NOTE: Manually reset timestamp_at_tick from mocked version.
+            object.__delattr__(
+                minimal_chart.sync_track,
+                "timestamp_at_tick",
             )
 
         @pytest.mark.parametrize(
@@ -354,9 +369,11 @@ class TestChart(object):
         def test_with_time(
             self, mocker, minimal_chart, start_time, end_time, want_lower_bound, want_upper_bound
         ):
-            minimal_chart[pytest.defaults.instrument][
-                pytest.defaults.difficulty
-            ].note_events = pytest.defaults.note_events
+            object.__setattr__(
+                minimal_chart[pytest.defaults.instrument][pytest.defaults.difficulty],
+                "note_events",
+                pytest.defaults.note_events,
+            )
 
             mocker.patch.object(
                 InstrumentTrack,
@@ -404,9 +421,11 @@ class TestChart(object):
             want_lower_bound,
             want_upper_bound,
         ):
-            minimal_chart[pytest.defaults.instrument][
-                pytest.defaults.difficulty
-            ].note_events = pytest.defaults.note_events
+            object.__setattr__(
+                minimal_chart[pytest.defaults.instrument][pytest.defaults.difficulty],
+                "note_events",
+                pytest.defaults.note_events,
+            )
 
             mocker.patch.object(
                 InstrumentTrack,

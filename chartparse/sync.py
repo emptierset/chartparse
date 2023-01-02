@@ -27,56 +27,49 @@ logger = logging.getLogger(__name__)
 
 
 @typ.final
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
-    """All of a :class:`~chartparse.chart.Chart` object's tempo-mapping related events."""
+    """All of a :class:`~chartparse.chart.Chart` object's tempo-mapping related events.
+
+    This is a ``frozen``, ``kw_only`` dataclass.
+    """
 
     _Self = typ.TypeVar("_Self", bound="SyncTrack")
 
-    resolution: typ.Final[int]
+    resolution: int
     """The number of ticks for which a quarter note lasts."""
 
-    time_signature_events: typ.Final[Sequence[TimeSignatureEvent]]
+    time_signature_events: Sequence[TimeSignatureEvent]
     """A ``SyncTrack``'s ``TimeSignatureEvent``\\ s."""
 
-    bpm_events: typ.Final[Sequence[BPMEvent]]
+    bpm_events: Sequence[BPMEvent]
     """A ``SyncTrack``'s ``BPMEvent``\\ s."""
 
-    anchor_events: typ.Final[Sequence[AnchorEvent]]
+    anchor_events: Sequence[AnchorEvent]
     """A ``SyncTrack``'s ``AnchorEvent``\\ s."""
 
-    section_name: typ.Final[str] = "SyncTrack"
+    section_name: typ.ClassVar[str] = "SyncTrack"
     """The name of this track's section in a ``.chart`` file."""
 
-    def __init__(
-        self,
-        resolution: int,
-        time_signature_events: Sequence[TimeSignatureEvent],
-        bpm_events: Sequence[BPMEvent],
-        anchor_events: Sequence[AnchorEvent],
-    ):
-        """Instantiates and validates all instance attributes.
+    def __post_init__(self):
+        """Validates all instance attributes.
 
         Raises:
             ValueError: If ``time_signature_events`` or ``bpm_events`` is empty, or if either of
                 their first elements has a ``tick`` value of ``0``.
         """
-        if resolution <= 0:
-            raise ValueError(f"resolution ({resolution}) must be positive")
-        if not time_signature_events:
+        if self.resolution <= 0:
+            raise ValueError(f"resolution ({self.resolution}) must be positive")
+        if not self.time_signature_events:
             raise ValueError("time_signature_events must not be empty")
-        if time_signature_events[0].tick != 0:
+        if self.time_signature_events[0].tick != 0:
             raise ValueError(
-                f"first TimeSignatureEvent {time_signature_events[0]} must have tick 0"
+                f"first TimeSignatureEvent {self.time_signature_events[0]} must have tick 0"
             )
-        if not bpm_events:
+        if not self.bpm_events:
             raise ValueError("bpm_events must not be empty")
-        if bpm_events[0].tick != 0:
-            raise ValueError(f"first BPMEvent {bpm_events[0]} must have tick 0")
-
-        self.resolution = resolution
-        self.time_signature_events = time_signature_events
-        self.bpm_events = bpm_events
-        self.anchor_events = anchor_events
+        if self.bpm_events[0].tick != 0:
+            raise ValueError(f"first BPMEvent {self.bpm_events[0]} must have tick 0")
 
     @classmethod
     def from_chart_lines(
@@ -123,7 +116,12 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             anchor_data, AnchorEvent.from_parsed_data
         )
 
-        return cls(resolution, time_signature_events, bpm_events, anchor_events)
+        return cls(
+            resolution=resolution,
+            time_signature_events=time_signature_events,
+            bpm_events=bpm_events,
+            anchor_events=anchor_events,
+        )
 
     @classmethod
     def _parse_data_from_chart_lines(
@@ -169,6 +167,9 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             proximal_bpm_event_index=proximal_bpm_event_index,
         )
 
+    # TODO: This method only needs to exist because we need to be able to use timestamp_at_tick
+    # during from_chart_lines, and we don't yet have the object we need for it. If we factor out
+    # bpm_events to its own object, it can own timestamp_at_tick.
     @staticmethod
     def _timestamp_at_tick(
         bpm_events: Sequence[BPMEvent],
@@ -227,7 +228,10 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 @typ.final
 @dataclasses.dataclass(kw_only=True, frozen=True)
 class TimeSignatureEvent(Event):
-    """An event representing a time signature change at a particular tick."""
+    """An event representing a time signature change at a particular tick.
+
+    This is a ``frozen``, ``kw_only`` dataclass.
+    """
 
     _Self = typ.TypeVar("_Self", bound="TimeSignatureEvent")
 
@@ -324,7 +328,10 @@ class TimeSignatureEvent(Event):
 @typ.final
 @dataclasses.dataclass(kw_only=True, frozen=True)
 class BPMEvent(Event):
-    """An event representing a BPM (beats per minute) change at a particular tick."""
+    """An event representing a BPM (beats per minute) change at a particular tick.
+
+    This is a ``frozen``, ``kw_only`` dataclass.
+    """
 
     _Self = typ.TypeVar("_Self", bound="BPMEvent")
 

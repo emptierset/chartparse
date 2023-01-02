@@ -185,12 +185,12 @@ class TestInstrumentTrack(object):
             )
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self
-                pytest.defaults.resolution,
-                pytest.defaults.instrument,
-                pytest.defaults.difficulty,
-                pytest.defaults.note_events,
-                pytest.defaults.star_power_events,
-                pytest.defaults.track_events,
+                resolution=pytest.defaults.resolution,
+                instrument=pytest.defaults.instrument,
+                difficulty=pytest.defaults.difficulty,
+                note_events=pytest.defaults.note_events,
+                star_power_events=pytest.defaults.star_power_events,
+                track_events=pytest.defaults.track_events,
             )
 
         def NoteEventWithDefaultsPlus(**kwargs):
@@ -418,7 +418,7 @@ class TestInstrumentTrack(object):
             ],
         )
         def test(self, bare_instrument_track, note_events, want):
-            bare_instrument_track.note_events = note_events
+            object.__setattr__(bare_instrument_track, "note_events", note_events)
             got = bare_instrument_track.last_note_end_timestamp
             assert got == want
 

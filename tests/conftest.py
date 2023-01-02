@@ -547,23 +547,23 @@ def bare_instrument_track():
 @pytest.fixture
 def minimal_instrument_track(bare_instrument_track):
     """Minimal initialization necessary to avoid attribute errors."""
-    bare_instrument_track.instrument = _default_instrument
-    bare_instrument_track.difficulty = _default_difficulty
-    bare_instrument_track.section_name = "ExpertSingle"
-    bare_instrument_track.note_events = []
-    bare_instrument_track.star_power_events = []
+    object.__setattr__(bare_instrument_track, "instrument", _default_instrument)
+    object.__setattr__(bare_instrument_track, "difficulty", _default_difficulty)
+    object.__setattr__(bare_instrument_track, "section_name", "ExpertSingle")
+    object.__setattr__(bare_instrument_track, "note_events", [])
+    object.__setattr__(bare_instrument_track, "star_power_events", [])
     return bare_instrument_track
 
 
 @pytest.fixture
 def default_instrument_track():
     return InstrumentTrack(
-        _default_resolution,
-        _default_instrument,
-        _default_difficulty,
-        _default_note_events,
-        _default_star_power_events,
-        _default_track_events,
+        resolution=_default_resolution,
+        instrument=_default_instrument,
+        difficulty=_default_difficulty,
+        note_events=_default_note_events,
+        star_power_events=_default_star_power_events,
+        track_events=_default_track_events,
     )
 
 
@@ -613,18 +613,18 @@ def bare_sync_track():
 @pytest.fixture
 def minimal_sync_track(bare_sync_track):
     """Minimal initialization necessary to avoid attribute errors."""
-    bare_sync_track.time_signature_events = []
-    bare_sync_track.bpm_events = []
+    object.__setattr__(bare_sync_track, "time_signature_events", [])
+    object.__setattr__(bare_sync_track, "bpm_events", [])
     return bare_sync_track
 
 
 @pytest.fixture
 def default_sync_track():
     return SyncTrack(
-        _default_resolution,
-        _default_time_signature_events,
-        _default_bpm_events,
-        _default_anchor_events,
+        resolution=_default_resolution,
+        time_signature_events=_default_time_signature_events,
+        bpm_events=_default_bpm_events,
+        anchor_events=_default_anchor_events,
     )
 
 
@@ -659,16 +659,19 @@ def bare_global_events_track():
 @pytest.fixture
 def minimal_global_events_track(bare_global_events_track):
     """Minimal initialization necessary to avoid attribute errors."""
-    bare_global_events_track.text_events = []
-    bare_global_events_track.section_events = []
-    bare_global_events_track.lyric_events = []
+    object.__setattr__(bare_global_events_track, "text_events", [])
+    object.__setattr__(bare_global_events_track, "section_events", [])
+    object.__setattr__(bare_global_events_track, "lyric_events", [])
     return bare_global_events_track
 
 
 @pytest.fixture
 def default_global_events_track():
     return GlobalEventsTrack(
-        _default_resolution, _default_text_events, _default_section_events, _default_lyric_events
+        resolution=_default_resolution,
+        text_events=_default_text_events,
+        section_events=_default_section_events,
+        lyric_events=_default_lyric_events,
     )
 
 
@@ -723,34 +726,34 @@ def bare_metadata():
 @pytest.fixture
 def minimal_metadata():
     """Minimal initialization necessary to avoid attribute errors."""
-    return Metadata(_default_resolution)
+    return Metadata(resolution=_default_resolution)
 
 
 @pytest.fixture
 def default_metadata():
     return Metadata(
-        _default_resolution,
-        _default_offset,
-        _default_player2,
-        _default_intensity,
-        _default_preview_start,
-        _default_preview_end,
-        _default_genre,
-        _default_media_type,
-        _default_name,
-        _default_artist,
-        _default_charter,
-        _default_album,
-        _default_year,
-        _default_music_stream,
-        _default_guitar_stream,
-        _default_rhythm_stream,
-        _default_bass_stream,
-        _default_drum_stream,
-        _default_drum2_stream,
-        _default_drum3_stream,
-        _default_drum4_stream,
-        _default_vocal_stream,
-        _default_keys_stream,
-        _default_crowd_stream,
+        resolution=_default_resolution,
+        offset=_default_offset,
+        player2=_default_player2,
+        difficulty=_default_intensity,
+        preview_start=_default_preview_start,
+        preview_end=_default_preview_end,
+        genre=_default_genre,
+        media_type=_default_media_type,
+        name=_default_name,
+        artist=_default_artist,
+        charter=_default_charter,
+        album=_default_album,
+        year=_default_year,
+        music_stream=_default_music_stream,
+        guitar_stream=_default_guitar_stream,
+        rhythm_stream=_default_rhythm_stream,
+        bass_stream=_default_bass_stream,
+        drum_stream=_default_drum_stream,
+        drum2_stream=_default_drum2_stream,
+        drum3_stream=_default_drum3_stream,
+        drum4_stream=_default_drum4_stream,
+        vocal_stream=_default_vocal_stream,
+        keys_stream=_default_keys_stream,
+        crowd_stream=_default_crowd_stream,
     )

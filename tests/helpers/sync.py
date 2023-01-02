@@ -12,7 +12,12 @@ def SyncTrackWithDefaults(
     bpm_events=pytest.defaults.bpm_events,
     anchor_events=pytest.defaults.anchor_events,
 ):
-    return SyncTrack(resolution, time_signature_events, bpm_events, anchor_events)
+    return SyncTrack(
+        resolution=resolution,
+        time_signature_events=time_signature_events,
+        bpm_events=bpm_events,
+        anchor_events=anchor_events,
+    )
 
 
 def TimeSignatureEventWithDefaults(
