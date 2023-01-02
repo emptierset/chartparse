@@ -83,8 +83,11 @@ cov:               ## Run tests and produce coverage reports if successful.
 test:              ## Run tests and generate coverage report.
 	$(ENV_PREFIX)pytest -vv	-l --tb=short tests/
 
+.PHONY: proofnofmt
+proofnofmt: check cov  ## ("Proofread") Run all linters, mypy, and unit tests, without fmt.
+
 .PHONY: proof
-proof: check cov  ## ("Proofread") Run all linters, mypy, and unit tests.
+proof: fmt check cov  ## ("Proofread") Run all linters, mypy, and unit tests.
 
 .PHONY: watch
 watch:             ## Run tests on every change.
