@@ -78,6 +78,7 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         self.sync_track = sync_track
         self.instrument_tracks = instrument_tracks
 
+    # TODO: Allow user to specify filters to ignore instruments/difficulties they don't care about.
     @classmethod
     def from_filepath(cls, path: Path) -> Chart:
         """Given a path, parses the contents of its file and returns a new Chart.

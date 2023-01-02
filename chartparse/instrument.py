@@ -227,6 +227,8 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     track_events: typ.Final[Sequence[TrackEvent]]
     """An (instrument, difficulty) pair's ``TrackEvent`` objects."""
 
+    # TODO: This is a hack. Figure out how to generalize this to other instruments, or at _least_
+    # load it dynamically from NoteTrackIndex.
     _min_note_instrument_track_index = 0
     _max_note_instrument_track_index = 4
     _open_instrument_track_index = 7

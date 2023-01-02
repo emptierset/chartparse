@@ -13,5 +13,8 @@ directory = sys.argv[1]
 
 files = glob(directory + "/*.chart")
 
+logger.setLevel(logging.INFO)
+
 for fname in files:
+    logger.info(f"parsing '{fname}'")
     _ = Chart.from_filepath(fname)
