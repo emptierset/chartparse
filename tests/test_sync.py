@@ -249,30 +249,6 @@ class TestSyncTrack(object):
 
 
 class TestTimeSignatureEvent(object):
-    class TestInit(object):
-        def test(self, mocker):
-            want_upper_numeral = 1
-            want_lower_numeral = 2
-            want_proximal_bpm_event_index = 3
-
-            spy_init = mocker.spy(Event, "__init__")
-
-            got = TimeSignatureEventWithDefaults(
-                upper_numeral=want_upper_numeral,
-                lower_numeral=want_lower_numeral,
-                proximal_bpm_event_index=want_proximal_bpm_event_index,
-            )
-
-            spy_init.assert_called_once_with(
-                unittest.mock.ANY,  # ignore self
-                pytest.defaults.tick,
-                pytest.defaults.timestamp,
-                proximal_bpm_event_index=want_proximal_bpm_event_index,
-            )
-
-            assert got.upper_numeral == want_upper_numeral
-            assert got.lower_numeral == want_lower_numeral
-
     class TestFromParsedData(object):
         @pytest.mark.parametrize(
             "prev_event",
@@ -312,11 +288,11 @@ class TestTimeSignatureEvent(object):
             )
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self
-                pytest.defaults.tick,
-                pytest.defaults.default_tatter_timestamp,
-                pytest.defaults.upper_time_signature_numeral,
-                want_lower,
-                proximal_bpm_event_index=pytest.defaults.default_tatter_index,
+                tick=pytest.defaults.tick,
+                timestamp=pytest.defaults.default_tatter_timestamp,
+                upper_numeral=pytest.defaults.upper_time_signature_numeral,
+                lower_numeral=want_lower,
+                _proximal_bpm_event_index=pytest.defaults.default_tatter_index,
             )
 
     class TestParsedData(object):
@@ -355,23 +331,7 @@ class TestTimeSignatureEvent(object):
 
 
 class TestBPMEvent(object):
-    class TestInit(object):
-        def test(self, mocker):
-            want_proximal_bpm_event_index = 1
-
-            spy_init = mocker.spy(Event, "__init__")
-
-            got = BPMEventWithDefaults(proximal_bpm_event_index=want_proximal_bpm_event_index)
-
-            spy_init.assert_called_once_with(
-                unittest.mock.ANY,  # ignore self
-                pytest.defaults.tick,
-                pytest.defaults.timestamp,
-                proximal_bpm_event_index=want_proximal_bpm_event_index,
-            )
-
-            assert got.bpm == pytest.defaults.bpm
-
+    class TestPostInit(object):
         def test_more_than_three_decimal_places_error(self):
             with pytest.raises(ValueError):
                 _ = BPMEventWithDefaults(bpm=120.0001)
@@ -386,10 +346,10 @@ class TestBPMEvent(object):
 
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self
-                0,
-                datetime.timedelta(0),
-                pytest.defaults.bpm,
-                proximal_bpm_event_index=0,
+                tick=0,
+                timestamp=datetime.timedelta(0),
+                bpm=pytest.defaults.bpm,
+                _proximal_bpm_event_index=0,
             )
 
         def test_prev_event_present(self, mocker):
@@ -416,10 +376,10 @@ class TestBPMEvent(object):
 
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self
-                data.tick,
-                prev_event.timestamp + datetime.timedelta(seconds=seconds_since_prev),
-                pytest.defaults.bpm,
-                proximal_bpm_event_index=pytest.defaults.proximal_bpm_event_index,
+                tick=data.tick,
+                timestamp=prev_event.timestamp + datetime.timedelta(seconds=seconds_since_prev),
+                bpm=pytest.defaults.bpm,
+                _proximal_bpm_event_index=pytest.defaults.proximal_bpm_event_index,
             )
 
         @pytest.mark.parametrize(
@@ -463,8 +423,8 @@ class TestAnchorEvent(object):
 
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self
-                pytest.defaults.tick,
-                pytest.defaults.timestamp,
+                tick=pytest.defaults.tick,
+                timestamp=pytest.defaults.timestamp,
             )
 
     class TestFromParsedData(object):
@@ -475,7 +435,9 @@ class TestAnchorEvent(object):
             _ = AnchorEvent.from_parsed_data(data)
 
             spy_init.assert_called_once_with(
-                unittest.mock.ANY, pytest.defaults.tick, pytest.defaults.timestamp  # ignore self
+                unittest.mock.ANY,
+                tick=pytest.defaults.tick,
+                timestamp=pytest.defaults.timestamp,  # ignore self
             )
 
     class TestParsedData(object):

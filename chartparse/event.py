@@ -27,6 +27,7 @@ class TimestampAtTickSupporter(typ.Protocol):
         ...  # pragma: no cover
 
 
+@dataclasses.dataclass(kw_only=True, frozen=True)
 class Event(DictPropertiesEqMixin, DictReprMixin):
     """An event that occurs at a tick and timestamp in an :class:`~chartparse.track.EventTrack`.
 
@@ -34,23 +35,13 @@ class Event(DictPropertiesEqMixin, DictReprMixin):
     attractive ``__str__`` representation.
     """
 
-    tick: typ.Final[int]
+    tick: int
     """The tick at which this event occurs."""
 
-    timestamp: typ.Final[datetime.timedelta]
+    timestamp: datetime.timedelta
     """The timestamp when this event occurs."""
 
-    _proximal_bpm_event_index: typ.Final[int]
-
-    def __init__(
-        self,
-        tick: int,
-        timestamp: datetime.timedelta,
-        proximal_bpm_event_index: int = 0,
-    ) -> None:
-        self.tick = tick
-        self.timestamp = timestamp
-        self._proximal_bpm_event_index = proximal_bpm_event_index
+    _proximal_bpm_event_index: int = 0
 
     # TODO: Figure out a way for the final closing parenthesis to wrap _around_ any additional info
     # added by subclass __str__ implementations.

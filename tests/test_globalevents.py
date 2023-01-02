@@ -4,7 +4,6 @@ import pytest
 import re
 import unittest.mock
 
-from chartparse.event import Event
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.globalevents import (
     GlobalEventsTrack,
@@ -87,24 +86,6 @@ class TestGlobalEventsTrack(object):
 
 
 class TestGlobalEvent(object):
-    class TestInit(object):
-        def test(self, mocker):
-            want_proximal_bpm_event_index = 1
-            want_value = "value"
-            spy_init = mocker.spy(Event, "__init__")
-
-            got = GlobalEventWithDefaults(
-                value=want_value, proximal_bpm_event_index=want_proximal_bpm_event_index
-            )
-
-            spy_init.assert_called_once_with(
-                unittest.mock.ANY,  # ignore self
-                pytest.defaults.tick,
-                pytest.defaults.timestamp,
-                proximal_bpm_event_index=want_proximal_bpm_event_index,
-            )
-            assert got.value == want_value
-
     class TestFromParsedData(object):
         @pytest.mark.parametrize(
             "prev_event",
@@ -135,10 +116,10 @@ class TestGlobalEvent(object):
 
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self
-                pytest.defaults.tick,
-                pytest.defaults.default_tatter_timestamp,
-                pytest.defaults.global_event_value,
-                proximal_bpm_event_index=pytest.defaults.default_tatter_index,
+                tick=pytest.defaults.tick,
+                timestamp=pytest.defaults.default_tatter_timestamp,
+                value=pytest.defaults.global_event_value,
+                _proximal_bpm_event_index=pytest.defaults.default_tatter_index,
             )
 
     class TestParsedData(object):

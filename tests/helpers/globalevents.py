@@ -26,7 +26,12 @@ def GlobalEventWithDefaults(
     value=pytest.defaults.global_event_value,
     proximal_bpm_event_index=pytest.defaults.proximal_bpm_event_index,
 ):
-    return GlobalEvent(tick, timestamp, value, proximal_bpm_event_index=proximal_bpm_event_index)
+    return GlobalEvent(
+        tick=tick,
+        timestamp=timestamp,
+        value=value,
+        _proximal_bpm_event_index=proximal_bpm_event_index,
+    )
 
 
 def GlobalEventParsedDataWithDefaults(

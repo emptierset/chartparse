@@ -445,6 +445,7 @@ class HOPOState(Enum):
 
 
 @typ.final
+@dataclasses.dataclass(kw_only=True, frozen=True)
 class NoteEvent(Event):
     """An event representing all of the notes at a particular tick.
 
@@ -459,41 +460,23 @@ class NoteEvent(Event):
 
     _Self = typ.TypeVar("_Self", bound="NoteEvent")
 
-    note: typ.Final[Note]
+    note: Note
     """The note lane(s) that are active."""
 
-    sustain: typ.Final[ComplexSustain]
+    sustain: ComplexSustain = 0
     """Information about this note event's sustain value."""
 
-    end_timestamp: typ.Final[datetime.timedelta]
+    end_timestamp: datetime.timedelta
     """The timestamp at which this note ends."""
 
-    hopo_state: typ.Final[HOPOState]
+    hopo_state: HOPOState
     """Whether the note is a strum, a HOPO, or a tap note."""
 
-    star_power_data: typ.Final[StarPowerData | None]
+    star_power_data: StarPowerData | None = None
     """Information associated with star power for this note.
 
     If this is ``None``, then the note is not a star power note.
     """
-
-    def __init__(
-        self,
-        tick: int,
-        timestamp: datetime.timedelta,
-        end_timestamp: datetime.timedelta,
-        note: Note,
-        hopo_state: HOPOState,
-        sustain: ComplexSustain = 0,
-        star_power_data: StarPowerData | None = None,
-        proximal_bpm_event_index: int = 0,
-    ) -> None:
-        super().__init__(tick, timestamp, proximal_bpm_event_index=proximal_bpm_event_index)
-        self.end_timestamp = end_timestamp
-        self.note = note
-        self.hopo_state = hopo_state
-        self.sustain = sustain
-        self.star_power_data = star_power_data
 
     @functools.cached_property
     def longest_sustain(self) -> int:
@@ -581,14 +564,14 @@ class NoteEvent(Event):
         )
 
         event = cls(
-            tick,
-            timestamp,
-            end_timestamp,
-            note,
-            hopo_state,
+            tick=tick,
+            timestamp=timestamp,
+            end_timestamp=end_timestamp,
+            note=note,
+            hopo_state=hopo_state,
             sustain=sustain,
             star_power_data=star_power_data,
-            proximal_bpm_event_index=proximal_bpm_event_index,
+            _proximal_bpm_event_index=proximal_bpm_event_index,
         )
         return event, proximal_bpm_event_index, star_power_event_index
 
@@ -726,7 +709,7 @@ class NoteEvent(Event):
             )
 
 
-# TODO: Make this a dataclass.
+@dataclasses.dataclass(kw_only=True, frozen=True)
 class SpecialEvent(Event):
     """Provides a regex template for parsing 'S' style chart lines.
 
@@ -735,22 +718,12 @@ class SpecialEvent(Event):
 
     _Self = typ.TypeVar("_Self", bound="SpecialEvent")
 
-    sustain: typ.Final[int]
+    sustain: int
     """The number of ticks for which this event is sustained.
 
     This event does _not_ overlap events at ``tick + sustain``; it ends immediately before that
     tick.
     """
-
-    def __init__(
-        self,
-        tick: int,
-        timestamp: datetime.timedelta,
-        sustain: int,
-        proximal_bpm_event_index: int = 0,
-    ) -> None:
-        super().__init__(tick, timestamp, proximal_bpm_event_index=proximal_bpm_event_index)
-        self.sustain = sustain
 
     @functools.cached_property
     def end_tick(self) -> int:
@@ -781,7 +754,10 @@ class SpecialEvent(Event):
             proximal_bpm_event_index=prev_event._proximal_bpm_event_index if prev_event else 0,
         )
         return cls(
-            data.tick, timestamp, data.sustain, proximal_bpm_event_index=proximal_bpm_event_index
+            tick=data.tick,
+            timestamp=timestamp,
+            sustain=data.sustain,
+            _proximal_bpm_event_index=proximal_bpm_event_index,
         )
 
     def tick_is_during_event(self, tick: int) -> bool:
@@ -869,11 +845,8 @@ class StarPowerEvent(SpecialEvent):
 # TODO: Support S 64 ## (Rock Band drum fills)
 
 
-# TODO: Support E textherewithoutspaces ("track events") within InstrumentTracks.
-
-
-# TODO: Make this a dataclass (and all events...?).
 @typ.final
+@dataclasses.dataclass(kw_only=True, frozen=True)
 class TrackEvent(Event):
     """An event representing arbitrary data at a particular tick.
 
@@ -883,18 +856,8 @@ class TrackEvent(Event):
 
     _Self = typ.TypeVar("_Self", bound="TrackEvent")
 
-    value: typ.Final[str]
+    value: str
     """The data that this event stores."""
-
-    def __init__(
-        self,
-        tick: int,
-        timestamp: datetime.timedelta,
-        value: str,
-        proximal_bpm_event_index: int = 0,
-    ) -> None:
-        super().__init__(tick, timestamp, proximal_bpm_event_index=proximal_bpm_event_index)
-        self.value = value
 
     @classmethod
     def from_parsed_data(
@@ -919,7 +882,10 @@ class TrackEvent(Event):
             proximal_bpm_event_index=prev_event._proximal_bpm_event_index if prev_event else 0,
         )
         return cls(
-            data.tick, timestamp, data.value, proximal_bpm_event_index=proximal_bpm_event_index
+            tick=data.tick,
+            timestamp=timestamp,
+            value=data.value,
+            _proximal_bpm_event_index=proximal_bpm_event_index,
         )
 
     def __str__(self) -> str:  # pragma: no cover

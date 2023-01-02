@@ -33,7 +33,12 @@ def SpecialEventWithDefaults(
     proximal_bpm_event_index=pytest.defaults.proximal_bpm_event_index,
     init_end_tick=False,
 ):
-    s = SpecialEvent(tick, timestamp, sustain, proximal_bpm_event_index=proximal_bpm_event_index)
+    s = SpecialEvent(
+        tick=tick,
+        timestamp=timestamp,
+        sustain=sustain,
+        _proximal_bpm_event_index=proximal_bpm_event_index,
+    )
     if init_end_tick:
         s.end_tick  # accessing this initializes it because it's a cached_property
     return s
@@ -55,7 +60,12 @@ def StarPowerEventWithDefaults(
     proximal_bpm_event_index=pytest.defaults.proximal_bpm_event_index,
     init_end_tick=False,
 ):
-    s = StarPowerEvent(tick, timestamp, sustain, proximal_bpm_event_index=proximal_bpm_event_index)
+    s = StarPowerEvent(
+        tick=tick,
+        timestamp=timestamp,
+        sustain=sustain,
+        _proximal_bpm_event_index=proximal_bpm_event_index,
+    )
     if init_end_tick:
         s.end_tick  # accessing this initializes it because it's a cached_property
     return s
@@ -73,14 +83,14 @@ def NoteEventWithDefaults(
     proximal_bpm_event_index=pytest.defaults.proximal_bpm_event_index,
 ):
     return NoteEvent(
-        tick,
-        timestamp,
-        end_timestamp,
-        note,
-        hopo_state,
+        tick=tick,
+        timestamp=timestamp,
+        end_timestamp=end_timestamp,
+        note=note,
+        hopo_state=hopo_state,
         sustain=sustain,
         star_power_data=star_power_data,
-        proximal_bpm_event_index=proximal_bpm_event_index,
+        _proximal_bpm_event_index=proximal_bpm_event_index,
     )
 
 
@@ -104,7 +114,12 @@ def TrackEventWithDefaults(
     value=pytest.defaults.global_event_value,
     proximal_bpm_event_index=pytest.defaults.proximal_bpm_event_index,
 ):
-    return TrackEvent(tick, timestamp, value, proximal_bpm_event_index=proximal_bpm_event_index)
+    return TrackEvent(
+        tick=tick,
+        timestamp=timestamp,
+        value=value,
+        _proximal_bpm_event_index=proximal_bpm_event_index,
+    )
 
 
 def TrackEventParsedDataWithDefaults(

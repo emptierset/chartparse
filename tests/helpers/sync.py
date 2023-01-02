@@ -24,11 +24,11 @@ def TimeSignatureEventWithDefaults(
     proximal_bpm_event_index=pytest.defaults.proximal_bpm_event_index,
 ):
     return TimeSignatureEvent(
-        tick,
-        timestamp,
-        upper_numeral,
-        lower_numeral,
-        proximal_bpm_event_index=proximal_bpm_event_index,
+        tick=tick,
+        timestamp=timestamp,
+        upper_numeral=upper_numeral,
+        lower_numeral=lower_numeral,
+        _proximal_bpm_event_index=proximal_bpm_event_index,
     )
 
 
@@ -45,7 +45,9 @@ def BPMEventWithDefaults(
     bpm=pytest.defaults.bpm,
     proximal_bpm_event_index=pytest.defaults.proximal_bpm_event_index,
 ):
-    return BPMEvent(tick, timestamp, bpm, proximal_bpm_event_index=proximal_bpm_event_index)
+    return BPMEvent(
+        tick=tick, timestamp=timestamp, bpm=bpm, _proximal_bpm_event_index=proximal_bpm_event_index
+    )
 
 
 def BPMEventParsedDataWithDefaults(
@@ -57,7 +59,7 @@ def BPMEventParsedDataWithDefaults(
 
 
 def AnchorEventWithDefaults(*, tick=pytest.defaults.tick, timestamp=pytest.defaults.timestamp):
-    return AnchorEvent(tick, timestamp)
+    return AnchorEvent(tick=tick, timestamp=timestamp)
 
 
 def AnchorEventParsedDataWithDefaults(

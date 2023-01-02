@@ -6,7 +6,6 @@ import re
 import unittest.mock
 
 import chartparse.instrument
-from chartparse.event import Event
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.instrument import (
     InstrumentTrack,
@@ -429,39 +428,6 @@ class TestInstrumentTrack(object):
 
 
 class TestNoteEvent(object):
-    class TestInit(object):
-        def test(self, mocker):
-            want_end_timestamp = datetime.timedelta(1)
-            want_star_power_data = StarPowerData(star_power_event_index=2)
-            want_sustain = 3
-            want_proximal_bpm_event_index = 5
-            want_note = Note.ORANGE
-            want_hopo_state = HOPOState.TAP
-
-            spy_init = mocker.spy(Event, "__init__")
-
-            got = NoteEventWithDefaults(
-                end_timestamp=want_end_timestamp,
-                note=want_note,
-                hopo_state=want_hopo_state,
-                sustain=want_sustain,
-                star_power_data=want_star_power_data,
-                proximal_bpm_event_index=want_proximal_bpm_event_index,
-            )
-
-            spy_init.assert_called_once_with(
-                unittest.mock.ANY,  # ignore self
-                pytest.defaults.tick,
-                pytest.defaults.timestamp,
-                want_proximal_bpm_event_index,
-            )
-
-            assert got.end_timestamp == want_end_timestamp
-            assert got.note == want_note
-            assert got.sustain == want_sustain
-            assert got.hopo_state == want_hopo_state
-            assert got.star_power_data == want_star_power_data
-
     class TestFromParsedData(object):
         @pytest.mark.parametrize(
             (
@@ -574,13 +540,13 @@ class TestNoteEvent(object):
 
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self
-                want_tick,
-                pytest.defaults.default_tatter_timestamp,
-                pytest.defaults.default_tatter_timestamp,
-                want_note,
-                want_hopo_state,
+                tick=want_tick,
+                timestamp=pytest.defaults.default_tatter_timestamp,
+                end_timestamp=pytest.defaults.default_tatter_timestamp,
+                note=want_note,
+                hopo_state=want_hopo_state,
                 sustain=want_sustain,
-                proximal_bpm_event_index=pytest.defaults.default_tatter_index,
+                _proximal_bpm_event_index=pytest.defaults.default_tatter_index,
                 star_power_data=want_star_power_data,
             )
 
@@ -941,7 +907,7 @@ class TestNoteEvent(object):
             ],
         )
         def test(self, mocker, bare_note_event, sustain, want):
-            bare_note_event.sustain = 100
+            object.__setattr__(bare_note_event, "sustain", 100)
             spy = mocker.spy(NoteEvent, "_longest_sustain")
             bare_note_event.longest_sustain
             spy.assert_called_once_with(100)
@@ -963,8 +929,8 @@ class TestNoteEvent(object):
 
     class TestEndTick(object):
         def test_wrapper(self, mocker, bare_note_event):
-            bare_note_event.tick = 100
-            bare_note_event.sustain = 10
+            object.__setattr__(bare_note_event, "tick", 100)
+            object.__setattr__(bare_note_event, "sustain", 10)
             spy = mocker.spy(NoteEvent, "_end_tick")
             bare_note_event.end_tick
             assert spy.called_once_with(100, 10)
@@ -976,24 +942,6 @@ class TestNoteEvent(object):
 
 
 class TestSpecialEvent(object):
-    class TestInit(object):
-        def test(self, mocker):
-            want_proximal_bpm_event_index = 1
-            want_sustain = 2
-            spy_init = mocker.spy(Event, "__init__")
-
-            got = SpecialEventWithDefaults(
-                sustain=want_sustain, proximal_bpm_event_index=want_proximal_bpm_event_index
-            )
-
-            spy_init.assert_called_once_with(
-                unittest.mock.ANY,  # ignore self
-                pytest.defaults.tick,
-                pytest.defaults.timestamp,
-                proximal_bpm_event_index=want_proximal_bpm_event_index,
-            )
-            assert got.sustain == want_sustain
-
     class TestFromParsedData(object):
         @pytest.mark.parametrize(
             "prev_event",
@@ -1017,10 +965,10 @@ class TestSpecialEvent(object):
             )
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self
-                pytest.defaults.tick,
-                pytest.defaults.default_tatter_timestamp,
-                pytest.defaults.sustain,
-                proximal_bpm_event_index=pytest.defaults.default_tatter_index,
+                tick=pytest.defaults.tick,
+                timestamp=pytest.defaults.default_tatter_timestamp,
+                sustain=pytest.defaults.sustain,
+                _proximal_bpm_event_index=pytest.defaults.default_tatter_index,
             )
 
     class TestParsedData(object):
@@ -1091,24 +1039,6 @@ class TestStarPowerEvent(object):
 
 
 class TestTrackEvent(object):
-    class TestInit(object):
-        def test(self, mocker):
-            want_proximal_bpm_event_index = 1
-            want_value = "value"
-            spy_init = mocker.spy(Event, "__init__")
-
-            got = TrackEventWithDefaults(
-                value=want_value, proximal_bpm_event_index=want_proximal_bpm_event_index
-            )
-
-            spy_init.assert_called_once_with(
-                unittest.mock.ANY,  # ignore self
-                pytest.defaults.tick,
-                pytest.defaults.timestamp,
-                proximal_bpm_event_index=want_proximal_bpm_event_index,
-            )
-            assert got.value == want_value
-
     class TestFromParsedData(object):
         @pytest.mark.parametrize(
             "prev_event",
@@ -1139,10 +1069,10 @@ class TestTrackEvent(object):
 
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self
-                pytest.defaults.tick,
-                pytest.defaults.default_tatter_timestamp,
-                pytest.defaults.track_event_value,
-                proximal_bpm_event_index=pytest.defaults.default_tatter_index,
+                tick=pytest.defaults.tick,
+                timestamp=pytest.defaults.default_tatter_timestamp,
+                value=pytest.defaults.track_event_value,
+                _proximal_bpm_event_index=pytest.defaults.default_tatter_index,
             )
 
     class TestParsedData(object):

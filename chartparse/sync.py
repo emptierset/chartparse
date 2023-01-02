@@ -225,32 +225,19 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
 
 @typ.final
+@dataclasses.dataclass(kw_only=True, frozen=True)
 class TimeSignatureEvent(Event):
     """An event representing a time signature change at a particular tick."""
 
     _Self = typ.TypeVar("_Self", bound="TimeSignatureEvent")
 
-    upper_numeral: typ.Final[int]
+    upper_numeral: int
     """The number indicating how many beats constitute a bar."""
 
-    lower_numeral: typ.Final[int]
+    lower_numeral: int
     """The number indicating the note value that represents one beat."""
 
-    _default_lower_numeral: typ.Final[int] = 4
-
-    def __init__(
-        self,
-        tick: int,
-        timestamp: datetime.timedelta,
-        upper_numeral: int,
-        lower_numeral: int,
-        proximal_bpm_event_index: int = 0,
-    ):
-        """Initializes all instance attributes."""
-
-        super().__init__(tick, timestamp, proximal_bpm_event_index=proximal_bpm_event_index)
-        self.upper_numeral = upper_numeral
-        self.lower_numeral = lower_numeral
+    _default_lower_numeral: typ.ClassVar[int] = 4
 
     @classmethod
     def from_parsed_data(
@@ -279,11 +266,11 @@ class TimeSignatureEvent(Event):
             proximal_bpm_event_index=prev_event._proximal_bpm_event_index if prev_event else 0,
         )
         return cls(
-            data.tick,
-            timestamp,
-            data.upper,
-            lower_numeral,
-            proximal_bpm_event_index=proximal_bpm_event_index,
+            tick=data.tick,
+            timestamp=timestamp,
+            upper_numeral=data.upper,
+            lower_numeral=lower_numeral,
+            _proximal_bpm_event_index=proximal_bpm_event_index,
         )
 
     def __str__(self) -> str:  # pragma: no cover
@@ -335,30 +322,23 @@ class TimeSignatureEvent(Event):
 
 
 @typ.final
+@dataclasses.dataclass(kw_only=True, frozen=True)
 class BPMEvent(Event):
     """An event representing a BPM (beats per minute) change at a particular tick."""
 
     _Self = typ.TypeVar("_Self", bound="BPMEvent")
 
-    bpm: typ.Final[float]
+    bpm: float
     """The beats per minute value. Must not have more than 3 decimal places."""
 
-    def __init__(
-        self,
-        tick: int,
-        timestamp: datetime.timedelta,
-        bpm: float,
-        proximal_bpm_event_index: int = 0,
-    ):
-        """Initialize all instance attributes.
+    def __post_init__(self):
+        """Validate instance attributes.
 
         Raises:
             ValueError: If ``bpm`` has more than 3 decimal places.
         """
-        if round(bpm, 3) != bpm:
-            raise ValueError(f"bpm {bpm} must not have more than 3 decimal places.")
-        super().__init__(tick, timestamp, proximal_bpm_event_index=proximal_bpm_event_index)
-        self.bpm = bpm
+        if round(self.bpm, 3) != self.bpm:
+            raise ValueError(f"bpm {self.bpm} must not have more than 3 decimal places.")
 
     @classmethod
     def from_parsed_data(
@@ -417,7 +397,12 @@ class BPMEvent(Event):
             data.tick,
             proximal_bpm_event_index=prev_event._proximal_bpm_event_index if prev_event else 0,
         )
-        return cls(data.tick, timestamp, bpm, proximal_bpm_event_index=proximal_bpm_event_index)
+        return cls(
+            tick=data.tick,
+            timestamp=timestamp,
+            bpm=bpm,
+            _proximal_bpm_event_index=proximal_bpm_event_index,
+        )
 
     def __str__(self) -> str:  # pragma: no cover
         to_join = [super().__str__()]
@@ -467,15 +452,6 @@ class AnchorEvent(Event):
 
     _Self = typ.TypeVar("_Self", bound="AnchorEvent")
 
-    def __init__(
-        self,
-        tick: int,
-        timestamp: datetime.timedelta,
-    ):
-        """Initializes all instance attributes."""
-
-        super().__init__(tick, timestamp)
-
     @classmethod
     def from_parsed_data(cls: type[_Self], data: AnchorEvent.ParsedData) -> _Self:
         """Obtain an instance of this object from parsed data.
@@ -488,7 +464,7 @@ class AnchorEvent(Event):
         """
 
         timestamp = datetime.timedelta(microseconds=data.microseconds)
-        return cls(data.tick, timestamp)
+        return cls(tick=data.tick, timestamp=timestamp)
 
     @typ.final
     @dataclasses.dataclass(kw_only=True, frozen=True, repr=False)

@@ -11,7 +11,6 @@ You should not need to create any of this module's objects manually; please inst
 from __future__ import annotations
 
 import dataclasses
-import datetime
 import logging
 import re
 import typing as typ
@@ -118,7 +117,7 @@ class GlobalEventsTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         )
 
 
-# TODO: Make this a dataclass (and all events...?).
+@dataclasses.dataclass(kw_only=True, frozen=True)
 class GlobalEvent(Event):
     """An event in a :class:`~chartparse.globalevents.GlobalEventsTrack`.
 
@@ -132,19 +131,8 @@ class GlobalEvent(Event):
 
     _Self = typ.TypeVar("_Self", bound="GlobalEvent")
 
-    value: typ.Final[str]
+    value: str
     """The data that this event stores."""
-
-    def __init__(
-        self,
-        tick: int,
-        timestamp: datetime.timedelta,
-        value: str,
-        # TODO: Consider making proximal_bpm_event_index required.
-        proximal_bpm_event_index: int = 0,
-    ) -> None:
-        super().__init__(tick, timestamp, proximal_bpm_event_index=proximal_bpm_event_index)
-        self.value = value
 
     @classmethod
     def from_parsed_data(
@@ -169,7 +157,10 @@ class GlobalEvent(Event):
             proximal_bpm_event_index=prev_event._proximal_bpm_event_index if prev_event else 0,
         )
         return cls(
-            data.tick, timestamp, data.value, proximal_bpm_event_index=proximal_bpm_event_index
+            tick=data.tick,
+            timestamp=timestamp,
+            value=data.value,
+            _proximal_bpm_event_index=proximal_bpm_event_index,
         )
 
     def __str__(self) -> str:  # pragma: no cover
