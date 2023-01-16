@@ -32,7 +32,6 @@ class DictReprMixin(object):
     def __repr__(self) -> str:  # pragma: no cover
         instance_attrs = {k: v for k, v in self.__dict__.items() if not hasattr(self.__class__, k)}
         return f"{type(self).__name__}({str(instance_attrs)[1:-1]})"
-        # return f"{type(self).__name__}({str(self.__dict__.items())[1:-1]})"
 
 
 class DictReprTruncatedSequencesMixin(object):
