@@ -8,9 +8,7 @@
 from __future__ import annotations
 
 import typing as typ
-
-if typ.TYPE_CHECKING:  # pragma: no cover
-    from collections.abc import Collection
+from collections.abc import Collection
 
 
 def raise_(ex: Exception) -> None:

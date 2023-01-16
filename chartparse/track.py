@@ -13,13 +13,14 @@ from __future__ import annotations
 import collections
 import logging
 import typing as typ
+from collections.abc import Iterable, Sequence
 
 from chartparse.event import Event, TimestampAtTickSupporter
 from chartparse.exceptions import ProgrammerError, RegexNotMatchError
 from chartparse.sync import AnchorEvent
 
 if typ.TYPE_CHECKING:  # pragma: no cover
-    from collections.abc import Callable, Iterable, Sequence
+    from collections.abc import Callable
 
     from chartparse.globalevents import LyricEvent, SectionEvent, TextEvent
     from chartparse.instrument import StarPowerEvent, TrackEvent
