@@ -1,7 +1,7 @@
 """For representing the data related to a single (instrument, difficulty) pair.
 
-You should not need to create any of this module's objects manually; please instead create a
-:class:`~chartparse.chart.Chart` and inspect its attributes via that object.
+You should not need to create any of this module's objects manually; please instead create
+a :class:`~chartparse.chart.Chart` and inspect its attributes via that object.
 
 .. _Google Python Style Guide:
     http://google.github.io/styleguide/pyguide.html
@@ -151,7 +151,7 @@ class Note(Enum):
     def from_parsed_data(
         cls: type[_Self], data: NoteEvent.ParsedData | Sequence[NoteEvent.ParsedData]
     ) -> _Self:
-        """Returns the ``Note`` represented by one or more ``NoteEvent.ParsedData``s.
+        """Returns the ``Note`` represented by one or more ``NoteEvent.ParsedData``\\s.
 
         Args:
             data: The data or datas whose note track indices should be examined.
@@ -521,10 +521,12 @@ class NoteEvent(Event):
         Args:
             data: The data necessary to create an event. Most likely from a Moonscraper ``.chart``.
             prev_event: The event with the largest tick value less than that of the input data.
-            star_power_events: All ``StarPowerEvent``s.
+            star_power_events: All ``StarPowerEvent``\\s.
             tatter: An object that can be used to get a timestamp at a particular tick.
+
             proximal_bpm_event_index: The index of the ``BPMEvent`` with the largest tick value
                 smaller than that of this event. For optimization only.
+
             star_power_event_index: The index of the ``StarPowerEvent`` with the largest tick value
                 smaller than that of this event. For optimization only.
 
@@ -743,8 +745,10 @@ class SpecialEvent(Event):
 
         Args:
             data: The data necessary to create an event. Most likely from a Moonscraper ``.chart``.
+
             prev_event: The event of this type with the greatest ``tick`` value less than that of
                 this event. If this is ``None``, then this must be the first event of this type.
+
             tatter: An object that can be used to get a timestamp at a particular tick.
 
         Returns:
@@ -874,8 +878,10 @@ class TrackEvent(Event):
 
         Args:
             data: The data necessary to create an event. Most likely from a Moonscraper ``.chart``.
+
             prev_event: The event of this type with the greatest ``tick`` value less than that of
                 this event. If this is ``None``, then this must be the first event of this type.
+
             tatter: An object that can be used to get a timestamp at a particular tick.
 
         Returns:

@@ -256,9 +256,11 @@ class TimeSignatureEvent(Event):
 
         Args:
             data: The data necessary to create an event. Most likely from a Moonscraper ``.chart``.
+
             prev_event: The ``TimeSignatureEvent`` with the greatest ``tick`` value less than that
                 of this event. If this is ``None``, then this must be the first
                 ``TimeSignatureEvent``.
+
             tatter: An object that can be used to get a timestamp at a particular tick.
 
         Returns:
@@ -360,8 +362,10 @@ class BPMEvent(Event):
 
         Args:
             data: The data necessary to create an event. Most likely from a Moonscraper ``.chart``.
+
             prev_event: The event of this type with the greatest ``tick`` value less than that of
                 this event. If this is ``None``, then this must be the first event of this type.
+
             resolution: The number of ticks for which a quarter note lasts.
 
         Returns:

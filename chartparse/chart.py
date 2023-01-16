@@ -210,8 +210,10 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         Args:
             instrument: The instrument for which the
                 :class:`~chartparse.instrument.InstrumentTrack` should be looked up.
+
             difficulty: The instrument for which the
                 :class:`~chartparse.instrument.InstrumentTrack` should be looked up.
+
             start_time: The beginning of the interval.
             end_time: The end of the interval.
             start_tick: The beginning of the interval.

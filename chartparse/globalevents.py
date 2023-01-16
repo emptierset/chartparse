@@ -148,8 +148,11 @@ class GlobalEvent(Event):
 
         Args:
             data: The data necessary to create an event. Most likely from a Moonscraper ``.chart``.
+
             prev_event: The event of this type with the greatest ``tick`` value less than that of
-                this event. If this is ``None``, then this must be the first event of this type.
+                        this event. If this is ``None``, then this must be the first event of this
+                        type.
+
             tatter: An object that can be used to get a timestamp at a particular tick.
 
         Returns:

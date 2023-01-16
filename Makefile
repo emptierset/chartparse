@@ -56,7 +56,7 @@ fmt: isort black autoflake  ## Format code using isort, black, and autoflake.
 
 .PHONY: flake
 flake:             ## Run pep8 linter.
-	$(ENV_PREFIX)flake8 --extend-ignore=E731 --max-line-length 99 chartparse/ tests/
+	$(ENV_PREFIX)flake8 --extend-ignore=E731 --max-line-length 99 --rst-roles meth,class,attr chartparse/ tests/
 
 .PHONY: lint
 lint: flake blackcheck  ## Run pep8 linter and black.

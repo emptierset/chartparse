@@ -53,6 +53,7 @@ def parse_data_from_chart_lines(
             is more efficient if the types in `types` are ordered in descending frequency. That is,
             because it chooses the first type that matches, users should put the more common ones
             first.
+
         lines: An iterable of strings most likely from a Moonscraper ``.chart``.
 
     Returns:
