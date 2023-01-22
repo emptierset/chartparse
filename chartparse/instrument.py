@@ -171,7 +171,6 @@ class Note(Enum):
 
 
 @typ.final
-@functools.total_ordering
 class NoteTrackIndex(AllValuesGettableEnum):
     """The integer in a line in a Moonscraper ``.chart`` file's instrument track."""
 
@@ -196,6 +195,11 @@ class NoteTrackIndex(AllValuesGettableEnum):
     def __lt__(self, other):
         if self.__class__ is other.__class__:
             return self.value < other.value
+        return NotImplemented  # pragma: no cover
+
+    def __le__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value < other.value or self.value == other.value
         return NotImplemented  # pragma: no cover
 
     @functools.lru_cache
