@@ -67,7 +67,7 @@ def minimal_compute_star_power_data_mock(mocker):
         # Sync events
         "default_time_signature_event",
         "default_bpm_event",
-        # TODO: Add anchor_event.
+        "default_anchor_event",
         # Global events
         "default_text_event",
         "default_section_event",
@@ -75,7 +75,7 @@ def minimal_compute_star_power_data_mock(mocker):
         # Instrument events
         "default_note_event",
         "default_star_power_event",
-        # TODO: Add track_event.
+        "default_track_event",
     ]
 )
 def all_events(request):
