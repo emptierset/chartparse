@@ -4,7 +4,7 @@ import datetime
 import pathlib
 import pytest
 
-from chartparse.chart import Chart, _max_timedelta
+from chartparse.chart import Chart
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.globalevents import GlobalEventsTrack
 from chartparse.instrument import InstrumentTrack, Difficulty, Instrument, Note
@@ -229,7 +229,7 @@ class TestChart(object):
 
     class TestNotesPerSecond(object):
         @pytest.mark.parametrize(
-            "lower_bound,upper_bound,want",
+            "interval_start_time,interval_end_time,want",
             [
                 pytest.param(
                     datetime.timedelta(seconds=1),
@@ -257,7 +257,7 @@ class TestChart(object):
                 ),
             ],
         )
-        def test_from_note_events(self, bare_chart, lower_bound, upper_bound, want):
+        def test_from_note_events(self, bare_chart, interval_start_time, interval_end_time, want):
             note_event1 = NoteEventWithDefaults(
                 timestamp=datetime.timedelta(seconds=1),
                 note=Note.GRY,
@@ -272,12 +272,12 @@ class TestChart(object):
             )
             test_notes_per_second_note_events = [note_event1, note_event2, note_event3]
             got = bare_chart._notes_per_second(
-                test_notes_per_second_note_events, lower_bound, upper_bound
+                test_notes_per_second_note_events, interval_start_time, interval_end_time
             )
             assert got == want
 
         @pytest.mark.parametrize(
-            "start_tick,end_tick,want_lower_bound,want_upper_bound",
+            "start_tick,end_tick,want_interval_start_time,want_interval_end_time",
             [
                 pytest.param(
                     None,
@@ -290,7 +290,7 @@ class TestChart(object):
                     1,
                     None,
                     datetime.timedelta(seconds=1),
-                    _max_timedelta,
+                    datetime.timedelta(seconds=1000),
                     id="last_none",
                 ),
                 pytest.param(
@@ -303,7 +303,13 @@ class TestChart(object):
             ],
         )
         def test_with_ticks(
-            self, mocker, minimal_chart, start_tick, end_tick, want_lower_bound, want_upper_bound
+            self,
+            mocker,
+            minimal_chart,
+            start_tick,
+            end_tick,
+            want_interval_start_time,
+            want_interval_end_time,
         ):
             object.__setattr__(
                 minimal_chart[pytest.defaults.instrument][pytest.defaults.difficulty],
@@ -315,7 +321,7 @@ class TestChart(object):
                 InstrumentTrack,
                 "last_note_end_timestamp",
                 new_callable=mocker.PropertyMock,
-                return_value=_max_timedelta,
+                return_value=want_interval_end_time,
             )
 
             # NOTE: This _should_ be mocked as such, but because sync_track is a frozen dataclass,
@@ -338,7 +344,7 @@ class TestChart(object):
                 end_tick=end_tick,
             )
             spy.assert_called_once_with(
-                pytest.defaults.note_events, want_lower_bound, want_upper_bound
+                pytest.defaults.note_events, want_interval_start_time, want_interval_end_time
             )
 
             # NOTE: Manually reset timestamp_at_tick from mocked version.
@@ -348,13 +354,13 @@ class TestChart(object):
             )
 
         @pytest.mark.parametrize(
-            "start_time,end_time,want_lower_bound,want_upper_bound",
+            "start_time,end_time,want_interval_start_time,want_interval_end_time",
             [
                 pytest.param(
                     datetime.timedelta(seconds=1),
                     None,
                     datetime.timedelta(seconds=1),
-                    _max_timedelta,
+                    datetime.timedelta(seconds=1000),
                     id="last_none",
                 ),
                 pytest.param(
@@ -367,7 +373,13 @@ class TestChart(object):
             ],
         )
         def test_with_time(
-            self, mocker, minimal_chart, start_time, end_time, want_lower_bound, want_upper_bound
+            self,
+            mocker,
+            minimal_chart,
+            start_time,
+            end_time,
+            want_interval_start_time,
+            want_interval_end_time,
         ):
             object.__setattr__(
                 minimal_chart[pytest.defaults.instrument][pytest.defaults.difficulty],
@@ -379,7 +391,7 @@ class TestChart(object):
                 InstrumentTrack,
                 "last_note_end_timestamp",
                 new_callable=mocker.PropertyMock,
-                return_value=_max_timedelta,
+                return_value=want_interval_end_time,
             )
 
             spy = mocker.spy(minimal_chart, "_notes_per_second")
@@ -390,17 +402,17 @@ class TestChart(object):
                 end_time=end_time,
             )
             spy.assert_called_once_with(
-                pytest.defaults.note_events, want_lower_bound, want_upper_bound
+                pytest.defaults.note_events, want_interval_start_time, want_interval_end_time
             )
 
         @pytest.mark.parametrize(
-            "start_seconds,end_seconds,want_lower_bound,want_upper_bound",
+            "start_seconds,end_seconds,want_interval_start_time,want_interval_end_time",
             [
                 pytest.param(
                     1,
                     None,
                     datetime.timedelta(seconds=1),
-                    _max_timedelta,
+                    datetime.timedelta(seconds=1000),
                     id="last_none",
                 ),
                 pytest.param(
@@ -418,8 +430,8 @@ class TestChart(object):
             minimal_chart,
             start_seconds,
             end_seconds,
-            want_lower_bound,
-            want_upper_bound,
+            want_interval_start_time,
+            want_interval_end_time,
         ):
             object.__setattr__(
                 minimal_chart[pytest.defaults.instrument][pytest.defaults.difficulty],
@@ -431,7 +443,7 @@ class TestChart(object):
                 InstrumentTrack,
                 "last_note_end_timestamp",
                 new_callable=mocker.PropertyMock,
-                return_value=_max_timedelta,
+                return_value=want_interval_end_time,
             )
 
             spy = mocker.spy(minimal_chart, "_notes_per_second")
@@ -442,7 +454,7 @@ class TestChart(object):
                 end_seconds=end_seconds,
             )
             spy.assert_called_once_with(
-                pytest.defaults.note_events, want_lower_bound, want_upper_bound
+                pytest.defaults.note_events, want_interval_start_time, want_interval_end_time
             )
 
         @pytest.mark.parametrize(

@@ -41,8 +41,6 @@ if typ.TYPE_CHECKING:  # pragma: no cover
 logging.basicConfig()
 logger = logging.getLogger(__name__)
 
-_max_timedelta = datetime.datetime.max - datetime.datetime.min
-
 
 @typ.final
 class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
@@ -253,54 +251,57 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
         all_start_args_none = num_of_start_args_none == len(start_args)
         if (start_tick is not None) or all_start_args_none:
-            lower_bound = (
+            interval_start_time = (
                 self.sync_track.timestamp_at_tick(start_tick, self.metadata.resolution)[0]
                 if start_tick is not None
                 else datetime.timedelta(0)
             )
-            upper_bound = (
+            interval_end_time = (
                 self.sync_track.timestamp_at_tick(end_tick, self.metadata.resolution)[0]
                 if end_tick is not None
-                # ValueError is raised above if there are no NoteEvents.
+                # ValueError is raised above if there are no NoteEvents, which is the only case
+                # where track.last_note_end_timestamp is None.
                 else typ.cast(datetime.timedelta, track.last_note_end_timestamp)
             )
         elif start_time is not None:
-            lower_bound = start_time if start_time is not None else datetime.timedelta(0)
-            # ValueError is raised above if there are no NoteEvents.
-            upper_bound = (
+            interval_start_time = start_time if start_time is not None else datetime.timedelta(0)
+            # ValueError is raised above if there are no NoteEvents, which is the only case where
+            # track.last_note_end_timestamp is None.
+            interval_end_time = (
                 end_time
                 if end_time is not None
                 else typ.cast(datetime.timedelta, track.last_note_end_timestamp)
             )
         elif start_seconds is not None:
-            lower_bound = (
+            interval_start_time = (
                 datetime.timedelta(seconds=start_seconds)
                 if start_seconds is not None
                 else datetime.timedelta(0)
             )
-            upper_bound = (
+            interval_end_time = (
                 datetime.timedelta(seconds=end_seconds)
                 if end_seconds is not None
-                # ValueError is raised above if there are no NoteEvents.
+                # ValueError is raised above if there are no NoteEvents, which is the only case
+                # where track.last_note_end_timestamp is None.
                 else typ.cast(datetime.timedelta, track.last_note_end_timestamp)
             )
         else:  # pragma: no cover
             raise ProgrammerError
 
-        return self._notes_per_second(track.note_events, lower_bound, upper_bound)
+        return self._notes_per_second(track.note_events, interval_start_time, interval_end_time)
 
     @staticmethod
     def _notes_per_second(
         events: Sequence[NoteEvent],
-        lower_bound: datetime.timedelta,
-        upper_bound: datetime.timedelta,
+        interval_start_time: datetime.timedelta,
+        interval_end_time: datetime.timedelta,
     ) -> float:
         def is_event_eligible(note: NoteEvent) -> bool:
-            return lower_bound <= note.timestamp <= upper_bound
+            return interval_start_time <= note.timestamp <= interval_end_time
 
         num_events_to_consider = sum(1 for e in events if is_event_eligible(e))
-        phrase_duration_seconds = (upper_bound - lower_bound).total_seconds()
-        return num_events_to_consider / phrase_duration_seconds
+        interval_duration_seconds = (interval_end_time - interval_start_time).total_seconds()
+        return num_events_to_consider / interval_duration_seconds
 
     def __str__(self) -> str:  # pragma: no cover
         items = []
