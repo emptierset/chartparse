@@ -63,7 +63,7 @@ lint: flake blackcheck  ## Run pep8 linter and black.
 
 .PHONY: mypy
 mypy:              ## Run mypy type checker.
-	$(ENV_PREFIX)mypy --ignore-missing-imports chartparse/
+	$(ENV_PREFIX)mypy --ignore-missing-imports chartparse/ tests/
 
 .PHONY: check
 check: lint mypy   ## Run all linters and mypy.

@@ -20,7 +20,9 @@ from chartparse.instrument import (
 )
 from chartparse.tick import NoteDuration
 
+from tests.helpers import defaults
 import tests.helpers.tick
+from tests.helpers import unsafe
 from tests.helpers.instrument import (
     InstrumentTrackWithDefaults,
     StarPowerEventWithDefaults,
@@ -62,13 +64,11 @@ class TestNote(object):
 
 
 class TestNoteTrackIndex(object):
-    class TestTotalOrdering(object):
+    class TestOrderability(object):
         assert NoteTrackIndex.G < NoteTrackIndex.R
         assert NoteTrackIndex.G <= NoteTrackIndex.R
         assert NoteTrackIndex.R >= NoteTrackIndex.G
         assert NoteTrackIndex.R > NoteTrackIndex.G
-        assert NoteTrackIndex.G == NoteTrackIndex.G
-        assert NoteTrackIndex.G != NoteTrackIndex.R
 
 
 class TestComplexSustainFromParsedDatas(object):
@@ -122,11 +122,11 @@ class TestInstrumentTrack(object):
     class TestInit(object):
         def test(self, mocker, default_instrument_track):
             _ = InstrumentTrackWithDefaults()
-            assert default_instrument_track.instrument == pytest.defaults.instrument
-            assert default_instrument_track.difficulty == pytest.defaults.difficulty
-            assert default_instrument_track.note_events == pytest.defaults.note_events
-            assert default_instrument_track.star_power_events == pytest.defaults.star_power_events
-            assert default_instrument_track.section_name == pytest.defaults.section_name
+            assert default_instrument_track.instrument == defaults.instrument
+            assert default_instrument_track.difficulty == defaults.difficulty
+            assert default_instrument_track.note_events == defaults.note_events
+            assert default_instrument_track.star_power_events == defaults.star_power_events
+            assert default_instrument_track.section_name == defaults.section_name
 
         @pytest.mark.parametrize("resolution", [0, -1])
         def test_non_positive_resolution(self, resolution):
@@ -139,45 +139,45 @@ class TestInstrumentTrack(object):
                 InstrumentTrack,
                 "_parse_data_from_chart_lines",
                 return_value=(
-                    pytest.defaults.note_event_parsed_datas,
-                    pytest.defaults.star_power_event_parsed_datas,
-                    pytest.defaults.track_event_parsed_datas,
+                    defaults.note_event_parsed_datas,
+                    defaults.star_power_event_parsed_datas,
+                    defaults.track_event_parsed_datas,
                 ),
             )
             mock_build_note_events = mocker.patch.object(
                 InstrumentTrack,
                 "_build_note_events_from_data",
-                return_value=pytest.defaults.note_events,
+                return_value=defaults.note_events,
             )
             mock_build_events = mocker.patch(
                 "chartparse.track.build_events_from_data",
                 side_effect=[
-                    pytest.defaults.star_power_events,
-                    pytest.defaults.track_events,
+                    defaults.star_power_events,
+                    defaults.track_events,
                 ],
             )
             spy_init = mocker.spy(InstrumentTrack, "__init__")
             _ = InstrumentTrack.from_chart_lines(
-                pytest.defaults.instrument,
-                pytest.defaults.difficulty,
-                pytest.invalid_chart_lines,
+                defaults.instrument,
+                defaults.difficulty,
+                defaults.invalid_chart_lines,
                 default_tatter,
             )
-            mock_parse_data.assert_called_once_with(pytest.invalid_chart_lines)
+            mock_parse_data.assert_called_once_with(defaults.invalid_chart_lines)
             mock_build_note_events.assert_called_once_with(
-                pytest.defaults.note_event_parsed_datas,
-                pytest.defaults.star_power_events,
+                defaults.note_event_parsed_datas,
+                defaults.star_power_events,
                 default_tatter,
             )
             mock_build_events.assert_has_calls(
                 [
                     unittest.mock.call(
-                        pytest.defaults.star_power_event_parsed_datas,
+                        defaults.star_power_event_parsed_datas,
                         StarPowerEvent.from_parsed_data,
                         default_tatter,
                     ),
                     unittest.mock.call(
-                        pytest.defaults.track_event_parsed_datas,
+                        defaults.track_event_parsed_datas,
                         TrackEvent.from_parsed_data,
                         default_tatter,
                     ),
@@ -185,26 +185,28 @@ class TestInstrumentTrack(object):
             )
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self
-                resolution=pytest.defaults.resolution,
-                instrument=pytest.defaults.instrument,
-                difficulty=pytest.defaults.difficulty,
-                note_events=pytest.defaults.note_events,
-                star_power_events=pytest.defaults.star_power_events,
-                track_events=pytest.defaults.track_events,
+                resolution=defaults.resolution,
+                instrument=defaults.instrument,
+                difficulty=defaults.difficulty,
+                note_events=defaults.note_events,
+                star_power_events=defaults.star_power_events,
+                track_events=defaults.track_events,
             )
 
+        @staticmethod
         def NoteEventWithDefaultsPlus(**kwargs):
             return NoteEventWithDefaults(
-                proximal_bpm_event_index=pytest.defaults.default_tatter_index,
-                timestamp=pytest.defaults.default_tatter_timestamp,
-                end_timestamp=pytest.defaults.default_tatter_timestamp,
+                proximal_bpm_event_index=defaults.tatter_bpm_event_index,
+                timestamp=defaults.tatter_timestamp,
+                end_timestamp=defaults.tatter_timestamp,
                 **kwargs,
             )
 
+        @staticmethod
         def StarPowerEventWithDefaultsPlus(**kwargs):
             return StarPowerEventWithDefaults(
-                proximal_bpm_event_index=pytest.defaults.default_tatter_index,
-                timestamp=pytest.defaults.default_tatter_timestamp,
+                proximal_bpm_event_index=defaults.tatter_bpm_event_index,
+                timestamp=defaults.tatter_timestamp,
                 **kwargs,
             )
 
@@ -212,7 +214,7 @@ class TestInstrumentTrack(object):
             "lines, want_note_events, want_star_power_events",
             [
                 pytest.param(
-                    [pytest.invalid_chart_line],
+                    [defaults.invalid_chart_line],
                     [],
                     [],
                     id="skip_invalid_line",
@@ -393,13 +395,13 @@ class TestInstrumentTrack(object):
             self, mocker, lines, want_note_events, want_star_power_events, default_tatter
         ):
             got = InstrumentTrack.from_chart_lines(
-                pytest.defaults.instrument,
-                pytest.defaults.difficulty,
+                defaults.instrument,
+                defaults.difficulty,
                 lines,
                 default_tatter,
             )
-            assert got.instrument == pytest.defaults.instrument
-            assert got.difficulty == pytest.defaults.difficulty
+            assert got.instrument == defaults.instrument
+            assert got.difficulty == defaults.difficulty
             assert got.star_power_events == want_star_power_events
             assert got.note_events == want_note_events
 
@@ -418,7 +420,7 @@ class TestInstrumentTrack(object):
             ],
         )
         def test(self, bare_instrument_track, note_events, want):
-            object.__setattr__(bare_instrument_track, "note_events", note_events)
+            unsafe.setattr(bare_instrument_track, "note_events", note_events)
             got = bare_instrument_track.last_note_end_timestamp
             assert got == want
 
@@ -502,7 +504,7 @@ class TestNoteEvent(object):
             _event, _bpm_event_index, _star_power_event_index = NoteEvent.from_parsed_data(
                 data,
                 None,
-                pytest.defaults.star_power_events,
+                defaults.star_power_events,
                 default_tatter,
                 proximal_bpm_event_index=want_proximal_bpm_event_index,
                 star_power_event_index=want_star_power_event_index,
@@ -518,7 +520,7 @@ class TestNoteEvent(object):
                         # technically tick+sustain, but annoying because it requires mocking or
                         # calling _end_tick.
                         unittest.mock.ANY,
-                        proximal_bpm_event_index=pytest.defaults.default_tatter_index,
+                        proximal_bpm_event_index=defaults.tatter_bpm_event_index,
                     ),
                 ],
             )
@@ -534,19 +536,19 @@ class TestNoteEvent(object):
 
             mock_compute_star_power_data.assert_called_once_with(
                 want_tick,
-                pytest.defaults.star_power_events,
+                defaults.star_power_events,
                 proximal_star_power_event_index=want_star_power_event_index,
             )
 
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self
                 tick=want_tick,
-                timestamp=pytest.defaults.default_tatter_timestamp,
-                end_timestamp=pytest.defaults.default_tatter_timestamp,
+                timestamp=defaults.tatter_timestamp,
+                end_timestamp=defaults.tatter_timestamp,
                 note=want_note,
                 hopo_state=want_hopo_state,
                 sustain=want_sustain,
-                _proximal_bpm_event_index=pytest.defaults.default_tatter_index,
+                _proximal_bpm_event_index=defaults.tatter_bpm_event_index,
                 star_power_data=want_star_power_data,
             )
 
@@ -722,7 +724,7 @@ class TestNoteEvent(object):
         )
         def test(self, tick, note, is_tap, is_forced, previous, want):
             got = NoteEvent._compute_hopo_state(
-                pytest.defaults.resolution,
+                defaults.resolution,
                 tick,
                 note,
                 is_tap,
@@ -734,9 +736,9 @@ class TestNoteEvent(object):
         def test_forced_first_note_raises(self):
             with pytest.raises(ValueError):
                 _ = NoteEvent._compute_hopo_state(
-                    pytest.defaults.resolution,
-                    pytest.defaults.tick,
-                    pytest.defaults.note,
+                    defaults.resolution,
+                    defaults.tick,
+                    defaults.note,
                     False,
                     True,
                     None,
@@ -797,9 +799,9 @@ class TestNoteEvent(object):
                 invalid_instrument_note_track_index = 8
                 with pytest.raises(ValueError):
                     _ = NoteEvent.ParsedData.from_chart_line(
-                        f"T {pytest.defaults.tick} "
+                        f"T {defaults.tick} "
                         f"I {invalid_instrument_note_track_index} "
-                        f"S {pytest.defaults.sustain}"
+                        f"S {defaults.sustain}"
                     )
 
             def setup_method(self):
@@ -831,7 +833,7 @@ class TestNoteEvent(object):
             "tick,star_power_events,want_data,want_proximal_star_power_event_index",
             [
                 pytest.param(
-                    pytest.defaults.tick,
+                    defaults.tick,
                     [],
                     None,
                     0,
@@ -857,9 +859,7 @@ class TestNoteEvent(object):
                 pytest.param(
                     0,
                     [StarPowerEventWithDefaults(tick=0, sustain=10)],
-                    StarPowerData(
-                        star_power_event_index=pytest.defaults.proximal_star_power_event_index
-                    ),
+                    StarPowerData(star_power_event_index=defaults.proximal_star_power_event_index),
                     0,
                     id="tick_in_event",
                 ),
@@ -885,7 +885,7 @@ class TestNoteEvent(object):
             got_data, got_proximal_star_power_event_index = NoteEvent._compute_star_power_data(
                 tick,
                 star_power_events,
-                proximal_star_power_event_index=pytest.defaults.proximal_star_power_event_index,
+                proximal_star_power_event_index=defaults.proximal_star_power_event_index,
             )
             assert got_data == want_data
             assert got_proximal_star_power_event_index == want_proximal_star_power_event_index
@@ -893,9 +893,9 @@ class TestNoteEvent(object):
         def test_proximal_star_power_event_index_after_last_event(self):
             with pytest.raises(ValueError):
                 _, _ = NoteEvent._compute_star_power_data(
-                    pytest.defaults.tick,
-                    pytest.defaults.star_power_events,
-                    proximal_star_power_event_index=len(pytest.defaults.star_power_events),
+                    defaults.tick,
+                    defaults.star_power_events,
+                    proximal_star_power_event_index=len(defaults.star_power_events),
                 )
 
     class TestLongestSustain(object):
@@ -907,7 +907,7 @@ class TestNoteEvent(object):
             ],
         )
         def test(self, mocker, bare_note_event, sustain, want):
-            object.__setattr__(bare_note_event, "sustain", 100)
+            unsafe.setattr(bare_note_event, "sustain", 100)
             spy = mocker.spy(NoteEvent, "_longest_sustain")
             bare_note_event.longest_sustain
             spy.assert_called_once_with(100)
@@ -929,8 +929,8 @@ class TestNoteEvent(object):
 
     class TestEndTick(object):
         def test_wrapper(self, mocker, bare_note_event):
-            object.__setattr__(bare_note_event, "tick", 100)
-            object.__setattr__(bare_note_event, "sustain", 10)
+            unsafe.setattr(bare_note_event, "tick", 100)
+            unsafe.setattr(bare_note_event, "sustain", 10)
             spy = mocker.spy(NoteEvent, "_end_tick")
             bare_note_event.end_tick
             assert spy.called_once_with(100, 10)
@@ -960,15 +960,15 @@ class TestSpecialEvent(object):
             )
 
             default_tatter.spy.assert_called_once_with(
-                pytest.defaults.tick,
+                defaults.tick,
                 proximal_bpm_event_index=prev_event._proximal_bpm_event_index if prev_event else 0,
             )
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self
-                tick=pytest.defaults.tick,
-                timestamp=pytest.defaults.default_tatter_timestamp,
-                sustain=pytest.defaults.sustain,
-                _proximal_bpm_event_index=pytest.defaults.default_tatter_index,
+                tick=defaults.tick,
+                timestamp=defaults.tatter_timestamp,
+                sustain=defaults.sustain,
+                _proximal_bpm_event_index=defaults.tatter_bpm_event_index,
             )
 
     class TestParsedData(object):
@@ -977,10 +977,10 @@ class TestSpecialEvent(object):
 
             def test(self, mocker):
                 got = SpecialEvent.ParsedData.from_chart_line(
-                    f"T {pytest.defaults.tick} V {pytest.defaults.sustain}"
+                    f"T {defaults.tick} V {defaults.sustain}"
                 )
-                assert got.tick == pytest.defaults.tick
-                assert got.sustain == pytest.defaults.sustain
+                assert got.tick == defaults.tick
+                assert got.sustain == defaults.sustain
 
             def test_no_match(self, invalid_chart_line, default_tatter):
                 with pytest.raises(RegexNotMatchError):
@@ -1063,25 +1063,25 @@ class TestTrackEvent(object):
             )
 
             default_tatter.spy.assert_called_once_with(
-                pytest.defaults.tick,
+                defaults.tick,
                 proximal_bpm_event_index=prev_event._proximal_bpm_event_index if prev_event else 0,
             )
 
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self
-                tick=pytest.defaults.tick,
-                timestamp=pytest.defaults.default_tatter_timestamp,
-                value=pytest.defaults.track_event_value,
-                _proximal_bpm_event_index=pytest.defaults.default_tatter_index,
+                tick=defaults.tick,
+                timestamp=defaults.tatter_timestamp,
+                value=defaults.track_event_value,
+                _proximal_bpm_event_index=defaults.tatter_bpm_event_index,
             )
 
     class TestParsedData(object):
         class TestFromChartLine(object):
             def test(self, mocker):
-                line = generate_track_line(pytest.defaults.tick, pytest.defaults.track_event_value)
+                line = generate_track_line(defaults.tick, defaults.track_event_value)
                 got = TrackEvent.ParsedData.from_chart_line(line)
-                assert got.tick == pytest.defaults.tick
-                assert got.value == pytest.defaults.track_event_value
+                assert got.tick == defaults.tick
+                assert got.value == defaults.track_event_value
 
             def test_no_match(self, invalid_chart_line):
                 with pytest.raises(RegexNotMatchError):

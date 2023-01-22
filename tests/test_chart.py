@@ -11,6 +11,8 @@ from chartparse.instrument import InstrumentTrack, Difficulty, Instrument, Note
 from chartparse.metadata import Metadata
 from chartparse.sync import SyncTrack
 
+from tests.helpers import defaults
+from tests.helpers import unsafe
 from tests.helpers.instrument import NoteEventWithDefaults
 from tests.helpers.log import LogChecker
 
@@ -57,15 +59,16 @@ class TestChart(object):
             default_global_events_track,
             default_sync_track,
             default_instrument_track,
+            invalid_chart_line,
         ):
             mocker.patch.object(
                 Chart,
                 "_find_sections",
                 return_value={
-                    "Song": pytest.invalid_chart_lines,
-                    "Events": pytest.invalid_chart_lines,
-                    "SyncTrack": pytest.invalid_chart_lines,
-                    "ExpertSingle": pytest.invalid_chart_lines,
+                    "Song": [invalid_chart_line],
+                    "Events": [invalid_chart_line],
+                    "SyncTrack": [invalid_chart_line],
+                    "ExpertSingle": [invalid_chart_line],
                 },
             )
             mocker.patch.object(Metadata, "from_chart_lines", return_value=default_metadata)
@@ -222,10 +225,8 @@ class TestChart(object):
     class TestSecondsFromTicksAtBPM(object):
         def test(self, mocker, minimal_chart):
             mock = mocker.patch("chartparse.tick.seconds_from_ticks_at_bpm")
-            _ = minimal_chart._seconds_from_ticks_at_bpm(pytest.defaults.tick, pytest.defaults.bpm)
-            mock.assert_called_once_with(
-                pytest.defaults.tick, pytest.defaults.bpm, pytest.defaults.resolution
-            )
+            _ = minimal_chart._seconds_from_ticks_at_bpm(defaults.tick, defaults.bpm)
+            mock.assert_called_once_with(defaults.tick, defaults.bpm, defaults.resolution)
 
     class TestNotesPerSecond(object):
         @pytest.mark.parametrize(
@@ -311,10 +312,10 @@ class TestChart(object):
             want_interval_start_time,
             want_interval_end_time,
         ):
-            object.__setattr__(
-                minimal_chart[pytest.defaults.instrument][pytest.defaults.difficulty],
+            unsafe.setattr(
+                minimal_chart[defaults.instrument][defaults.difficulty],
                 "note_events",
-                pytest.defaults.note_events,
+                defaults.note_events,
             )
 
             mocker.patch.object(
@@ -331,24 +332,24 @@ class TestChart(object):
             #    "timestamp_at_tick",
             #    side_effect=lambda tick, _resolution: (datetime.timedelta(seconds=tick),),
             # )
-            object.__setattr__(
+            unsafe.setattr(
                 minimal_chart.sync_track,
                 "timestamp_at_tick",
                 lambda tick, _resolution: (datetime.timedelta(seconds=tick),),
             )
             spy = mocker.spy(minimal_chart, "_notes_per_second")
             _ = minimal_chart.notes_per_second(
-                pytest.defaults.instrument,
-                pytest.defaults.difficulty,
+                defaults.instrument,
+                defaults.difficulty,
                 start_tick=start_tick,
                 end_tick=end_tick,
             )
             spy.assert_called_once_with(
-                pytest.defaults.note_events, want_interval_start_time, want_interval_end_time
+                defaults.note_events, want_interval_start_time, want_interval_end_time
             )
 
             # NOTE: Manually reset timestamp_at_tick from mocked version.
-            object.__delattr__(
+            unsafe.delattr(
                 minimal_chart.sync_track,
                 "timestamp_at_tick",
             )
@@ -381,10 +382,10 @@ class TestChart(object):
             want_interval_start_time,
             want_interval_end_time,
         ):
-            object.__setattr__(
-                minimal_chart[pytest.defaults.instrument][pytest.defaults.difficulty],
+            unsafe.setattr(
+                minimal_chart[defaults.instrument][defaults.difficulty],
                 "note_events",
-                pytest.defaults.note_events,
+                defaults.note_events,
             )
 
             mocker.patch.object(
@@ -396,13 +397,13 @@ class TestChart(object):
 
             spy = mocker.spy(minimal_chart, "_notes_per_second")
             _ = minimal_chart.notes_per_second(
-                pytest.defaults.instrument,
-                pytest.defaults.difficulty,
+                defaults.instrument,
+                defaults.difficulty,
                 start_time=start_time,
                 end_time=end_time,
             )
             spy.assert_called_once_with(
-                pytest.defaults.note_events, want_interval_start_time, want_interval_end_time
+                defaults.note_events, want_interval_start_time, want_interval_end_time
             )
 
         @pytest.mark.parametrize(
@@ -433,10 +434,10 @@ class TestChart(object):
             want_interval_start_time,
             want_interval_end_time,
         ):
-            object.__setattr__(
-                minimal_chart[pytest.defaults.instrument][pytest.defaults.difficulty],
+            unsafe.setattr(
+                minimal_chart[defaults.instrument][defaults.difficulty],
                 "note_events",
-                pytest.defaults.note_events,
+                defaults.note_events,
             )
 
             mocker.patch.object(
@@ -448,45 +449,45 @@ class TestChart(object):
 
             spy = mocker.spy(minimal_chart, "_notes_per_second")
             _ = minimal_chart.notes_per_second(
-                pytest.defaults.instrument,
-                pytest.defaults.difficulty,
+                defaults.instrument,
+                defaults.difficulty,
                 start_seconds=start_seconds,
                 end_seconds=end_seconds,
             )
             spy.assert_called_once_with(
-                pytest.defaults.note_events, want_interval_start_time, want_interval_end_time
+                defaults.note_events, want_interval_start_time, want_interval_end_time
             )
 
         @pytest.mark.parametrize(
             "start_time,start_tick,start_seconds",
             [
                 pytest.param(
-                    pytest.defaults.timestamp,
-                    pytest.defaults.tick,
+                    defaults.timestamp,
+                    defaults.tick,
                     None,
                 ),
                 pytest.param(
-                    pytest.defaults.timestamp,
+                    defaults.timestamp,
                     None,
-                    pytest.defaults.seconds,
+                    defaults.seconds,
                 ),
                 pytest.param(
                     None,
-                    pytest.defaults.tick,
-                    pytest.defaults.seconds,
+                    defaults.tick,
+                    defaults.seconds,
                 ),
                 pytest.param(
-                    pytest.defaults.timestamp,
-                    pytest.defaults.tick,
-                    pytest.defaults.seconds,
+                    defaults.timestamp,
+                    defaults.tick,
+                    defaults.seconds,
                 ),
             ],
         )
         def test_too_many_start_args(self, bare_chart, start_time, start_tick, start_seconds):
             with pytest.raises(ValueError):
                 _ = bare_chart.notes_per_second(
-                    pytest.defaults.instrument,
-                    pytest.defaults.difficulty,
+                    defaults.instrument,
+                    defaults.difficulty,
                     start_time=start_time,
                     start_tick=start_tick,
                     start_seconds=start_seconds,
@@ -511,14 +512,12 @@ class TestChart(object):
             bare_chart.instrument_tracks = minimal_instrument_tracks
             with pytest.raises(ValueError):
                 _ = bare_chart.notes_per_second(
-                    pytest.defaults.instrument,
-                    pytest.defaults.difficulty,
+                    defaults.instrument,
+                    defaults.difficulty,
                 )
 
     class TestGetItem(object):
         def test(self, default_chart):
-            got = default_chart[pytest.defaults.instrument][pytest.defaults.difficulty]
-            want = default_chart.instrument_tracks[pytest.defaults.instrument][
-                pytest.defaults.difficulty
-            ]
+            got = default_chart[defaults.instrument][defaults.difficulty]
+            want = default_chart.instrument_tracks[defaults.instrument][defaults.difficulty]
             assert got == want

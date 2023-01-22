@@ -8,6 +8,7 @@ from chartparse.event import Event
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.sync import SyncTrack, BPMEvent, TimeSignatureEvent, AnchorEvent
 
+from tests.helpers import defaults
 from tests.helpers.lines import generate_bpm as generate_bpm_line
 from tests.helpers.lines import generate_time_signature as generate_time_signature_line
 from tests.helpers.lines import generate_anchor_event as generate_anchor_line
@@ -26,9 +27,9 @@ class TestSyncTrack(object):
     class TestInit(object):
         def test(self):
             got = SyncTrackWithDefaults()
-            assert got.time_signature_events == pytest.defaults.time_signature_events
-            assert got.bpm_events == pytest.defaults.bpm_events
-            assert got.anchor_events == pytest.defaults.anchor_events
+            assert got.time_signature_events == defaults.time_signature_events
+            assert got.bpm_events == defaults.bpm_events
+            assert got.anchor_events == defaults.anchor_events
 
         def test_non_positive_resolution(self):
             with pytest.raises(ValueError):
@@ -67,52 +68,52 @@ class TestSyncTrack(object):
                 )
 
     class TestFromChartLines(object):
-        def test(self, mocker):
+        def test(self, mocker, invalid_chart_line):
             mock_parse_data = mocker.patch.object(
                 SyncTrack,
                 "_parse_data_from_chart_lines",
                 return_value=(
-                    pytest.defaults.time_signature_event_parsed_datas,
-                    pytest.defaults.bpm_event_parsed_datas,
-                    pytest.defaults.anchor_event_parsed_datas,
+                    defaults.time_signature_event_parsed_datas,
+                    defaults.bpm_event_parsed_datas,
+                    defaults.anchor_event_parsed_datas,
                 ),
             )
             mock_build_events = mocker.patch(
                 "chartparse.track.build_events_from_data",
                 side_effect=[
-                    pytest.defaults.bpm_events,
-                    pytest.defaults.time_signature_events,
-                    pytest.defaults.anchor_events,
+                    defaults.bpm_events,
+                    defaults.time_signature_events,
+                    defaults.anchor_events,
                 ],
             )
             spy_init = mocker.spy(SyncTrack, "__init__")
-            _ = SyncTrack.from_chart_lines(pytest.defaults.resolution, pytest.invalid_chart_lines)
+            _ = SyncTrack.from_chart_lines(defaults.resolution, [invalid_chart_line])
 
-            mock_parse_data.assert_called_once_with(pytest.invalid_chart_lines)
+            mock_parse_data.assert_called_once_with([invalid_chart_line])
             mock_build_events.assert_has_calls(
                 [
                     unittest.mock.call(
-                        pytest.defaults.bpm_event_parsed_datas,
+                        defaults.bpm_event_parsed_datas,
                         BPMEvent.from_parsed_data,
-                        pytest.defaults.resolution,
+                        defaults.resolution,
                     ),
                     unittest.mock.call(
-                        pytest.defaults.time_signature_event_parsed_datas,
+                        defaults.time_signature_event_parsed_datas,
                         TimeSignatureEvent.from_parsed_data,
                         unittest.mock.ANY,  # ignore object conjured locally
                     ),
                     unittest.mock.call(
-                        pytest.defaults.anchor_event_parsed_datas,
+                        defaults.anchor_event_parsed_datas,
                         AnchorEvent.from_parsed_data,
                     ),
                 ]
             )
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self
-                resolution=pytest.defaults.resolution,
-                time_signature_events=pytest.defaults.time_signature_events,
-                bpm_events=pytest.defaults.bpm_events,
-                anchor_events=pytest.defaults.anchor_events,
+                resolution=defaults.resolution,
+                time_signature_events=defaults.time_signature_events,
+                bpm_events=defaults.bpm_events,
+                anchor_events=defaults.anchor_events,
             )
 
     class TestTimestampAtTick(object):
@@ -229,7 +230,7 @@ class TestSyncTrack(object):
             with pytest.raises(ValueError):
                 _ = bare_sync_track._index_of_proximal_bpm_event(
                     bpm_events,
-                    pytest.defaults.tick,
+                    defaults.tick,
                     proximal_bpm_event_index=proximal_bpm_event_index,
                 )
 
@@ -256,9 +257,9 @@ class TestTimeSignatureEvent(object):
                 ),
                 pytest.param(
                     TimeSignatureEventParsedDataWithDefaults(
-                        lower=pytest.defaults.raw_lower_time_signature_numeral
+                        lower=int(defaults.raw_lower_time_signature_numeral)
                     ),
-                    pytest.defaults.lower_time_signature_numeral,
+                    defaults.lower_time_signature_numeral,
                     id="line_with_lower_specified",
                 ),
             ],
@@ -269,16 +270,16 @@ class TestTimeSignatureEvent(object):
             _ = TimeSignatureEvent.from_parsed_data(data, prev_event, default_tatter)
 
             default_tatter.spy.assert_called_once_with(
-                pytest.defaults.tick,
+                defaults.tick,
                 proximal_bpm_event_index=prev_event._proximal_bpm_event_index if prev_event else 0,
             )
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self
-                tick=pytest.defaults.tick,
-                timestamp=pytest.defaults.default_tatter_timestamp,
-                upper_numeral=pytest.defaults.upper_time_signature_numeral,
+                tick=defaults.tick,
+                timestamp=defaults.tatter_timestamp,
+                upper_numeral=defaults.upper_time_signature_numeral,
                 lower_numeral=want_lower,
-                _proximal_bpm_event_index=pytest.defaults.default_tatter_index,
+                _proximal_bpm_event_index=defaults.tatter_bpm_event_index,
             )
 
     class TestParsedData(object):
@@ -288,27 +289,27 @@ class TestTimeSignatureEvent(object):
                 [
                     pytest.param(
                         generate_time_signature_line(
-                            pytest.defaults.tick,
-                            pytest.defaults.upper_time_signature_numeral,
+                            defaults.tick,
+                            defaults.upper_time_signature_numeral,
                         ),
                         None,
                         id="line_without_lower_specified",
                     ),
                     pytest.param(
                         generate_time_signature_line(
-                            pytest.defaults.tick,
-                            pytest.defaults.upper_time_signature_numeral,
-                            lower=pytest.defaults.raw_lower_time_signature_numeral,
+                            defaults.tick,
+                            defaults.upper_time_signature_numeral,
+                            lower=defaults.raw_lower_time_signature_numeral,
                         ),
-                        pytest.defaults.raw_lower_time_signature_numeral,
+                        int(defaults.raw_lower_time_signature_numeral),
                         id="line_with_lower_specified",
                     ),
                 ],
             )
             def test(self, mocker, line, want_lower):
                 got = TimeSignatureEvent.ParsedData.from_chart_line(line)
-                assert got.tick == pytest.defaults.tick
-                assert got.upper == pytest.defaults.upper_time_signature_numeral
+                assert got.tick == defaults.tick
+                assert got.upper == defaults.upper_time_signature_numeral
                 assert got.lower == want_lower
 
             def test_no_match(self, invalid_chart_line, default_tatter):
@@ -327,14 +328,14 @@ class TestBPMEvent(object):
             spy_init = mocker.spy(BPMEvent, "__init__")
 
             _ = BPMEvent.from_parsed_data(
-                BPMEventParsedDataWithDefaults(tick=0), None, pytest.defaults.resolution
+                BPMEventParsedDataWithDefaults(tick=0), None, defaults.resolution
             )
 
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self
                 tick=0,
                 timestamp=datetime.timedelta(0),
-                bpm=pytest.defaults.bpm,
+                bpm=defaults.bpm,
                 _proximal_bpm_event_index=0,
             )
 
@@ -352,20 +353,20 @@ class TestBPMEvent(object):
                 "chartparse.tick.seconds_from_ticks_at_bpm", return_value=seconds_since_prev
             )
 
-            _ = BPMEvent.from_parsed_data(data, prev_event, pytest.defaults.resolution)
+            _ = BPMEvent.from_parsed_data(data, prev_event, defaults.resolution)
 
             mock_seconds_from_ticks_at_bpm.assert_called_once_with(
                 data.tick - prev_event.tick,
-                pytest.defaults.bpm,
-                pytest.defaults.resolution,
+                defaults.bpm,
+                defaults.resolution,
             )
 
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self
                 tick=data.tick,
                 timestamp=prev_event.timestamp + datetime.timedelta(seconds=seconds_since_prev),
-                bpm=pytest.defaults.bpm,
-                _proximal_bpm_event_index=pytest.defaults.proximal_bpm_event_index,
+                bpm=defaults.bpm,
+                _proximal_bpm_event_index=defaults.proximal_bpm_event_index,
             )
 
         @pytest.mark.parametrize(
@@ -385,19 +386,19 @@ class TestBPMEvent(object):
         )
         def test_wrongly_ordered_events(self, mocker, prev_event, data):
             with pytest.raises(ValueError):
-                _ = BPMEvent.from_parsed_data(data, prev_event, pytest.defaults.resolution)
+                _ = BPMEvent.from_parsed_data(data, prev_event, defaults.resolution)
 
     class TestParsedData(object):
         class TestFromChartLine(object):
             def test(self):
-                line = generate_bpm_line(pytest.defaults.tick, pytest.defaults.bpm)
+                line = generate_bpm_line(defaults.tick, defaults.bpm)
                 got = BPMEvent.ParsedData.from_chart_line(line)
-                assert got.tick == pytest.defaults.tick
-                assert got.raw_bpm == pytest.defaults.raw_bpm
+                assert got.tick == defaults.tick
+                assert got.raw_bpm == defaults.raw_bpm
 
-            def test_no_match(self):
+            def test_no_match(self, invalid_chart_line):
                 with pytest.raises(RegexNotMatchError):
-                    _ = BPMEvent.ParsedData.from_chart_line(pytest.invalid_chart_line)
+                    _ = BPMEvent.ParsedData.from_chart_line(invalid_chart_line)
 
 
 class TestAnchorEvent(object):
@@ -409,8 +410,8 @@ class TestAnchorEvent(object):
 
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self
-                tick=pytest.defaults.tick,
-                timestamp=pytest.defaults.timestamp,
+                tick=defaults.tick,
+                timestamp=defaults.timestamp,
             )
 
     class TestFromParsedData(object):
@@ -422,17 +423,17 @@ class TestAnchorEvent(object):
 
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,
-                tick=pytest.defaults.tick,
-                timestamp=pytest.defaults.timestamp,  # ignore self
+                tick=defaults.tick,
+                timestamp=defaults.timestamp,  # ignore self
             )
 
     class TestParsedData(object):
         class TestFromChartLine(object):
             def test(self):
-                line = generate_anchor_line(pytest.defaults.tick, pytest.defaults.microseconds)
+                line = generate_anchor_line(defaults.tick, defaults.microseconds)
                 got = AnchorEvent.ParsedData.from_chart_line(line)
-                assert got.tick == pytest.defaults.tick
-                assert got.microseconds == pytest.defaults.microseconds
+                assert got.tick == defaults.tick
+                assert got.microseconds == defaults.microseconds
 
             def test_no_match(self, invalid_chart_line):
                 with pytest.raises(RegexNotMatchError):

@@ -8,6 +8,7 @@ from chartparse.event import Event
 from chartparse.track import build_events_from_data, parse_data_from_chart_lines
 from chartparse.sync import BPMEvent, AnchorEvent
 
+from tests.helpers import defaults
 from tests.helpers.fruit import Fruit
 from tests.helpers.log import LogChecker
 
@@ -17,21 +18,21 @@ class TestBuildEventsFromData(object):
         "data,from_data_return_value,want",
         [
             pytest.param(
-                pytest.defaults.time_signature_event_parsed_data,
-                pytest.defaults.time_signature_event,
-                [pytest.defaults.time_signature_event],
+                defaults.time_signature_event_parsed_data,
+                defaults.time_signature_event,
+                [defaults.time_signature_event],
                 id="with_timestamp_getter",
             ),
             pytest.param(
-                pytest.defaults.anchor_event_parsed_data,
-                pytest.defaults.anchor_event,
-                [pytest.defaults.anchor_event],
+                defaults.anchor_event_parsed_data,
+                defaults.anchor_event,
+                [defaults.anchor_event],
                 id="with_None",
             ),
             pytest.param(
-                pytest.defaults.bpm_event_parsed_data,
-                pytest.defaults.bpm_event,
-                [pytest.defaults.bpm_event],
+                defaults.bpm_event_parsed_data,
+                defaults.bpm_event,
+                [defaults.bpm_event],
                 id="with_resolution",
             ),
         ],
@@ -47,7 +48,7 @@ class TestBuildEventsFromData(object):
     ):
         from_data_fn_mock = mocker.Mock(return_value=from_data_return_value)
         if isinstance(from_data_return_value, BPMEvent):
-            resolution_or_tatter_or_None = pytest.defaults.resolution
+            resolution_or_tatter_or_None = defaults.resolution
         elif isinstance(from_data_return_value, AnchorEvent):
             resolution_or_tatter_or_None = None
         else:
@@ -91,9 +92,9 @@ class TestParseDataFromChartLines(object):
         got = parse_data_from_chart_lines(types, lines)
         assert got == want
 
-    def test_no_suitable_parsers(self, mocker, caplog):
-        _ = parse_data_from_chart_lines(tuple(), pytest.invalid_chart_lines)
+    def test_no_suitable_parsers(self, mocker, caplog, invalid_chart_line):
+        _ = parse_data_from_chart_lines(tuple(), [invalid_chart_line])
         logchecker = LogChecker(caplog)
         logchecker.assert_contains_string_in_one_line(
-            chartparse.track._unparsable_line_msg_tmpl.format(pytest.invalid_chart_line, [])
+            chartparse.track._unparsable_line_msg_tmpl.format(invalid_chart_line, [])
         )

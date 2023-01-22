@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import pytest
 
 from chartparse.instrument import (
     StarPowerEvent,
@@ -10,15 +9,17 @@ from chartparse.instrument import (
     TrackEvent,
 )
 
+from tests.helpers import defaults
+
 
 def InstrumentTrackWithDefaults(
     *,
-    resolution=pytest.defaults.resolution,
-    instrument=pytest.defaults.instrument,
-    difficulty=pytest.defaults.difficulty,
-    note_events=pytest.defaults.note_events,
-    star_power_events=pytest.defaults.star_power_events,
-    track_events=pytest.defaults.track_events,
+    resolution=defaults.resolution,
+    instrument=defaults.instrument,
+    difficulty=defaults.difficulty,
+    note_events=defaults.note_events,
+    star_power_events=defaults.star_power_events,
+    track_events=defaults.track_events,
 ):
     return InstrumentTrack(
         resolution=resolution,
@@ -32,10 +33,10 @@ def InstrumentTrackWithDefaults(
 
 def SpecialEventWithDefaults(
     *,
-    tick=pytest.defaults.tick,
-    timestamp=pytest.defaults.timestamp,
-    sustain=pytest.defaults.sustain,
-    proximal_bpm_event_index=pytest.defaults.proximal_bpm_event_index,
+    tick=defaults.tick,
+    timestamp=defaults.timestamp,
+    sustain=defaults.sustain,
+    proximal_bpm_event_index=defaults.proximal_bpm_event_index,
     init_end_tick=False,
 ):
     s = SpecialEvent(
@@ -51,18 +52,18 @@ def SpecialEventWithDefaults(
 
 def SpecialEventParsedDataWithDefaults(
     *,
-    tick=pytest.defaults.tick,
-    sustain=pytest.defaults.sustain,
+    tick=defaults.tick,
+    sustain=defaults.sustain,
 ):
     return SpecialEvent.ParsedData(tick=tick, sustain=sustain)
 
 
 def StarPowerEventWithDefaults(
     *,
-    tick=pytest.defaults.tick,
-    timestamp=pytest.defaults.timestamp,
-    sustain=pytest.defaults.sustain,
-    proximal_bpm_event_index=pytest.defaults.proximal_bpm_event_index,
+    tick=defaults.tick,
+    timestamp=defaults.timestamp,
+    sustain=defaults.sustain,
+    proximal_bpm_event_index=defaults.proximal_bpm_event_index,
     init_end_tick=False,
 ):
     s = StarPowerEvent(
@@ -78,14 +79,14 @@ def StarPowerEventWithDefaults(
 
 def NoteEventWithDefaults(
     *,
-    tick=pytest.defaults.tick,
-    timestamp=pytest.defaults.timestamp,
-    end_timestamp=pytest.defaults.timestamp,
-    note=pytest.defaults.note,
-    hopo_state=pytest.defaults.hopo_state,
-    sustain=pytest.defaults.sustain,
+    tick=defaults.tick,
+    timestamp=defaults.timestamp,
+    end_timestamp=defaults.timestamp,
+    note=defaults.note,
+    hopo_state=defaults.hopo_state,
+    sustain=defaults.sustain,
     star_power_data=None,
-    proximal_bpm_event_index=pytest.defaults.proximal_bpm_event_index,
+    proximal_bpm_event_index=defaults.proximal_bpm_event_index,
 ):
     return NoteEvent(
         tick=tick,
@@ -101,9 +102,9 @@ def NoteEventWithDefaults(
 
 def NoteEventParsedDataWithDefaults(
     *,
-    tick=pytest.defaults.tick,
-    note_track_index=pytest.defaults.note_track_index,
-    sustain=pytest.defaults.sustain_list,
+    tick=defaults.tick,
+    note_track_index=defaults.note_track_index,
+    sustain=defaults.sustain_list,
 ):
     return NoteEvent.ParsedData(
         tick=tick,
@@ -114,10 +115,10 @@ def NoteEventParsedDataWithDefaults(
 
 def TrackEventWithDefaults(
     *,
-    tick=pytest.defaults.tick,
-    timestamp=pytest.defaults.timestamp,
-    value=pytest.defaults.global_event_value,
-    proximal_bpm_event_index=pytest.defaults.proximal_bpm_event_index,
+    tick=defaults.tick,
+    timestamp=defaults.timestamp,
+    value=defaults.global_event_value,
+    proximal_bpm_event_index=defaults.proximal_bpm_event_index,
 ):
     return TrackEvent(
         tick=tick,
@@ -129,7 +130,7 @@ def TrackEventWithDefaults(
 
 def TrackEventParsedDataWithDefaults(
     *,
-    tick=pytest.defaults.tick,
-    value=pytest.defaults.track_event_value,
+    tick=defaults.tick,
+    value=defaults.track_event_value,
 ):
     return TrackEvent.ParsedData(tick=tick, value=value)

@@ -1,5 +1,3 @@
-import pytest
-
 from chartparse.globalevents import (
     GlobalEvent,
     GlobalEventsTrack,
@@ -8,13 +6,15 @@ from chartparse.globalevents import (
     LyricEvent,
 )
 
+from tests.helpers import defaults
+
 
 def GlobalEventsTrackWithDefaults(
     *,
-    resolution=pytest.defaults.resolution,
-    text_events=pytest.defaults.text_events,
-    section_events=pytest.defaults.section_events,
-    lyric_events=pytest.defaults.lyric_events,
+    resolution=defaults.resolution,
+    text_events=defaults.text_events,
+    section_events=defaults.section_events,
+    lyric_events=defaults.lyric_events,
 ):
     return GlobalEventsTrack(
         resolution=resolution,
@@ -26,10 +26,10 @@ def GlobalEventsTrackWithDefaults(
 
 def GlobalEventWithDefaults(
     *,
-    tick=pytest.defaults.tick,
-    timestamp=pytest.defaults.timestamp,
-    value=pytest.defaults.global_event_value,
-    proximal_bpm_event_index=pytest.defaults.proximal_bpm_event_index,
+    tick=defaults.tick,
+    timestamp=defaults.timestamp,
+    value=defaults.global_event_value,
+    proximal_bpm_event_index=defaults.proximal_bpm_event_index,
 ):
     return GlobalEvent(
         tick=tick,
@@ -41,31 +41,31 @@ def GlobalEventWithDefaults(
 
 def GlobalEventParsedDataWithDefaults(
     *,
-    tick=pytest.defaults.tick,
-    value=pytest.defaults.global_event_value,
+    tick=defaults.tick,
+    value=defaults.global_event_value,
 ):
     return GlobalEvent.ParsedData(tick=tick, value=value)
 
 
 def TextEventParsedDataWithDefaults(
     *,
-    tick=pytest.defaults.tick,
-    value=pytest.defaults.text_event_value,
+    tick=defaults.tick,
+    value=defaults.text_event_value,
 ):
     return TextEvent.ParsedData(tick=tick, value=value)
 
 
 def SectionEventParsedDataWithDefaults(
     *,
-    tick=pytest.defaults.tick,
-    value=pytest.defaults.section_event_value,
+    tick=defaults.tick,
+    value=defaults.section_event_value,
 ):
     return SectionEvent.ParsedData(tick=tick, value=value)
 
 
 def LyricEventParsedDataWithDefaults(
     *,
-    tick=pytest.defaults.tick,
-    value=pytest.defaults.lyric_event_value,
+    tick=defaults.tick,
+    value=defaults.lyric_event_value,
 ):
     return LyricEvent.ParsedData(tick=tick, value=value)

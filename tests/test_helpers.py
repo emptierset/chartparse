@@ -3,6 +3,7 @@ from __future__ import annotations
 import pytest
 
 import tests.helpers.lines
+from tests.helpers import defaults
 
 
 class TestGenerateValidBPMLine(object):
@@ -13,8 +14,8 @@ class TestGenerateValidBPMLine(object):
     def test_raises(self):
         with pytest.raises(ValueError):
             _ = tests.helpers.lines.generate_bpm(
-                pytest.defaults.tick,
-                pytest.defaults.bpm + 0.0001,
+                defaults.tick,
+                defaults.bpm + 0.0001,
             )
 
 

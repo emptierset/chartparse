@@ -1,16 +1,17 @@
 from __future__ import annotations
 
-import pytest
 
 from chartparse.sync import TimeSignatureEvent, BPMEvent, SyncTrack, AnchorEvent
+
+from tests.helpers import defaults
 
 
 def SyncTrackWithDefaults(
     *,
-    resolution=pytest.defaults.resolution,
-    time_signature_events=pytest.defaults.time_signature_events,
-    bpm_events=pytest.defaults.bpm_events,
-    anchor_events=pytest.defaults.anchor_events,
+    resolution=defaults.resolution,
+    time_signature_events=defaults.time_signature_events,
+    bpm_events=defaults.bpm_events,
+    anchor_events=defaults.anchor_events,
 ):
     return SyncTrack(
         resolution=resolution,
@@ -22,11 +23,11 @@ def SyncTrackWithDefaults(
 
 def TimeSignatureEventWithDefaults(
     *,
-    tick=pytest.defaults.tick,
-    timestamp=pytest.defaults.timestamp,
-    upper_numeral=pytest.defaults.upper_time_signature_numeral,
-    lower_numeral=pytest.defaults.lower_time_signature_numeral,
-    proximal_bpm_event_index=pytest.defaults.proximal_bpm_event_index,
+    tick=defaults.tick,
+    timestamp=defaults.timestamp,
+    upper_numeral=defaults.upper_time_signature_numeral,
+    lower_numeral=defaults.lower_time_signature_numeral,
+    proximal_bpm_event_index=defaults.proximal_bpm_event_index,
 ):
     return TimeSignatureEvent(
         tick=tick,
@@ -38,17 +39,17 @@ def TimeSignatureEventWithDefaults(
 
 
 def TimeSignatureEventParsedDataWithDefaults(
-    *, tick=pytest.defaults.tick, upper=pytest.defaults.upper_time_signature_numeral, lower=None
+    *, tick=defaults.tick, upper=defaults.upper_time_signature_numeral, lower=None
 ):
     return TimeSignatureEvent.ParsedData(tick=tick, upper=upper, lower=lower)
 
 
 def BPMEventWithDefaults(
     *,
-    tick=pytest.defaults.tick,
-    timestamp=pytest.defaults.timestamp,
-    bpm=pytest.defaults.bpm,
-    proximal_bpm_event_index=pytest.defaults.proximal_bpm_event_index,
+    tick=defaults.tick,
+    timestamp=defaults.timestamp,
+    bpm=defaults.bpm,
+    proximal_bpm_event_index=defaults.proximal_bpm_event_index,
 ):
     return BPMEvent(
         tick=tick, timestamp=timestamp, bpm=bpm, _proximal_bpm_event_index=proximal_bpm_event_index
@@ -57,17 +58,15 @@ def BPMEventWithDefaults(
 
 def BPMEventParsedDataWithDefaults(
     *,
-    tick=pytest.defaults.tick,
-    raw_bpm=pytest.defaults.raw_bpm,
+    tick=defaults.tick,
+    raw_bpm=defaults.raw_bpm,
 ):
     return BPMEvent.ParsedData(tick=tick, raw_bpm=raw_bpm)
 
 
-def AnchorEventWithDefaults(*, tick=pytest.defaults.tick, timestamp=pytest.defaults.timestamp):
+def AnchorEventWithDefaults(*, tick=defaults.tick, timestamp=defaults.timestamp):
     return AnchorEvent(tick=tick, timestamp=timestamp)
 
 
-def AnchorEventParsedDataWithDefaults(
-    *, tick=pytest.defaults.tick, microseconds=pytest.defaults.microseconds
-):
+def AnchorEventParsedDataWithDefaults(*, tick=defaults.tick, microseconds=defaults.microseconds):
     return AnchorEvent.ParsedData(tick=tick, microseconds=microseconds)
