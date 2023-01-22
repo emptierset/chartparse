@@ -67,6 +67,15 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
     _unhandled_section_log_msg_tmpl: typ.Final[str] = "unhandled section titled '{}'"
 
+    _required_sections: typ.Final[list[str]] = [
+        Metadata.section_name,
+        SyncTrack.section_name,
+        GlobalEventsTrack.section_name,
+    ]
+
+    _section_name_regex: typ.Final[str] = r"^\[(.+?)\]$"
+    _section_name_regex_prog: typ.Final[typ.Pattern[str]] = re.compile(_section_name_regex)
+
     def __init__(
         self,
         metadata: Metadata,
@@ -95,12 +104,6 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         """
         with open(path, "r", encoding="utf-8-sig") as f:
             return Chart.from_file(f)
-
-    _required_sections: typ.Final[list[str]] = [
-        Metadata.section_name,
-        SyncTrack.section_name,
-        GlobalEventsTrack.section_name,
-    ]
 
     @classmethod
     def from_file(cls, fp: typ.TextIO) -> Chart:
@@ -152,9 +155,6 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
                 logger.warning(cls._unhandled_section_log_msg_tmpl.format(section_name))
 
         return cls(metadata, global_events_track, sync_track, instrument_tracks)
-
-    _section_name_regex = r"^\[(.+?)\]$"
-    _section_name_regex_prog = re.compile(_section_name_regex)
 
     @classmethod
     def _find_sections(cls, lines: Iterable[str]) -> dict[str, Iterable[str]]:
