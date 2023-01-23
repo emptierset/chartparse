@@ -88,28 +88,43 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         self.sync_track = sync_track
         self.instrument_tracks = instrument_tracks
 
-    # TODO: Allow user to specify filters to ignore instruments/difficulties they don't care about.
     @classmethod
-    def from_filepath(cls, path: Path) -> Chart:
+    def from_filepath(
+        cls, path: Path, want_tracks: Sequence[tuple[Instrument, Difficulty]] | None = None
+    ) -> Chart:
+        # TODO: Move [Song] and [SyncTrack] requiredness disclaimer somewhere central, and include
+        # GlobalEventsTrack requiredness as well.
         """Given a path, parses the contents of its file and returns a new Chart.
 
         Args:
             path: A ``Path`` object that points to a ``.chart`` file written by Moonscraper. Must
                 have a ``[Song]`` section and a ``[SyncTrack]`` section.
+            want_tracks: An optional sequence of ``Instrument`` & ``Difficulty`` tuples. If
+                specified, only the specified instruments and difficulties will be parsed from
+                ``path``.
 
         Returns:
             A ``Chart`` object, initialized with data parsed from ``path``.
         """
         with open(path, "r", encoding="utf-8-sig") as f:
-            return Chart.from_file(f)
+            return Chart.from_file(f, want_tracks=want_tracks)
 
     @classmethod
-    def from_file(cls, fp: typ.TextIO) -> Chart:
+    def from_file(
+        cls,
+        fp: typ.TextIO,
+        want_tracks: Sequence[tuple[Instrument, Difficulty]] | None = None,
+    ) -> Chart:
+        # TODO: Move [Song] and [SyncTrack] requiredness disclaimer somewhere central, and include
+        # GlobalEventsTrack requiredness as well.
         """Given a file object, parses its contents and returns a new Chart.
 
         Args:
-            fp: A file object that allows reading from a .chart file written by Moonscraper.  Must
+            fp: A file object that allows reading from a .chart file written by Moonscraper. Must
                 have a ``[Song]`` section and a ``[SyncTrack]`` section.
+            want_tracks: An optional sequence of ``Instrument`` & ``Difficulty`` tuples. If
+                specified, only the specified instruments and difficulties will be parsed from
+                ``fp``.
 
         Returns:
             A ``Chart`` object, initialized with data parsed from ``fp``.
@@ -139,9 +154,12 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         ] = collections.defaultdict(dict)
         for section_name, section_lines in sections.items():
             if section_name in instrument_track_name_to_instrument_difficulty_pair:
-                instrument, difficulty = instrument_track_name_to_instrument_difficulty_pair[
+                instrument_difficulty_pair = instrument_track_name_to_instrument_difficulty_pair[
                     section_name
                 ]
+                if want_tracks is not None and instrument_difficulty_pair not in want_tracks:
+                    continue
+                instrument, difficulty = instrument_difficulty_pair
                 track = InstrumentTrack.from_chart_lines(
                     instrument,
                     difficulty,

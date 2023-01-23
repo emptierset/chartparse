@@ -3,6 +3,7 @@ from __future__ import annotations
 import datetime
 import pathlib
 import pytest
+import unittest.mock
 
 from chartparse.chart import Chart
 from chartparse.exceptions import RegexNotMatchError
@@ -50,7 +51,17 @@ class TestChart(object):
             assert got.sync_track == default_sync_track
             assert got.instrument_tracks == default_instrument_tracks
 
-    class TestFromFileAndFilepath(object):
+    class TestFromFilepath(object):
+        def test(self, mocker, default_chart):
+            spy = mocker.spy(Chart, "from_file")
+            _ = Chart.from_filepath(_valid_chart_filepath, want_tracks=[])
+            spy.assert_called_once_with(
+                # I don't care to mock the stdlib's `open` return value.
+                unittest.mock.ANY,
+                want_tracks=[],
+            )
+
+    class TestFromFile(object):
         def test(
             self,
             mocker,
@@ -69,22 +80,47 @@ class TestChart(object):
                     "Events": [invalid_chart_line],
                     "SyncTrack": [invalid_chart_line],
                     "ExpertSingle": [invalid_chart_line],
+                    # EasySingle is ignored in this test case via want_tracks.
+                    "EasySingle": [invalid_chart_line],
                 },
             )
-            mocker.patch.object(Metadata, "from_chart_lines", return_value=default_metadata)
             mocker.patch.object(
-                GlobalEventsTrack, "from_chart_lines", return_value=default_global_events_track
+                Metadata,
+                "from_chart_lines",
+                return_value=default_metadata,
             )
-            mocker.patch.object(SyncTrack, "from_chart_lines", return_value=default_sync_track)
             mocker.patch.object(
-                InstrumentTrack, "from_chart_lines", return_value=default_instrument_track
+                GlobalEventsTrack,
+                "from_chart_lines",
+                return_value=default_global_events_track,
             )
-            with open(_valid_chart_filepath, "r", encoding="utf-8-sig") as f:
-                got_from_file = Chart.from_file(f)
-            got_from_filepath = Chart.from_filepath(_valid_chart_filepath)
+            mocker.patch.object(
+                SyncTrack,
+                "from_chart_lines",
+                return_value=default_sync_track,
+            )
+            instrument_track_from_chart_lines_mock = mocker.patch.object(
+                InstrumentTrack,
+                "from_chart_lines",
+                return_value=default_instrument_track,
+            )
 
-            assert got_from_file == default_chart
-            assert got_from_filepath == default_chart
+            want_tracks = [(Instrument.GUITAR, Difficulty.EXPERT)]
+
+            with open(_valid_chart_filepath, "r", encoding="utf-8-sig") as f:
+                got = Chart.from_file(f, want_tracks=want_tracks)
+
+            assert got == default_chart
+
+            # This assert tests the want_tracks filtering logic; because EasySingle is returned by
+            # _find_sections, InstrumentTrack.from_chart_lines will be called more than once if the
+            # filtering logic does not work.
+            instrument_track_from_chart_lines_mock.assert_called_once_with(
+                Instrument.GUITAR,
+                Difficulty.EXPERT,
+                [invalid_chart_line],
+                default_sync_track,
+            )
 
         @pytest.mark.parametrize(
             "path",
