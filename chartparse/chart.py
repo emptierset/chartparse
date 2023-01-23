@@ -92,13 +92,11 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     def from_filepath(
         cls, path: Path, want_tracks: Sequence[tuple[Instrument, Difficulty]] | None = None
     ) -> Chart:
-        # TODO: Move [Song] and [SyncTrack] requiredness disclaimer somewhere central, and include
-        # GlobalEventsTrack requiredness as well.
         """Given a path, parses the contents of its file and returns a new Chart.
 
         Args:
             path: A ``Path`` object that points to a ``.chart`` file written by Moonscraper. Must
-                have a ``[Song]`` section and a ``[SyncTrack]`` section.
+                have at least a ``[Song]``, ``[SyncTrack]``, and ``[Events]`` track.
             want_tracks: An optional sequence of ``Instrument`` & ``Difficulty`` tuples. If
                 specified, only the specified instruments and difficulties will be parsed from
                 ``path``.
@@ -115,13 +113,11 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         fp: typ.TextIO,
         want_tracks: Sequence[tuple[Instrument, Difficulty]] | None = None,
     ) -> Chart:
-        # TODO: Move [Song] and [SyncTrack] requiredness disclaimer somewhere central, and include
-        # GlobalEventsTrack requiredness as well.
         """Given a file object, parses its contents and returns a new Chart.
 
         Args:
             fp: A file object that allows reading from a .chart file written by Moonscraper. Must
-                have a ``[Song]`` section and a ``[SyncTrack]`` section.
+                have at least a ``[Song]``, ``[SyncTrack]``, and ``[Events]`` track.
             want_tracks: An optional sequence of ``Instrument`` & ``Difficulty`` tuples. If
                 specified, only the specified instruments and difficulties will be parsed from
                 ``fp``.
