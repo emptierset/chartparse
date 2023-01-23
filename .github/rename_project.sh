@@ -20,8 +20,8 @@ original_author="AWConant"
 original_name="chartparse"
 original_urlname="chartparse"
 original_description="Awesome chartparse created by AWConant"
-# for filename in $(find . -name "*.*") 
-for filename in $(git ls-files) 
+# for filename in $(find . -name "*.*")
+for filename in $(git ls-files)
 do
     sed -i "s/$original_author/$author/g" $filename
     sed -i "s/$original_name/$name/g" $filename

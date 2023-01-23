@@ -1,7 +1,7 @@
 .. chartparse documentation master file, created by
    sphinx-quickstart on Tue Jun 21 16:05:37 2022.
    You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+   contain the root ``toctree`` directive.
 
 chartparse: a Python package for parsing Guitar Hero .chart files
 =================================================================

@@ -44,7 +44,7 @@ if [ -d "${template_dir}" ]; then
         # Ask user if they want to overwrite
         echo "Directory ${template_dir} already exists."
         read -p "Do you want to overwrite it? [y/N] " -n 1 -r
-        echo 
+        echo
         if [[ $REPLY =~ ^[Yy]$ ]]; then
             echo "Overwriting ${template_dir}"
             download_template
