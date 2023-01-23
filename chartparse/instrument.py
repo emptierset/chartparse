@@ -238,14 +238,6 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     track_events: Sequence[TrackEvent]
     """An (instrument, difficulty) pair's ``TrackEvent`` objects."""
 
-    # TODO: This is a hack. Figure out how to generalize this to other instruments, or at _least_
-    # load it dynamically from NoteTrackIndex.
-    _min_note_instrument_track_index: typ.ClassVar[int] = 0
-    _max_note_instrument_track_index: typ.ClassVar[int] = 4
-    _open_instrument_track_index: typ.ClassVar[int] = 7
-    _forced_instrument_track_index: typ.ClassVar[int] = 5
-    _tap_instrument_track_index: typ.ClassVar[int] = 6
-
     def __post_init__(self):
         """Validates all instance attributes."""
         if self.resolution <= 0:
