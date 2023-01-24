@@ -132,6 +132,12 @@ class TestGlobalEvent(object):
                 _proximal_bpm_event_index=minimal_bpm_events_with_mock.proximal_bpm_event_index,
             )
 
+    class TestStr(object):
+        # This just exercises the path; asserting the output is irksome and unnecessary.
+        def test(self):
+            e = GlobalEventWithDefaults()
+            str(e)
+
     class TestParsedData(object):
         class TestFromChartLine(object):
             test_regex = r"^T (\d+?) V (.*?)$"

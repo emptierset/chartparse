@@ -140,6 +140,11 @@ class TestTimeSignatureEvent(object):
                 _proximal_bpm_event_index=minimal_bpm_events_with_mock.proximal_bpm_event_index,
             )
 
+    class TestStr(object):
+        def test(self):
+            e = TimeSignatureEventWithDefaults()
+            str(e)
+
     class TestParsedData(object):
         class TestFromChartLine(object):
             @testcase.parametrize(
@@ -245,6 +250,11 @@ class TestBPMEvent(object):
         def test_wrongly_ordered_events(self, mocker, prev_event, data):
             with pytest.raises(ValueError):
                 _ = BPMEvent.from_parsed_data(data, prev_event, defaults.resolution)
+
+    class TestStr(object):
+        def test(self):
+            e = BPMEventWithDefaults()
+            str(e)
 
     class TestParsedData(object):
         class TestFromChartLine(object):

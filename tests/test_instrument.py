@@ -7,11 +7,15 @@ import unittest.mock
 
 import chartparse.instrument
 from chartparse.exceptions import RegexNotMatchError
+
+# TODO: isort appears to be broken.
 from chartparse.instrument import (
     InstrumentTrack,
+    Instrument,
     StarPowerEvent,
     NoteEvent,
     TrackEvent,
+    Difficulty,
     StarPowerData,
     HOPOState,
     SpecialEvent,
@@ -66,10 +70,11 @@ class TestNote(object):
 
 class TestNoteTrackIndex(object):
     class TestOrderability(object):
-        assert NoteTrackIndex.G < NoteTrackIndex.R
-        assert NoteTrackIndex.G <= NoteTrackIndex.R
-        assert NoteTrackIndex.R >= NoteTrackIndex.G
-        assert NoteTrackIndex.R > NoteTrackIndex.G
+        def test(self):
+            assert NoteTrackIndex.G < NoteTrackIndex.R
+            assert NoteTrackIndex.G <= NoteTrackIndex.R
+            assert NoteTrackIndex.R >= NoteTrackIndex.G
+            assert NoteTrackIndex.R > NoteTrackIndex.G
 
 
 class TestComplexSustainFromParsedDatas(object):
@@ -131,6 +136,27 @@ class TestInstrumentTrack(object):
         def test_non_positive_resolution(self, resolution):
             with pytest.raises(ValueError):
                 _ = InstrumentTrackWithDefaults(resolution=0)
+
+    class TestSectionName(object):
+        @testcase.parametrize(
+            ["instrument", "difficulty", "want"],
+            [
+                testcase.new_anonymous(
+                    instrument=Instrument.GUITAR,
+                    difficulty=Difficulty.EXPERT,
+                    want="ExpertSingle",
+                ),
+                testcase.new_anonymous(
+                    instrument=Instrument.BASS,
+                    difficulty=Difficulty.EASY,
+                    want="EasyDoubleBass",
+                ),
+            ],
+        )
+        def test(self, instrument, difficulty, want):
+            track = InstrumentTrackWithDefaults(instrument=instrument, difficulty=difficulty)
+            got = track.section_name
+            assert got == want
 
     class TestFromChartLines(object):
         def test(self, mocker, minimal_bpm_events):
@@ -422,6 +448,11 @@ class TestInstrumentTrack(object):
             got = minimal_instrument_track.last_note_end_timestamp
             assert got is None
 
+    class TestStr(object):
+        # This just exercises the path; asserting the output is irksome and unnecessary.
+        def test(self, default_instrument_track):
+            str(default_instrument_track)
+
 
 class TestNoteEvent(object):
     class TestFromParsedData(object):
@@ -545,6 +576,26 @@ class TestNoteEvent(object):
                 _proximal_bpm_event_index=minimal_bpm_events_with_mock.proximal_bpm_event_index,
                 star_power_data=want_star_power_data,
             )
+
+    class TestStr(object):
+        # This just exercises the path; asserting the output is irksome and unnecessary.
+        @testcase.parametrize(
+            ["event"],
+            [
+                testcase.new(
+                    "with_star_power",
+                    event=NoteEventWithDefaults(
+                        star_power_data=StarPowerData(star_power_event_index=0)
+                    ),
+                ),
+                testcase.new(
+                    "without_star_power",
+                    event=NoteEventWithDefaults(),
+                ),
+            ],
+        )
+        def test(self, event):
+            str(event)
 
     class TestComputeHOPOState(object):
         @testcase.parametrize(
@@ -982,6 +1033,12 @@ class TestSpecialEvent(object):
                 _proximal_bpm_event_index=minimal_bpm_events_with_mock.proximal_bpm_event_index,
             )
 
+    class TestStr(object):
+        # This just exercises the path; asserting the output is irksome and unnecessary.
+        def test(self):
+            e = SpecialEventWithDefaults()
+            str(e)
+
     class TestParsedData(object):
         class TestFromChartLine(object):
             test_regex = r"^T (\d+?) V (.*?)$"
@@ -1109,6 +1166,12 @@ class TestTrackEvent(object):
                 value=defaults.track_event_value,
                 _proximal_bpm_event_index=minimal_bpm_events_with_mock.proximal_bpm_event_index,
             )
+
+    class TestStr(object):
+        # This just exercises the path; asserting the output is irksome and unnecessary.
+        def test(self):
+            e = TrackEventWithDefaults()
+            str(e)
 
     class TestParsedData(object):
         class TestFromChartLine(object):

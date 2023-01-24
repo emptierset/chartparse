@@ -169,7 +169,7 @@ class GlobalEvent(Event):
             _proximal_bpm_event_index=proximal_bpm_event_index,
         )
 
-    def __str__(self) -> str:  # pragma: no cover
+    def __str__(self) -> str:
         to_join = [super().__str__()]
         to_join.append(f': "{self.value}"')
         return "".join(to_join)

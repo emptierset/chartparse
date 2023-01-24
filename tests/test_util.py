@@ -1,6 +1,13 @@
 from __future__ import annotations
 
-from chartparse.util import DictPropertiesEqMixin, AllValuesGettableEnum
+from chartparse.util import (
+    DictPropertiesEqMixin,
+    AllValuesGettableEnum,
+    DictReprMixin,
+    DictReprTruncatedSequencesMixin,
+)
+
+from tests.helpers import testcase
 
 
 class TestDictPropertiesEqMixin(object):
@@ -56,3 +63,40 @@ class TestAllValuesGettableEnum(object):
 
         def test_does_not_get_aliases(self):
             assert TestAllValuesGettableEnum.TrinketEnumWithAlias.all_values() == [1, 2]
+
+
+class TestDictReprMixin(object):
+    class TrinketClass(DictReprMixin):
+        def __init__(self, x):
+            self.x = x
+
+    class TestRepr(object):
+        # This just exercises the path; asserting the output is irksome and unnecessary.
+        def test(self):
+            f = TestDictReprMixin.TrinketClass(1)
+            str(f)
+
+
+class TestDictReprTruncatedSequencesMixin(object):
+    class TrinketClass(DictReprTruncatedSequencesMixin):
+        def __init__(self, x):
+            self.x = x
+
+    @testcase.parametrize(
+        ["x"],
+        [
+            testcase.new(
+                "non-sequence",
+                x=1,
+            ),
+            testcase.new(
+                "sequence",
+                x=[3, 1],
+            ),
+        ],
+    )
+    class TestRepr(object):
+        # This just exercises the path; asserting the output is irksome and unnecessary.
+        def test(self, x):
+            f = TestDictReprTruncatedSequencesMixin.TrinketClass(x)
+            str(f)

@@ -177,8 +177,7 @@ class TimeSignatureEvent(Event):
             _proximal_bpm_event_index=proximal_bpm_event_index,
         )
 
-    # TODO: Unit test all of the str and repr methods. It's easy for them to break silently.
-    def __str__(self) -> str:  # pragma: no cover
+    def __str__(self) -> str:
         to_join = [super().__str__()]
         to_join.append(f": {self.upper_numeral}/{self.lower_numeral}")
         return "".join(to_join)
@@ -302,7 +301,7 @@ class BPMEvent(Event):
             _proximal_bpm_event_index=proximal_bpm_event_index,
         )
 
-    def __str__(self) -> str:  # pragma: no cover
+    def __str__(self) -> str:
         to_join = [super().__str__()]
         to_join.append(f": {self.bpm} BPM")
         return "".join(to_join)

@@ -300,6 +300,7 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
                 else typ.cast(datetime.timedelta, track.last_note_end_timestamp)
             )
         else:  # pragma: no cover
+            # TODO: Can some/all ProgrammerErrors be removed due to mypy safety?
             raise ProgrammerError
 
         return self._notes_per_second(track.note_events, interval_start_time, interval_end_time)
@@ -317,7 +318,7 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         interval_duration_seconds = (interval_end_time - interval_start_time).total_seconds()
         return num_events_to_consider / interval_duration_seconds
 
-    def __str__(self) -> str:  # pragma: no cover
+    def __str__(self) -> str:
         items = []
         if hasattr(self, "metadata"):
             items.append(f"{self.metadata}")

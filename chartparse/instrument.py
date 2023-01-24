@@ -242,8 +242,7 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             raise ValueError(f"resolution ({self.resolution}) must be positive")
 
     @functools.cached_property
-    # TODO: Maybe cover this?
-    def section_name(self) -> str:  # pragma: no cover
+    def section_name(self) -> str:
         """The concatenation of this track's difficulty and instrument (in that order)."""
         return self.difficulty.value + self.instrument.value
 
@@ -315,7 +314,7 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             parsed_data[TrackEvent.ParsedData],
         )
 
-    def __str__(self) -> str:  # pragma: no cover
+    def __str__(self) -> str:
         return (
             f"{type(self).__name__}"
             f"(instrument: {self.instrument}, "
@@ -635,7 +634,7 @@ class NoteEvent(Event):
 
         return StarPowerData(star_power_event_index=candidate_index), candidate_index
 
-    def __str__(self) -> str:  # pragma: no cover
+    def __str__(self) -> str:
         to_join = [super().__str__()]
         to_join.append(f": sustain={self.sustain}")
         to_join.append(f": {self.note}")
@@ -643,15 +642,13 @@ class NoteEvent(Event):
         if self.star_power_data:
             to_join.append("*")
 
-        flags = []
-        if self.hopo_state == HOPOState.TAP:
-            flags.append("T")
-        elif self.hopo_state == HOPOState.HOPO:
-            flags.append("H")
-        elif self.hopo_state == HOPOState.STRUM:
-            flags.append("S")
-        if flags:
-            to_join.extend([" [hopo_state=", "".join(flags), "]"])
+        hopo_state_to_string = {
+            HOPOState.TAP: "T",
+            HOPOState.HOPO: "H",
+            HOPOState.STRUM: "S",
+        }
+
+        to_join.append(f" [hopo_state={hopo_state_to_string[self.hopo_state]}]")
 
         return "".join(to_join)
 
@@ -778,7 +775,7 @@ class SpecialEvent(Event):
         """
         return tick >= self.end_tick
 
-    def __str__(self) -> str:  # pragma: no cover
+    def __str__(self) -> str:
         to_join = [super().__str__()]
         to_join.append(f": sustain={self.sustain}")
         return "".join(to_join)
@@ -893,7 +890,7 @@ class TrackEvent(Event):
             _proximal_bpm_event_index=proximal_bpm_event_index,
         )
 
-    def __str__(self) -> str:  # pragma: no cover
+    def __str__(self) -> str:
         to_join = [super().__str__()]
         to_join.append(f': "{self.value}"')
         return "".join(to_join)

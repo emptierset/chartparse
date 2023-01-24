@@ -571,3 +571,8 @@ class TestChart(object):
             got = default_chart[defaults.instrument][defaults.difficulty]
             want = default_chart.instrument_tracks[defaults.instrument][defaults.difficulty]
             assert got == want
+
+    class TestStr(object):
+        # This just exercises the path; asserting the output is irksome and unnecessary.
+        def test(self, default_chart):
+            str(default_chart)

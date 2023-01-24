@@ -33,10 +33,13 @@ class Event(DictPropertiesEqMixin, DictReprMixin):
 
     # TODO: Figure out a way for the final closing parenthesis to wrap _around_ any additional info
     # added by subclass __str__ implementations.
-    def __str__(self) -> str:  # pragma: no cover
+    def __str__(self) -> str:
         to_join = [f"{type(self).__name__}(t@{self.tick:07})"]
         as_str = (
             str(self.timestamp)
+            # This normally converts to str with six decimal digits, but for integral timedeltas,
+            # it prints with no decimal places. Manually force decimals to be included so
+            # everything lines up prettily.
             if not self.timestamp.total_seconds().is_integer()
             else f"{self.timestamp}.000000"
         )
