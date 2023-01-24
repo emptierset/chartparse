@@ -133,10 +133,10 @@ class TestTimeSignatureEvent(object):
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self
                 tick=defaults.tick,
-                timestamp=defaults.bpm_events_timestamp,
+                timestamp=minimal_bpm_events_with_mock.timestamp,
                 upper_numeral=defaults.upper_time_signature_numeral,
                 lower_numeral=want_lower,
-                _proximal_bpm_event_index=defaults.bpm_events_bpm_event_index,
+                _proximal_bpm_event_index=minimal_bpm_events_with_mock.proximal_bpm_event_index,
             )
 
     class TestParsedData(object):

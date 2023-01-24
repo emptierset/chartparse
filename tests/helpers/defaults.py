@@ -37,8 +37,8 @@ microseconds = seconds // 1000000
 proximal_bpm_event_index = 0
 proximal_star_power_event_index = 0
 
-bpm_events_timestamp = datetime.timedelta(seconds=111)
-bpm_events_bpm_event_index = 222
+timestamp_at_tick_timestamp = datetime.timedelta(seconds=111)
+timestamp_at_tick_proximal_bpm_event_index = 222
 
 bpm = 120.000
 raw_bpm = str(int(bpm * 1000))

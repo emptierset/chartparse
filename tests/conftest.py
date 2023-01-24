@@ -270,13 +270,26 @@ def minimal_bpm_events(bare_bpm_events):
 def minimal_bpm_events_with_mock(mocker, minimal_bpm_events):
     class SpyableClass(object):
         def timestamp_at_tick(self, tick, *, start_iteration_index=0):
-            return defaults.bpm_events_timestamp, defaults.bpm_events_bpm_event_index
+            return (
+                defaults.timestamp_at_tick_timestamp,
+                defaults.timestamp_at_tick_proximal_bpm_event_index,
+            )
 
     # It is not possible to mock a method of a frozen dataclass conventionally. Instead, we must
     # manually create a fake method, spy on that, and substitute it using unsafe setattr.
     s = SpyableClass()
     spy = mocker.spy(s, "timestamp_at_tick")
 
+    unsafe.setattr(
+        minimal_bpm_events,
+        "timestamp",
+        defaults.timestamp_at_tick_timestamp,
+    )
+    unsafe.setattr(
+        minimal_bpm_events,
+        "proximal_bpm_event_index",
+        defaults.timestamp_at_tick_proximal_bpm_event_index,
+    )
     unsafe.setattr(
         minimal_bpm_events,
         "timestamp_at_tick_mock",

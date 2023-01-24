@@ -196,17 +196,17 @@ class TestInstrumentTrack(object):
         @staticmethod
         def NoteEventWithDefaultsPlus(**kwargs):
             return NoteEventWithDefaults(
-                proximal_bpm_event_index=defaults.bpm_events_bpm_event_index,
-                timestamp=defaults.bpm_events_timestamp,
-                end_timestamp=defaults.bpm_events_timestamp,
+                proximal_bpm_event_index=defaults.timestamp_at_tick_proximal_bpm_event_index,
+                timestamp=defaults.timestamp_at_tick_timestamp,
+                end_timestamp=defaults.timestamp_at_tick_timestamp,
                 **kwargs,
             )
 
         @staticmethod
         def StarPowerEventWithDefaultsPlus(**kwargs):
             return StarPowerEventWithDefaults(
-                proximal_bpm_event_index=defaults.bpm_events_bpm_event_index,
-                timestamp=defaults.bpm_events_timestamp,
+                proximal_bpm_event_index=defaults.timestamp_at_tick_proximal_bpm_event_index,
+                timestamp=defaults.timestamp_at_tick_timestamp,
                 **kwargs,
             )
 
@@ -526,7 +526,7 @@ class TestNoteEvent(object):
                         # technically tick+sustain, but annoying because it requires mocking or
                         # calling _end_tick.
                         unittest.mock.ANY,
-                        start_iteration_index=defaults.bpm_events_bpm_event_index,
+                        start_iteration_index=minimal_bpm_events_with_mock.proximal_bpm_event_index,  # noqa: E501
                     ),
                 ],
             )
@@ -549,12 +549,12 @@ class TestNoteEvent(object):
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self
                 tick=want_tick,
-                timestamp=defaults.bpm_events_timestamp,
-                end_timestamp=defaults.bpm_events_timestamp,
+                timestamp=minimal_bpm_events_with_mock.timestamp,
+                end_timestamp=minimal_bpm_events_with_mock.timestamp,
                 note=want_note,
                 hopo_state=want_hopo_state,
                 sustain=want_sustain,
-                _proximal_bpm_event_index=defaults.bpm_events_bpm_event_index,
+                _proximal_bpm_event_index=minimal_bpm_events_with_mock.proximal_bpm_event_index,
                 star_power_data=want_star_power_data,
             )
 
@@ -972,9 +972,9 @@ class TestSpecialEvent(object):
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self
                 tick=defaults.tick,
-                timestamp=defaults.bpm_events_timestamp,
+                timestamp=minimal_bpm_events_with_mock.timestamp,
                 sustain=defaults.sustain,
-                _proximal_bpm_event_index=defaults.bpm_events_bpm_event_index,
+                _proximal_bpm_event_index=minimal_bpm_events_with_mock.proximal_bpm_event_index,
             )
 
     class TestParsedData(object):
@@ -1076,9 +1076,9 @@ class TestTrackEvent(object):
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self
                 tick=defaults.tick,
-                timestamp=defaults.bpm_events_timestamp,
+                timestamp=minimal_bpm_events_with_mock.timestamp,
                 value=defaults.track_event_value,
-                _proximal_bpm_event_index=defaults.bpm_events_bpm_event_index,
+                _proximal_bpm_event_index=minimal_bpm_events_with_mock.proximal_bpm_event_index,
             )
 
     class TestParsedData(object):
