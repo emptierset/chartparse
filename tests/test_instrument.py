@@ -124,8 +124,8 @@ class TestInstrumentTrack(object):
             _ = InstrumentTrackWithDefaults()
             assert default_instrument_track.instrument == defaults.instrument
             assert default_instrument_track.difficulty == defaults.difficulty
-            assert default_instrument_track.note_events == defaults.note_events
-            assert default_instrument_track.star_power_events == defaults.star_power_events
+            assert default_instrument_track.note_events == [defaults.note_event]
+            assert default_instrument_track.star_power_events == [defaults.star_power_event]
             assert default_instrument_track.section_name == defaults.section_name
 
         @pytest.mark.parametrize("resolution", [0, -1])
@@ -139,21 +139,21 @@ class TestInstrumentTrack(object):
                 InstrumentTrack,
                 "_parse_data_from_chart_lines",
                 return_value=(
-                    defaults.note_event_parsed_datas,
-                    defaults.star_power_event_parsed_datas,
-                    defaults.track_event_parsed_datas,
+                    [defaults.note_event_parsed_data],
+                    [defaults.star_power_event],
+                    [defaults.track_event_parsed_data],
                 ),
             )
             mock_build_note_events = mocker.patch.object(
                 InstrumentTrack,
                 "_build_note_events_from_data",
-                return_value=defaults.note_events,
+                return_value=[defaults.note_event],
             )
             mock_build_events = mocker.patch(
                 "chartparse.track.build_events_from_data",
                 side_effect=[
-                    defaults.star_power_events,
-                    defaults.track_events,
+                    [defaults.star_power_event],
+                    [defaults.track_event],
                 ],
             )
             spy_init = mocker.spy(InstrumentTrack, "__init__")
@@ -165,19 +165,19 @@ class TestInstrumentTrack(object):
             )
             mock_parse_data.assert_called_once_with(defaults.invalid_chart_lines)
             mock_build_note_events.assert_called_once_with(
-                defaults.note_event_parsed_datas,
-                defaults.star_power_events,
+                [defaults.note_event_parsed_data],
+                [defaults.star_power_event],
                 minimal_bpm_events,
             )
             mock_build_events.assert_has_calls(
                 [
                     unittest.mock.call(
-                        defaults.star_power_event_parsed_datas,
+                        [defaults.star_power_event],
                         StarPowerEvent.from_parsed_data,
                         minimal_bpm_events,
                     ),
                     unittest.mock.call(
-                        defaults.track_event_parsed_datas,
+                        [defaults.track_event_parsed_data],
                         TrackEvent.from_parsed_data,
                         minimal_bpm_events,
                     ),
@@ -188,9 +188,9 @@ class TestInstrumentTrack(object):
                 resolution=defaults.resolution,
                 instrument=defaults.instrument,
                 difficulty=defaults.difficulty,
-                note_events=defaults.note_events,
-                star_power_events=defaults.star_power_events,
-                track_events=defaults.track_events,
+                note_events=[defaults.note_event],
+                star_power_events=[defaults.star_power_event],
+                track_events=[defaults.track_event],
             )
 
         @staticmethod
@@ -510,7 +510,7 @@ class TestNoteEvent(object):
             _event, _bpm_event_index, _star_power_event_index = NoteEvent.from_parsed_data(
                 data,
                 None,
-                defaults.star_power_events,
+                [defaults.star_power_event],
                 minimal_bpm_events_with_mock,
                 proximal_bpm_event_index=want_proximal_bpm_event_index,
                 star_power_event_index=want_star_power_event_index,
@@ -542,7 +542,7 @@ class TestNoteEvent(object):
 
             mock_compute_star_power_data.assert_called_once_with(
                 want_tick,
-                defaults.star_power_events,
+                [defaults.star_power_event],
                 proximal_star_power_event_index=want_star_power_event_index,
             )
 
@@ -900,8 +900,8 @@ class TestNoteEvent(object):
             with pytest.raises(ValueError):
                 _, _ = NoteEvent._compute_star_power_data(
                     defaults.tick,
-                    defaults.star_power_events,
-                    proximal_star_power_event_index=len(defaults.star_power_events),
+                    [defaults.star_power_event],
+                    proximal_star_power_event_index=len([defaults.star_power_event]),
                 )
 
     class TestLongestSustain(object):

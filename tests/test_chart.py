@@ -351,7 +351,7 @@ class TestChart(object):
             unsafe.setattr(
                 minimal_chart[defaults.instrument][defaults.difficulty],
                 "note_events",
-                defaults.note_events,
+                [defaults.note_event],
             )
 
             mocker.patch.object(
@@ -382,7 +382,7 @@ class TestChart(object):
                 end_tick=end_tick,
             )
             spy.assert_called_once_with(
-                defaults.note_events, want_interval_start_time, want_interval_end_time
+                [defaults.note_event], want_interval_start_time, want_interval_end_time
             )
 
             # NOTE: Manually reset timestamp_at_tick from mocked version.
@@ -422,7 +422,7 @@ class TestChart(object):
             unsafe.setattr(
                 minimal_chart[defaults.instrument][defaults.difficulty],
                 "note_events",
-                defaults.note_events,
+                [defaults.note_event],
             )
 
             mocker.patch.object(
@@ -440,7 +440,7 @@ class TestChart(object):
                 end_time=end_time,
             )
             spy.assert_called_once_with(
-                defaults.note_events, want_interval_start_time, want_interval_end_time
+                [defaults.note_event], want_interval_start_time, want_interval_end_time
             )
 
         @pytest.mark.parametrize(
@@ -474,7 +474,7 @@ class TestChart(object):
             unsafe.setattr(
                 minimal_chart[defaults.instrument][defaults.difficulty],
                 "note_events",
-                defaults.note_events,
+                [defaults.note_event],
             )
 
             mocker.patch.object(
@@ -492,7 +492,7 @@ class TestChart(object):
                 end_seconds=end_seconds,
             )
             spy.assert_called_once_with(
-                defaults.note_events, want_interval_start_time, want_interval_end_time
+                [defaults.note_event], want_interval_start_time, want_interval_end_time
             )
 
         @pytest.mark.parametrize(

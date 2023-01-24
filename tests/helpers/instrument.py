@@ -17,9 +17,9 @@ def InstrumentTrackWithDefaults(
     resolution=defaults.resolution,
     instrument=defaults.instrument,
     difficulty=defaults.difficulty,
-    note_events=defaults.note_events,
-    star_power_events=defaults.star_power_events,
-    track_events=defaults.track_events,
+    note_events=[defaults.note_event],
+    star_power_events=[defaults.star_power_event],
+    track_events=[defaults.track_event],
 ):
     return InstrumentTrack(
         resolution=resolution,

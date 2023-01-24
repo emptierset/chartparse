@@ -49,17 +49,17 @@ class TestSyncTrack(object):
                 SyncTrack,
                 "_parse_data_from_chart_lines",
                 return_value=(
-                    defaults.time_signature_event_parsed_datas,
-                    defaults.bpm_event_parsed_datas,
-                    defaults.anchor_event_parsed_datas,
+                    [defaults.time_signature_event_parsed_data],
+                    [defaults.bpm_event_parsed_data],
+                    [defaults.anchor_event_parsed_data],
                 ),
             )
             mock_build_events = mocker.patch(
                 "chartparse.track.build_events_from_data",
                 side_effect=[
-                    defaults.bpm_events,
-                    defaults.time_signature_events,
-                    defaults.anchor_events,
+                    [defaults.bpm_event],
+                    [defaults.time_signature_event],
+                    [defaults.anchor_event],
                 ],
             )
             spy_init = mocker.spy(SyncTrack, "__init__")
@@ -69,26 +69,26 @@ class TestSyncTrack(object):
             mock_build_events.assert_has_calls(
                 [
                     unittest.mock.call(
-                        defaults.bpm_event_parsed_datas,
+                        [defaults.bpm_event_parsed_data],
                         BPMEvent.from_parsed_data,
                         defaults.resolution,
                     ),
                     unittest.mock.call(
-                        defaults.time_signature_event_parsed_datas,
+                        [defaults.time_signature_event_parsed_data],
                         TimeSignatureEvent.from_parsed_data,
                         unittest.mock.ANY,  # ignore object conjured locally
                     ),
                     unittest.mock.call(
-                        defaults.anchor_event_parsed_datas,
+                        [defaults.anchor_event_parsed_data],
                         AnchorEvent.from_parsed_data,
                     ),
                 ]
             )
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self
-                time_signature_events=defaults.time_signature_events,
-                bpm_events=defaults.bpm_events,
-                anchor_events=defaults.anchor_events,
+                time_signature_events=[defaults.time_signature_event],
+                bpm_events=[defaults.bpm_event],
+                anchor_events=[defaults.anchor_event],
             )
 
 

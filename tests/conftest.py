@@ -157,9 +157,9 @@ def default_instrument_track():
         resolution=defaults.resolution,
         instrument=defaults.instrument,
         difficulty=defaults.difficulty,
-        note_events=defaults.note_events,
-        star_power_events=defaults.star_power_events,
-        track_events=defaults.track_events,
+        note_events=[defaults.note_event],
+        star_power_events=[defaults.star_power_event],
+        track_events=[defaults.track_event],
     )
 
 
@@ -228,9 +228,9 @@ def minimal_sync_track(bare_sync_track, bare_bpm_events):
 @pytest.fixture
 def default_sync_track():
     return SyncTrack(
-        time_signature_events=defaults.time_signature_events,
-        bpm_events=defaults.bpm_events,
-        anchor_events=defaults.anchor_events,
+        time_signature_events=[defaults.time_signature_event],
+        bpm_events=[defaults.bpm_event],
+        anchor_events=[defaults.anchor_event],
     )
 
 
@@ -334,9 +334,9 @@ def minimal_global_events_track(bare_global_events_track):
 def default_global_events_track():
     return GlobalEventsTrack(
         resolution=defaults.resolution,
-        text_events=defaults.text_events,
-        section_events=defaults.section_events,
-        lyric_events=defaults.lyric_events,
+        text_events=[defaults.text_event],
+        section_events=[defaults.section_event],
+        lyric_events=[defaults.lyric_event],
     )
 
 

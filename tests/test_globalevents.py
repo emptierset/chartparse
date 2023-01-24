@@ -28,9 +28,9 @@ class TestGlobalEventsTrack(object):
     class TestInit(object):
         def test(self, default_global_events_track):
             # TODO: Construct GlobalEventsTrack manually.
-            assert default_global_events_track.text_events == defaults.text_events
-            assert default_global_events_track.section_events == defaults.section_events
-            assert default_global_events_track.lyric_events == defaults.lyric_events
+            assert default_global_events_track.text_events == [defaults.text_event]
+            assert default_global_events_track.section_events == [defaults.section_event]
+            assert default_global_events_track.lyric_events == [defaults.lyric_event]
 
         @pytest.mark.parametrize("resolution", [0, -1])
         def test_non_positive_resolution(self, resolution):
@@ -42,17 +42,17 @@ class TestGlobalEventsTrack(object):
             GlobalEventsTrack,
             "_parse_data_from_chart_lines",
             return_value=(
-                defaults.text_event_parsed_datas,
-                defaults.section_event_parsed_datas,
-                defaults.lyric_event_parsed_datas,
+                [defaults.text_event_parsed_data],
+                [defaults.section_event_parsed_data],
+                [defaults.lyric_event_parsed_data],
             ),
         )
         mock_build_events = mocker.patch(
             "chartparse.track.build_events_from_data",
             side_effect=[
-                defaults.text_events,
-                defaults.section_events,
-                defaults.lyric_events,
+                [defaults.text_event],
+                [defaults.section_event],
+                [defaults.lyric_event],
             ],
         )
         spy_init = mocker.spy(GlobalEventsTrack, "__init__")
@@ -82,9 +82,9 @@ class TestGlobalEventsTrack(object):
         spy_init.assert_called_once_with(
             unittest.mock.ANY,  # ignore self
             resolution=defaults.resolution,
-            text_events=defaults.text_events,
-            section_events=defaults.section_events,
-            lyric_events=defaults.lyric_events,
+            text_events=[defaults.text_event],
+            section_events=[defaults.section_event],
+            lyric_events=[defaults.lyric_event],
         )
 
 

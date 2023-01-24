@@ -8,9 +8,9 @@ from tests.helpers import defaults
 
 def SyncTrackWithDefaults(
     *,
-    time_signature_events=defaults.time_signature_events,
-    bpm_events=defaults.bpm_events,
-    anchor_events=defaults.anchor_events,
+    time_signature_events=[defaults.time_signature_event],
+    bpm_events=[defaults.bpm_event],
+    anchor_events=[defaults.anchor_event],
 ):
     return SyncTrack(
         time_signature_events=time_signature_events,

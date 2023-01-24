@@ -43,11 +43,7 @@ timestamp_at_tick_proximal_bpm_event_index = 222
 bpm = 120.000
 raw_bpm = str(int(bpm * 1000))
 bpm_event = BPMEvent(tick=tick, timestamp=timestamp, bpm=bpm)
-# TODO: Get rid of all "events" defaults and instead expect the user to wrap the individual default
-# events in a list manually.
-bpm_events = [bpm_event]
 bpm_event_parsed_data = BPMEvent.ParsedData(tick=tick, raw_bpm=raw_bpm)
-bpm_event_parsed_datas = [bpm_event_parsed_data]
 
 upper_time_signature_numeral = 4
 lower_time_signature_numeral = 8
@@ -58,42 +54,30 @@ time_signature_event = TimeSignatureEvent(
     upper_numeral=upper_time_signature_numeral,
     lower_numeral=lower_time_signature_numeral,
 )
-time_signature_events = [time_signature_event]
 time_signature_event_parsed_data = TimeSignatureEvent.ParsedData(
     tick=tick,
     upper=upper_time_signature_numeral,
     lower=lower_time_signature_numeral,
 )
-time_signature_event_parsed_datas = [time_signature_event_parsed_data]
 
 anchor_event = AnchorEvent(tick=tick, timestamp=timestamp)
-anchor_events = [anchor_event]
 anchor_event_parsed_data = AnchorEvent.ParsedData(tick=tick, microseconds=microseconds)
-anchor_event_parsed_datas = [anchor_event_parsed_data]
 
 global_event_value = "default_global_event_value"
 global_event = GlobalEvent(tick=tick, timestamp=timestamp, value=global_event_value)
-global_events = [global_event]
 global_event_parsed_data = GlobalEvent.ParsedData(tick=tick, value=global_event_value)
-global_event_parsed_datas = [global_event_parsed_data]
 
 text_event_value = "default_text_event_value"
 text_event = TextEvent(tick=tick, timestamp=timestamp, value=text_event_value)
-text_events = [text_event]
 text_event_parsed_data = TextEvent.ParsedData(tick=tick, value=text_event_value)
-text_event_parsed_datas = [text_event_parsed_data]
 
 section_event_value = "default_section_event_value"
 section_event = SectionEvent(tick=tick, timestamp=timestamp, value=section_event_value)
-section_events = [section_event]
 section_event_parsed_data = SectionEvent.ParsedData(tick=tick, value=section_event_value)
-section_event_parsed_datas = [section_event_parsed_data]
 
 lyric_event_value = "default_lyric_event_value"
 lyric_event = LyricEvent(tick=tick, timestamp=timestamp, value=lyric_event_value)
-lyric_events = [lyric_event]
 lyric_event_parsed_data = LyricEvent.ParsedData(tick=tick, value=lyric_event_value)
-lyric_event_parsed_datas = [lyric_event_parsed_data]
 
 
 difficulty = Difficulty.EXPERT
@@ -115,27 +99,21 @@ note_event = NoteEvent(
     note=note,
     hopo_state=hopo_state,
 )
-note_events = [note_event]
 note_event_parsed_data = NoteEvent.ParsedData(
     tick=tick,
     sustain=sustain,
     note_track_index=note_track_index,
 )
-note_event_parsed_datas = [note_event_parsed_data]
 
 star_power_event = StarPowerEvent(tick=tick, timestamp=timestamp, sustain=sustain)
-star_power_events = [star_power_event]
 star_power_event_parsed_data = StarPowerEvent.ParsedData(tick=tick, sustain=sustain)
-star_power_event_parsed_datas = [star_power_event_parsed_data]
 
 track_event_value = "default_track_event_value"
 track_event = TrackEvent(tick=tick, timestamp=timestamp, value=track_event_value)
-track_events = [track_event]
 track_event_parsed_data = TrackEvent.ParsedData(
     tick=tick,
     value=track_event_value,
 )
-track_event_parsed_datas = [track_event_parsed_data]
 
 name = "Song Name"
 artist = "Artist Name"

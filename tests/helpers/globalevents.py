@@ -12,9 +12,9 @@ from tests.helpers import defaults
 def GlobalEventsTrackWithDefaults(
     *,
     resolution=defaults.resolution,
-    text_events=defaults.text_events,
-    section_events=defaults.section_events,
-    lyric_events=defaults.lyric_events,
+    text_events=[defaults.text_event],
+    section_events=[defaults.section_event],
+    lyric_events=[defaults.lyric_event],
 ):
     return GlobalEventsTrack(
         resolution=resolution,
