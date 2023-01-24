@@ -65,14 +65,15 @@ class RegexNotMatchError(Exception):
 
 
 @typ.final
-class ProgrammerError(Exception):
+class UnreachableError(Exception):
     """Raised in branches that should be unreachable.
 
     Oftentimes, these branches must exist to satisfy mypy. If this error is raised, it indicates
     a fundamental issue with the code that should have been caught during review.
     """
 
-    message: typ.Final[str] = "should be impossible"
+    message: typ.Final[str]
 
-    def __init__(self) -> None:
-        super().__init__(self.message)
+    def __init__(self, reason: str) -> None:
+        super().__init__(reason)
+        self.message = reason

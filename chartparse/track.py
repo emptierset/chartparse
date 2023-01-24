@@ -16,7 +16,7 @@ import typing as typ
 from collections.abc import Iterable, Sequence
 
 from chartparse.event import Event
-from chartparse.exceptions import ProgrammerError, RegexNotMatchError
+from chartparse.exceptions import RegexNotMatchError, UnreachableError
 from chartparse.sync import AnchorEvent, BPMEvents
 
 if typ.TYPE_CHECKING:  # pragma: no cover
@@ -225,5 +225,5 @@ def build_events_from_data(datas, from_data_fn, resolution_or_bpm_events_or_None
         # TODO: Should we instead optionally validate a chart, which allows us to assume everything
         # is sorted? etc.
         return sorted(events, key=lambda e: e.tick)
-    else:
-        raise ProgrammerError  # pragma: no cover
+    else:  # pragma: no cover
+        raise UnreachableError("resolution_or_bpm_events_or_None must be one of the named types")

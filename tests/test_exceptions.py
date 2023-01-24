@@ -2,7 +2,12 @@ from __future__ import annotations
 
 import pytest
 
-from chartparse.exceptions import MissingRequiredField, RegexNotMatchError, ProgrammerError, raise_
+from chartparse.exceptions import (
+    MissingRequiredField,
+    RegexNotMatchError,
+    UnreachableError,
+    raise_,
+)
 
 
 class TestRaise(object):
@@ -35,7 +40,8 @@ class TestRegexNotMatchError(object):
         assert got.message == r"none of 2 strings matched regex '\d+'"
 
 
-class TestProgrammerError(object):
+class TestUnreachableError(object):
     def test(self):
-        got = ProgrammerError()
-        assert got.message == ProgrammerError.message
+        reason = "can't be reached"
+        got = UnreachableError(reason)
+        assert got.message == reason

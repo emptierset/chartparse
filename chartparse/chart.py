@@ -28,7 +28,7 @@ from collections.abc import Iterable, Sequence
 from pathlib import Path
 
 import chartparse.tick
-from chartparse.exceptions import ProgrammerError, RegexNotMatchError
+from chartparse.exceptions import RegexNotMatchError, UnreachableError
 from chartparse.globalevents import GlobalEventsTrack
 from chartparse.instrument import Difficulty, Instrument, InstrumentTrack
 from chartparse.metadata import Metadata
@@ -300,8 +300,7 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
                 else typ.cast(datetime.timedelta, track.last_note_end_timestamp)
             )
         else:  # pragma: no cover
-            # TODO: Can some/all ProgrammerErrors be removed due to mypy safety?
-            raise ProgrammerError
+            raise UnreachableError("at least one start_.* param must not be None")
 
         return self._notes_per_second(track.note_events, interval_start_time, interval_end_time)
 
