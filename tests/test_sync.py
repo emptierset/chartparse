@@ -8,6 +8,7 @@ from chartparse.event import Event
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.sync import SyncTrack, BPMEvent, BPMEvents, TimeSignatureEvent, AnchorEvent
 
+from tests.helpers import testcase
 from tests.helpers import defaults
 from tests.helpers import unsafe
 from tests.helpers.lines import generate_bpm as generate_bpm_line
@@ -94,30 +95,33 @@ class TestSyncTrack(object):
 
 class TestTimeSignatureEvent(object):
     class TestFromParsedData(object):
-        @pytest.mark.parametrize(
-            "prev_event",
+        @testcase.parametrize(
+            ["prev_event"],
             [
-                pytest.param(None, id="prev_event_none"),
-                pytest.param(
-                    TimeSignatureEventWithDefaults(proximal_bpm_event_index=1),
-                    id="prev_event_present",
+                testcase.new(
+                    "prev_event_none",
+                    prev_event=None,
+                ),
+                testcase.new(
+                    "prev_event_present",
+                    prev_event=TimeSignatureEventWithDefaults(proximal_bpm_event_index=1),
                 ),
             ],
         )
-        @pytest.mark.parametrize(
-            "data,want_lower",
+        @testcase.parametrize(
+            ["data", "want_lower"],
             [
-                pytest.param(
-                    TimeSignatureEventParsedDataWithDefaults(),
-                    TimeSignatureEvent._default_lower_numeral,
-                    id="line_without_lower_specified",
+                testcase.new(
+                    "line_without_lower_specified",
+                    data=TimeSignatureEventParsedDataWithDefaults(),
+                    want_lower=TimeSignatureEvent._default_lower_numeral,
                 ),
-                pytest.param(
-                    TimeSignatureEventParsedDataWithDefaults(
+                testcase.new(
+                    "line_with_lower_specified",
+                    data=TimeSignatureEventParsedDataWithDefaults(
                         lower=int(defaults.raw_lower_time_signature_numeral)
                     ),
-                    defaults.lower_time_signature_numeral,
-                    id="line_with_lower_specified",
+                    want_lower=defaults.lower_time_signature_numeral,
                 ),
             ],
         )
@@ -141,25 +145,25 @@ class TestTimeSignatureEvent(object):
 
     class TestParsedData(object):
         class TestFromChartLine(object):
-            @pytest.mark.parametrize(
-                "line,want_lower",
+            @testcase.parametrize(
+                ["line", "want_lower"],
                 [
-                    pytest.param(
-                        generate_time_signature_line(
+                    testcase.new(
+                        "line_without_lower_specified",
+                        line=generate_time_signature_line(
                             defaults.tick,
                             defaults.upper_time_signature_numeral,
                         ),
-                        None,
-                        id="line_without_lower_specified",
+                        want_lower=None,
                     ),
-                    pytest.param(
-                        generate_time_signature_line(
+                    testcase.new(
+                        "line_with_lower_specified",
+                        line=generate_time_signature_line(
                             defaults.tick,
                             defaults.upper_time_signature_numeral,
                             lower=defaults.raw_lower_time_signature_numeral,
                         ),
-                        int(defaults.raw_lower_time_signature_numeral),
-                        id="line_with_lower_specified",
+                        want_lower=int(defaults.raw_lower_time_signature_numeral),
                     ),
                 ],
             )
@@ -226,18 +230,18 @@ class TestBPMEvent(object):
                 _proximal_bpm_event_index=1,
             )
 
-        @pytest.mark.parametrize(
-            "prev_event,data",
+        @testcase.parametrize(
+            ["prev_event", "data"],
             [
-                pytest.param(
-                    BPMEventWithDefaults(tick=1),
-                    BPMEventParsedDataWithDefaults(tick=0),
-                    id="prev_event_after_current",
+                testcase.new(
+                    "prev_event_after_current",
+                    prev_event=BPMEventWithDefaults(tick=1),
+                    data=BPMEventParsedDataWithDefaults(tick=0),
                 ),
-                pytest.param(
-                    BPMEventWithDefaults(tick=0),
-                    BPMEventParsedDataWithDefaults(tick=0),
-                    id="prev_event_equal_to_current",
+                testcase.new(
+                    "prev_event_equal_to_current",
+                    prev_event=BPMEventWithDefaults(tick=0),
+                    data=BPMEventParsedDataWithDefaults(tick=0),
                 ),
             ],
         )
@@ -295,14 +299,29 @@ class TestBPMEvents(object):
             assert got == want
 
     class TestTimestampAtTick(object):
-        @pytest.mark.parametrize(
-            "tick,want_timestamp,want_proximal_bpm_event_index",
+        @testcase.parametrize(
+            ["tick", "want_timestamp", "want_proximal_bpm_event_index"],
             [
-                # TODO: Create helper that allows me to define pytest.param values by "name".
-                pytest.param(100, datetime.timedelta(seconds=1), 1),
-                pytest.param(120, datetime.timedelta(seconds=1.1), 1),
-                pytest.param(400, datetime.timedelta(seconds=2.5), 2),
-                pytest.param(1000, datetime.timedelta(seconds=5.166666), 3),
+                testcase.new_anonymous(
+                    tick=100,
+                    want_timestamp=datetime.timedelta(seconds=1),
+                    want_proximal_bpm_event_index=1,
+                ),
+                testcase.new_anonymous(
+                    tick=120,
+                    want_timestamp=datetime.timedelta(seconds=1.1),
+                    want_proximal_bpm_event_index=1,
+                ),
+                testcase.new_anonymous(
+                    tick=400,
+                    want_timestamp=datetime.timedelta(seconds=2.5),
+                    want_proximal_bpm_event_index=2,
+                ),
+                testcase.new_anonymous(
+                    tick=1000,
+                    want_timestamp=datetime.timedelta(seconds=5.166666),
+                    want_proximal_bpm_event_index=3,
+                ),
             ],
         )
         def test(self, tick, want_timestamp, want_proximal_bpm_event_index):
@@ -328,45 +347,45 @@ class TestBPMEvents(object):
             assert got_proximal_bpm_event_index == want_proximal_bpm_event_index
 
     class TestIndexOfProximalEvent(object):
-        @pytest.mark.parametrize(
-            "bpm_event_list,tick,want",
+        @testcase.parametrize(
+            ["bpm_event_list", "tick", "want"],
             [
-                pytest.param(
-                    [
+                testcase.new(
+                    "tick_coincides_with_first_event",
+                    bpm_event_list=[
                         BPMEventWithDefaults(tick=0),
                         BPMEventWithDefaults(tick=100),
                     ],
-                    0,
-                    0,
-                    id="tick_coincides_with_first_event",
+                    tick=0,
+                    want=0,
                 ),
-                pytest.param(
-                    [
+                testcase.new(
+                    "tick_between_first_and_second_events",
+                    bpm_event_list=[
                         BPMEventWithDefaults(tick=0),
                         BPMEventWithDefaults(tick=100),
                     ],
-                    50,
-                    0,
-                    id="tick_between_first_and_second_events",
+                    tick=50,
+                    want=0,
                 ),
-                pytest.param(
-                    [
+                testcase.new(
+                    "tick_between_second_and_third_events",
+                    bpm_event_list=[
                         BPMEventWithDefaults(tick=0),
                         BPMEventWithDefaults(tick=100),
                         BPMEventWithDefaults(tick=200),
                     ],
-                    150,
-                    1,
-                    id="tick_between_second_and_third_events",
+                    tick=150,
+                    want=1,
                 ),
-                pytest.param(
-                    [
+                testcase.new(
+                    "tick_after_last_event",
+                    bpm_event_list=[
                         BPMEventWithDefaults(tick=0),
                         BPMEventWithDefaults(tick=1),
                     ],
-                    2,
-                    1,
-                    id="tick_after_last_event",
+                    tick=2,
+                    want=1,
                 ),
             ],
         )
@@ -375,23 +394,24 @@ class TestBPMEvents(object):
             got = bare_bpm_events._index_of_proximal_event(tick)
             assert got == want
 
-        @pytest.mark.parametrize(
-            "bpm_event_list,tick,start_iteration_index",
+        @testcase.parametrize(
+            ["bpm_event_list", "tick", "start_iteration_index"],
             [
-                pytest.param(
-                    [],
-                    0,
-                    0,
-                    id="no_events",
+                testcase.new(
+                    "no_events",
+                    bpm_event_list=[],
+                    tick=0,
+                    start_iteration_index=0,
                 ),
-                pytest.param(
-                    [BPMEventWithDefaults()],
-                    0,
-                    1,
-                    id="proximal_event_index_after_last_event",
+                testcase.new(
+                    "proximal_event_index_after_last_event",
+                    bpm_event_list=[BPMEventWithDefaults()],
+                    tick=0,
+                    start_iteration_index=1,
                 ),
-                pytest.param(
-                    [
+                testcase.new(
+                    "input_tick_before_tick_at_proximal_event_index",
+                    bpm_event_list=[
                         BPMEventWithDefaults(
                             tick=0,
                         ),
@@ -399,9 +419,8 @@ class TestBPMEvents(object):
                             tick=100,
                         ),
                     ],
-                    50,
-                    1,
-                    id="input_tick_before_tick_at_proximal_event_index",
+                    tick=50,
+                    start_iteration_index=1,
                 ),
             ],
         )

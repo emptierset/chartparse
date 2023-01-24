@@ -14,6 +14,7 @@ from chartparse.globalevents import (
 )
 
 from tests.helpers import defaults
+from tests.helpers import testcase
 from tests.helpers.globalevents import (
     GlobalEventWithDefaults,
     GlobalEventsTrackWithDefaults,
@@ -32,7 +33,19 @@ class TestGlobalEventsTrack(object):
             assert default_global_events_track.section_events == [defaults.section_event]
             assert default_global_events_track.lyric_events == [defaults.lyric_event]
 
-        @pytest.mark.parametrize("resolution", [0, -1])
+        @testcase.parametrize(
+            ["resolution"],
+            [
+                testcase.new(
+                    "zero",
+                    resolution=0,
+                ),
+                testcase.new(
+                    "negative",
+                    resolution=-1,
+                ),
+            ],
+        )
         def test_non_positive_resolution(self, resolution):
             with pytest.raises(ValueError):
                 _ = GlobalEventsTrackWithDefaults(resolution=resolution)
@@ -90,16 +103,16 @@ class TestGlobalEventsTrack(object):
 
 class TestGlobalEvent(object):
     class TestFromParsedData(object):
-        @pytest.mark.parametrize(
-            "prev_event",
+        @testcase.parametrize(
+            ["prev_event"],
             [
-                pytest.param(
-                    None,
-                    id="prev_event_none",
+                testcase.new(
+                    "prev_event_none",
+                    prev_event=None,
                 ),
-                pytest.param(
-                    GlobalEventWithDefaults(proximal_bpm_event_index=1),
-                    id="prev_event_present",
+                testcase.new(
+                    "prev_event_present",
+                    prev_event=GlobalEventWithDefaults(proximal_bpm_event_index=1),
                 ),
             ],
         )

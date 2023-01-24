@@ -20,8 +20,9 @@ from chartparse.instrument import (
 )
 from chartparse.tick import NoteDuration
 
-from tests.helpers import defaults
 import tests.helpers.tick
+from tests.helpers import defaults
+from tests.helpers import testcase
 from tests.helpers import unsafe
 from tests.helpers.instrument import (
     InstrumentTrackWithDefaults,
@@ -40,21 +41,21 @@ from tests.helpers.lines import generate_track as generate_track_line
 
 class TestNote(object):
     class TestFromParsedData(object):
-        @pytest.mark.parametrize(
-            "data,want",
+        @testcase.parametrize(
+            ["data", "want"],
             [
-                pytest.param(
-                    NoteEventParsedDataWithDefaults(note_track_index=NoteTrackIndex.G),
-                    Note.G,
-                    id="single_data",
+                testcase.new(
+                    "single_data",
+                    data=NoteEventParsedDataWithDefaults(note_track_index=NoteTrackIndex.G),
+                    want=Note.G,
                 ),
-                pytest.param(
-                    [
+                testcase.new(
+                    "multiple_data",
+                    data=[
                         NoteEventParsedDataWithDefaults(note_track_index=NoteTrackIndex.G),
                         NoteEventParsedDataWithDefaults(note_track_index=NoteTrackIndex.R),
                     ],
-                    Note.GR,
-                    id="multiple_data",
+                    want=Note.GR,
                 ),
             ],
         )
@@ -72,25 +73,26 @@ class TestNoteTrackIndex(object):
 
 
 class TestComplexSustainFromParsedDatas(object):
-    @pytest.mark.parametrize(
-        "datas, want",
+    @testcase.parametrize(
+        ["datas", "want"],
         [
-            pytest.param(
-                [
+            testcase.new(
+                "open",
+                datas=[
                     NoteEventParsedDataWithDefaults(
                         note_track_index=NoteTrackIndex.OPEN, sustain=100
                     )
                 ],
-                100,
-                id="open",
+                want=100,
             ),
-            pytest.param(
-                [NoteEventParsedDataWithDefaults(note_track_index=NoteTrackIndex.TAP)],
-                0,
-                id="no_note_data",
+            testcase.new(
+                "no_note_data",
+                datas=[NoteEventParsedDataWithDefaults(note_track_index=NoteTrackIndex.TAP)],
+                want=0,
             ),
-            pytest.param(
-                [
+            testcase.new(
+                "same_length_notes_return_int_sustain",
+                datas=[
                     NoteEventParsedDataWithDefaults(
                         note_track_index=NoteTrackIndex.G, sustain=100
                     ),
@@ -98,18 +100,17 @@ class TestComplexSustainFromParsedDatas(object):
                         note_track_index=NoteTrackIndex.R, sustain=100
                     ),
                 ],
-                100,
-                id="same_length_notes_return_int_sustain",
+                want=100,
             ),
-            pytest.param(
-                [
+            testcase.new(
+                "variable_length_notes_return_tuple_sustain",
+                datas=[
                     NoteEventParsedDataWithDefaults(
                         note_track_index=NoteTrackIndex.G, sustain=100
                     ),
                     NoteEventParsedDataWithDefaults(note_track_index=NoteTrackIndex.R, sustain=50),
                 ],
-                (100, 50, None, None, None),
-                id="variable_length_notes_return_tuple_sustain",
+                want=(100, 50, None, None, None),
             ),
         ],
     )
@@ -128,7 +129,13 @@ class TestInstrumentTrack(object):
             assert default_instrument_track.star_power_events == [defaults.star_power_event]
             assert default_instrument_track.section_name == defaults.section_name
 
-        @pytest.mark.parametrize("resolution", [0, -1])
+        @testcase.parametrize(
+            ["resolution"],
+            [
+                testcase.new("zero", resolution=0),
+                testcase.new("negative", resolution=-1),
+            ],
+        )
         def test_non_positive_resolution(self, resolution):
             with pytest.raises(ValueError):
                 _ = InstrumentTrackWithDefaults(resolution=0)
@@ -211,73 +218,66 @@ class TestInstrumentTrack(object):
             )
 
         # TODO: This doesn't actually test timestamp generation.
-        @pytest.mark.parametrize(
-            "lines, want_note_events, want_star_power_events",
+        @testcase.parametrize(
+            ["lines", "want_note_events", "want_star_power_events"],
             [
-                pytest.param(
-                    [defaults.invalid_chart_line],
-                    [],
-                    [],
-                    id="skip_invalid_line",
+                testcase.new(
+                    "skip_invalid_line",
+                    lines=[defaults.invalid_chart_line],
+                    want_note_events=[],
                 ),
-                pytest.param(
-                    [generate_note_line(0, NoteTrackIndex.OPEN.value)],
-                    [NoteEventWithDefaultsPlus(tick=0, note=Note.OPEN)],
-                    [],
-                    id="open_note",
+                testcase.new(
+                    "open_note",
+                    lines=[generate_note_line(0, NoteTrackIndex.OPEN.value)],
+                    want_note_events=[NoteEventWithDefaultsPlus(tick=0, note=Note.OPEN)],
                 ),
-                pytest.param(
-                    [generate_note_line(0, NoteTrackIndex.G.value)],
-                    [NoteEventWithDefaultsPlus(tick=0, note=Note.G)],
-                    [],
-                    id="green_note",
+                testcase.new(
+                    "green_note",
+                    lines=[generate_note_line(0, NoteTrackIndex.G.value)],
+                    want_note_events=[NoteEventWithDefaultsPlus(tick=0, note=Note.G)],
                 ),
-                pytest.param(
-                    [generate_note_line(0, NoteTrackIndex.R.value)],
-                    [NoteEventWithDefaultsPlus(tick=0, note=Note.R)],
-                    [],
-                    id="red_note",
+                testcase.new(
+                    "red_note",
+                    lines=[generate_note_line(0, NoteTrackIndex.R.value)],
+                    want_note_events=[NoteEventWithDefaultsPlus(tick=0, note=Note.R)],
                 ),
-                pytest.param(
-                    [generate_note_line(0, NoteTrackIndex.Y.value)],
-                    [NoteEventWithDefaultsPlus(tick=0, note=Note.Y)],
-                    [],
-                    id="yellow_note",
+                testcase.new(
+                    "yellow_note",
+                    lines=[generate_note_line(0, NoteTrackIndex.Y.value)],
+                    want_note_events=[NoteEventWithDefaultsPlus(tick=0, note=Note.Y)],
                 ),
-                pytest.param(
-                    [generate_note_line(0, NoteTrackIndex.B.value)],
-                    [NoteEventWithDefaultsPlus(tick=0, note=Note.B)],
-                    [],
-                    id="blue_note",
+                testcase.new(
+                    "blue_note",
+                    lines=[generate_note_line(0, NoteTrackIndex.B.value)],
+                    want_note_events=[NoteEventWithDefaultsPlus(tick=0, note=Note.B)],
                 ),
-                pytest.param(
-                    [generate_note_line(0, NoteTrackIndex.O.value)],
-                    [NoteEventWithDefaultsPlus(tick=0, note=Note.O)],
-                    [],
-                    id="orange_note",
+                testcase.new(
+                    "orange_note",
+                    lines=[generate_note_line(0, NoteTrackIndex.O.value)],
+                    want_note_events=[NoteEventWithDefaultsPlus(tick=0, note=Note.O)],
                 ),
-                pytest.param(
-                    [
+                testcase.new(
+                    "tap_green_note",
+                    lines=[
                         generate_note_line(0, NoteTrackIndex.G.value),
                         generate_note_line(0, NoteTrackIndex.TAP.value),
                     ],
-                    [
+                    want_note_events=[
                         NoteEventWithDefaultsPlus(
                             tick=0,
                             note=Note.G,
                             hopo_state=HOPOState.TAP,
                         )
                     ],
-                    [],
-                    id="tap_green_note",
                 ),
-                pytest.param(
-                    [
+                testcase.new(
+                    "forced_red_note",
+                    lines=[
                         generate_note_line(0, NoteTrackIndex.G.value),
                         generate_note_line(1, NoteTrackIndex.R.value),
                         generate_note_line(1, NoteTrackIndex.FORCED.value),
                     ],
-                    [
+                    want_note_events=[
                         NoteEventWithDefaultsPlus(
                             tick=0,
                             note=Note.G,
@@ -288,49 +288,44 @@ class TestInstrumentTrack(object):
                             hopo_state=HOPOState.STRUM,
                         ),
                     ],
-                    [],
-                    id="forced_red_note",
                 ),
-                pytest.param(
-                    [
+                testcase.new(
+                    "green_with_sustain",
+                    lines=[
                         generate_note_line(0, NoteTrackIndex.G.value, sustain=100),
                     ],
-                    [NoteEventWithDefaultsPlus(tick=0, note=Note.G, sustain=100)],
-                    [],
-                    id="green_with_sustain",
+                    want_note_events=[NoteEventWithDefaultsPlus(tick=0, note=Note.G, sustain=100)],
                 ),
-                pytest.param(
-                    [
+                testcase.new(
+                    "chord",
+                    lines=[
                         generate_note_line(0, NoteTrackIndex.G.value),
                         generate_note_line(0, NoteTrackIndex.R.value),
                     ],
-                    [NoteEventWithDefaultsPlus(tick=0, note=Note.GR)],
-                    [],
-                    id="chord",
+                    want_note_events=[NoteEventWithDefaultsPlus(tick=0, note=Note.GR)],
                 ),
-                pytest.param(
-                    [
+                testcase.new(
+                    "nonuniform_sustains",
+                    lines=[
                         generate_note_line(0, NoteTrackIndex.G.value, sustain=100),
                         generate_note_line(0, NoteTrackIndex.R.value),
                     ],
-                    [
+                    want_note_events=[
                         NoteEventWithDefaultsPlus(
                             tick=0,
                             note=Note.GR,
                             sustain=(100, 0, None, None, None),
                         )
                     ],
-                    [],
-                    id="nonuniform_sustains",
                 ),
-                pytest.param(
-                    [generate_star_power_line(0, 100)],
-                    [],
-                    [StarPowerEventWithDefaultsPlus(tick=0, sustain=100)],
-                    id="single_star_power_phrase",
+                testcase.new(
+                    "single_star_power_phrase",
+                    lines=[generate_star_power_line(0, 100)],
+                    want_star_power_events=[StarPowerEventWithDefaultsPlus(tick=0, sustain=100)],
                 ),
-                pytest.param(
-                    [
+                testcase.new(
+                    "everything_together",
+                    lines=[
                         generate_note_line(0, NoteTrackIndex.G.value, sustain=100),
                         generate_star_power_line(0, 100),
                         generate_note_line(2000, NoteTrackIndex.R.value, sustain=50),
@@ -343,7 +338,7 @@ class TestInstrumentTrack(object):
                         generate_note_line(2200, NoteTrackIndex.TAP.value),
                         generate_note_line(2300, NoteTrackIndex.OPEN.value),
                     ],
-                    [
+                    want_note_events=[
                         NoteEventWithDefaultsPlus(
                             tick=0,
                             note=Note.G,
@@ -376,7 +371,7 @@ class TestInstrumentTrack(object):
                             note=Note.OPEN,
                         ),
                     ],
-                    [
+                    want_star_power_events=[
                         StarPowerEventWithDefaultsPlus(
                             tick=0,
                             sustain=100,
@@ -388,9 +383,9 @@ class TestInstrumentTrack(object):
                             init_end_tick=True,
                         ),
                     ],
-                    id="everything_together",
                 ),
             ],
+            default_values={"want_note_events": [], "want_star_power_events": []},
         )
         def test_integration(
             self,
@@ -412,16 +407,17 @@ class TestInstrumentTrack(object):
             assert got.note_events == want_note_events
 
     class TestLastNoteEndTimestamp(object):
-        @pytest.mark.parametrize(
-            "note_events,want",
+        @testcase.parametrize(
+            ["note_events", "want"],
             [
-                pytest.param(
-                    [
+                testcase.new(
+                    "in_the_middle",
+                    note_events=[
                         NoteEventWithDefaults(end_timestamp=datetime.timedelta(seconds=0)),
                         NoteEventWithDefaults(end_timestamp=datetime.timedelta(seconds=1)),
                         NoteEventWithDefaults(end_timestamp=datetime.timedelta(seconds=0.5)),
                     ],
-                    datetime.timedelta(seconds=1),
+                    want=datetime.timedelta(seconds=1),
                 ),
             ],
         )
@@ -437,33 +433,34 @@ class TestInstrumentTrack(object):
 
 class TestNoteEvent(object):
     class TestFromParsedData(object):
-        @pytest.mark.parametrize(
-            (
-                "data,"
-                "want_tick,"
-                "want_sustain,"
-                "want_note,"
-                "want_hopo_state,"
-                "want_star_power_data,"
-                "want_star_power_event_index,"
-                "want_proximal_bpm_event_index"
-            ),
+        @testcase.parametrize(
             [
-                pytest.param(
-                    NoteEventParsedDataWithDefaults(
+                "data",
+                "want_tick",
+                "want_sustain",
+                "want_note",
+                "want_hopo_state",
+                "want_star_power_data",
+                "want_star_power_event_index",
+                "want_proximal_bpm_event_index",
+            ],
+            [
+                testcase.new(
+                    "single_data",
+                    data=NoteEventParsedDataWithDefaults(
                         tick=1, note_track_index=NoteTrackIndex.G, sustain=100
                     ),
-                    1,
-                    100,
-                    Note.G,
-                    HOPOState.STRUM,
-                    StarPowerData(star_power_event_index=5),
-                    11,
-                    22,
-                    id="single_data",
+                    want_tick=1,
+                    want_sustain=100,
+                    want_note=Note.G,
+                    want_hopo_state=HOPOState.STRUM,
+                    want_star_power_data=StarPowerData(star_power_event_index=5),
+                    want_star_power_event_index=11,
+                    want_proximal_bpm_event_index=22,
                 ),
-                pytest.param(
-                    [
+                testcase.new(
+                    "multiple_data",
+                    data=[
                         NoteEventParsedDataWithDefaults(
                             tick=1, note_track_index=NoteTrackIndex.G, sustain=100
                         ),
@@ -471,14 +468,13 @@ class TestNoteEvent(object):
                             tick=1, note_track_index=NoteTrackIndex.R, sustain=50
                         ),
                     ],
-                    1,
-                    (100, 50, None, None, None),
-                    Note.GR,
-                    HOPOState.STRUM,
-                    StarPowerData(star_power_event_index=5),
-                    11,
-                    22,
-                    id="multiple_data",
+                    want_tick=1,
+                    want_sustain=(100, 50, None, None, None),
+                    want_note=Note.GR,
+                    want_hopo_state=HOPOState.STRUM,
+                    want_star_power_data=StarPowerData(star_power_event_index=5),
+                    want_star_power_event_index=11,
+                    want_proximal_bpm_event_index=22,
                 ),
             ],
         )
@@ -559,172 +555,172 @@ class TestNoteEvent(object):
             )
 
     class TestComputeHOPOState(object):
-        @pytest.mark.parametrize(
-            "tick,note,is_tap,is_forced,previous,want",
+        @testcase.parametrize(
+            ["tick", "note", "is_tap", "is_forced", "previous", "want"],
             [
-                pytest.param(
-                    tests.helpers.tick.calculate_ticks_between_notes_with_defaults(
-                        NoteDuration.SIXTEENTH,
-                    ),
-                    Note.R,
-                    True,
-                    True,
-                    NoteEventWithDefaults(
-                        tick=0,
-                        note=Note.G,
-                    ),
-                    HOPOState.TAP,
-                    id="forced_tap_note_is_a_tap",
+                testcase.new(
+                    "forced_tap_note_is_a_tap",
                     # TODO: I don't actually know if this test case is accurate. Needs verifying.
-                ),
-                pytest.param(
-                    0,
-                    Note.G,
-                    False,
-                    False,
-                    None,
-                    HOPOState.STRUM,
-                    id="first_note_is_strum",
-                ),
-                pytest.param(
-                    tests.helpers.tick.calculate_ticks_between_notes_with_defaults(
+                    tick=tests.helpers.tick.calculate_ticks_between_notes_with_defaults(
                         NoteDuration.SIXTEENTH,
                     ),
-                    Note.R,
-                    False,
-                    False,
-                    NoteEventWithDefaults(
+                    note=Note.R,
+                    is_tap=True,
+                    is_forced=True,
+                    previous=NoteEventWithDefaults(
                         tick=0,
                         note=Note.G,
                     ),
-                    HOPOState.HOPO,
-                    id="16th_notes_are_hopos",
+                    want=HOPOState.TAP,
                 ),
-                pytest.param(
-                    tests.helpers.tick.calculate_ticks_between_notes_with_defaults(
-                        NoteDuration.TWELFTH,
-                    ),
-                    Note.R,
-                    False,
-                    False,
-                    NoteEventWithDefaults(
-                        tick=0,
-                        note=Note.G,
-                    ),
-                    HOPOState.HOPO,
-                    id="12th_notes_are_hopos",
+                testcase.new(
+                    "first_note_is_strum",
+                    tick=0,
+                    note=Note.G,
+                    is_tap=False,
+                    is_forced=False,
+                    previous=None,
+                    want=HOPOState.STRUM,
                 ),
-                pytest.param(
-                    tests.helpers.tick.calculate_ticks_between_notes_with_defaults(
-                        NoteDuration.EIGHTH,
-                    ),
-                    Note.R,
-                    False,
-                    False,
-                    NoteEventWithDefaults(
-                        tick=0,
-                        note=Note.G,
-                    ),
-                    HOPOState.STRUM,
-                    id="8th_notes_are_strums",
-                ),
-                pytest.param(
-                    tests.helpers.tick.calculate_ticks_between_notes_with_defaults(
+                testcase.new(
+                    "16th_notes_are_hopos",
+                    tick=tests.helpers.tick.calculate_ticks_between_notes_with_defaults(
                         NoteDuration.SIXTEENTH,
                     ),
-                    Note.G,
-                    False,
-                    False,
-                    NoteEventWithDefaults(
+                    note=Note.R,
+                    is_tap=False,
+                    is_forced=False,
+                    previous=NoteEventWithDefaults(
                         tick=0,
                         note=Note.G,
                     ),
-                    HOPOState.STRUM,
-                    id="consecutive_16th_notes_are_strums",
+                    want=HOPOState.HOPO,
                 ),
-                pytest.param(
-                    tests.helpers.tick.calculate_ticks_between_notes_with_defaults(
+                testcase.new(
+                    "12th_notes_are_hopos",
+                    tick=tests.helpers.tick.calculate_ticks_between_notes_with_defaults(
                         NoteDuration.TWELFTH,
                     ),
-                    Note.G,
-                    False,
-                    False,
-                    NoteEventWithDefaults(
+                    note=Note.R,
+                    is_tap=False,
+                    is_forced=False,
+                    previous=NoteEventWithDefaults(
                         tick=0,
                         note=Note.G,
                     ),
-                    HOPOState.STRUM,
-                    id="consecutive_12th_notes_are_strums",
+                    want=HOPOState.HOPO,
                 ),
-                pytest.param(
-                    tests.helpers.tick.calculate_ticks_between_notes_with_defaults(
+                testcase.new(
+                    "8th_notes_are_strums",
+                    tick=tests.helpers.tick.calculate_ticks_between_notes_with_defaults(
                         NoteDuration.EIGHTH,
                     ),
-                    Note.G,
-                    False,
-                    False,
-                    NoteEventWithDefaults(
+                    note=Note.R,
+                    is_tap=False,
+                    is_forced=False,
+                    previous=NoteEventWithDefaults(
                         tick=0,
                         note=Note.G,
                     ),
-                    HOPOState.STRUM,
-                    id="consecutive_8th_notes_are_strums",
+                    want=HOPOState.STRUM,
                 ),
-                pytest.param(
-                    tests.helpers.tick.calculate_ticks_between_notes_with_defaults(
+                testcase.new(
+                    "consecutive_16th_notes_are_strums",
+                    tick=tests.helpers.tick.calculate_ticks_between_notes_with_defaults(
+                        NoteDuration.SIXTEENTH,
+                    ),
+                    note=Note.G,
+                    is_tap=False,
+                    is_forced=False,
+                    previous=NoteEventWithDefaults(
+                        tick=0,
+                        note=Note.G,
+                    ),
+                    want=HOPOState.STRUM,
+                ),
+                testcase.new(
+                    "consecutive_12th_notes_are_strums",
+                    tick=tests.helpers.tick.calculate_ticks_between_notes_with_defaults(
                         NoteDuration.TWELFTH,
                     ),
-                    Note.G,
-                    False,
-                    False,
-                    NoteEventWithDefaults(
+                    note=Note.G,
+                    is_tap=False,
+                    is_forced=False,
+                    previous=NoteEventWithDefaults(
+                        tick=0,
+                        note=Note.G,
+                    ),
+                    want=HOPOState.STRUM,
+                ),
+                testcase.new(
+                    "consecutive_8th_notes_are_strums",
+                    tick=tests.helpers.tick.calculate_ticks_between_notes_with_defaults(
+                        NoteDuration.EIGHTH,
+                    ),
+                    note=Note.G,
+                    is_tap=False,
+                    is_forced=False,
+                    previous=NoteEventWithDefaults(
+                        tick=0,
+                        note=Note.G,
+                    ),
+                    want=HOPOState.STRUM,
+                ),
+                testcase.new(
+                    "pull_off_from_chord_is_hopo",
+                    tick=tests.helpers.tick.calculate_ticks_between_notes_with_defaults(
+                        NoteDuration.TWELFTH,
+                    ),
+                    note=Note.G,
+                    is_tap=False,
+                    is_forced=False,
+                    previous=NoteEventWithDefaults(
                         tick=0,
                         note=Note.RY,
                     ),
-                    HOPOState.HOPO,
-                    id="pull_off_from_chord_is_hopo",
+                    want=HOPOState.HOPO,
                 ),
-                pytest.param(
-                    tests.helpers.tick.calculate_ticks_between_notes_with_defaults(
+                testcase.new(
+                    "hammer_on_to_chord_is_not_hopo",
+                    tick=tests.helpers.tick.calculate_ticks_between_notes_with_defaults(
                         NoteDuration.TWELFTH,
                     ),
-                    Note.RY,
-                    False,
-                    False,
-                    NoteEventWithDefaults(
+                    note=Note.RY,
+                    is_tap=False,
+                    is_forced=False,
+                    previous=NoteEventWithDefaults(
                         tick=0,
                         note=Note.G,
                     ),
-                    HOPOState.STRUM,
-                    id="hammer_on_to_chord_is_not_hopo",
+                    want=HOPOState.STRUM,
                 ),
-                pytest.param(
-                    tests.helpers.tick.calculate_ticks_between_notes_with_defaults(
+                testcase.new(
+                    "hammer_on_to_open_is_hopo",
+                    tick=tests.helpers.tick.calculate_ticks_between_notes_with_defaults(
                         NoteDuration.TWELFTH,
                     ),
-                    Note.OPEN,
-                    False,
-                    False,
-                    NoteEventWithDefaults(
+                    note=Note.OPEN,
+                    is_tap=False,
+                    is_forced=False,
+                    previous=NoteEventWithDefaults(
                         tick=0,
                         note=Note.G,
                     ),
-                    HOPOState.HOPO,
-                    id="hammer_on_to_open_is_hopo",
+                    want=HOPOState.HOPO,
                 ),
-                pytest.param(
-                    tests.helpers.tick.calculate_ticks_between_notes_with_defaults(
+                testcase.new(
+                    "pull_off_to_open_is_hopo",
+                    tick=tests.helpers.tick.calculate_ticks_between_notes_with_defaults(
                         NoteDuration.TWELFTH,
                     ),
-                    Note.G,
-                    False,
-                    False,
-                    NoteEventWithDefaults(
+                    note=Note.G,
+                    is_tap=False,
+                    is_forced=False,
+                    previous=NoteEventWithDefaults(
                         tick=0,
                         note=Note.OPEN,
                     ),
-                    HOPOState.HOPO,
-                    id="pull_off_to_open_is_hopo",
+                    want=HOPOState.HOPO,
                 ),
             ],
         )
@@ -755,30 +751,29 @@ class TestNoteEvent(object):
             test_regex = r"^T (\d+?) I (\d+?) S (\d+?)$"
 
             tick = 4
-            sustain_ticks = 3
 
-            @pytest.mark.parametrize(
-                ("want_note_track_index," "want_sustain,"),
+            @testcase.parametrize(
+                ["want_note_track_index", "want_sustain"],
                 [
-                    pytest.param(
-                        NoteTrackIndex.YELLOW,
-                        sustain_ticks,
-                        id="normal_note",
+                    testcase.new(
+                        "normal_note",
+                        want_note_track_index=NoteTrackIndex.YELLOW,
+                        want_sustain=3,
                     ),
-                    pytest.param(
-                        NoteTrackIndex.OPEN,
-                        sustain_ticks,
-                        id="open_note",
+                    testcase.new(
+                        "open_note",
+                        want_note_track_index=NoteTrackIndex.OPEN,
+                        want_sustain=3,
                     ),
-                    pytest.param(
-                        NoteTrackIndex.FORCED,
-                        0,
-                        id="forced_note",
+                    testcase.new(
+                        "forced_note",
+                        want_note_track_index=NoteTrackIndex.FORCED,
+                        want_sustain=0,
                     ),
-                    pytest.param(
-                        NoteTrackIndex.TAP,
-                        0,
-                        id="tap_note",
+                    testcase.new(
+                        "tap_note",
+                        want_note_track_index=NoteTrackIndex.TAP,
+                        want_sustain=0,
                     ),
                 ],
             )
@@ -819,13 +814,23 @@ class TestNoteEvent(object):
                 del NoteEvent.ParsedData._regex_prog
 
         class TestComplexSustain(object):
-            @pytest.mark.parametrize(
-                "sustain,want",
+            @testcase.parametrize(
+                ["sustain", "want"],
                 [
-                    pytest.param(None, None, id="None"),
-                    pytest.param(1, 1, id="int"),
-                    pytest.param(
-                        (None, 1, None, None, None), (None, 1, None, None, None), id="list"
+                    testcase.new(
+                        "None",
+                        sustain=None,
+                        want=None,
+                    ),
+                    testcase.new(
+                        "int",
+                        sustain=1,
+                        want=1,
+                    ),
+                    testcase.new(
+                        "list",
+                        sustain=(None, 1, None, None, None),
+                        want=(None, 1, None, None, None),
                     ),
                 ],
             )
@@ -835,49 +840,51 @@ class TestNoteEvent(object):
                 assert got == want
 
     class TestComputeStarPowerData(object):
-        @pytest.mark.parametrize(
-            "tick,star_power_events,want_data,want_proximal_star_power_event_index",
+        @testcase.parametrize(
+            ["tick", "star_power_events", "want_data", "want_proximal_star_power_event_index"],
             [
-                pytest.param(
-                    defaults.tick,
-                    [],
-                    None,
-                    0,
-                    id="empty_star_power_events",
+                testcase.new(
+                    "empty_star_power_events",
+                    tick=defaults.tick,
+                    star_power_events=[],
+                    want_data=None,
+                    want_proximal_star_power_event_index=0,
                 ),
-                pytest.param(
-                    0,
-                    [StarPowerEventWithDefaults(tick=100, sustain=10)],
-                    None,
-                    0,
-                    id="tick_not_in_event",
+                testcase.new(
+                    "tick_not_in_event",
+                    tick=0,
+                    star_power_events=[StarPowerEventWithDefaults(tick=100, sustain=10)],
+                    want_data=None,
+                    want_proximal_star_power_event_index=0,
                 ),
-                pytest.param(
-                    10,
-                    [
+                testcase.new(
+                    "tick_not_in_event_with_noninitial_candidate_index",
+                    tick=10,
+                    star_power_events=[
                         StarPowerEventWithDefaults(tick=0, sustain=10),
                         StarPowerEventWithDefaults(tick=100, sustain=10),
                     ],
-                    None,
-                    1,
-                    id="tick_not_in_event_with_noninitial_candidate_index",
+                    want_data=None,
+                    want_proximal_star_power_event_index=1,
                 ),
-                pytest.param(
-                    0,
-                    [StarPowerEventWithDefaults(tick=0, sustain=10)],
-                    StarPowerData(star_power_event_index=defaults.proximal_star_power_event_index),
-                    0,
-                    id="tick_in_event",
+                testcase.new(
+                    "tick_in_event",
+                    tick=0,
+                    star_power_events=[StarPowerEventWithDefaults(tick=0, sustain=10)],
+                    want_data=StarPowerData(
+                        star_power_event_index=defaults.proximal_star_power_event_index
+                    ),
+                    want_proximal_star_power_event_index=0,
                 ),
-                pytest.param(
-                    100,
-                    [
+                testcase.new(
+                    "tick_in_event_with_noninitial_candidate_index",
+                    tick=100,
+                    star_power_events=[
                         StarPowerEventWithDefaults(tick=0, sustain=10),
                         StarPowerEventWithDefaults(tick=100, sustain=10),
                     ],
-                    StarPowerData(star_power_event_index=1),
-                    1,
-                    id="tick_in_event_with_noninitial_candidate_index",
+                    want_data=StarPowerData(star_power_event_index=1),
+                    want_proximal_star_power_event_index=1,
                 ),
             ],
         )
@@ -905,27 +912,29 @@ class TestNoteEvent(object):
                 )
 
     class TestLongestSustain(object):
-        @pytest.mark.parametrize(
-            "sustain,want",
+        @testcase.parametrize(
+            ["sustain", "want"],
             [
-                pytest.param(100, 100),
-                pytest.param((50, 100, None, 200, None), 200),
+                testcase.new(
+                    "simple_sustain",
+                    sustain=100,
+                    want=100,
+                ),
+                testcase.new(
+                    "tuple_sustain",
+                    sustain=(50, 100, None, 200, None),
+                    want=200,
+                ),
             ],
         )
         def test(self, mocker, bare_note_event, sustain, want):
+            # Test wrapper
             unsafe.setattr(bare_note_event, "sustain", 100)
             spy = mocker.spy(NoteEvent, "_longest_sustain")
             bare_note_event.longest_sustain
             spy.assert_called_once_with(100)
 
-        @pytest.mark.parametrize(
-            "sustain,want",
-            [
-                pytest.param(100, 100),
-                pytest.param((50, 100, None, 200, None), 200),
-            ],
-        )
-        def test_impl(self, sustain, want):
+            # Test impl
             got = NoteEvent._longest_sustain(sustain)
             assert got == want
 
@@ -949,12 +958,16 @@ class TestNoteEvent(object):
 
 class TestSpecialEvent(object):
     class TestFromParsedData(object):
-        @pytest.mark.parametrize(
-            "prev_event",
+        @testcase.parametrize(
+            ["prev_event"],
             [
-                pytest.param(None, id="prev_event_none"),
-                pytest.param(
-                    SpecialEventWithDefaults(proximal_bpm_event_index=1), id="prev_event_present"
+                testcase.new(
+                    "prev_event_none",
+                    prev_event=None,
+                ),
+                testcase.new(
+                    "prev_event_present",
+                    prev_event=SpecialEventWithDefaults(proximal_bpm_event_index=1),
                 ),
             ],
         )
@@ -1001,17 +1014,29 @@ class TestSpecialEvent(object):
                 del SpecialEvent.ParsedData._regex_prog
 
     class TestTickIsAfterEvent(object):
-        @pytest.mark.parametrize(
-            "tick,want",
+        @testcase.parametrize(
+            ["tick", "want"],
             [
-                pytest.param(0, False, id="before"),
-                pytest.param(
-                    100,
-                    False,
-                    id="coincide_with_start",
+                testcase.new(
+                    "before",
+                    tick=0,
+                    want=False,
                 ),
-                pytest.param(110, True, id="coincide_with_end"),
-                pytest.param(111, True, id="after"),
+                testcase.new(
+                    "coincide_with_start",
+                    tick=100,
+                    want=False,
+                ),
+                testcase.new(
+                    "coincide_with_end",
+                    tick=110,
+                    want=True,
+                ),
+                testcase.new(
+                    "after",
+                    tick=111,
+                    want=True,
+                ),
             ],
         )
         def test(self, tick, want):
@@ -1020,17 +1045,29 @@ class TestSpecialEvent(object):
             assert got == want
 
     class TestTickIsDuringEvent(object):
-        @pytest.mark.parametrize(
-            "tick,want",
+        @testcase.parametrize(
+            ["tick", "want"],
             [
-                pytest.param(0, False, id="before"),
-                pytest.param(
-                    100,
-                    True,
-                    id="coincide_with_start",
+                testcase.new(
+                    "before",
+                    tick=0,
+                    want=False,
                 ),
-                pytest.param(110, False, id="coincide_with_end"),
-                pytest.param(111, False, id="after"),
+                testcase.new(
+                    "coincide_with_start",
+                    tick=100,
+                    want=True,
+                ),
+                testcase.new(
+                    "coincide_with_end",
+                    tick=110,
+                    want=False,
+                ),
+                testcase.new(
+                    "after",
+                    tick=111,
+                    want=False,
+                ),
             ],
         )
         def test(self, tick, want):
@@ -1046,16 +1083,16 @@ class TestStarPowerEvent(object):
 
 class TestTrackEvent(object):
     class TestFromParsedData(object):
-        @pytest.mark.parametrize(
-            "prev_event",
+        @testcase.parametrize(
+            ["prev_event"],
             [
-                pytest.param(
-                    None,
-                    id="prev_event_none",
+                testcase.new(
+                    "prev_event_none",
+                    prev_event=None,
                 ),
-                pytest.param(
-                    TrackEventWithDefaults(proximal_bpm_event_index=1),
-                    id="prev_event_present",
+                testcase.new(
+                    "prev_event_present",
+                    prev_event=TrackEventWithDefaults(proximal_bpm_event_index=1),
                 ),
             ],
         )

@@ -13,6 +13,7 @@ from chartparse.metadata import Metadata
 from chartparse.sync import SyncTrack
 
 from tests.helpers import defaults
+from tests.helpers import testcase
 from tests.helpers import unsafe
 from tests.helpers.instrument import NoteEventWithDefaults
 from tests.helpers.log import LogChecker
@@ -122,20 +123,20 @@ class TestChart(object):
                 default_sync_track.bpm_events,
             )
 
-        @pytest.mark.parametrize(
-            "path",
+        @testcase.parametrize(
+            ["path"],
             [
-                pytest.param(
-                    _missing_metadata_chart_filepath,
-                    id="missing_metadata",
+                testcase.new(
+                    "missing_metadata",
+                    path=_missing_metadata_chart_filepath,
                 ),
-                pytest.param(
-                    _missing_sync_track_chart_filepath,
-                    id="missing_sync_track",
+                testcase.new(
+                    "missing_sync_track",
+                    path=_missing_sync_track_chart_filepath,
                 ),
-                pytest.param(
-                    _missing_global_events_track_chart_filepath,
-                    id="missing_global_events_track",
+                testcase.new(
+                    "missing_global_events_track",
+                    path=_missing_global_events_track_chart_filepath,
                 ),
             ],
         )
@@ -231,26 +232,26 @@ class TestChart(object):
                 ],
             )
 
-        @pytest.mark.parametrize(
-            "lines",
+        @testcase.parametrize(
+            ["lines"],
             [
-                pytest.param(
-                    ["Song]", "{", '  Name = "Song Name"', "}"],
-                    id="malformed_missing_open_bracket",
+                testcase.new(
+                    "malformed_missing_open_bracket",
+                    lines=["Song]", "{", '  Name = "Song Name"', "}"],
                 ),
-                pytest.param(
-                    ["[Song", "{", '  Name = "Song Name"', "}"],
-                    id="malformed_missing_close_bracket",
+                testcase.new(
+                    "malformed_missing_close_bracket",
+                    lines=["[Song", "{", '  Name = "Song Name"', "}"],
                 ),
-                pytest.param(
-                    [
+                testcase.new(
+                    "malformed_noninitial_section",
+                    lines=[
                         "[Song]",
                         "{",
                         '  Name = "Song Name"',
                         "}",
                         "[ExpertSingle",
                     ],
-                    id="malformed_noninitial_section",
                 ),
             ],
         )
@@ -265,32 +266,32 @@ class TestChart(object):
             mock.assert_called_once_with(defaults.tick, defaults.bpm, defaults.resolution)
 
     class TestNotesPerSecond(object):
-        @pytest.mark.parametrize(
-            "interval_start_time,interval_end_time,want",
+        @testcase.parametrize(
+            ["interval_start_time", "interval_end_time", "want"],
             [
-                pytest.param(
-                    datetime.timedelta(seconds=1),
-                    datetime.timedelta(seconds=3),
-                    3 / 2,
-                    id="boundaries_included",
+                testcase.new(
+                    "boundaries_included",
+                    interval_start_time=datetime.timedelta(seconds=1),
+                    interval_end_time=datetime.timedelta(seconds=3),
+                    want=3 / 2,
                 ),
-                pytest.param(
-                    datetime.timedelta(seconds=2),
-                    datetime.timedelta(seconds=3),
-                    2,
-                    id="filtered_too_early_note",
+                testcase.new(
+                    "filtered_too_early_note",
+                    interval_start_time=datetime.timedelta(seconds=2),
+                    interval_end_time=datetime.timedelta(seconds=3),
+                    want=2,
                 ),
-                pytest.param(
-                    datetime.timedelta(seconds=1),
-                    datetime.timedelta(seconds=2),
-                    2,
-                    id="filtered_too_late_note",
+                testcase.new(
+                    "filtered_too_late_note",
+                    interval_start_time=datetime.timedelta(seconds=1),
+                    interval_end_time=datetime.timedelta(seconds=2),
+                    want=2,
                 ),
-                pytest.param(
-                    datetime.timedelta(seconds=0),
-                    datetime.timedelta(seconds=4),
-                    3 / 4,
-                    id="wider_interval_than_notes",
+                testcase.new(
+                    "wider_interval_than_notes",
+                    interval_start_time=datetime.timedelta(seconds=0),
+                    interval_end_time=datetime.timedelta(seconds=4),
+                    want=3 / 4,
                 ),
             ],
         )
@@ -313,29 +314,29 @@ class TestChart(object):
             )
             assert got == want
 
-        @pytest.mark.parametrize(
-            "start_tick,end_tick,want_interval_start_time,want_interval_end_time",
+        @testcase.parametrize(
+            ["start_tick", "end_tick", "want_interval_start_time", "want_interval_end_time"],
             [
-                pytest.param(
-                    None,
-                    2,
-                    datetime.timedelta(0),
-                    datetime.timedelta(seconds=2),
-                    id="all_start_args_none",
+                testcase.new(
+                    "all_start_args_none",
+                    start_tick=None,
+                    end_tick=2,
+                    want_interval_start_time=datetime.timedelta(0),
+                    want_interval_end_time=datetime.timedelta(seconds=2),
                 ),
-                pytest.param(
-                    1,
-                    None,
-                    datetime.timedelta(seconds=1),
-                    datetime.timedelta(seconds=1000),
-                    id="last_none",
+                testcase.new(
+                    "last_none",
+                    start_tick=1,
+                    end_tick=None,
+                    want_interval_start_time=datetime.timedelta(seconds=1),
+                    want_interval_end_time=datetime.timedelta(seconds=1000),
                 ),
-                pytest.param(
-                    1,
-                    2,
-                    datetime.timedelta(seconds=1),
-                    datetime.timedelta(seconds=2),
-                    id="no_none",
+                testcase.new(
+                    "no_none",
+                    start_tick=1,
+                    end_tick=2,
+                    want_interval_start_time=datetime.timedelta(seconds=1),
+                    want_interval_end_time=datetime.timedelta(seconds=2),
                 ),
             ],
         )
@@ -391,22 +392,22 @@ class TestChart(object):
                 "timestamp_at_tick",
             )
 
-        @pytest.mark.parametrize(
-            "start_time,end_time,want_interval_start_time,want_interval_end_time",
+        @testcase.parametrize(
+            ["start_time", "end_time", "want_interval_start_time", "want_interval_end_time"],
             [
-                pytest.param(
-                    datetime.timedelta(seconds=1),
-                    None,
-                    datetime.timedelta(seconds=1),
-                    datetime.timedelta(seconds=1000),
-                    id="last_none",
+                testcase.new(
+                    "last_none",
+                    start_time=datetime.timedelta(seconds=1),
+                    end_time=None,
+                    want_interval_start_time=datetime.timedelta(seconds=1),
+                    want_interval_end_time=datetime.timedelta(seconds=1000),
                 ),
-                pytest.param(
-                    datetime.timedelta(seconds=1),
-                    datetime.timedelta(seconds=2),
-                    datetime.timedelta(seconds=1),
-                    datetime.timedelta(seconds=2),
-                    id="no_none",
+                testcase.new(
+                    "no_none",
+                    start_time=datetime.timedelta(seconds=1),
+                    end_time=datetime.timedelta(seconds=2),
+                    want_interval_start_time=datetime.timedelta(seconds=1),
+                    want_interval_end_time=datetime.timedelta(seconds=2),
                 ),
             ],
         )
@@ -443,22 +444,22 @@ class TestChart(object):
                 [defaults.note_event], want_interval_start_time, want_interval_end_time
             )
 
-        @pytest.mark.parametrize(
-            "start_seconds,end_seconds,want_interval_start_time,want_interval_end_time",
+        @testcase.parametrize(
+            ["start_seconds", "end_seconds", "want_interval_start_time", "want_interval_end_time"],
             [
-                pytest.param(
-                    1,
-                    None,
-                    datetime.timedelta(seconds=1),
-                    datetime.timedelta(seconds=1000),
-                    id="last_none",
+                testcase.new(
+                    "last_none",
+                    start_seconds=1,
+                    end_seconds=None,
+                    want_interval_start_time=datetime.timedelta(seconds=1),
+                    want_interval_end_time=datetime.timedelta(seconds=1000),
                 ),
-                pytest.param(
-                    1,
-                    2,
-                    datetime.timedelta(seconds=1),
-                    datetime.timedelta(seconds=2),
-                    id="no_none",
+                testcase.new(
+                    "no_none",
+                    start_seconds=1,
+                    end_seconds=2,
+                    want_interval_start_time=datetime.timedelta(seconds=1),
+                    want_interval_end_time=datetime.timedelta(seconds=2),
                 ),
             ],
         )
@@ -495,28 +496,32 @@ class TestChart(object):
                 [defaults.note_event], want_interval_start_time, want_interval_end_time
             )
 
-        @pytest.mark.parametrize(
-            "start_time,start_tick,start_seconds",
+        @testcase.parametrize(
+            ["start_time", "start_tick", "start_seconds"],
             [
-                pytest.param(
-                    defaults.timestamp,
-                    defaults.tick,
-                    None,
+                testcase.new(
+                    "time_and_tick",
+                    start_time=defaults.timestamp,
+                    start_tick=defaults.tick,
+                    start_seconds=None,
                 ),
-                pytest.param(
-                    defaults.timestamp,
-                    None,
-                    defaults.seconds,
+                testcase.new(
+                    "time_and_seconds",
+                    start_time=defaults.timestamp,
+                    start_tick=None,
+                    start_seconds=defaults.seconds,
                 ),
-                pytest.param(
-                    None,
-                    defaults.tick,
-                    defaults.seconds,
+                testcase.new(
+                    "tick_and_seconds",
+                    start_time=None,
+                    start_tick=defaults.tick,
+                    start_seconds=defaults.seconds,
                 ),
-                pytest.param(
-                    defaults.timestamp,
-                    defaults.tick,
-                    defaults.seconds,
+                testcase.new(
+                    "all_three",
+                    start_time=defaults.timestamp,
+                    start_tick=defaults.tick,
+                    start_seconds=defaults.seconds,
                 ),
             ],
         )
@@ -530,12 +535,21 @@ class TestChart(object):
                     start_seconds=start_seconds,
                 )
 
-        @pytest.mark.parametrize(
-            "instrument,difficulty",
+        @testcase.parametrize(
+            ["instrument", "difficulty"],
             [
-                pytest.param(Instrument.BASS, Difficulty.EXPERT),
-                pytest.param(Instrument.GUITAR, Difficulty.MEDIUM),
-                pytest.param(Instrument.BASS, Difficulty.MEDIUM),
+                testcase.new_anonymous(
+                    instrument=Instrument.BASS,
+                    difficulty=Difficulty.EXPERT,
+                ),
+                testcase.new_anonymous(
+                    instrument=Instrument.GUITAR,
+                    difficulty=Difficulty.MEDIUM,
+                ),
+                testcase.new_anonymous(
+                    instrument=Instrument.BASS,
+                    difficulty=Difficulty.MEDIUM,
+                ),
             ],
         )
         def test_missing_instrument_difficulty(self, default_chart, instrument, difficulty):

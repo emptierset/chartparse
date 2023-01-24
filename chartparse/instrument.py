@@ -244,7 +244,8 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             raise ValueError(f"resolution ({self.resolution}) must be positive")
 
     @functools.cached_property
-    def section_name(self) -> str:
+    # TODO: Maybe cover this?
+    def section_name(self) -> str:  # pragma: no cover
         """The concatenation of this track's difficulty and instrument (in that order)."""
         return self.difficulty.value + self.instrument.value
 

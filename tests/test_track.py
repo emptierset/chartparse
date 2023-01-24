@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import dataclasses
-import pytest
 
 import chartparse.track
 from chartparse.event import Event
@@ -9,32 +8,33 @@ from chartparse.track import build_events_from_data, parse_data_from_chart_lines
 from chartparse.sync import BPMEvent, AnchorEvent
 
 from tests.helpers import defaults
+from tests.helpers import testcase
 from tests.helpers.fruit import Fruit
 from tests.helpers.log import LogChecker
 from tests.helpers.sync import BPMEventsWithDefaults
 
 
 class TestBuildEventsFromData(object):
-    @pytest.mark.parametrize(
-        "data,from_data_return_value,want",
+    @testcase.parametrize(
+        ["data", "from_data_return_value", "want"],
         [
-            pytest.param(
-                defaults.time_signature_event_parsed_data,
-                defaults.time_signature_event,
-                [defaults.time_signature_event],
-                id="with_timestamp_getter",
+            testcase.new(
+                "with_timestamp_getter",
+                data=defaults.time_signature_event_parsed_data,
+                from_data_return_value=defaults.time_signature_event,
+                want=[defaults.time_signature_event],
             ),
-            pytest.param(
-                defaults.anchor_event_parsed_data,
-                defaults.anchor_event,
-                [defaults.anchor_event],
-                id="with_None",
+            testcase.new(
+                "with_None",
+                data=defaults.anchor_event_parsed_data,
+                from_data_return_value=defaults.anchor_event,
+                want=[defaults.anchor_event],
             ),
-            pytest.param(
-                defaults.bpm_event_parsed_data,
-                defaults.bpm_event,
-                BPMEventsWithDefaults(),
-                id="with_resolution",
+            testcase.new(
+                "with_resolution",
+                data=defaults.bpm_event_parsed_data,
+                from_data_return_value=defaults.bpm_event,
+                want=BPMEventsWithDefaults(),
             ),
         ],
     )
@@ -73,19 +73,19 @@ class TestParseDataFromChartLines(object):
         def from_chart_line(cls, line):
             return cls(tick=int(line), fruit=Fruit(int(line)))
 
-    @pytest.mark.parametrize(
-        "types,lines,want",
+    @testcase.parametrize(
+        ["types", "lines", "want"],
         [
-            pytest.param(
-                (ParsedData,),
-                ["0", "1"],
-                {
+            testcase.new(
+                "two_typical_events",
+                types=(ParsedData,),
+                lines=["0", "1"],
+                want={
                     ParsedData: [
                         ParsedData(tick=0, fruit=Fruit(0)),
                         ParsedData(tick=1, fruit=Fruit(1)),
                     ]
                 },
-                id="two_typical_events",
             ),
         ],
     )

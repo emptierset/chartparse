@@ -3,19 +3,40 @@ from __future__ import annotations
 import pytest
 
 import chartparse.tick
-
 from chartparse.tick import NoteDuration
+
+from tests.helpers import testcase
 
 
 class TestCalculateTicksBetweenNotes(object):
-    @pytest.mark.parametrize(
-        "resolution,note_duration,want",
+    @testcase.parametrize(
+        ["resolution", "note_duration", "want"],
         [
-            pytest.param(100, NoteDuration.QUARTER, 100),
-            pytest.param(192, NoteDuration.QUARTER, 192),
-            pytest.param(192, NoteDuration.EIGHTH, 96),
-            pytest.param(192, NoteDuration.EIGHTH_TRIPLET, 64),
-            pytest.param(192, NoteDuration.SIXTEENTH_TRIPLET, 32),
+            testcase.new_anonymous(
+                resolution=100,
+                note_duration=NoteDuration.QUARTER,
+                want=100,
+            ),
+            testcase.new_anonymous(
+                resolution=192,
+                note_duration=NoteDuration.QUARTER,
+                want=192,
+            ),
+            testcase.new_anonymous(
+                resolution=192,
+                note_duration=NoteDuration.EIGHTH,
+                want=96,
+            ),
+            testcase.new_anonymous(
+                resolution=192,
+                note_duration=NoteDuration.EIGHTH_TRIPLET,
+                want=64,
+            ),
+            testcase.new_anonymous(
+                resolution=192,
+                note_duration=NoteDuration.SIXTEENTH_TRIPLET,
+                want=32,
+            ),
         ],
     )
     def test(self, resolution, note_duration, want):
@@ -23,30 +44,79 @@ class TestCalculateTicksBetweenNotes(object):
         assert got == want
 
 
-# TODO: Add "id" (and pytest.param where still missing) everywhere.
 class TestSecondsFromTicksAtBPM(object):
-    @pytest.mark.parametrize(
-        "ticks,bpm,resolution,want",
+    @testcase.parametrize(
+        ["ticks", "bpm", "resolution", "want"],
         [
-            pytest.param(100, 60, 100, 1),
-            pytest.param(100, 120, 100, 0.5),
-            pytest.param(200, 120, 100, 1),
-            pytest.param(400, 200, 100, 1.2),
-            pytest.param(100, 60, 200, 0.5),
+            testcase.new_anonymous(
+                ticks=100,
+                bpm=60,
+                resolution=100,
+                want=1,
+            ),
+            testcase.new_anonymous(
+                ticks=100,
+                bpm=120,
+                resolution=100,
+                want=0.5,
+            ),
+            testcase.new_anonymous(
+                ticks=200,
+                bpm=120,
+                resolution=100,
+                want=1,
+            ),
+            testcase.new_anonymous(
+                ticks=400,
+                bpm=200,
+                resolution=100,
+                want=1.2,
+            ),
+            testcase.new_anonymous(
+                ticks=100,
+                bpm=60,
+                resolution=200,
+                want=0.5,
+            ),
         ],
     )
     def test(self, ticks, bpm, resolution, want):
         got = chartparse.tick.seconds_from_ticks_at_bpm(ticks, bpm, resolution)
         assert got == want
 
-    @pytest.mark.parametrize(
-        "ticks,bpm,resolution",
+    @testcase.parametrize(
+        ["ticks", "bpm", "resolution"],
         [
-            pytest.param(-1, 120.000, 192, id="negative_ticks"),
-            pytest.param(0, -1, 192, id="negative_bpm"),
-            pytest.param(0, 0, 192, id="zero_bpm"),
-            pytest.param(0, 120.000, -1, id="negative_resolution"),
-            pytest.param(0, 120.000, 0, id="zero_resolution"),
+            testcase.new(
+                "negative_ticks",
+                ticks=-1,
+                bpm=120.000,
+                resolution=192,
+            ),
+            testcase.new(
+                "negative_bpm",
+                ticks=0,
+                bpm=-1,
+                resolution=192,
+            ),
+            testcase.new(
+                "zero_bpm",
+                ticks=0,
+                bpm=0,
+                resolution=192,
+            ),
+            testcase.new(
+                "negative_resolution",
+                ticks=0,
+                bpm=120.000,
+                resolution=-1,
+            ),
+            testcase.new(
+                "zero_resolution",
+                ticks=0,
+                bpm=120.000,
+                resolution=0,
+            ),
         ],
     )
     def test_error(self, ticks, bpm, resolution):
