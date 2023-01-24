@@ -154,7 +154,6 @@ class TestChart(object):
 
     class TestFindSections(object):
         def test(self):
-            # TODO: Reconstruct file contents from want_lines rather than having an actual file.
             with open(_valid_chart_filepath, "r", encoding="utf-8-sig") as f:
                 lines = f.read().splitlines()
 
