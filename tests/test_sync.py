@@ -12,7 +12,7 @@ from tests.helpers import defaults
 from tests.helpers import unsafe
 from tests.helpers.lines import generate_bpm as generate_bpm_line
 from tests.helpers.lines import generate_time_signature as generate_time_signature_line
-from tests.helpers.lines import generate_anchor_event as generate_anchor_line
+from tests.helpers.lines import generate_anchor as generate_anchor_line
 from tests.helpers.sync import (
     TimeSignatureEventWithDefaults,
     TimeSignatureEventParsedDataWithDefaults,
