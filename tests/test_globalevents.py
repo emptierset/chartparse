@@ -28,7 +28,6 @@ from tests.helpers.globalevents import (
 class TestGlobalEventsTrack(object):
     class TestInit(object):
         def test(self, default_global_events_track):
-            # TODO: Construct GlobalEventsTrack manually.
             assert default_global_events_track.text_events == [defaults.text_event]
             assert default_global_events_track.section_events == [defaults.section_event]
             assert default_global_events_track.lyric_events == [defaults.lyric_event]

@@ -227,8 +227,6 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     difficulty: Difficulty
     """This track's difficulty setting."""
 
-    # TODO: All of these sequences of events should probably be individual objects so things like
-    # _last_note_timestamp can live more tightly coupled to the actual events.
     note_events: Sequence[NoteEvent]
     """An (instrument, difficulty) pair's ``NoteEvent`` objects."""
 
