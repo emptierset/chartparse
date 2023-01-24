@@ -6,9 +6,10 @@ import unittest.mock
 
 from chartparse.event import Event
 from chartparse.exceptions import RegexNotMatchError
-from chartparse.sync import SyncTrack, BPMEvent, TimeSignatureEvent, AnchorEvent
+from chartparse.sync import SyncTrack, BPMEvent, BPMEvents, TimeSignatureEvent, AnchorEvent
 
 from tests.helpers import defaults
+from tests.helpers import unsafe
 from tests.helpers.lines import generate_bpm as generate_bpm_line
 from tests.helpers.lines import generate_time_signature as generate_time_signature_line
 from tests.helpers.lines import generate_anchor_event as generate_anchor_line
@@ -16,6 +17,7 @@ from tests.helpers.sync import (
     TimeSignatureEventWithDefaults,
     TimeSignatureEventParsedDataWithDefaults,
     BPMEventWithDefaults,
+    BPMEventsWithDefaults,
     BPMEventParsedDataWithDefaults,
     SyncTrackWithDefaults,
     AnchorEventWithDefaults,
@@ -24,19 +26,8 @@ from tests.helpers.sync import (
 
 
 class TestSyncTrack(object):
-    class TestInit(object):
-        def test(self):
-            got = SyncTrackWithDefaults()
-            assert got.time_signature_events == defaults.time_signature_events
-            assert got.bpm_events == defaults.bpm_events
-            assert got.anchor_events == defaults.anchor_events
-
-        def test_non_positive_resolution(self):
-            with pytest.raises(ValueError):
-                _ = SyncTrackWithDefaults(resolution=0)
-            with pytest.raises(ValueError):
-                _ = SyncTrackWithDefaults(resolution=-1)
-
+    # TODO: Remove testinits for dataclasses.
+    class TestPostInit(object):
         def test_empty_time_signature_events(self):
             with pytest.raises(ValueError):
                 _ = SyncTrackWithDefaults(time_signature_events=[])
@@ -46,21 +37,6 @@ class TestSyncTrack(object):
                 _ = SyncTrackWithDefaults(
                     time_signature_events=[
                         TimeSignatureEventWithDefaults(
-                            tick=1,
-                            timestamp=datetime.timedelta(seconds=1),
-                        )
-                    ],
-                )
-
-        def test_empty_bpm_events(self):
-            with pytest.raises(ValueError):
-                _ = SyncTrackWithDefaults(bpm_events=[])
-
-        def test_missing_first_bpm_event(self):
-            with pytest.raises(ValueError):
-                _ = SyncTrackWithDefaults(
-                    bpm_events=[
-                        BPMEventWithDefaults(
                             tick=1,
                             timestamp=datetime.timedelta(seconds=1),
                         )
@@ -110,129 +86,10 @@ class TestSyncTrack(object):
             )
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self
-                resolution=defaults.resolution,
                 time_signature_events=defaults.time_signature_events,
                 bpm_events=defaults.bpm_events,
                 anchor_events=defaults.anchor_events,
             )
-
-    class TestTimestampAtTick(object):
-        @pytest.mark.parametrize(
-            "tick,want_timestamp,want_proximal_bpm_event_index",
-            [
-                # TODO: Create helper that allows me to define pytest.param values by "name".
-                pytest.param(100, datetime.timedelta(seconds=1), 1),
-                pytest.param(120, datetime.timedelta(seconds=1.1), 1),
-                pytest.param(400, datetime.timedelta(seconds=2.5), 2),
-                pytest.param(1000, datetime.timedelta(seconds=5.166666), 3),
-            ],
-        )
-        def test_impl(self, tick, want_timestamp, want_proximal_bpm_event_index):
-            resolution = 100
-            event0 = BPMEvent.from_parsed_data(
-                BPMEvent.ParsedData(tick=0, raw_bpm="60000"), None, resolution
-            )
-            event1 = BPMEvent.from_parsed_data(
-                BPMEvent.ParsedData(tick=100, raw_bpm="120000"), event0, resolution
-            )
-            event2 = BPMEvent.from_parsed_data(
-                BPMEvent.ParsedData(tick=400, raw_bpm="180000"), event1, resolution
-            )
-            event3 = BPMEvent.from_parsed_data(
-                BPMEvent.ParsedData(tick=800, raw_bpm="90000"), event2, resolution
-            )
-            test_bpm_events = [event0, event1, event2, event3]
-
-            got_timestamp, got_proximal_bpm_event_index = SyncTrack._timestamp_at_tick(
-                test_bpm_events, tick, resolution
-            )
-            assert got_timestamp == want_timestamp
-            assert got_proximal_bpm_event_index == want_proximal_bpm_event_index
-
-    class TestindexOfProximalBPMEvent(object):
-        @pytest.mark.parametrize(
-            "bpm_events,tick,want",
-            [
-                pytest.param(
-                    [
-                        BPMEventWithDefaults(tick=0),
-                        BPMEventWithDefaults(tick=100),
-                    ],
-                    0,
-                    0,
-                    id="tick_coincides_with_first_event",
-                ),
-                pytest.param(
-                    [
-                        BPMEventWithDefaults(tick=0),
-                        BPMEventWithDefaults(tick=100),
-                    ],
-                    50,
-                    0,
-                    id="tick_between_first_and_second_events",
-                ),
-                pytest.param(
-                    [
-                        BPMEventWithDefaults(tick=0),
-                        BPMEventWithDefaults(tick=100),
-                        BPMEventWithDefaults(tick=200),
-                    ],
-                    150,
-                    1,
-                    id="tick_between_second_and_third_events",
-                ),
-                pytest.param(
-                    [
-                        BPMEventWithDefaults(tick=0),
-                        BPMEventWithDefaults(tick=1),
-                    ],
-                    2,
-                    1,
-                    id="tick_after_last_event",
-                ),
-            ],
-        )
-        def test(self, bare_sync_track, bpm_events, tick, want):
-            got = bare_sync_track._index_of_proximal_bpm_event(bpm_events, tick)
-            assert got == want
-
-        @pytest.mark.parametrize(
-            "bpm_events,tick,proximal_bpm_event_index",
-            [
-                pytest.param(
-                    [],
-                    0,
-                    0,
-                    id="no_bpm_events",
-                ),
-                pytest.param(
-                    [BPMEventWithDefaults()],
-                    0,
-                    1,
-                    id="proximal_bpm_event_index_after_last_bpm_event",
-                ),
-                pytest.param(
-                    [
-                        BPMEventWithDefaults(
-                            tick=0,
-                        ),
-                        BPMEventWithDefaults(
-                            tick=100,
-                        ),
-                    ],
-                    50,
-                    1,
-                    id="input_tick_before_tick_at_proximal_bpm_event_index",
-                ),
-            ],
-        )
-        def test_raises(self, bare_sync_track, tick, proximal_bpm_event_index, bpm_events):
-            with pytest.raises(ValueError):
-                _ = bare_sync_track._index_of_proximal_bpm_event(
-                    bpm_events,
-                    defaults.tick,
-                    proximal_bpm_event_index=proximal_bpm_event_index,
-                )
 
 
 class TestTimeSignatureEvent(object):
@@ -264,22 +121,22 @@ class TestTimeSignatureEvent(object):
                 ),
             ],
         )
-        def test(self, mocker, default_tatter, prev_event, data, want_lower):
+        def test(self, mocker, minimal_bpm_events_with_mock, prev_event, data, want_lower):
             spy_init = mocker.spy(TimeSignatureEvent, "__init__")
 
-            _ = TimeSignatureEvent.from_parsed_data(data, prev_event, default_tatter)
+            _ = TimeSignatureEvent.from_parsed_data(data, prev_event, minimal_bpm_events_with_mock)
 
-            default_tatter.spy.assert_called_once_with(
+            minimal_bpm_events_with_mock.timestamp_at_tick_mock.assert_called_once_with(
                 defaults.tick,
-                proximal_bpm_event_index=prev_event._proximal_bpm_event_index if prev_event else 0,
+                start_iteration_index=prev_event._proximal_bpm_event_index if prev_event else 0,
             )
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self
                 tick=defaults.tick,
-                timestamp=defaults.tatter_timestamp,
+                timestamp=defaults.bpm_events_timestamp,
                 upper_numeral=defaults.upper_time_signature_numeral,
                 lower_numeral=want_lower,
-                _proximal_bpm_event_index=defaults.tatter_bpm_event_index,
+                _proximal_bpm_event_index=defaults.bpm_events_bpm_event_index,
             )
 
     class TestParsedData(object):
@@ -312,7 +169,7 @@ class TestTimeSignatureEvent(object):
                 assert got.upper == defaults.upper_time_signature_numeral
                 assert got.lower == want_lower
 
-            def test_no_match(self, invalid_chart_line, default_tatter):
+            def test_no_match(self, invalid_chart_line):
                 with pytest.raises(RegexNotMatchError):
                     _ = TimeSignatureEvent.ParsedData.from_chart_line(invalid_chart_line)
 
@@ -366,7 +223,7 @@ class TestBPMEvent(object):
                 tick=data.tick,
                 timestamp=prev_event.timestamp + datetime.timedelta(seconds=seconds_since_prev),
                 bpm=defaults.bpm,
-                _proximal_bpm_event_index=defaults.proximal_bpm_event_index,
+                _proximal_bpm_event_index=1,
             )
 
         @pytest.mark.parametrize(
@@ -399,6 +256,162 @@ class TestBPMEvent(object):
             def test_no_match(self, invalid_chart_line):
                 with pytest.raises(RegexNotMatchError):
                     _ = BPMEvent.ParsedData.from_chart_line(invalid_chart_line)
+
+
+class TestBPMEvents(object):
+    class TestPostInit(object):
+        def test_non_positive_resolution(self):
+            with pytest.raises(ValueError):
+                _ = BPMEventsWithDefaults(resolution=0)
+            with pytest.raises(ValueError):
+                _ = BPMEventsWithDefaults(resolution=-1)
+
+        def test_empty_bpm_events(self):
+            with pytest.raises(ValueError):
+                _ = BPMEventsWithDefaults(events=[])
+
+        def test_missing_first_bpm_event(self):
+            with pytest.raises(ValueError):
+                _ = BPMEventsWithDefaults(
+                    events=[
+                        BPMEventWithDefaults(
+                            tick=1,
+                            timestamp=datetime.timedelta(seconds=1),
+                        )
+                    ]
+                )
+
+    class TestLen(object):
+        def test(self):
+            events = BPMEventsWithDefaults(events=[BPMEventWithDefaults(), BPMEventWithDefaults()])
+            got = len(events)
+            assert got == 2
+
+    class TestGetItem(object):
+        def test(self):
+            want = BPMEventWithDefaults(tick=5)
+            events = BPMEventsWithDefaults(events=[BPMEventWithDefaults(tick=0), want])
+            got = events[1]
+            assert got == want
+
+    class TestTimestampAtTick(object):
+        @pytest.mark.parametrize(
+            "tick,want_timestamp,want_proximal_bpm_event_index",
+            [
+                # TODO: Create helper that allows me to define pytest.param values by "name".
+                pytest.param(100, datetime.timedelta(seconds=1), 1),
+                pytest.param(120, datetime.timedelta(seconds=1.1), 1),
+                pytest.param(400, datetime.timedelta(seconds=2.5), 2),
+                pytest.param(1000, datetime.timedelta(seconds=5.166666), 3),
+            ],
+        )
+        def test(self, tick, want_timestamp, want_proximal_bpm_event_index):
+            resolution = 100
+            event0 = BPMEvent.from_parsed_data(
+                BPMEvent.ParsedData(tick=0, raw_bpm="60000"), None, resolution
+            )
+            event1 = BPMEvent.from_parsed_data(
+                BPMEvent.ParsedData(tick=100, raw_bpm="120000"), event0, resolution
+            )
+            event2 = BPMEvent.from_parsed_data(
+                BPMEvent.ParsedData(tick=400, raw_bpm="180000"), event1, resolution
+            )
+            event3 = BPMEvent.from_parsed_data(
+                BPMEvent.ParsedData(tick=800, raw_bpm="90000"), event2, resolution
+            )
+            test_bpm_events = BPMEvents(
+                events=[event0, event1, event2, event3], resolution=resolution
+            )
+
+            got_timestamp, got_proximal_bpm_event_index = test_bpm_events.timestamp_at_tick(tick)
+            assert got_timestamp == want_timestamp
+            assert got_proximal_bpm_event_index == want_proximal_bpm_event_index
+
+    class TestIndexOfProximalEvent(object):
+        @pytest.mark.parametrize(
+            "bpm_event_list,tick,want",
+            [
+                pytest.param(
+                    [
+                        BPMEventWithDefaults(tick=0),
+                        BPMEventWithDefaults(tick=100),
+                    ],
+                    0,
+                    0,
+                    id="tick_coincides_with_first_event",
+                ),
+                pytest.param(
+                    [
+                        BPMEventWithDefaults(tick=0),
+                        BPMEventWithDefaults(tick=100),
+                    ],
+                    50,
+                    0,
+                    id="tick_between_first_and_second_events",
+                ),
+                pytest.param(
+                    [
+                        BPMEventWithDefaults(tick=0),
+                        BPMEventWithDefaults(tick=100),
+                        BPMEventWithDefaults(tick=200),
+                    ],
+                    150,
+                    1,
+                    id="tick_between_second_and_third_events",
+                ),
+                pytest.param(
+                    [
+                        BPMEventWithDefaults(tick=0),
+                        BPMEventWithDefaults(tick=1),
+                    ],
+                    2,
+                    1,
+                    id="tick_after_last_event",
+                ),
+            ],
+        )
+        def test(self, bare_bpm_events, bpm_event_list, tick, want):
+            unsafe.setattr(bare_bpm_events, "events", bpm_event_list)
+            got = bare_bpm_events._index_of_proximal_event(tick)
+            assert got == want
+
+        @pytest.mark.parametrize(
+            "bpm_event_list,tick,start_iteration_index",
+            [
+                pytest.param(
+                    [],
+                    0,
+                    0,
+                    id="no_events",
+                ),
+                pytest.param(
+                    [BPMEventWithDefaults()],
+                    0,
+                    1,
+                    id="proximal_event_index_after_last_event",
+                ),
+                pytest.param(
+                    [
+                        BPMEventWithDefaults(
+                            tick=0,
+                        ),
+                        BPMEventWithDefaults(
+                            tick=100,
+                        ),
+                    ],
+                    50,
+                    1,
+                    id="input_tick_before_tick_at_proximal_event_index",
+                ),
+            ],
+        )
+        def test_raises(self, bare_bpm_events, tick, start_iteration_index, bpm_event_list):
+            unsafe.setattr(bare_bpm_events, "events", bpm_event_list)
+            with pytest.raises(ValueError):
+                _ = bare_bpm_events._index_of_proximal_event(
+                    defaults.tick,
+                    start_iteration_index=start_iteration_index,
+                )
 
 
 class TestAnchorEvent(object):

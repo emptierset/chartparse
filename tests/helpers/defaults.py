@@ -37,12 +37,14 @@ microseconds = seconds // 1000000
 proximal_bpm_event_index = 0
 proximal_star_power_event_index = 0
 
-tatter_timestamp = datetime.timedelta(seconds=834)
-tatter_bpm_event_index = 47
+bpm_events_timestamp = datetime.timedelta(seconds=111)
+bpm_events_bpm_event_index = 222
 
 bpm = 120.000
 raw_bpm = str(int(bpm * 1000))
 bpm_event = BPMEvent(tick=tick, timestamp=timestamp, bpm=bpm)
+# TODO: Get rid of all "events" defaults and instead expect the user to wrap the individual default
+# events in a list manually.
 bpm_events = [bpm_event]
 bpm_event_parsed_data = BPMEvent.ParsedData(tick=tick, raw_bpm=raw_bpm)
 bpm_event_parsed_datas = [bpm_event_parsed_data]

@@ -23,7 +23,7 @@ from chartparse.util import DictPropertiesEqMixin, DictReprMixin, DictReprTrunca
 if typ.TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Iterable, Sequence
 
-    from chartparse.event import TimestampAtTickSupporter
+    from chartparse.sync import BPMEvents
 
 logger = logging.getLogger(__name__)
 
@@ -62,13 +62,13 @@ class GlobalEventsTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     def from_chart_lines(
         cls: type[_Self],
         lines: Iterable[str],
-        tatter: TimestampAtTickSupporter,
+        bpm_events: BPMEvents,
     ) -> _Self:
         """Initializes instance attributes by parsing an iterable of strings.
 
         Args:
             lines: An iterable of strings most likely from a Moonscraper ``.chart``.
-            tatter: An object that can be used to get a timestamp at a particular tick.
+            bpm_events: The chart's wrapped BPMEvents.
 
         Returns:
             A ``GlobalEventsTrack`` parsed from ``lines``.
@@ -79,20 +79,20 @@ class GlobalEventsTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         text_events = chartparse.track.build_events_from_data(
             text_data,
             TextEvent.from_parsed_data,
-            tatter,
+            bpm_events,
         )
         section_events = chartparse.track.build_events_from_data(
             section_data,
             SectionEvent.from_parsed_data,
-            tatter,
+            bpm_events,
         )
         lyric_events = chartparse.track.build_events_from_data(
             lyric_data,
             LyricEvent.from_parsed_data,
-            tatter,
+            bpm_events,
         )
         return cls(
-            resolution=tatter.resolution,
+            resolution=bpm_events.resolution,
             text_events=text_events,
             section_events=section_events,
             lyric_events=lyric_events,
@@ -142,7 +142,7 @@ class GlobalEvent(Event):
         cls: type[_Self],
         data: GlobalEvent.ParsedData,
         prev_event: _Self | None,
-        tatter: TimestampAtTickSupporter,
+        bpm_events: BPMEvents,
     ) -> _Self:
         """Obtain an instance of this object from parsed data.
 
@@ -153,14 +153,14 @@ class GlobalEvent(Event):
                         this event. If this is ``None``, then this must be the first event of this
                         type.
 
-            tatter: An object that can be used to get a timestamp at a particular tick.
+            bpm_events: The chart's wrapped BPMEvents.
 
         Returns:
             An an instance of this object initialized from ``data``.
         """
-        timestamp, proximal_bpm_event_index = tatter.timestamp_at_tick(
+        timestamp, proximal_bpm_event_index = bpm_events.timestamp_at_tick(
             data.tick,
-            proximal_bpm_event_index=prev_event._proximal_bpm_event_index if prev_event else 0,
+            start_iteration_index=prev_event._proximal_bpm_event_index if prev_event else 0,
         )
         return cls(
             tick=data.tick,

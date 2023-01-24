@@ -37,7 +37,7 @@ class TestGlobalEventsTrack(object):
             with pytest.raises(ValueError):
                 _ = GlobalEventsTrackWithDefaults(resolution=resolution)
 
-    def test_from_chart_lines(self, mocker, default_tatter, invalid_chart_line):
+    def test_from_chart_lines(self, mocker, minimal_bpm_events, invalid_chart_line):
         mock_parse_data = mocker.patch.object(
             GlobalEventsTrack,
             "_parse_data_from_chart_lines",
@@ -57,23 +57,25 @@ class TestGlobalEventsTrack(object):
         )
         spy_init = mocker.spy(GlobalEventsTrack, "__init__")
 
-        _ = GlobalEventsTrack.from_chart_lines([invalid_chart_line], default_tatter)
+        _ = GlobalEventsTrack.from_chart_lines([invalid_chart_line], minimal_bpm_events)
 
         mock_parse_data.assert_called_once_with([invalid_chart_line])
         mock_build_events.assert_has_calls(
             [
                 unittest.mock.call(
-                    [TextEventParsedDataWithDefaults()], TextEvent.from_parsed_data, default_tatter
+                    [TextEventParsedDataWithDefaults()],
+                    TextEvent.from_parsed_data,
+                    minimal_bpm_events,
                 ),
                 unittest.mock.call(
                     [SectionEventParsedDataWithDefaults()],
                     SectionEvent.from_parsed_data,
-                    default_tatter,
+                    minimal_bpm_events,
                 ),
                 unittest.mock.call(
                     [LyricEventParsedDataWithDefaults()],
                     LyricEvent.from_parsed_data,
-                    default_tatter,
+                    minimal_bpm_events,
                 ),
             ],
         )
@@ -101,26 +103,26 @@ class TestGlobalEvent(object):
                 ),
             ],
         )
-        def test(self, mocker, default_tatter, prev_event):
+        def test(self, mocker, minimal_bpm_events_with_mock, prev_event):
             spy_init = mocker.spy(GlobalEvent, "__init__")
 
             _ = GlobalEvent.from_parsed_data(
                 GlobalEventParsedDataWithDefaults(),
                 prev_event,
-                default_tatter,
+                minimal_bpm_events_with_mock,
             )
 
-            default_tatter.spy.assert_called_once_with(
+            minimal_bpm_events_with_mock.timestamp_at_tick_mock.assert_called_once_with(
                 defaults.tick,
-                proximal_bpm_event_index=prev_event._proximal_bpm_event_index if prev_event else 0,
+                start_iteration_index=prev_event._proximal_bpm_event_index if prev_event else 0,
             )
 
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self
                 tick=defaults.tick,
-                timestamp=defaults.tatter_timestamp,
+                timestamp=defaults.bpm_events_timestamp,
                 value=defaults.global_event_value,
-                _proximal_bpm_event_index=defaults.tatter_bpm_event_index,
+                _proximal_bpm_event_index=defaults.bpm_events_bpm_event_index,
             )
 
     class TestParsedData(object):

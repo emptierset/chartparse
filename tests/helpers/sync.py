@@ -1,20 +1,18 @@
 from __future__ import annotations
 
 
-from chartparse.sync import TimeSignatureEvent, BPMEvent, SyncTrack, AnchorEvent
+from chartparse.sync import TimeSignatureEvent, BPMEvent, SyncTrack, AnchorEvent, BPMEvents
 
 from tests.helpers import defaults
 
 
 def SyncTrackWithDefaults(
     *,
-    resolution=defaults.resolution,
     time_signature_events=defaults.time_signature_events,
     bpm_events=defaults.bpm_events,
     anchor_events=defaults.anchor_events,
 ):
     return SyncTrack(
-        resolution=resolution,
         time_signature_events=time_signature_events,
         bpm_events=bpm_events,
         anchor_events=anchor_events,
@@ -62,6 +60,14 @@ def BPMEventParsedDataWithDefaults(
     raw_bpm=defaults.raw_bpm,
 ):
     return BPMEvent.ParsedData(tick=tick, raw_bpm=raw_bpm)
+
+
+def BPMEventsWithDefaults(
+    *,
+    events=[defaults.bpm_event],
+    resolution=defaults.resolution,
+):
+    return BPMEvents(events=events, resolution=resolution)
 
 
 def AnchorEventWithDefaults(*, tick=defaults.tick, timestamp=defaults.timestamp):

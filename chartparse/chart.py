@@ -138,7 +138,7 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             metadata.resolution, sections[SyncTrack.section_name]
         )
         global_events_track = GlobalEventsTrack.from_chart_lines(
-            sections[GlobalEventsTrack.section_name], sync_track
+            sections[GlobalEventsTrack.section_name], sync_track.bpm_events
         )
 
         instrument_track_name_to_instrument_difficulty_pair: dict[
@@ -160,7 +160,7 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
                     instrument,
                     difficulty,
                     section_lines,
-                    sync_track,
+                    sync_track.bpm_events,
                 )
                 instrument_tracks[instrument][difficulty] = track
             elif section_name not in cls._required_sections:
@@ -266,12 +266,12 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         all_start_args_none = num_of_start_args_none == len(start_args)
         if (start_tick is not None) or all_start_args_none:
             interval_start_time = (
-                self.sync_track.timestamp_at_tick(start_tick, self.metadata.resolution)[0]
+                self.sync_track.bpm_events.timestamp_at_tick(start_tick)[0]
                 if start_tick is not None
                 else datetime.timedelta(0)
             )
             interval_end_time = (
-                self.sync_track.timestamp_at_tick(end_tick, self.metadata.resolution)[0]
+                self.sync_track.bpm_events.timestamp_at_tick(end_tick)[0]
                 if end_tick is not None
                 # ValueError is raised above if there are no NoteEvents, which is the only case
                 # where track.last_note_end_timestamp is None.

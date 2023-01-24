@@ -15,9 +15,9 @@ import logging
 import typing as typ
 from collections.abc import Iterable, Sequence
 
-from chartparse.event import Event, TimestampAtTickSupporter
+from chartparse.event import Event
 from chartparse.exceptions import ProgrammerError, RegexNotMatchError
-from chartparse.sync import AnchorEvent
+from chartparse.sync import AnchorEvent, BPMEvents
 
 if typ.TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Callable
@@ -97,7 +97,7 @@ def build_events_from_data(
     ],
     resolution: int,
     /,
-) -> list[BPMEvent]:
+) -> BPMEvents:
     ...  # pragma: no cover
 
 
@@ -108,11 +108,11 @@ def build_events_from_data(
         [
             TimeSignatureEvent.ParsedData,
             TimeSignatureEvent | None,
-            TimestampAtTickSupporter,
+            BPMEvents,
         ],
         TimeSignatureEvent,
     ],
-    tatter: TimestampAtTickSupporter,
+    bpm_events: BPMEvents,
     /,
 ) -> list[TimeSignatureEvent]:
     ...  # pragma: no cover
@@ -125,11 +125,11 @@ def build_events_from_data(
         [
             SectionEvent.ParsedData,
             SectionEvent | None,
-            TimestampAtTickSupporter,
+            BPMEvents,
         ],
         SectionEvent,
     ],
-    tatter: TimestampAtTickSupporter,
+    bpm_events: BPMEvents,
     /,
 ) -> list[SectionEvent]:
     ...  # pragma: no cover
@@ -142,11 +142,11 @@ def build_events_from_data(
         [
             LyricEvent.ParsedData,
             LyricEvent | None,
-            TimestampAtTickSupporter,
+            BPMEvents,
         ],
         LyricEvent,
     ],
-    tatter: TimestampAtTickSupporter,
+    bpm_events: BPMEvents,
     /,
 ) -> list[LyricEvent]:
     ...  # pragma: no cover
@@ -159,11 +159,11 @@ def build_events_from_data(
         [
             TextEvent.ParsedData,
             TextEvent | None,
-            TimestampAtTickSupporter,
+            BPMEvents,
         ],
         TextEvent,
     ],
-    tatter: TimestampAtTickSupporter,
+    bpm_events: BPMEvents,
     /,
 ) -> list[TextEvent]:
     ...  # pragma: no cover
@@ -176,11 +176,11 @@ def build_events_from_data(
         [
             StarPowerEvent.ParsedData,
             StarPowerEvent | None,
-            TimestampAtTickSupporter,
+            BPMEvents,
         ],
         StarPowerEvent,
     ],
-    tatter: TimestampAtTickSupporter,
+    bpm_events: BPMEvents,
     /,
 ) -> list[StarPowerEvent]:
     ...  # pragma: no cover
@@ -193,17 +193,17 @@ def build_events_from_data(
         [
             TrackEvent.ParsedData,
             TrackEvent | None,
-            TimestampAtTickSupporter,
+            BPMEvents,
         ],
         TrackEvent,
     ],
-    tatter: TimestampAtTickSupporter,
+    bpm_events: BPMEvents,
     /,
 ) -> list[TrackEvent]:
     ...  # pragma: no cover
 
 
-def build_events_from_data(datas, from_data_fn, resolution_or_tatter_or_None=None, /):
+def build_events_from_data(datas, from_data_fn, resolution_or_bpm_events_or_None=None, /):
     events = []
     for data in datas:
         if isinstance(data, AnchorEvent.ParsedData):
@@ -211,13 +211,17 @@ def build_events_from_data(datas, from_data_fn, resolution_or_tatter_or_None=Non
             events.append(event)
         else:
             prev_event = events[-1] if events else None
-            event = from_data_fn(data, prev_event, resolution_or_tatter_or_None)
+            event = from_data_fn(data, prev_event, resolution_or_bpm_events_or_None)
             events.append(event)
-    if isinstance(resolution_or_tatter_or_None, int) or resolution_or_tatter_or_None is None:
-        # Using BPMEvent.ParsedData or AnchorEvent.ParsedData.
+    if isinstance(resolution_or_bpm_events_or_None, int):
+        # Using BPMEvent.ParsedData.
         # In this case, BPMEvents must already be in increasing tick order, by definition.
+        return BPMEvents(events=events, resolution=resolution_or_bpm_events_or_None)
+    elif resolution_or_bpm_events_or_None is None:
+        # Using AnchorEvent.ParsedData.
+        # In this case, AnchorEvents must already be in increasing tick order, by definition.
         return events
-    elif isinstance(resolution_or_tatter_or_None, TimestampAtTickSupporter):
+    elif isinstance(resolution_or_bpm_events_or_None, BPMEvents):
         # TODO: Should we instead optionally validate a chart, which allows us to assume everything
         # is sorted? etc.
         return sorted(events, key=lambda e: e.tick)

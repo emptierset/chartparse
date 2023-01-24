@@ -119,7 +119,7 @@ class TestChart(object):
                 Instrument.GUITAR,
                 Difficulty.EXPERT,
                 [invalid_chart_line],
-                default_sync_track,
+                default_sync_track.bpm_events,
             )
 
         @pytest.mark.parametrize(
@@ -361,17 +361,18 @@ class TestChart(object):
                 return_value=want_interval_end_time,
             )
 
-            # NOTE: This _should_ be mocked as such, but because sync_track is a frozen dataclass,
-            # it cannot be mocked conventionally.
+            # NOTE: This _should_ be mocked as such, but because bpm_events is a frozen dataclass,
+            # it cannot be mocked conventionally (mocking tries to edit fields that are protected
+            # by frozenness).
             # mocker.patch.object(
-            #    minimal_chart.sync_track,
+            #    minimal_chart.sync_track.bpm_events,
             #    "timestamp_at_tick",
             #    side_effect=lambda tick, _resolution: (datetime.timedelta(seconds=tick),),
             # )
             unsafe.setattr(
-                minimal_chart.sync_track,
+                minimal_chart.sync_track.bpm_events,
                 "timestamp_at_tick",
-                lambda tick, _resolution: (datetime.timedelta(seconds=tick),),
+                lambda tick, *, _start_iteration_index=0: (datetime.timedelta(seconds=tick),),
             )
             spy = mocker.spy(minimal_chart, "_notes_per_second")
             _ = minimal_chart.notes_per_second(
@@ -386,7 +387,7 @@ class TestChart(object):
 
             # NOTE: Manually reset timestamp_at_tick from mocked version.
             unsafe.delattr(
-                minimal_chart.sync_track,
+                minimal_chart.sync_track.bpm_events,
                 "timestamp_at_tick",
             )
 

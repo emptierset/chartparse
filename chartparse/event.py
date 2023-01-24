@@ -15,18 +15,6 @@ import typing as typ
 from chartparse.util import DictPropertiesEqMixin, DictReprMixin
 
 
-@typ.runtime_checkable
-class TimestampAtTickSupporter(typ.Protocol):
-    @property
-    def resolution(self) -> int:
-        ...  # pragma: no cover
-
-    def timestamp_at_tick(
-        self, tick: int, proximal_bpm_event_index: int = ...
-    ) -> tuple[datetime.timedelta, int]:
-        ...  # pragma: no cover
-
-
 @dataclasses.dataclass(kw_only=True, frozen=True)
 class Event(DictPropertiesEqMixin, DictReprMixin):
     """An event that occurs at a tick and timestamp in an :class:`~chartparse.track.EventTrack`.

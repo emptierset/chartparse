@@ -33,7 +33,7 @@ from chartparse.util import (
 )
 
 if typ.TYPE_CHECKING:  # pragma: no cover
-    from chartparse.event import TimestampAtTickSupporter
+    from chartparse.sync import BPMEvents
 
 logger = logging.getLogger(__name__)
 
@@ -265,7 +265,7 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         instrument: Instrument,
         difficulty: Difficulty,
         lines: Iterable[str],
-        tatter: TimestampAtTickSupporter,
+        bpm_events: BPMEvents,
     ) -> _Self:
         """Initializes instance attributes by parsing an iterable of strings.
 
@@ -273,7 +273,7 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             instrument: The instrument to which this track corresponds.
             difficulty: This track's difficulty setting.
             lines: An iterable of strings most likely from a Moonscraper ``.chart``.
-            tatter: An object that can be used to get a timestamp at a particular tick.
+            bpm_events: The chart's wrapped BPMEvents.
 
         Returns:
             An ``InstrumentTrack`` parsed from ``line``.
@@ -283,16 +283,16 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         star_power_events = chartparse.track.build_events_from_data(
             star_power_data,
             StarPowerEvent.from_parsed_data,
-            tatter,
+            bpm_events,
         )
         track_events = chartparse.track.build_events_from_data(
             track_data,
             TrackEvent.from_parsed_data,
-            tatter,
+            bpm_events,
         )
-        note_events = cls._build_note_events_from_data(note_data, star_power_events, tatter)
+        note_events = cls._build_note_events_from_data(note_data, star_power_events, bpm_events)
         return cls(
-            resolution=tatter.resolution,
+            resolution=bpm_events.resolution,
             instrument=instrument,
             difficulty=difficulty,
             note_events=note_events,
@@ -330,7 +330,7 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         cls,
         datas: Sequence[NoteEvent.ParsedData],
         star_power_events: Sequence[StarPowerEvent],
-        tatter: TimestampAtTickSupporter,
+        bpm_events: BPMEvents,
     ) -> list[NoteEvent]:
         proximal_bpm_event_index = 0
         star_power_event_index = 0
@@ -341,7 +341,7 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             previous_event = events[-1] if events else None
 
             # Find all datas with the same tick value. Because the input is expected to be sorted
-            # by tick value, these such datas should always be in a contiguous block.
+            # by tick value, these such datas must be in a contiguous block.
             left = i
             while i + 1 < num_datas and datas[i + 1].tick == datas[i].tick:
                 i += 1
@@ -351,7 +351,7 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
                 datas[left:right],
                 previous_event,
                 star_power_events,
-                tatter,
+                bpm_events,
                 proximal_bpm_event_index=proximal_bpm_event_index,
                 star_power_event_index=star_power_event_index,
             )
@@ -505,7 +505,7 @@ class NoteEvent(Event):
         data: NoteEvent.ParsedData | Sequence[NoteEvent.ParsedData],
         prev_event: NoteEvent | None,
         star_power_events: Sequence[StarPowerEvent],
-        tatter: TimestampAtTickSupporter,
+        bpm_events: BPMEvents,
         proximal_bpm_event_index: int = 0,
         star_power_event_index: int = 0,
     ) -> tuple[_Self, int, int]:
@@ -518,7 +518,7 @@ class NoteEvent(Event):
             data: The data necessary to create an event. Most likely from a Moonscraper ``.chart``.
             prev_event: The event with the largest tick value less than that of the input data.
             star_power_events: All ``StarPowerEvent``\\s.
-            tatter: An object that can be used to get a timestamp at a particular tick.
+            bpm_events: The chart's wrapped BPMEvents.
 
             proximal_bpm_event_index: The index of the ``BPMEvent`` with the largest tick value
                 smaller than that of this event. For optimization only.
@@ -538,12 +538,12 @@ class NoteEvent(Event):
         is_tap = any(d.note_track_index == NoteTrackIndex.TAP for d in datas)
         is_forced = any(d.note_track_index == NoteTrackIndex.FORCED for d in datas)
 
-        timestamp, proximal_bpm_event_index = tatter.timestamp_at_tick(
-            tick, proximal_bpm_event_index=proximal_bpm_event_index
+        timestamp, proximal_bpm_event_index = bpm_events.timestamp_at_tick(
+            tick, start_iteration_index=proximal_bpm_event_index
         )
 
         hopo_state = NoteEvent._compute_hopo_state(
-            tatter.resolution,
+            bpm_events.resolution,
             tick,
             note,
             is_tap,
@@ -557,8 +557,8 @@ class NoteEvent(Event):
 
         longest_sustain = cls._longest_sustain(sustain)
         end_tick = cls._end_tick(tick, longest_sustain)
-        end_timestamp, _ = tatter.timestamp_at_tick(
-            end_tick, proximal_bpm_event_index=proximal_bpm_event_index
+        end_timestamp, _ = bpm_events.timestamp_at_tick(
+            end_tick, start_iteration_index=proximal_bpm_event_index
         )
 
         event = cls(
@@ -735,7 +735,7 @@ class SpecialEvent(Event):
         cls: type[_Self],
         data: SpecialEvent.ParsedData,
         prev_event: _Self | None,
-        tatter: TimestampAtTickSupporter,
+        bpm_events: BPMEvents,
     ) -> _Self:
         """Obtain an instance of this object from parsed data.
 
@@ -745,15 +745,15 @@ class SpecialEvent(Event):
             prev_event: The event of this type with the greatest ``tick`` value less than that of
                 this event. If this is ``None``, then this must be the first event of this type.
 
-            tatter: An object that can be used to get a timestamp at a particular tick.
+            bpm_events: The chart's wrapped BPMEvents.
 
         Returns:
             An an instance of this object initialized from ``data``.
         """
 
-        timestamp, proximal_bpm_event_index = tatter.timestamp_at_tick(
+        timestamp, proximal_bpm_event_index = bpm_events.timestamp_at_tick(
             data.tick,
-            proximal_bpm_event_index=prev_event._proximal_bpm_event_index if prev_event else 0,
+            start_iteration_index=prev_event._proximal_bpm_event_index if prev_event else 0,
         )
         return cls(
             tick=data.tick,
@@ -868,7 +868,7 @@ class TrackEvent(Event):
         cls: type[_Self],
         data: TrackEvent.ParsedData,
         prev_event: _Self | None,
-        tatter: TimestampAtTickSupporter,
+        bpm_events: BPMEvents,
     ) -> _Self:
         """Obtain an instance of this object from parsed data.
 
@@ -878,14 +878,14 @@ class TrackEvent(Event):
             prev_event: The event of this type with the greatest ``tick`` value less than that of
                 this event. If this is ``None``, then this must be the first event of this type.
 
-            tatter: An object that can be used to get a timestamp at a particular tick.
+            bpm_events: The chart's wrapped BPMEvents.
 
         Returns:
             An an instance of this object initialized from ``data``.
         """
-        timestamp, proximal_bpm_event_index = tatter.timestamp_at_tick(
+        timestamp, proximal_bpm_event_index = bpm_events.timestamp_at_tick(
             data.tick,
-            proximal_bpm_event_index=prev_event._proximal_bpm_event_index if prev_event else 0,
+            start_iteration_index=prev_event._proximal_bpm_event_index if prev_event else 0,
         )
         return cls(
             tick=data.tick,

@@ -15,15 +15,16 @@ import datetime
 import logging
 import re
 import typing as typ
+from collections.abc import Sequence
 
 import chartparse.tick
 import chartparse.track
-from chartparse.event import Event, TimestampAtTickSupporter
+from chartparse.event import Event
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.util import DictPropertiesEqMixin, DictReprMixin, DictReprTruncatedSequencesMixin
 
 if typ.TYPE_CHECKING:  # pragma: no cover
-    from collections.abc import Iterable, Sequence
+    from collections.abc import Iterable
 
 logger = logging.getLogger(__name__)
 
@@ -38,13 +39,10 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
     _Self = typ.TypeVar("_Self", bound="SyncTrack")
 
-    resolution: int
-    """The number of ticks for which a quarter note lasts."""
-
     time_signature_events: Sequence[TimeSignatureEvent]
     """A ``SyncTrack``'s ``TimeSignatureEvent``\\ s."""
 
-    bpm_events: Sequence[BPMEvent]
+    bpm_events: BPMEvents
     """A ``SyncTrack``'s ``BPMEvent``\\ s."""
 
     anchor_events: Sequence[AnchorEvent]
@@ -58,20 +56,15 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
         Raises:
             ValueError: If ``time_signature_events`` or ``bpm_events`` is empty, or if either of
-                their first elements has a ``tick`` value of ``0``.
+                their first elements has a ``tick`` value of ``0``, or if ``resolution`` is not
+                positive.
         """
-        if self.resolution <= 0:
-            raise ValueError(f"resolution ({self.resolution}) must be positive")
         if not self.time_signature_events:
             raise ValueError("time_signature_events must not be empty")
         if self.time_signature_events[0].tick != 0:
             raise ValueError(
                 f"first TimeSignatureEvent {self.time_signature_events[0]} must have tick 0"
             )
-        if not self.bpm_events:
-            raise ValueError("bpm_events must not be empty")
-        if self.bpm_events[0].tick != 0:
-            raise ValueError(f"first BPMEvent {self.bpm_events[0]} must have tick 0")
 
     @classmethod
     def from_chart_lines(
@@ -97,21 +90,8 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             resolution,
         )
 
-        @dataclasses.dataclass(frozen=True, kw_only=True)
-        class _TimestampAtTicker(object):
-            resolution: int
-
-            def timestamp_at_tick(
-                self, tick: int, proximal_bpm_event_index: int = 0
-            ) -> tuple[datetime.timedelta, int]:
-                return cls._timestamp_at_tick(
-                    bpm_events, tick, self.resolution, proximal_bpm_event_index
-                )  # pragma: no cover
-
-        tatter = _TimestampAtTicker(resolution=resolution)
-
         time_signature_events = chartparse.track.build_events_from_data(
-            time_signature_data, TimeSignatureEvent.from_parsed_data, tatter
+            time_signature_data, TimeSignatureEvent.from_parsed_data, bpm_events
         )
 
         anchor_events = chartparse.track.build_events_from_data(
@@ -119,7 +99,6 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         )
 
         return cls(
-            resolution=resolution,
             time_signature_events=time_signature_events,
             bpm_events=bpm_events,
             anchor_events=anchor_events,
@@ -142,89 +121,6 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             parsed_data[BPMEvent.ParsedData],
             parsed_data[AnchorEvent.ParsedData],
         )
-
-    def timestamp_at_tick(
-        self, tick: int, proximal_bpm_event_index: int = 0
-    ) -> tuple[datetime.timedelta, int]:
-        """Returns the timestamp at the input tick.
-
-        Args:
-            tick: The tick at which the timestamp should be calculated.
-
-        Kwargs:
-            proximal_bpm_event_index: An optional optimizing input that allows this function to
-                start iterating over ``BPMEvent``s at a later index. Only pass this if you are
-                certain that the event that should be proximal to ``tick`` is _not_ before this
-                index.
-
-        Returns:
-            The timestamp at the input tick, plus the index of the ``BPMEvent`` proximal to the
-            input tick. This index can be passed to successive calls to this function via
-            ``proximal_bpm_event_index`` as an optimization.
-        """
-        return self._timestamp_at_tick(
-            self.bpm_events,
-            tick,
-            self.resolution,
-            proximal_bpm_event_index=proximal_bpm_event_index,
-        )
-
-    # TODO: This method only needs to exist because we need to be able to use timestamp_at_tick
-    # during from_chart_lines, and we don't yet have the object we need for it. If we factor out
-    # bpm_events to its own object, it can own timestamp_at_tick.
-    @staticmethod
-    def _timestamp_at_tick(
-        bpm_events: Sequence[BPMEvent],
-        tick: int,
-        resolution: int,
-        proximal_bpm_event_index: int = 0,
-    ) -> tuple[datetime.timedelta, int]:
-        """Allows ``timestamp_at_tick`` to be used by injecting a ``bpm_events`` object."""
-
-        proximal_bpm_event_index = SyncTrack._index_of_proximal_bpm_event(
-            bpm_events, tick, proximal_bpm_event_index=proximal_bpm_event_index
-        )
-        proximal_bpm_event = bpm_events[proximal_bpm_event_index]
-        ticks_since_proximal_bpm_event = tick - proximal_bpm_event.tick
-        seconds_since_proximal_bpm_event = chartparse.tick.seconds_from_ticks_at_bpm(
-            ticks_since_proximal_bpm_event,
-            proximal_bpm_event.bpm,
-            resolution,
-        )
-        timedelta_since_proximal_bpm_event = datetime.timedelta(
-            seconds=seconds_since_proximal_bpm_event
-        )
-        timestamp = proximal_bpm_event.timestamp + timedelta_since_proximal_bpm_event
-        return timestamp, proximal_bpm_event_index
-
-    @staticmethod
-    def _index_of_proximal_bpm_event(
-        bpm_events: Sequence[BPMEvent], tick: int, proximal_bpm_event_index: int = 0
-    ) -> int:
-        if not bpm_events:
-            raise ValueError("bpm_events must not be empty")
-
-        index_of_last_event = len(bpm_events) - 1
-        if proximal_bpm_event_index > index_of_last_event:
-            raise ValueError(
-                f"there are no BPMEvents at or after index {proximal_bpm_event_index} in "
-                "bpm_events"
-            )
-
-        first_event = bpm_events[proximal_bpm_event_index]
-        if first_event.tick > tick:
-            raise ValueError(
-                f"input tick {tick} precedes tick value of first BPMEvent ({first_event.tick})"
-            )
-
-        # Do NOT iterate over last BPMEvent, since it has no next event.
-        for index in range(proximal_bpm_event_index, index_of_last_event):
-            if bpm_events[index + 1].tick > tick:
-                return index
-
-        # If none of the previous BPMEvents are proximal, the last event is proximal by
-        # definition.
-        return index_of_last_event
 
 
 @typ.final
@@ -250,7 +146,7 @@ class TimeSignatureEvent(Event):
         cls: type[_Self],
         data: TimeSignatureEvent.ParsedData,
         prev_event: _Self | None,
-        tatter: TimestampAtTickSupporter,
+        bpm_events: BPMEvents,
     ) -> _Self:
         """Obtain an instance of this object from parsed data.
 
@@ -261,7 +157,7 @@ class TimeSignatureEvent(Event):
                 of this event. If this is ``None``, then this must be the first
                 ``TimeSignatureEvent``.
 
-            tatter: An object that can be used to get a timestamp at a particular tick.
+            bpm_events: An object that can be used to get a timestamp at a particular tick.
 
         Returns:
             An an instance of this object initialized from ``data``.
@@ -269,9 +165,9 @@ class TimeSignatureEvent(Event):
 
         # The lower number is written by Moonscraper as the log2 of the true value.
         lower_numeral = 2**data.lower if data.lower is not None else cls._default_lower_numeral
-        timestamp, proximal_bpm_event_index = tatter.timestamp_at_tick(
+        timestamp, proximal_bpm_event_index = bpm_events.timestamp_at_tick(
             data.tick,
-            proximal_bpm_event_index=prev_event._proximal_bpm_event_index if prev_event else 0,
+            start_iteration_index=prev_event._proximal_bpm_event_index if prev_event else 0,
         )
         return cls(
             tick=data.tick,
@@ -281,6 +177,7 @@ class TimeSignatureEvent(Event):
             _proximal_bpm_event_index=proximal_bpm_event_index,
         )
 
+    # TODO: Unit test all of the str and repr methods. It's easy for them to break silently.
     def __str__(self) -> str:  # pragma: no cover
         to_join = [super().__str__()]
         to_join.append(f": {self.upper_numeral}/{self.lower_numeral}")
@@ -381,35 +278,23 @@ class BPMEvent(Event):
         bpm_decimal_part = int(bpm_decimal_part_str) / 1000
         bpm = bpm_whole_part + bpm_decimal_part
 
-        class TimestampAtTicker(object):
-            resolution: typ.Final[int]
-
-            def __init__(self, resolution: int):
-                self.resolution = resolution
-
-            def timestamp_at_tick(
-                self, tick: int, proximal_bpm_event_index: int = 0
-            ) -> tuple[datetime.timedelta, int]:
-                if prev_event is None:
-                    return datetime.timedelta(0), 0
-                if tick <= prev_event.tick:
-                    raise ValueError(
-                        f"{cls.__name__} at tick {tick} does not occur after previous "
-                        f"{cls.__name__} at tick {prev_event.tick}; tick values of "
-                        f"{cls.__name__} must be strictly increasing."
-                    )
-                ticks_since_prev = tick - prev_event.tick
-                seconds_since_prev = chartparse.tick.seconds_from_ticks_at_bpm(
-                    ticks_since_prev, prev_event.bpm, self.resolution
+        if prev_event is None:
+            timestamp, proximal_bpm_event_index = datetime.timedelta(0), 0
+        else:
+            if data.tick <= prev_event.tick:
+                # TODO: This branch can be removed if we move chart validation to an external flow.
+                raise ValueError(
+                    f"{cls.__name__} at tick {data.tick} does not occur after previous "
+                    f"{cls.__name__} at tick {prev_event.tick}; tick values of "
+                    f"{cls.__name__} must be strictly increasing."
                 )
-                timestamp = prev_event.timestamp + datetime.timedelta(seconds=seconds_since_prev)
-                return timestamp, proximal_bpm_event_index
+            ticks_since_prev = data.tick - prev_event.tick
+            seconds_since_prev = chartparse.tick.seconds_from_ticks_at_bpm(
+                ticks_since_prev, prev_event.bpm, resolution
+            )
+            timestamp = prev_event.timestamp + datetime.timedelta(seconds=seconds_since_prev)
+            proximal_bpm_event_index = prev_event._proximal_bpm_event_index + 1
 
-        tatter = TimestampAtTicker(resolution)
-        timestamp, proximal_bpm_event_index = tatter.timestamp_at_tick(
-            data.tick,
-            proximal_bpm_event_index=prev_event._proximal_bpm_event_index if prev_event else 0,
-        )
         return cls(
             tick=data.tick,
             timestamp=timestamp,
@@ -457,6 +342,109 @@ class BPMEvent(Event):
                 raise RegexNotMatchError(cls._regex, line)
             raw_tick, raw_bpm = m.groups()
             return cls(tick=int(raw_tick), raw_bpm=raw_bpm)
+
+
+@typ.final
+@dataclasses.dataclass(kw_only=True, frozen=True)
+class BPMEvents(Sequence[BPMEvent]):
+    """The chart's ``BPMEvent``\\s, wrapped with the chart's resolution.
+
+    This exists solely to allow ``timestamp_at_tick`` to be called the moment all requisite data is
+    accessible.
+
+    This is a ``frozen``, ``kw_only`` dataclass.
+    """
+
+    events: Sequence[BPMEvent]
+    """The chart's ``BPMEvent``\\s."""
+
+    resolution: int
+    """The number of ticks in a quarter note."""
+
+    def __post_init__(self) -> None:
+        """Validates all instance attributes.
+
+        Raises:
+            ValueError: If ``bpm_events`` is empty, or if its first element has a ``tick`` value of
+                ``0``, or if ``resolution`` is not positive.
+        """
+        if self.resolution <= 0:
+            raise ValueError(f"resolution ({self.resolution}) must be positive")
+        if not self.events:
+            raise ValueError("events must not be empty")
+        if self.events[0].tick != 0:
+            raise ValueError(f"first BPMEvent {self.events[0]} must have tick 0")
+
+    def __len__(self) -> int:
+        return len(self.events)
+
+    @typ.overload
+    def __getitem__(self, index: int) -> BPMEvent:
+        ...  # pragma: no cover
+
+    @typ.overload
+    def __getitem__(self, index: slice) -> Sequence[BPMEvent]:
+        ...  # pragma: no cover
+
+    def __getitem__(self, index: int | slice) -> BPMEvent | Sequence[BPMEvent]:
+        return self.events[index]
+
+    def timestamp_at_tick(
+        self, tick: int, *, start_iteration_index: int = 0
+    ) -> tuple[datetime.timedelta, int]:
+        """Returns the timestamp at the input tick.
+
+        Args:
+            tick: The tick at which the timestamp should be calculated.
+
+        Kwargs:
+            start_iteration_index: An optional optimizing input that allows this
+                function to start iterating over ``BPMEvent``s at a later index. Only pass this if
+                you are certain that the event that should be proximal to ``tick`` is _not_ before
+                this index. Not passing this kwarg results only in slower execution.
+
+        Returns:
+            The timestamp at the input tick, plus the index of the ``BPMEvent`` proximal to the
+            input tick. This index can be passed to successive calls to this function via
+            ``start_iteration_index`` as an optimization.
+        """
+        proximal_bpm_event_index = self._index_of_proximal_event(
+            tick, start_iteration_index=start_iteration_index
+        )
+        proximal_bpm_event = self.events[proximal_bpm_event_index]
+        ticks_since_proximal_bpm_event = tick - proximal_bpm_event.tick
+        seconds_since_proximal_bpm_event = chartparse.tick.seconds_from_ticks_at_bpm(
+            ticks_since_proximal_bpm_event,
+            proximal_bpm_event.bpm,
+            self.resolution,
+        )
+        timedelta_since_proximal_bpm_event = datetime.timedelta(
+            seconds=seconds_since_proximal_bpm_event
+        )
+        timestamp = proximal_bpm_event.timestamp + timedelta_since_proximal_bpm_event
+        return timestamp, proximal_bpm_event_index
+
+    def _index_of_proximal_event(self, tick: int, start_iteration_index: int = 0) -> int:
+        index_of_last_event = len(self) - 1
+        if start_iteration_index > index_of_last_event:
+            raise ValueError(
+                f"there are no BPMEvents at or after index {start_iteration_index} in bpm_events"
+            )
+
+        first_event = self[start_iteration_index]
+        if first_event.tick > tick:
+            raise ValueError(
+                f"input tick {tick} precedes tick value of first BPMEvent ({first_event.tick})"
+            )
+
+        # Do NOT iterate over last BPMEvent, since it has no next event.
+        for index in range(start_iteration_index, index_of_last_event):
+            if self[index + 1].tick > tick:
+                return index
+
+        # If none of the previous BPMEvents are proximal, the last event is proximal by
+        # definition.
+        return index_of_last_event
 
 
 @typ.final

@@ -11,6 +11,7 @@ from chartparse.sync import BPMEvent, AnchorEvent
 from tests.helpers import defaults
 from tests.helpers.fruit import Fruit
 from tests.helpers.log import LogChecker
+from tests.helpers.sync import BPMEventsWithDefaults
 
 
 class TestBuildEventsFromData(object):
@@ -32,7 +33,7 @@ class TestBuildEventsFromData(object):
             pytest.param(
                 defaults.bpm_event_parsed_data,
                 defaults.bpm_event,
-                [defaults.bpm_event],
+                BPMEventsWithDefaults(),
                 id="with_resolution",
             ),
         ],
@@ -41,26 +42,26 @@ class TestBuildEventsFromData(object):
         self,
         mocker,
         invalid_chart_line,
-        default_tatter,
+        minimal_bpm_events_with_mock,
         data,
         from_data_return_value,
         want,
     ):
         from_data_fn_mock = mocker.Mock(return_value=from_data_return_value)
         if isinstance(from_data_return_value, BPMEvent):
-            resolution_or_tatter_or_None = defaults.resolution
+            resolution_or_bpm_events_or_None = defaults.resolution
         elif isinstance(from_data_return_value, AnchorEvent):
-            resolution_or_tatter_or_None = None
+            resolution_or_bpm_events_or_None = None
         else:
-            resolution_or_tatter_or_None = default_tatter
+            resolution_or_bpm_events_or_None = minimal_bpm_events_with_mock
 
-        got = build_events_from_data([data], from_data_fn_mock, resolution_or_tatter_or_None)
+        got = build_events_from_data([data], from_data_fn_mock, resolution_or_bpm_events_or_None)
 
         assert got == want
         if isinstance(from_data_return_value, AnchorEvent):
             from_data_fn_mock.assert_called_once_with(data)
         else:
-            from_data_fn_mock.assert_called_once_with(data, None, resolution_or_tatter_or_None)
+            from_data_fn_mock.assert_called_once_with(data, None, resolution_or_bpm_events_or_None)
 
 
 class TestParseDataFromChartLines(object):

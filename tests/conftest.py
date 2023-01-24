@@ -25,27 +25,15 @@ from chartparse.instrument import (
     TrackEvent,
 )
 from chartparse.metadata import Metadata
-from chartparse.sync import SyncTrack, BPMEvent, TimeSignatureEvent, AnchorEvent
+from chartparse.sync import SyncTrack, BPMEvent, BPMEvents, TimeSignatureEvent, AnchorEvent
 
 from tests.helpers import defaults
+from tests.helpers import unsafe
 
 
 @pytest.fixture
 def invalid_chart_line():
     return defaults.invalid_chart_line
-
-
-@pytest.fixture
-def default_tatter(mocker):
-    class FakeTimestampAtTicker(object):
-        def __init__(self, resolution: int):
-            self.resolution = resolution
-            self.spy = mocker.spy(self, "timestamp_at_tick")
-
-        def timestamp_at_tick(self, tick, proximal_bpm_event_index=0):
-            return defaults.tatter_timestamp, defaults.tatter_bpm_event_index
-
-    return FakeTimestampAtTicker(defaults.resolution)
 
 
 @pytest.fixture
@@ -155,11 +143,11 @@ def bare_instrument_track():
 @pytest.fixture
 def minimal_instrument_track(bare_instrument_track):
     """Minimal initialization necessary to avoid attribute errors."""
-    object.__setattr__(bare_instrument_track, "instrument", defaults.instrument)
-    object.__setattr__(bare_instrument_track, "difficulty", defaults.difficulty)
-    object.__setattr__(bare_instrument_track, "section_name", "ExpertSingle")
-    object.__setattr__(bare_instrument_track, "note_events", [])
-    object.__setattr__(bare_instrument_track, "star_power_events", [])
+    unsafe.setattr(bare_instrument_track, "instrument", defaults.instrument)
+    unsafe.setattr(bare_instrument_track, "difficulty", defaults.difficulty)
+    unsafe.setattr(bare_instrument_track, "section_name", "ExpertSingle")
+    unsafe.setattr(bare_instrument_track, "note_events", [])
+    unsafe.setattr(bare_instrument_track, "star_power_events", [])
     return bare_instrument_track
 
 
@@ -229,17 +217,17 @@ def bare_sync_track():
 
 
 @pytest.fixture
-def minimal_sync_track(bare_sync_track):
+def minimal_sync_track(bare_sync_track, bare_bpm_events):
     """Minimal initialization necessary to avoid attribute errors."""
-    object.__setattr__(bare_sync_track, "time_signature_events", [])
-    object.__setattr__(bare_sync_track, "bpm_events", [])
+    unsafe.setattr(bare_sync_track, "anchor_events", [])
+    unsafe.setattr(bare_sync_track, "time_signature_events", [])
+    unsafe.setattr(bare_sync_track, "bpm_events", bare_bpm_events)
     return bare_sync_track
 
 
 @pytest.fixture
 def default_sync_track():
     return SyncTrack(
-        resolution=defaults.resolution,
         time_signature_events=defaults.time_signature_events,
         bpm_events=defaults.bpm_events,
         anchor_events=defaults.anchor_events,
@@ -267,6 +255,42 @@ def default_bpm_event():
 
 
 @pytest.fixture
+def bare_bpm_events():
+    return BPMEvents.__new__(BPMEvents)
+
+
+@pytest.fixture
+def minimal_bpm_events(bare_bpm_events):
+    unsafe.setattr(bare_bpm_events, "events", [])
+    unsafe.setattr(bare_bpm_events, "resolution", defaults.resolution)
+    return bare_bpm_events
+
+
+@pytest.fixture
+def minimal_bpm_events_with_mock(mocker, minimal_bpm_events):
+    class SpyableClass(object):
+        def timestamp_at_tick(self, tick, *, start_iteration_index=0):
+            return defaults.bpm_events_timestamp, defaults.bpm_events_bpm_event_index
+
+    # It is not possible to mock a method of a frozen dataclass conventionally. Instead, we must
+    # manually create a fake method, spy on that, and substitute it using unsafe setattr.
+    s = SpyableClass()
+    spy = mocker.spy(s, "timestamp_at_tick")
+
+    unsafe.setattr(
+        minimal_bpm_events,
+        "timestamp_at_tick_mock",
+        spy,
+    )
+    unsafe.setattr(
+        minimal_bpm_events,
+        "timestamp_at_tick",
+        s.timestamp_at_tick,
+    )
+    return minimal_bpm_events
+
+
+@pytest.fixture
 def bare_anchor_event():
     return AnchorEvent.__new__(AnchorEvent)
 
@@ -287,9 +311,9 @@ def bare_global_events_track():
 @pytest.fixture
 def minimal_global_events_track(bare_global_events_track):
     """Minimal initialization necessary to avoid attribute errors."""
-    object.__setattr__(bare_global_events_track, "text_events", [])
-    object.__setattr__(bare_global_events_track, "section_events", [])
-    object.__setattr__(bare_global_events_track, "lyric_events", [])
+    unsafe.setattr(bare_global_events_track, "text_events", [])
+    unsafe.setattr(bare_global_events_track, "section_events", [])
+    unsafe.setattr(bare_global_events_track, "lyric_events", [])
     return bare_global_events_track
 
 
