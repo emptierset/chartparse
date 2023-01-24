@@ -448,8 +448,7 @@ class BPMEvents(Sequence[BPMEvent]):
 
 
 @typ.final
-# TODO: Make this a dataclass (why isn't it already? Maybe it is by inheritance?)
-# When I do, delete TestInit for this class.
+@dataclasses.dataclass(kw_only=True, frozen=True)
 class AnchorEvent(Event):
     """An event representing a tick "locked" to a particular timestamp."""
 

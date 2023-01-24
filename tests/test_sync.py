@@ -4,7 +4,6 @@ import datetime
 import pytest
 import unittest.mock
 
-from chartparse.event import Event
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.sync import SyncTrack, BPMEvent, BPMEvents, TimeSignatureEvent, AnchorEvent
 
@@ -21,7 +20,6 @@ from tests.helpers.sync import (
     BPMEventsWithDefaults,
     BPMEventParsedDataWithDefaults,
     SyncTrackWithDefaults,
-    AnchorEventWithDefaults,
     AnchorEventParsedDataWithDefaults,
 )
 
@@ -433,18 +431,6 @@ class TestBPMEvents(object):
 
 
 class TestAnchorEvent(object):
-    class TestInit(object):
-        def test(self, mocker):
-            spy_init = mocker.spy(Event, "__init__")
-
-            _ = AnchorEventWithDefaults()
-
-            spy_init.assert_called_once_with(
-                unittest.mock.ANY,  # ignore self
-                tick=defaults.tick,
-                timestamp=defaults.timestamp,
-            )
-
     class TestFromParsedData(object):
         def test(self, mocker):
             spy_init = mocker.spy(AnchorEvent, "__init__")
