@@ -4,7 +4,6 @@ import pytest
 
 import chartparse.tick
 from chartparse.tick import NoteDuration
-
 from tests.helpers import testcase
 
 

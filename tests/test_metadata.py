@@ -4,7 +4,6 @@ import pytest
 
 from chartparse.exceptions import MissingRequiredField
 from chartparse.metadata import Metadata
-
 from tests.helpers import defaults
 
 

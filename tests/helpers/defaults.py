@@ -3,27 +3,21 @@ from __future__ import annotations
 import datetime
 import math
 
-from chartparse.globalevents import (
-    GlobalEvent,
-    TextEvent,
-    SectionEvent,
-    LyricEvent,
-)
+from chartparse.globalevents import GlobalEvent, LyricEvent, SectionEvent, TextEvent
 from chartparse.instrument import (
+    Difficulty,
+    HOPOState,
+    Instrument,
+    Note,
     NoteEvent,
     NoteTrackIndex,
-    TrackEvent,
     StarPowerEvent,
-    Instrument,
-    Difficulty,
-    Note,
-    HOPOState,
-    _SustainList,
     SustainTuple,
+    TrackEvent,
+    _SustainList,
 )
 from chartparse.metadata import Player2Instrument
-from chartparse.sync import BPMEvent, TimeSignatureEvent, AnchorEvent
-
+from chartparse.sync import AnchorEvent, BPMEvent, TimeSignatureEvent
 
 filepath = "/not/a/real/path"
 

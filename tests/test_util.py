@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 from chartparse.util import (
-    DictPropertiesEqMixin,
     AllValuesGettableEnum,
+    DictPropertiesEqMixin,
     DictReprMixin,
     DictReprTruncatedSequencesMixin,
 )
-
 from tests.helpers import testcase
 
 

@@ -2,19 +2,17 @@ from __future__ import annotations
 
 import datetime
 import pathlib
-import pytest
 import unittest.mock
+
+import pytest
 
 from chartparse.chart import Chart
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.globalevents import GlobalEventsTrack
-from chartparse.instrument import InstrumentTrack, Difficulty, Instrument, Note
+from chartparse.instrument import Difficulty, Instrument, InstrumentTrack, Note
 from chartparse.metadata import Metadata
 from chartparse.sync import SyncTrack
-
-from tests.helpers import defaults
-from tests.helpers import testcase
-from tests.helpers import unsafe
+from tests.helpers import defaults, testcase, unsafe
 from tests.helpers.instrument import NoteEventWithDefaults
 from tests.helpers.log import LogChecker
 

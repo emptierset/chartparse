@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-
-from chartparse.sync import TimeSignatureEvent, BPMEvent, SyncTrack, AnchorEvent, BPMEvents
-
+from chartparse.sync import AnchorEvent, BPMEvent, BPMEvents, SyncTrack, TimeSignatureEvent
 from tests.helpers import defaults
 
 

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import sys
 import os
+import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "helpers"))
 
@@ -10,25 +10,23 @@ import pytest
 from chartparse.chart import Chart
 from chartparse.event import Event
 from chartparse.globalevents import (
-    GlobalEventsTrack,
     GlobalEvent,
-    TextEvent,
-    SectionEvent,
+    GlobalEventsTrack,
     LyricEvent,
+    SectionEvent,
+    TextEvent,
 )
 from chartparse.instrument import (
     InstrumentTrack,
     NoteEvent,
+    SpecialEvent,
     StarPowerData,
     StarPowerEvent,
-    SpecialEvent,
     TrackEvent,
 )
 from chartparse.metadata import Metadata
-from chartparse.sync import SyncTrack, BPMEvent, BPMEvents, TimeSignatureEvent, AnchorEvent
-
-from tests.helpers import defaults
-from tests.helpers import unsafe
+from chartparse.sync import AnchorEvent, BPMEvent, BPMEvents, SyncTrack, TimeSignatureEvent
+from tests.helpers import defaults, unsafe
 
 
 @pytest.fixture

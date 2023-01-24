@@ -1,27 +1,26 @@
 from __future__ import annotations
 
-import pytest
 import re
 import unittest.mock
 
+import pytest
+
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.globalevents import (
-    GlobalEventsTrack,
     GlobalEvent,
-    TextEvent,
-    SectionEvent,
+    GlobalEventsTrack,
     LyricEvent,
+    SectionEvent,
+    TextEvent,
 )
-
-from tests.helpers import defaults
-from tests.helpers import testcase
+from tests.helpers import defaults, testcase
 from tests.helpers.globalevents import (
-    GlobalEventWithDefaults,
-    GlobalEventsTrackWithDefaults,
     GlobalEventParsedDataWithDefaults,
-    TextEventParsedDataWithDefaults,
-    SectionEventParsedDataWithDefaults,
+    GlobalEventsTrackWithDefaults,
+    GlobalEventWithDefaults,
     LyricEventParsedDataWithDefaults,
+    SectionEventParsedDataWithDefaults,
+    TextEventParsedDataWithDefaults,
 )
 
 

@@ -1,11 +1,10 @@
 from chartparse.globalevents import (
     GlobalEvent,
     GlobalEventsTrack,
-    TextEvent,
-    SectionEvent,
     LyricEvent,
+    SectionEvent,
+    TextEvent,
 )
-
 from tests.helpers import defaults
 
 

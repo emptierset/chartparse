@@ -1,26 +1,24 @@
 from __future__ import annotations
 
 import datetime
-import pytest
 import unittest.mock
 
-from chartparse.exceptions import RegexNotMatchError
-from chartparse.sync import SyncTrack, BPMEvent, BPMEvents, TimeSignatureEvent, AnchorEvent
+import pytest
 
-from tests.helpers import testcase
-from tests.helpers import defaults
-from tests.helpers import unsafe
+from chartparse.exceptions import RegexNotMatchError
+from chartparse.sync import AnchorEvent, BPMEvent, BPMEvents, SyncTrack, TimeSignatureEvent
+from tests.helpers import defaults, testcase, unsafe
+from tests.helpers.lines import generate_anchor as generate_anchor_line
 from tests.helpers.lines import generate_bpm as generate_bpm_line
 from tests.helpers.lines import generate_time_signature as generate_time_signature_line
-from tests.helpers.lines import generate_anchor as generate_anchor_line
 from tests.helpers.sync import (
-    TimeSignatureEventWithDefaults,
-    TimeSignatureEventParsedDataWithDefaults,
-    BPMEventWithDefaults,
-    BPMEventsWithDefaults,
-    BPMEventParsedDataWithDefaults,
-    SyncTrackWithDefaults,
     AnchorEventParsedDataWithDefaults,
+    BPMEventParsedDataWithDefaults,
+    BPMEventsWithDefaults,
+    BPMEventWithDefaults,
+    SyncTrackWithDefaults,
+    TimeSignatureEventParsedDataWithDefaults,
+    TimeSignatureEventWithDefaults,
 )
 
 

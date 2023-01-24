@@ -1,42 +1,38 @@
 from __future__ import annotations
 
 import datetime
-import pytest
 import re
 import unittest.mock
 
-import chartparse.instrument
-from chartparse.exceptions import RegexNotMatchError
+import pytest
 
-# TODO: isort appears to be broken.
+import chartparse.instrument
+import tests.helpers.tick
+from chartparse.exceptions import RegexNotMatchError
 from chartparse.instrument import (
-    InstrumentTrack,
-    Instrument,
-    StarPowerEvent,
-    NoteEvent,
-    TrackEvent,
     Difficulty,
-    StarPowerData,
     HOPOState,
-    SpecialEvent,
+    Instrument,
+    InstrumentTrack,
     Note,
+    NoteEvent,
     NoteTrackIndex,
+    SpecialEvent,
+    StarPowerData,
+    StarPowerEvent,
+    TrackEvent,
 )
 from chartparse.tick import NoteDuration
-
-import tests.helpers.tick
-from tests.helpers import defaults
-from tests.helpers import testcase
-from tests.helpers import unsafe
+from tests.helpers import defaults, testcase, unsafe
 from tests.helpers.instrument import (
     InstrumentTrackWithDefaults,
-    StarPowerEventWithDefaults,
-    NoteEventWithDefaults,
     NoteEventParsedDataWithDefaults,
-    SpecialEventWithDefaults,
+    NoteEventWithDefaults,
     SpecialEventParsedDataWithDefaults,
-    TrackEventWithDefaults,
+    SpecialEventWithDefaults,
+    StarPowerEventWithDefaults,
     TrackEventParsedDataWithDefaults,
+    TrackEventWithDefaults,
 )
 from tests.helpers.lines import generate_note as generate_note_line
 from tests.helpers.lines import generate_star_power as generate_star_power_line

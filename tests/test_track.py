@@ -4,11 +4,9 @@ import dataclasses
 
 import chartparse.track
 from chartparse.event import Event
+from chartparse.sync import AnchorEvent, BPMEvent
 from chartparse.track import build_events_from_data, parse_data_from_chart_lines
-from chartparse.sync import BPMEvent, AnchorEvent
-
-from tests.helpers import defaults
-from tests.helpers import testcase
+from tests.helpers import defaults, testcase
 from tests.helpers.fruit import Fruit
 from tests.helpers.log import LogChecker
 from tests.helpers.sync import BPMEventsWithDefaults

@@ -1,5 +1,4 @@
 from chartparse.event import Event
-
 from tests.helpers import defaults
 
 

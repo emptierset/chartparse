@@ -1,5 +1,4 @@
 import chartparse.tick
-
 from tests.helpers import defaults
 
 

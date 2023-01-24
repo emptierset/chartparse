@@ -1,6 +1,7 @@
 .ONESHELL:
 ENV_PREFIX=$(shell python -c "if __import__('pathlib').Path('.venv/bin/pip').exists(): print('.venv/bin/')")
 USING_POETRY=$(shell grep "tool.poetry" pyproject.toml && echo "yes")
+SRC_DIRECTORIES := chartparse/ tests/ scripts/
 
 .PHONY: help
 help:              ## Show the help.
@@ -31,39 +32,37 @@ doc:              ## Clean generated docs and compile fresh ones.
 
 .PHONY: black
 black:             ## Format code using black.
-	$(ENV_PREFIX)black -l 99 chartparse/
-	$(ENV_PREFIX)black -l 99 tests/
+	$(ENV_PREFIX)black -l 99 $(SRC_DIRECTORIES)
 
 .PHONY: blackcheck
 blackcheck:        ## Check code format using black.
-	$(ENV_PREFIX)black -l 99 chartparse/ --check
-	$(ENV_PREFIX)black -l 99 tests/ --check
+	$(ENV_PREFIX)black -l 99 --check $(SRC_DIRECTORIES)
 
 .PHONY: isort
 isort:             ## Format code using isort.
-	$(ENV_PREFIX)isort --line-length 99 chartparse/
+	$(ENV_PREFIX)isort --line-length 99 $(SRC_DIRECTORIES)
 
 .PHONY: autoflake
 autoflake:         ## Remove unused imports using autoflake.
-	$(ENV_PREFIX)autoflake -ri chartparse/ tests/
+	$(ENV_PREFIX)autoflake -ri $(SRC_DIRECTORIES)
 
 .PHONY: autoflakeall
 autoflakeall:         ## Remove all unused imports using autoflake.
-	$(ENV_PREFIX)autoflake --remove-all-unused-imports -ri chartparse/ tests/
+	$(ENV_PREFIX)autoflake --remove-all-unused-imports -ri $(SRC_DIRECTORIES)
 
 .PHONY: fmt
 fmt: isort black autoflake  ## Format code using isort, black, and autoflake.
 
 .PHONY: flake
 flake:             ## Run pep8 linter.
-	$(ENV_PREFIX)flake8 --extend-ignore=E731 --max-line-length 99 --rst-roles meth,class,attr chartparse/ tests/
+	$(ENV_PREFIX)flake8 --extend-ignore=E731 --max-line-length 99 --rst-roles meth,class,attr $(SRC_DIRECTORIES)
 
 .PHONY: lint
 lint: flake blackcheck  ## Run pep8 linter and black.
 
 .PHONY: mypy
 mypy:              ## Run mypy type checker.
-	$(ENV_PREFIX)mypy --ignore-missing-imports chartparse/ tests/
+	$(ENV_PREFIX)mypy --ignore-missing-imports $(SRC_DIRECTORIES)
 
 .PHONY: check
 check: lint mypy   ## Run all linters and mypy.

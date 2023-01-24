@@ -1,6 +1,7 @@
 """Python setup.py for chartparse package"""
 import io
 import os
+
 from setuptools import find_packages, setup
 
 

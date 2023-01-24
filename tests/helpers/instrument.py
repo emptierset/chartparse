@@ -1,14 +1,12 @@
 from __future__ import annotations
 
-
 from chartparse.instrument import (
-    StarPowerEvent,
+    InstrumentTrack,
     NoteEvent,
     SpecialEvent,
-    InstrumentTrack,
+    StarPowerEvent,
     TrackEvent,
 )
-
 from tests.helpers import defaults
 
 
