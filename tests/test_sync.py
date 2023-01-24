@@ -27,7 +27,6 @@ from tests.helpers.sync import (
 
 
 class TestSyncTrack(object):
-    # TODO: Remove testinits for dataclasses.
     class TestPostInit(object):
         def test_empty_time_signature_events(self):
             with pytest.raises(ValueError):

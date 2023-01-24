@@ -120,15 +120,7 @@ class TestComplexSustainFromParsedDatas(object):
 
 
 class TestInstrumentTrack(object):
-    class TestInit(object):
-        def test(self, mocker, default_instrument_track):
-            _ = InstrumentTrackWithDefaults()
-            assert default_instrument_track.instrument == defaults.instrument
-            assert default_instrument_track.difficulty == defaults.difficulty
-            assert default_instrument_track.note_events == [defaults.note_event]
-            assert default_instrument_track.star_power_events == [defaults.star_power_event]
-            assert default_instrument_track.section_name == defaults.section_name
-
+    class TestPostInit(object):
         @testcase.parametrize(
             ["resolution"],
             [

@@ -26,12 +26,7 @@ from tests.helpers.globalevents import (
 
 
 class TestGlobalEventsTrack(object):
-    class TestInit(object):
-        def test(self, default_global_events_track):
-            assert default_global_events_track.text_events == [defaults.text_event]
-            assert default_global_events_track.section_events == [defaults.section_event]
-            assert default_global_events_track.lyric_events == [defaults.lyric_event]
-
+    class TestPostInit(object):
         @testcase.parametrize(
             ["resolution"],
             [
