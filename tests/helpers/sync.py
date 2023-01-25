@@ -23,14 +23,14 @@ def TimeSignatureEventWithDefaults(
     timestamp=defaults.timestamp,
     upper_numeral=defaults.upper_time_signature_numeral,
     lower_numeral=defaults.lower_time_signature_numeral,
-    proximal_bpm_event_index=defaults.proximal_bpm_event_index,
+    _proximal_bpm_event_index=defaults.proximal_bpm_event_index,
 ):
     return TimeSignatureEvent(
         tick=tick,
         timestamp=timestamp,
         upper_numeral=upper_numeral,
         lower_numeral=lower_numeral,
-        _proximal_bpm_event_index=proximal_bpm_event_index,
+        _proximal_bpm_event_index=_proximal_bpm_event_index,
     )
 
 
@@ -45,10 +45,13 @@ def BPMEventWithDefaults(
     tick=defaults.tick,
     timestamp=defaults.timestamp,
     bpm=defaults.bpm,
-    proximal_bpm_event_index=defaults.proximal_bpm_event_index,
+    _proximal_bpm_event_index=defaults.proximal_bpm_event_index,
 ):
     return BPMEvent(
-        tick=tick, timestamp=timestamp, bpm=bpm, _proximal_bpm_event_index=proximal_bpm_event_index
+        tick=tick,
+        timestamp=timestamp,
+        bpm=bpm,
+        _proximal_bpm_event_index=_proximal_bpm_event_index,
     )
 
 

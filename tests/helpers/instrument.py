@@ -34,14 +34,14 @@ def SpecialEventWithDefaults(
     tick=defaults.tick,
     timestamp=defaults.timestamp,
     sustain=defaults.sustain,
-    proximal_bpm_event_index=defaults.proximal_bpm_event_index,
+    _proximal_bpm_event_index=defaults.proximal_bpm_event_index,
     init_end_tick=False,
 ):
     s = SpecialEvent(
         tick=tick,
         timestamp=timestamp,
         sustain=sustain,
-        _proximal_bpm_event_index=proximal_bpm_event_index,
+        _proximal_bpm_event_index=_proximal_bpm_event_index,
     )
     if init_end_tick:
         s.end_tick  # accessing this initializes it because it's a cached_property
@@ -61,14 +61,14 @@ def StarPowerEventWithDefaults(
     tick=defaults.tick,
     timestamp=defaults.timestamp,
     sustain=defaults.sustain,
-    proximal_bpm_event_index=defaults.proximal_bpm_event_index,
+    _proximal_bpm_event_index=defaults.proximal_bpm_event_index,
     init_end_tick=False,
 ):
     s = StarPowerEvent(
         tick=tick,
         timestamp=timestamp,
         sustain=sustain,
-        _proximal_bpm_event_index=proximal_bpm_event_index,
+        _proximal_bpm_event_index=_proximal_bpm_event_index,
     )
     if init_end_tick:
         s.end_tick  # accessing this initializes it because it's a cached_property
@@ -84,7 +84,7 @@ def NoteEventWithDefaults(
     hopo_state=defaults.hopo_state,
     sustain=defaults.sustain,
     star_power_data=None,
-    proximal_bpm_event_index=defaults.proximal_bpm_event_index,
+    _proximal_bpm_event_index=defaults.proximal_bpm_event_index,
 ):
     return NoteEvent(
         tick=tick,
@@ -94,7 +94,7 @@ def NoteEventWithDefaults(
         hopo_state=hopo_state,
         sustain=sustain,
         star_power_data=star_power_data,
-        _proximal_bpm_event_index=proximal_bpm_event_index,
+        _proximal_bpm_event_index=_proximal_bpm_event_index,
     )
 
 
@@ -116,13 +116,13 @@ def TrackEventWithDefaults(
     tick=defaults.tick,
     timestamp=defaults.timestamp,
     value=defaults.global_event_value,
-    proximal_bpm_event_index=defaults.proximal_bpm_event_index,
+    _proximal_bpm_event_index=defaults.proximal_bpm_event_index,
 ):
     return TrackEvent(
         tick=tick,
         timestamp=timestamp,
         value=value,
-        _proximal_bpm_event_index=proximal_bpm_event_index,
+        _proximal_bpm_event_index=_proximal_bpm_event_index,
     )
 
 

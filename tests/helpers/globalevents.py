@@ -28,13 +28,13 @@ def GlobalEventWithDefaults(
     tick=defaults.tick,
     timestamp=defaults.timestamp,
     value=defaults.global_event_value,
-    proximal_bpm_event_index=defaults.proximal_bpm_event_index,
+    _proximal_bpm_event_index=defaults.proximal_bpm_event_index,
 ):
     return GlobalEvent(
         tick=tick,
         timestamp=timestamp,
         value=value,
-        _proximal_bpm_event_index=proximal_bpm_event_index,
+        _proximal_bpm_event_index=_proximal_bpm_event_index,
     )
 
 

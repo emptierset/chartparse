@@ -99,7 +99,7 @@ class TestTimeSignatureEvent(object):
                 ),
                 testcase.new(
                     "prev_event_present",
-                    prev_event=TimeSignatureEventWithDefaults(proximal_bpm_event_index=1),
+                    prev_event=TimeSignatureEventWithDefaults(_proximal_bpm_event_index=1),
                 ),
             ],
         )

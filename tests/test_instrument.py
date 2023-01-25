@@ -217,7 +217,7 @@ class TestInstrumentTrack(object):
         @staticmethod
         def NoteEventWithDefaultsPlus(**kwargs):
             return NoteEventWithDefaults(
-                proximal_bpm_event_index=defaults.timestamp_at_tick_proximal_bpm_event_index,
+                _proximal_bpm_event_index=defaults.timestamp_at_tick_proximal_bpm_event_index,
                 timestamp=defaults.timestamp_at_tick_timestamp,
                 end_timestamp=defaults.timestamp_at_tick_timestamp,
                 **kwargs,
@@ -226,7 +226,7 @@ class TestInstrumentTrack(object):
         @staticmethod
         def StarPowerEventWithDefaultsPlus(**kwargs):
             return StarPowerEventWithDefaults(
-                proximal_bpm_event_index=defaults.timestamp_at_tick_proximal_bpm_event_index,
+                _proximal_bpm_event_index=defaults.timestamp_at_tick_proximal_bpm_event_index,
                 timestamp=defaults.timestamp_at_tick_timestamp,
                 **kwargs,
             )
@@ -1006,7 +1006,7 @@ class TestSpecialEvent(object):
                 ),
                 testcase.new(
                     "prev_event_present",
-                    prev_event=SpecialEventWithDefaults(proximal_bpm_event_index=1),
+                    prev_event=SpecialEventWithDefaults(_proximal_bpm_event_index=1),
                 ),
             ],
         )
@@ -1137,7 +1137,7 @@ class TestTrackEvent(object):
                 ),
                 testcase.new(
                     "prev_event_present",
-                    prev_event=TrackEventWithDefaults(proximal_bpm_event_index=1),
+                    prev_event=TrackEventWithDefaults(_proximal_bpm_event_index=1),
                 ),
             ],
         )
