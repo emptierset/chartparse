@@ -256,12 +256,6 @@ class TestChart(object):
             with pytest.raises(RegexNotMatchError):
                 _ = Chart._parse_section_dict(lines)
 
-    class TestSecondsFromTicksAtBPM(object):
-        def test(self, mocker, minimal_chart):
-            mock = mocker.patch("chartparse.tick.seconds_from_ticks_at_bpm")
-            _ = minimal_chart._seconds_from_ticks_at_bpm(defaults.tick, defaults.bpm)
-            mock.assert_called_once_with(defaults.tick, defaults.bpm, defaults.resolution)
-
     class TestNotesPerSecond(object):
         @testcase.parametrize(
             ["interval_start_time", "interval_end_time", "want"],

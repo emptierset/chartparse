@@ -27,7 +27,6 @@ import typing as typ
 from collections.abc import Iterable, Sequence
 from pathlib import Path
 
-import chartparse.tick
 from chartparse.exceptions import RegexNotMatchError, UnreachableError
 from chartparse.globalevents import GlobalEventsTrack
 from chartparse.instrument import Difficulty, Instrument, InstrumentTrack
@@ -191,9 +190,6 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
                 curr_first_line_index = None
                 curr_last_line_index = None
         return d
-
-    def _seconds_from_ticks_at_bpm(self, ticks: int, bpm: float) -> float:
-        return chartparse.tick.seconds_from_ticks_at_bpm(ticks, bpm, self.metadata.resolution)
 
     def notes_per_second(
         self,
