@@ -16,7 +16,6 @@ from chartparse.globalevents import (
 from tests.helpers import defaults, testcase
 from tests.helpers.globalevents import (
     GlobalEventParsedDataWithDefaults,
-    GlobalEventsTrackWithDefaults,
     GlobalEventWithDefaults,
     LyricEventParsedDataWithDefaults,
     SectionEventParsedDataWithDefaults,
@@ -25,24 +24,6 @@ from tests.helpers.globalevents import (
 
 
 class TestGlobalEventsTrack(object):
-    class TestPostInit(object):
-        @testcase.parametrize(
-            ["resolution"],
-            [
-                testcase.new(
-                    "zero",
-                    resolution=0,
-                ),
-                testcase.new(
-                    "negative",
-                    resolution=-1,
-                ),
-            ],
-        )
-        def test_non_positive_resolution(self, resolution):
-            with pytest.raises(ValueError):
-                _ = GlobalEventsTrackWithDefaults(resolution=resolution)
-
     def test_from_chart_lines(self, mocker, minimal_bpm_events, invalid_chart_line):
         mock_parse_data = mocker.patch.object(
             GlobalEventsTrack,
@@ -87,7 +68,6 @@ class TestGlobalEventsTrack(object):
         )
         spy_init.assert_called_once_with(
             unittest.mock.ANY,  # ignore self
-            resolution=defaults.resolution,
             text_events=[defaults.text_event],
             section_events=[defaults.section_event],
             lyric_events=[defaults.lyric_event],

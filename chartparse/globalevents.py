@@ -41,10 +41,6 @@ class GlobalEventsTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     section_name: typ.Final[str] = "Events"
     """The name of this track's section in a ``.chart`` file."""
 
-    resolution: int
-    """The number of ticks for which a quarter note lasts."""
-    # TODO: Why does this need resolution? Can it just be dropped?
-
     text_events: Sequence[TextEvent]
     """A ``GlobalEventTrack``'s ``TextEvent``\\ s."""
 
@@ -53,11 +49,6 @@ class GlobalEventsTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
     lyric_events: Sequence[LyricEvent]
     """A ``GlobalEventTrack``'s ``LyricEvent``\\ s."""
-
-    def __post_init__(self) -> None:
-        """Validates all instance attributes."""
-        if self.resolution <= 0:
-            raise ValueError(f"resolution ({self.resolution}) must be positive")
 
     @classmethod
     def from_chart_lines(
@@ -93,7 +84,6 @@ class GlobalEventsTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             bpm_events,
         )
         return cls(
-            resolution=bpm_events.resolution,
             text_events=text_events,
             section_events=section_events,
             lyric_events=lyric_events,

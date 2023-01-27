@@ -331,7 +331,6 @@ def minimal_global_events_track(bare_global_events_track):
 @pytest.fixture
 def default_global_events_track():
     return GlobalEventsTrack(
-        resolution=defaults.resolution,
         text_events=[defaults.text_event],
         section_events=[defaults.section_event],
         lyric_events=[defaults.lyric_event],
