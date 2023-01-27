@@ -73,7 +73,7 @@ class TestChart(object):
         ):
             mocker.patch.object(
                 Chart,
-                "_find_sections",
+                "_parse_section_dict",
                 return_value={
                     "Song": [invalid_chart_line],
                     "Events": [invalid_chart_line],
@@ -112,8 +112,8 @@ class TestChart(object):
             assert got == default_chart
 
             # This assert tests the want_tracks filtering logic; because EasySingle is returned by
-            # _find_sections, InstrumentTrack.from_chart_lines will be called more than once if the
-            # filtering logic does not work.
+            # _parse_section_dict, InstrumentTrack.from_chart_lines will be called more than once
+            # if the filtering logic does not work.
             instrument_track_from_chart_lines_mock.assert_called_once_with(
                 Instrument.GUITAR,
                 Difficulty.EXPERT,
@@ -155,7 +155,7 @@ class TestChart(object):
             with open(_valid_chart_filepath, "r", encoding="utf-8-sig") as f:
                 lines = f.read().splitlines()
 
-            sections = Chart._find_sections(lines)
+            sections = Chart._parse_section_dict(lines)
 
             def validate_lines(section_name, want_lines):
                 assert section_name in sections
@@ -254,7 +254,7 @@ class TestChart(object):
         )
         def test_raises(self, lines):
             with pytest.raises(RegexNotMatchError):
-                _ = Chart._find_sections(lines)
+                _ = Chart._parse_section_dict(lines)
 
     class TestSecondsFromTicksAtBPM(object):
         def test(self, mocker, minimal_chart):

@@ -126,19 +126,19 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             A ``Chart`` object, initialized with data parsed from ``fp``.
         """
         lines = fp.read().splitlines()
-        sections = cls._find_sections(lines)
-        if not all(section in sections for section in cls._required_sections):
+        section_dict = cls._parse_section_dict(lines)
+        if not all(section in section_dict for section in cls._required_sections):
             raise ValueError(
-                f"parsed section list {list(sections.keys())} does not contain all "
+                f"parsed section list {list(section_dict.keys())} does not contain all "
                 f"required sections {cls._required_sections}"
             )
 
-        metadata = Metadata.from_chart_lines(sections[Metadata.section_name])
+        metadata = Metadata.from_chart_lines(section_dict[Metadata.section_name])
         sync_track = SyncTrack.from_chart_lines(
-            metadata.resolution, sections[SyncTrack.section_name]
+            metadata.resolution, section_dict[SyncTrack.section_name]
         )
         global_events_track = GlobalEventsTrack.from_chart_lines(
-            sections[GlobalEventsTrack.section_name], sync_track.bpm_events
+            section_dict[GlobalEventsTrack.section_name], sync_track.bpm_events
         )
 
         instrument_track_name_to_instrument_difficulty_pair: dict[
@@ -148,7 +148,7 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         instrument_tracks: collections.defaultdict[
             Instrument, dict[Difficulty, InstrumentTrack]
         ] = collections.defaultdict(dict)
-        for section_name, section_lines in sections.items():
+        for section_name, section_lines in section_dict.items():
             if section_name in instrument_track_name_to_instrument_difficulty_pair:
                 instrument_difficulty_pair = instrument_track_name_to_instrument_difficulty_pair[
                     section_name
@@ -169,8 +169,8 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         return cls(metadata, global_events_track, sync_track, instrument_tracks)
 
     @classmethod
-    def _find_sections(cls, lines: Iterable[str]) -> dict[str, Iterable[str]]:
-        sections: dict[str, Iterable[str]] = dict()
+    def _parse_section_dict(cls, lines: Iterable[str]) -> dict[str, Iterable[str]]:
+        d: dict[str, Iterable[str]] = dict()
         curr_section_name = None
         curr_first_line_index = None
         curr_last_line_index = None
@@ -184,13 +184,13 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
                 curr_first_line_index = i + 1
             elif line == "}":
                 curr_last_line_index = i - 1
-                sections[curr_section_name] = itertools.islice(
+                d[curr_section_name] = itertools.islice(
                     lines, curr_first_line_index, curr_last_line_index + 1
                 )
                 curr_section_name = None
                 curr_first_line_index = None
                 curr_last_line_index = None
-        return sections
+        return d
 
     def _seconds_from_ticks_at_bpm(self, ticks: int, bpm: float) -> float:
         return chartparse.tick.seconds_from_ticks_at_bpm(ticks, bpm, self.metadata.resolution)
