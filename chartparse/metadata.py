@@ -17,6 +17,7 @@ import typing as typ
 from collections.abc import Callable
 
 from chartparse.exceptions import MissingRequiredField, RegexNotMatchError, raise_
+from chartparse.tick import Ticks
 from chartparse.util import DictPropertiesEqMixin, DictReprMixin
 
 if typ.TYPE_CHECKING:  # pragma: no cover
@@ -85,13 +86,13 @@ class Player2Instrument(enum.Enum):
     RHYTHM = "rhythm"
 
 
-FieldValue = int | str | Player2Instrument
+FieldValue = Ticks | int | str | Player2Instrument
 
 FieldValueParser = Callable[[str], FieldValue]
 
 
 class _FieldValuesDict(typ.TypedDict, total=False):
-    resolution: int
+    resolution: Ticks
     offset: int
     player2: Player2Instrument
     difficulty: int
@@ -249,7 +250,7 @@ class Metadata(DictPropertiesEqMixin, DictReprMixin):
     section_name: typ.ClassVar[str] = "Song"
     """The name of this track's section in a ``.chart`` file."""
 
-    resolution: int
+    resolution: Ticks
     """The number of ticks for which a quarter note lasts."""
 
     offset: int = 0

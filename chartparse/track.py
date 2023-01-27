@@ -18,6 +18,7 @@ from collections.abc import Iterable, Sequence
 from chartparse.event import Event
 from chartparse.exceptions import RegexNotMatchError, UnreachableError
 from chartparse.sync import AnchorEvent, BPMEvents
+from chartparse.tick import Ticks
 
 if typ.TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Callable
@@ -91,11 +92,11 @@ def build_events_from_data(
         [
             BPMEvent.ParsedData,
             BPMEvent | None,
-            int,
+            Ticks,
         ],
         BPMEvent,
     ],
-    resolution: int,
+    resolution: Ticks,
     /,
 ) -> BPMEvents:
     ...  # pragma: no cover

@@ -18,9 +18,12 @@ from collections.abc import Sequence
 from datetime import timedelta
 
 import chartparse.tick
+import chartparse.time
 import chartparse.track
 from chartparse.event import Event
 from chartparse.exceptions import RegexNotMatchError
+from chartparse.tick import Tick, Ticks
+from chartparse.time import Timestamp
 from chartparse.util import DictPropertiesEqMixin, DictReprMixin, DictReprTruncatedSequencesMixin
 
 if typ.TYPE_CHECKING:  # pragma: no cover
@@ -69,7 +72,7 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     @classmethod
     def from_chart_lines(
         cls: type[_Self],
-        resolution: int,
+        resolution: Ticks,
         lines: Iterable[str],
     ) -> _Self:
         """Initializes instance attributes by parsing an iterable of strings.
@@ -222,7 +225,7 @@ class TimeSignatureEvent(Event):
                 lower = int(raw_lower)
             except TypeError:
                 lower = None
-            return cls(tick=int(raw_tick), upper=int(raw_upper), lower=lower)
+            return cls(tick=Tick(int(raw_tick)), upper=int(raw_upper), lower=lower)
 
 
 @typ.final
@@ -252,7 +255,7 @@ class BPMEvent(Event):
         cls: type[_Self],
         data: BPMEvent.ParsedData,
         prev_event: _Self | None,
-        resolution: int,
+        resolution: Ticks,
     ) -> _Self:
         """Obtain an instance of this object from parsed data.
 
@@ -278,7 +281,7 @@ class BPMEvent(Event):
         bpm = bpm_whole_part + bpm_decimal_part
 
         if prev_event is None:
-            timestamp, proximal_bpm_event_index = timedelta(0), 0
+            timestamp, proximal_bpm_event_index = Timestamp(timedelta(0)), 0
         else:
             if data.tick <= prev_event.tick:
                 # TODO: This branch can be removed if we move chart validation to an external flow.
@@ -287,11 +290,13 @@ class BPMEvent(Event):
                     f"{cls.__name__} at tick {prev_event.tick}; tick values of "
                     f"{cls.__name__} must be strictly increasing."
                 )
-            ticks_since_prev = data.tick - prev_event.tick
+            ticks_since_prev = chartparse.tick.between(prev_event.tick, data.tick)
             seconds_since_prev = chartparse.tick.seconds_from_ticks_at_bpm(
                 ticks_since_prev, prev_event.bpm, resolution
             )
-            timestamp = prev_event.timestamp + timedelta(seconds=seconds_since_prev)
+            timestamp = chartparse.time.add(
+                prev_event.timestamp, timedelta(seconds=seconds_since_prev)
+            )
             proximal_bpm_event_index = prev_event._proximal_bpm_event_index + 1
 
         return cls(
@@ -340,7 +345,7 @@ class BPMEvent(Event):
             if not m:
                 raise RegexNotMatchError(cls._regex, line)
             raw_tick, raw_bpm = m.groups()
-            return cls(tick=int(raw_tick), raw_bpm=raw_bpm)
+            return cls(tick=Tick(int(raw_tick)), raw_bpm=raw_bpm)
 
 
 @typ.final
@@ -357,7 +362,7 @@ class BPMEvents(Sequence[BPMEvent]):
     events: Sequence[BPMEvent]
     """The chart's ``BPMEvent``\\s."""
 
-    resolution: int
+    resolution: Ticks
     """The number of ticks in a quarter note."""
 
     def __post_init__(self) -> None:
@@ -389,8 +394,8 @@ class BPMEvents(Sequence[BPMEvent]):
         return self.events[index]
 
     def timestamp_at_tick_no_optimize_return(
-        self, tick: int, *, start_iteration_index: int = 0
-    ) -> timedelta:
+        self, tick: Tick, *, start_iteration_index: int = 0
+    ) -> Timestamp:
         """Returns the timestamp at the input tick.
 
         Args:
@@ -409,8 +414,8 @@ class BPMEvents(Sequence[BPMEvent]):
         return timestamp
 
     def timestamp_at_tick(
-        self, tick: int, *, start_iteration_index: int = 0
-    ) -> tuple[timedelta, int]:
+        self, tick: Tick, *, start_iteration_index: int = 0
+    ) -> tuple[Timestamp, int]:
         """Returns the timestamp at the input tick, and an optimizing value.
 
         Args:
@@ -431,17 +436,18 @@ class BPMEvents(Sequence[BPMEvent]):
             tick, start_iteration_index=start_iteration_index
         )
         proximal_bpm_event = self.events[proximal_bpm_event_index]
-        ticks_since_proximal_bpm_event = tick - proximal_bpm_event.tick
+        ticks_since_proximal_bpm_event = chartparse.tick.between(proximal_bpm_event.tick, tick)
         seconds_since_proximal_bpm_event = chartparse.tick.seconds_from_ticks_at_bpm(
             ticks_since_proximal_bpm_event,
             proximal_bpm_event.bpm,
             self.resolution,
         )
-        timedelta_since_proximal_bpm_event = timedelta(seconds=seconds_since_proximal_bpm_event)
-        timestamp = proximal_bpm_event.timestamp + timedelta_since_proximal_bpm_event
+        timestamp = chartparse.time.add(
+            proximal_bpm_event.timestamp, seconds_since_proximal_bpm_event
+        )
         return timestamp, proximal_bpm_event_index
 
-    def _index_of_proximal_event(self, tick: int, start_iteration_index: int = 0) -> int:
+    def _index_of_proximal_event(self, tick: Tick, start_iteration_index: int = 0) -> int:
         index_of_last_event = len(self) - 1
         if start_iteration_index > index_of_last_event:
             raise ValueError(
@@ -482,7 +488,7 @@ class AnchorEvent(Event):
             An an instance of this object initialized from ``data``.
         """
 
-        timestamp = timedelta(microseconds=data.microseconds)
+        timestamp = Timestamp(timedelta(microseconds=data.microseconds))
         return cls(tick=data.tick, timestamp=timestamp)
 
     @typ.final
@@ -519,4 +525,4 @@ class AnchorEvent(Event):
             if not m:
                 raise RegexNotMatchError(cls._regex, line)
             raw_tick, raw_microseconds = m.groups()
-            return cls(tick=int(raw_tick), microseconds=int(raw_microseconds))
+            return cls(tick=Tick(int(raw_tick)), microseconds=int(raw_microseconds))

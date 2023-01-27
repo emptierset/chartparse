@@ -5,6 +5,7 @@ import dataclasses
 import chartparse.track
 from chartparse.event import Event
 from chartparse.sync import AnchorEvent, BPMEvent
+from chartparse.tick import Tick
 from chartparse.track import build_events_from_data, parse_data_from_chart_lines
 from tests.helpers import defaults, testcase
 from tests.helpers.fruit import Fruit
@@ -80,8 +81,8 @@ class TestParseDataFromChartLines(object):
                 lines=["0", "1"],
                 want={
                     ParsedData: [
-                        ParsedData(tick=0, fruit=Fruit(0)),
-                        ParsedData(tick=1, fruit=Fruit(1)),
+                        ParsedData(tick=Tick(0), fruit=Fruit(0)),
+                        ParsedData(tick=Tick(1), fruit=Fruit(1)),
                     ]
                 },
             ),

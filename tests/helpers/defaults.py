@@ -18,12 +18,14 @@ from chartparse.instrument import (
 )
 from chartparse.metadata import Player2Instrument
 from chartparse.sync import AnchorEvent, BPMEvent, TimeSignatureEvent
+from chartparse.tick import Tick, Ticks
+from chartparse.time import Timestamp
 
 filepath = "/not/a/real/path"
 
-tick = 0
+tick = Tick(0)
 
-timestamp = timedelta(0)
+timestamp = Timestamp(timedelta(0))
 
 seconds = 0
 microseconds = seconds // 1000000
@@ -77,9 +79,9 @@ lyric_event_parsed_data = LyricEvent.ParsedData(tick=tick, value=lyric_event_val
 difficulty = Difficulty.EXPERT
 instrument = Instrument.GUITAR
 section_name = difficulty.value + instrument.value
-sustain = 0  # ticks
-sustain_list = _SustainList([0, None, None, None, None])
-sustain_tuple = SustainTuple((0, None, None, None, None))
+sustain = Ticks(0)
+sustain_list = _SustainList([Ticks(0), None, None, None, None])
+sustain_tuple = SustainTuple((Ticks(0), None, None, None, None))
 
 note = Note.G
 note_track_index = NoteTrackIndex.G

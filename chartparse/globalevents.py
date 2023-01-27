@@ -18,6 +18,7 @@ import typing as typ
 import chartparse.track
 from chartparse.event import Event
 from chartparse.exceptions import RegexNotMatchError
+from chartparse.tick import Tick
 from chartparse.util import DictPropertiesEqMixin, DictReprMixin, DictReprTruncatedSequencesMixin
 
 if typ.TYPE_CHECKING:  # pragma: no cover
@@ -201,7 +202,7 @@ class GlobalEvent(Event):
             if not m:
                 raise RegexNotMatchError(cls._regex, line)
             raw_tick, raw_value = m.groups()
-            return cls(tick=int(raw_tick), value=raw_value)
+            return cls(tick=Tick(int(raw_tick)), value=raw_value)
 
 
 @typ.final

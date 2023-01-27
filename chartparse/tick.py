@@ -10,6 +10,33 @@ from __future__ import annotations
 import typing as typ
 from enum import Enum
 
+from chartparse.time import Seconds
+
+Tick = typ.NewType("Tick", int)
+"""A specific tick-moment in a chart."""
+
+
+Ticks = typ.NewType("Ticks", int)
+"""A duration measured in ticks."""
+
+
+def add(a: Tick, b: Ticks) -> Tick:
+    return Tick(a + b)
+
+
+def sum(a: Ticks, b: Ticks) -> Ticks:
+    return Ticks(a + b)  # pragma: no cover
+
+
+# TODO: Check whether this has a significant impact on performance. If so, scrap these helpers and
+# re-wrap results of arithmetic locally. If it doesn't matter, then actually cover these nocovers.
+def difference(minuend: Ticks, subtrahend: Ticks) -> Ticks:
+    return Ticks(minuend - subtrahend)  # pragma: no cover
+
+
+def between(beginning: Tick, end: Tick) -> Ticks:
+    return Ticks(end - beginning)
+
 
 @typ.final
 class NoteDuration(Enum):
@@ -53,7 +80,7 @@ class NoteDuration(Enum):
     FIVE_HUNDRED_TWELFTH_TRIPLET = SEVEN_HUNDRED_SIXTY_EIGHTH
 
 
-def calculate_ticks_between_notes(resolution: int, note_duration: NoteDuration) -> int:
+def calculate_ticks_between_notes(resolution: Ticks, note_duration: NoteDuration) -> Ticks:
     """Returns the number of ticks between two notes of a particular note value.
 
     It is unknown whether Moonscraper rounds or truncates when ``resolution`` does not divide
@@ -67,10 +94,10 @@ def calculate_ticks_between_notes(resolution: int, note_duration: NoteDuration) 
     Returns: The number of ticks between two notes of a particular note value.
 
     """
-    return round(resolution / note_duration.value)
+    return Ticks(round(resolution / note_duration.value))
 
 
-def seconds_from_ticks_at_bpm(ticks: int, bpm: float, resolution: int) -> float:
+def seconds_from_ticks_at_bpm(ticks: Ticks, bpm: float, resolution: Ticks) -> Seconds:
     """Returns the number of seconds that elapse over a number of ticks at a particular tempo.
 
     Args:
@@ -90,4 +117,4 @@ def seconds_from_ticks_at_bpm(ticks: int, bpm: float, resolution: int) -> float:
     ticks_per_minute = bpm * resolution
     ticks_per_second = ticks_per_minute / 60
     seconds_per_tick = 1 / ticks_per_second
-    return ticks * seconds_per_tick
+    return Seconds(ticks * seconds_per_tick)

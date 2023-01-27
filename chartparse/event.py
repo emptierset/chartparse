@@ -10,9 +10,12 @@ from __future__ import annotations
 import abc
 import dataclasses
 import typing as typ
-from datetime import timedelta
 
+from chartparse.time import Timestamp
 from chartparse.util import DictPropertiesEqMixin, DictReprMixin
+
+if typ.TYPE_CHECKING:  # pragma: no cover
+    from chartparse.chart import Tick
 
 
 @dataclasses.dataclass(kw_only=True, frozen=True)
@@ -23,10 +26,10 @@ class Event(DictPropertiesEqMixin, DictReprMixin):
     attractive ``__str__`` representation.
     """
 
-    tick: int
+    tick: Tick
     """The tick at which this event occurs."""
 
-    timestamp: timedelta
+    timestamp: Timestamp
     """The timestamp when this event occurs."""
 
     _proximal_bpm_event_index: int = 0
@@ -53,7 +56,7 @@ class Event(DictPropertiesEqMixin, DictReprMixin):
         This is a ``frozen``, ``kw_only`` dataclass.
         """
 
-        tick: int
+        tick: Tick
         """The tick at which the event represented by this data occurs."""
 
         _Self = typ.TypeVar("_Self", bound="Event.ParsedData")

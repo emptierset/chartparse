@@ -17,14 +17,14 @@ import logging
 import re
 import typing as typ
 from collections.abc import Iterable, Sequence
-from datetime import timedelta
 from enum import Enum
 
 import chartparse.tick
 import chartparse.track
 from chartparse.event import Event
 from chartparse.exceptions import RegexNotMatchError
-from chartparse.tick import NoteDuration
+from chartparse.tick import NoteDuration, Tick, Ticks
+from chartparse.time import Timestamp
 from chartparse.util import (
     AllValuesGettableEnum,
     DictPropertiesEqMixin,
@@ -239,7 +239,7 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     """An (instrument, difficulty) pair's ``TrackEvent`` objects."""
 
     @functools.cached_property
-    def last_note_end_timestamp(self) -> timedelta | None:
+    def last_note_end_timestamp(self) -> Timestamp | None:
         """The timestamp at which the :attr:`~chartparse.instrument.NoteEvent.sustain` value of the
         last :class:`~chartparse.instrument.NoteEvent` ends.
 
@@ -363,11 +363,11 @@ class StarPowerData(DictPropertiesEqMixin):
     star_power_event_index: int
 
 
-_SustainList = typ.NewType("_SustainList", list[int | None])
+_SustainList = typ.NewType("_SustainList", list[Ticks | None])
 """A mutable SustainTuple."""
 
 SustainTuple = typ.NewType(
-    "SustainTuple", tuple[int | None, int | None, int | None, int | None, int | None]
+    "SustainTuple", tuple[Ticks | None, Ticks | None, Ticks | None, Ticks | None, Ticks | None]
 )
 """A 5-element tuple representing the sustain value of each note lane for nonuniform sustains.
 
@@ -376,10 +376,10 @@ An element is ``None`` if and only if the corresponding note lane is inactive. I
 ``0`` element represents an unsustained note in unison with a sustained note.
 """
 
-ComplexSustain = int | SustainTuple
+ComplexSustain = Ticks | SustainTuple
 """An sustain value representing multiple coinciding notes with different sustain values.
 
-If this value is an ``int``, it means that all active note lanes at this tick value are sustained
+If this value is a ``Ticks``, it means that all active note lanes at this tick value are sustained
 for the same number of ticks. If this value is ``0``, then none of the note lanes are active.
 """
 
@@ -409,7 +409,7 @@ def complex_sustain_from_parsed_datas(datas: Sequence[NoteEvent.ParsedData]) -> 
 @functools.lru_cache
 def _refined_sustain_tuple(sustain_tuple: SustainTuple) -> ComplexSustain:
     if all(s is None for s in sustain_tuple):
-        return 0
+        return Ticks(0)
 
     first_non_none_sustain = next(s for s in sustain_tuple if s is not None)
     if all(d is None or d == first_non_none_sustain for d in sustain_tuple):
@@ -448,10 +448,10 @@ class NoteEvent(Event):
     note: Note
     """The note lane(s) that are active."""
 
-    sustain: ComplexSustain = 0
+    sustain: ComplexSustain = Ticks(0)
     """Information about this note event's sustain value."""
 
-    end_timestamp: timedelta
+    end_timestamp: Timestamp
     """The timestamp at which this note ends."""
 
     hopo_state: HOPOState
@@ -464,7 +464,7 @@ class NoteEvent(Event):
     """
 
     @functools.cached_property
-    def longest_sustain(self) -> int:
+    def longest_sustain(self) -> Ticks:
         """The length of the longest sustained note in this event.
 
         It's possible for different notes to have different sustain values at the same tick.
@@ -472,7 +472,7 @@ class NoteEvent(Event):
         return self._longest_sustain(self.sustain)
 
     @staticmethod
-    def _longest_sustain(sustain: ComplexSustain) -> int:
+    def _longest_sustain(sustain: ComplexSustain) -> Ticks:
         if isinstance(sustain, int):
             return sustain
         if all(s is None for s in sustain):
@@ -480,13 +480,13 @@ class NoteEvent(Event):
         return max(s for s in sustain if s is not None)
 
     @functools.cached_property
-    def end_tick(self) -> int:
+    def end_tick(self) -> Tick:
         """The tick immediately after this note ends."""
         return self._end_tick(self.tick, self.longest_sustain)
 
     @staticmethod
-    def _end_tick(tick: int, sustain: int) -> int:
-        return tick + sustain
+    def _end_tick(tick: Tick, sustain: Ticks) -> Tick:
+        return chartparse.tick.add(tick, sustain)
 
     @classmethod
     def from_parsed_data(
@@ -564,8 +564,8 @@ class NoteEvent(Event):
 
     @staticmethod
     def _compute_hopo_state(
-        resolution: int,
-        tick: int,
+        resolution: Ticks,
+        tick: Tick,
         note: Note,
         is_tap: bool,
         is_forced: bool,
@@ -601,7 +601,7 @@ class NoteEvent(Event):
 
     @staticmethod
     def _compute_star_power_data(
-        tick: int,
+        tick: Tick,
         star_power_events: Sequence[StarPowerEvent],
         *,
         proximal_star_power_event_index: int = 0,
@@ -655,7 +655,7 @@ class NoteEvent(Event):
         note_track_index: NoteTrackIndex
         """The note lane active on this chart line."""
 
-        sustain: int
+        sustain: Ticks
         """The duration in ticks of the active lane in the event represented by this data."""
 
         # This regex matches a single "N" line within a instrument track section.
@@ -688,9 +688,9 @@ class NoteEvent(Event):
             raw_tick, raw_note_index, raw_sustain = m.groups()
             note_track_index = NoteTrackIndex(int(raw_note_index))
             return cls(
-                tick=int(raw_tick),
+                tick=Tick(int(raw_tick)),
                 note_track_index=note_track_index,
-                sustain=int(raw_sustain),
+                sustain=Ticks(int(raw_sustain)),
             )
 
 
@@ -705,7 +705,7 @@ class SpecialEvent(Event):
 
     _Self = typ.TypeVar("_Self", bound="SpecialEvent")
 
-    sustain: int
+    sustain: Ticks
     """The number of ticks for which this event is sustained.
 
     This event does _not_ overlap events at ``tick + sustain``; it ends immediately before that
@@ -713,9 +713,9 @@ class SpecialEvent(Event):
     """
 
     @functools.cached_property
-    def end_tick(self) -> int:
+    def end_tick(self) -> Tick:
         """The tick immediately after this event ends."""
-        return self.tick + self.sustain
+        return chartparse.tick.add(self.tick, self.sustain)
 
     @classmethod
     def from_parsed_data(
@@ -749,7 +749,7 @@ class SpecialEvent(Event):
             _proximal_bpm_event_index=proximal_bpm_event_index,
         )
 
-    def tick_is_during_event(self, tick: int) -> bool:
+    def tick_is_during_event(self, tick: Tick) -> bool:
         """Returns whether ``tick`` occurs during this event.
 
         This canonicalizes the fact that, in order to be during an event, a tick value must be
@@ -758,7 +758,7 @@ class SpecialEvent(Event):
         """
         return self.tick <= tick and not self.tick_is_after_event(tick)
 
-    def tick_is_after_event(self, tick: int) -> bool:
+    def tick_is_after_event(self, tick: Tick) -> bool:
         """Returns whether ``tick`` occurs after this event.
 
         This canonicalizes the fact that, in order to be after an event, a tick value must be
@@ -780,7 +780,7 @@ class SpecialEvent(Event):
 
         _Self = typ.TypeVar("_Self", bound="SpecialEvent.ParsedData")
 
-        sustain: int
+        sustain: Ticks
         """The duration in ticks of the event represented by this data."""
 
         _regex: typ.ClassVar[str]
@@ -808,7 +808,10 @@ class SpecialEvent(Event):
             if not m:
                 raise RegexNotMatchError(cls._regex, line)
             raw_tick, raw_sustain = m.groups()
-            return cls(tick=int(raw_tick), sustain=int(raw_sustain))
+            return cls(
+                tick=Tick(int(raw_tick)),
+                sustain=Ticks(int(raw_sustain)),
+            )
 
 
 @typ.final
@@ -919,4 +922,4 @@ class TrackEvent(Event):
             if not m:
                 raise RegexNotMatchError(cls._regex, line)
             raw_tick, raw_value = m.groups()
-            return cls(tick=int(raw_tick), value=raw_value)
+            return cls(tick=Tick(int(raw_tick)), value=raw_value)

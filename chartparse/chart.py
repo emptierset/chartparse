@@ -32,6 +32,8 @@ from chartparse.globalevents import GlobalEventsTrack
 from chartparse.instrument import Difficulty, Instrument, InstrumentTrack
 from chartparse.metadata import Metadata
 from chartparse.sync import SyncTrack
+from chartparse.tick import Tick
+from chartparse.time import Timestamp
 from chartparse.util import DictPropertiesEqMixin, DictReprTruncatedSequencesMixin
 
 if typ.TYPE_CHECKING:  # pragma: no cover
@@ -206,7 +208,7 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         self,
         instrument: Instrument,
         difficulty: Difficulty,
-        start: timedelta,
+        start: Timestamp,
         end: None,
     ) -> float:
         ...  # pragma: no cover
@@ -216,8 +218,8 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         self,
         instrument: Instrument,
         difficulty: Difficulty,
-        start: timedelta,
-        end: timedelta,
+        start: Timestamp,
+        end: Timestamp,
     ) -> float:
         ...  # pragma: no cover
 
@@ -226,7 +228,7 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         self,
         instrument: Instrument,
         difficulty: Difficulty,
-        start: int,
+        start: Tick,
         end: None,
     ) -> float:
         ...  # pragma: no cover
@@ -236,8 +238,8 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         self,
         instrument: Instrument,
         difficulty: Difficulty,
-        start: int,
-        end: int,
+        start: Tick,
+        end: Tick,
     ) -> float:
         ...  # pragma: no cover
 
@@ -245,8 +247,8 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         self,
         instrument: Instrument,
         difficulty: Difficulty,
-        start: timedelta | int | None = None,
-        end: timedelta | int | None = None,
+        start: Timestamp | Tick | None = None,
+        end: Timestamp | Tick | None = None,
     ) -> float:
         """Returns the average notes per second over the input interval.
 
@@ -290,32 +292,34 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             raise ValueError("notes per second undefined for track with no notes")
         assert track.last_note_end_timestamp is not None
 
-        if start is None or isinstance(start, int):  # units are ticks
+        # Case: Tick or all None
+        if start is None or isinstance(start, int):
             assert end is None or isinstance(end, int)
             start_time = (
                 self.sync_track.bpm_events.timestamp_at_tick_no_optimize_return(start)
                 if start is not None
-                else timedelta(0)
+                else Timestamp(timedelta(0))
             )
             end_time = (
                 self.sync_track.bpm_events.timestamp_at_tick_no_optimize_return(end)
                 if end is not None
                 else track.last_note_end_timestamp
             )
-        elif isinstance(start, timedelta):  # units are time
+        # Case: Timestamp
+        elif isinstance(start, timedelta):
             assert end is None or isinstance(end, timedelta)
-            start_time = start if start is not None else timedelta(0)
+            start_time = start if start is not None else Timestamp(timedelta(0))
             end_time = end if end is not None else track.last_note_end_timestamp
         else:  # pragma: no cover
-            raise UnreachableError("start must be int, float, timedelta, or None")
+            raise UnreachableError("start must be int, timedelta, or None")
 
         return self._notes_per_second(track.note_events, start_time, end_time)
 
     @staticmethod
     def _notes_per_second(
         events: Sequence[NoteEvent],
-        start_time: timedelta,
-        end_time: timedelta,
+        start_time: Timestamp,
+        end_time: Timestamp,
     ) -> float:
         def is_event_eligible(note: NoteEvent) -> bool:
             return start_time <= note.timestamp <= end_time
