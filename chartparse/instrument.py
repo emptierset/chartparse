@@ -218,6 +218,11 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
     _Self = typ.TypeVar("_Self", bound="InstrumentTrack")
 
+    @functools.cached_property
+    def section_name(self) -> str:
+        """The concatenation of this track's difficulty and instrument (in that order)."""
+        return self.difficulty.value + self.instrument.value
+
     resolution: int
     """The number of ticks for which a quarter note lasts."""
 
@@ -240,11 +245,6 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         """Validates all instance attributes."""
         if self.resolution <= 0:
             raise ValueError(f"resolution ({self.resolution}) must be positive")
-
-    @functools.cached_property
-    def section_name(self) -> str:
-        """The concatenation of this track's difficulty and instrument (in that order)."""
-        return self.difficulty.value + self.instrument.value
 
     @functools.cached_property
     def last_note_end_timestamp(self) -> datetime.timedelta | None:

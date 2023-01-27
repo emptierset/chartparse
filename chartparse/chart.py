@@ -62,8 +62,6 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     instrument_tracks: typ.Final[dict[Instrument, dict[Difficulty, InstrumentTrack]]]
     """Contains all of the chart's :class:`~chartparse.instrument.InstrumentTrack` objects."""
 
-    _unhandled_section_log_msg_tmpl: typ.Final[str] = "unhandled section titled '{}'"
-
     _required_sections: typ.Final[list[str]] = [
         Metadata.section_name,
         SyncTrack.section_name,
@@ -72,6 +70,8 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
     _section_name_regex: typ.Final[str] = r"^\[(.+?)\]$"
     _section_name_regex_prog: typ.Final[typ.Pattern[str]] = re.compile(_section_name_regex)
+
+    _unhandled_section_log_msg_tmpl: typ.Final[str] = "unhandled section titled '{}'"
 
     def __init__(
         self,

@@ -39,6 +39,9 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
     _Self = typ.TypeVar("_Self", bound="SyncTrack")
 
+    section_name: typ.ClassVar[str] = "SyncTrack"
+    """The name of this track's section in a ``.chart`` file."""
+
     time_signature_events: Sequence[TimeSignatureEvent]
     """A ``SyncTrack``'s ``TimeSignatureEvent``\\ s."""
 
@@ -47,9 +50,6 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
     anchor_events: Sequence[AnchorEvent]
     """A ``SyncTrack``'s ``AnchorEvent``\\ s."""
-
-    section_name: typ.ClassVar[str] = "SyncTrack"
-    """The name of this track's section in a ``.chart`` file."""
 
     def __post_init__(self):
         """Validates all instance attributes.

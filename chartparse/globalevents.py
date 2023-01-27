@@ -38,6 +38,9 @@ class GlobalEventsTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
     _Self = typ.TypeVar("_Self", bound="GlobalEventsTrack")
 
+    section_name: typ.Final[str] = "Events"
+    """The name of this track's section in a ``.chart`` file."""
+
     resolution: int
     """The number of ticks for which a quarter note lasts."""
 
@@ -49,9 +52,6 @@ class GlobalEventsTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
     lyric_events: Sequence[LyricEvent]
     """A ``GlobalEventTrack``'s ``LyricEvent``\\ s."""
-
-    section_name: typ.Final[str] = "Events"
-    """The name of this track's section in a ``.chart`` file."""
 
     def __post_init__(self) -> None:
         """Validates all instance attributes."""
