@@ -43,6 +43,7 @@ class GlobalEventsTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
     resolution: int
     """The number of ticks for which a quarter note lasts."""
+    # TODO: Why does this need resolution? Can it just be dropped?
 
     text_events: Sequence[TextEvent]
     """A ``GlobalEventTrack``'s ``TextEvent``\\ s."""

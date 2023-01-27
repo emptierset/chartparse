@@ -225,6 +225,7 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
     resolution: int
     """The number of ticks for which a quarter note lasts."""
+    # TODO: Why does this need resolution? Can it just be dropped?
 
     instrument: Instrument
     """The instrument to which this track corresponds."""

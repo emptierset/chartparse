@@ -351,6 +351,17 @@ class TestBPMEvents(object):
             assert got_timestamp == want_timestamp
             assert got_proximal_bpm_event_index == want_proximal_bpm_event_index
 
+    class TestTimestampAtTickNoOptimizeReturn(object):
+        def test(self, mocker, minimal_bpm_events_with_mock):
+            tick = 451
+            start_iteration_index = 1337
+            _ = minimal_bpm_events_with_mock.timestamp_at_tick_no_optimize_return(
+                tick, start_iteration_index=start_iteration_index
+            )
+            minimal_bpm_events_with_mock.timestamp_at_tick_mock.assert_called_once_with(
+                tick, start_iteration_index=start_iteration_index
+            )
+
     class TestIndexOfProximalEvent(object):
         @testcase.parametrize(
             ["bpm_event_list", "tick", "want"],

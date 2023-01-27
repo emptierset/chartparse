@@ -388,10 +388,30 @@ class BPMEvents(Sequence[BPMEvent]):
     def __getitem__(self, index: int | slice) -> BPMEvent | Sequence[BPMEvent]:
         return self.events[index]
 
+    def timestamp_at_tick_no_optimize_return(
+        self, tick: int, *, start_iteration_index: int = 0
+    ) -> datetime.timedelta:
+        """Returns the timestamp at the input tick.
+
+        Args:
+            tick: The tick at which the timestamp should be calculated.
+
+        Kwargs:
+            start_iteration_index: An optional optimizing input that allows this
+                function to start iterating over ``BPMEvent``s at a later index. Only pass this if
+                you are certain that the event that should be proximal to ``tick`` is _not_ before
+                this index. Not passing this kwarg results only in slower execution.
+
+        Returns:
+            The timestamp at the input tick.
+        """
+        timestamp, _ = self.timestamp_at_tick(tick, start_iteration_index=start_iteration_index)
+        return timestamp
+
     def timestamp_at_tick(
         self, tick: int, *, start_iteration_index: int = 0
     ) -> tuple[datetime.timedelta, int]:
-        """Returns the timestamp at the input tick.
+        """Returns the timestamp at the input tick, and an optimizing value.
 
         Args:
             tick: The tick at which the timestamp should be calculated.

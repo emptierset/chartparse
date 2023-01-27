@@ -191,29 +191,92 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
                 curr_last_line_index = None
         return d
 
+    @typ.overload
     def notes_per_second(
         self,
         instrument: Instrument,
         difficulty: Difficulty,
-        start_time: datetime.timedelta | None = None,
-        end_time: datetime.timedelta | None = None,
-        start_tick: int | None = None,
-        end_tick: int | None = None,
-        start_seconds: float | None = None,
-        end_seconds: float | None = None,
+        start: None,
+        end: None,
+    ) -> float:
+        ...  # pragma: no cover
+
+    @typ.overload
+    def notes_per_second(
+        self,
+        instrument: Instrument,
+        difficulty: Difficulty,
+        start: datetime.timedelta,
+        end: None,
+    ) -> float:
+        ...  # pragma: no cover
+
+    @typ.overload
+    def notes_per_second(
+        self,
+        instrument: Instrument,
+        difficulty: Difficulty,
+        start: datetime.timedelta,
+        end: datetime.timedelta,
+    ) -> float:
+        ...  # pragma: no cover
+
+    @typ.overload
+    def notes_per_second(
+        self,
+        instrument: Instrument,
+        difficulty: Difficulty,
+        start: int,
+        end: None,
+    ) -> float:
+        ...  # pragma: no cover
+
+    @typ.overload
+    def notes_per_second(
+        self,
+        instrument: Instrument,
+        difficulty: Difficulty,
+        start: int,
+        end: int,
+    ) -> float:
+        ...  # pragma: no cover
+
+    @typ.overload
+    def notes_per_second(
+        self,
+        instrument: Instrument,
+        difficulty: Difficulty,
+        start: float,
+        end: None,
+    ) -> float:
+        ...  # pragma: no cover
+
+    @typ.overload
+    def notes_per_second(
+        self,
+        instrument: Instrument,
+        difficulty: Difficulty,
+        start: float,
+        end: float,
+    ) -> float:
+        ...  # pragma: no cover
+
+    def notes_per_second(
+        self,
+        instrument: Instrument,
+        difficulty: Difficulty,
+        start: datetime.timedelta | int | float | None = None,
+        end: datetime.timedelta | int | float | None = None,
     ) -> float:
         """Returns the average notes per second over the input interval.
 
         More specifically, this calculates the number of :class:`~chartparse.instrument.NoteEvent`
         objects per second. Chords do not count as multiple "notes" in one instant.
 
-        The interval is always a closed interval.
+        The interval is closed on both ends.
 
-        You may pass one or zero of ``start_time``, ``start_tick``, and ``start_seconds``, or else
-        ``ValueError`` will be raised.  If none of ``start_time``, ``start_tick``, and
-        ``start_seconds`` are passed, the beginning of the track will be treated as the start of
-        the interval.  If none of ``end_time``, ``end_tick``, and ``end_seconds`` are passed, the
-        end of the track will be treated as the end of the interval.
+        Important: passing ints will be interpreted as tick values; if you would like your inputs
+        to be interpreted as seconds, pass floats (even if they are whole-numbered).
 
         Args:
             instrument: The instrument for which the
@@ -222,32 +285,22 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             difficulty: The instrument for which the
                 :class:`~chartparse.instrument.InstrumentTrack` should be looked up.
 
-            start_time: The beginning of the interval.
-            end_time: The end of the interval.
-            start_tick: The beginning of the interval.
-            end_tick: The end of the interval.
-            start_seconds: The beginning of the interval.
-            end_seconds: The end of the interval.
+            start: The beginning of the interval.
+            end: The end of the interval.
 
         Returns:
             The average notes per second value over the input interval.
 
         Raises:
-            ValueError: If more than one of ``start_time``, ``start_tick``, and ``start_seconds``
-                is ``None``.
             ValueError: If there is no :class:`~chartparse.instrument.InstrumentTrack`
                 corresponding to ``instrument`` and ``difficulty``.
-            ValueError: If there are fewer than two :class:`~chartparse.instrument.NoteEvent`
-                objects within the indicated interval.
-        """
 
-        start_args = (start_time, start_seconds, start_tick)
-        num_of_start_args_none = start_args.count(None)
-        if num_of_start_args_none < 2:
-            raise ValueError(
-                f"no more than one of start_time {start_time}, start_seconds {start_seconds}, "
-                f"and start_tick {start_tick} can be non-None"
-            )
+            ValueError: If there are no :class:`~chartparse.instrument.NoteEvent` objects on the
+                instrument track in question.
+
+            ValueError: If the interval in question is not of positive length.
+
+        """
 
         try:
             track = self.instrument_tracks[instrument][difficulty]
@@ -258,45 +311,38 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
         if not track.note_events:
             raise ValueError("notes per second undefined for track with no notes")
+        assert track.last_note_end_timestamp is not None
 
-        all_start_args_none = num_of_start_args_none == len(start_args)
-        if (start_tick is not None) or all_start_args_none:
+        if start is None or isinstance(start, int):  # units are ticks
+            assert end is None or isinstance(end, int)
             interval_start_time = (
-                self.sync_track.bpm_events.timestamp_at_tick(start_tick)[0]
-                if start_tick is not None
+                self.sync_track.bpm_events.timestamp_at_tick_no_optimize_return(start)
+                if start is not None
                 else datetime.timedelta(0)
             )
             interval_end_time = (
-                self.sync_track.bpm_events.timestamp_at_tick(end_tick)[0]
-                if end_tick is not None
-                # ValueError is raised above if there are no NoteEvents, which is the only case
-                # where track.last_note_end_timestamp is None.
-                else typ.cast(datetime.timedelta, track.last_note_end_timestamp)
+                self.sync_track.bpm_events.timestamp_at_tick_no_optimize_return(end)
+                if end is not None
+                else track.last_note_end_timestamp
             )
-        elif start_time is not None:
-            interval_start_time = start_time if start_time is not None else datetime.timedelta(0)
-            # ValueError is raised above if there are no NoteEvents, which is the only case where
-            # track.last_note_end_timestamp is None.
-            interval_end_time = (
-                end_time
-                if end_time is not None
-                else typ.cast(datetime.timedelta, track.last_note_end_timestamp)
-            )
-        elif start_seconds is not None:
+        elif isinstance(start, datetime.timedelta):  # units are time
+            assert end is None or isinstance(end, datetime.timedelta)
+            interval_start_time = start if start is not None else datetime.timedelta(0)
+            interval_end_time = end if end is not None else track.last_note_end_timestamp
+        elif isinstance(start, float):  # units are seconds
+            # TODO: create NewTypes for timeinterval (time?), seconds, ticks
+            assert end is None or isinstance(end, float)
             interval_start_time = (
-                datetime.timedelta(seconds=start_seconds)
-                if start_seconds is not None
-                else datetime.timedelta(0)
+                datetime.timedelta(seconds=start) if start is not None else datetime.timedelta(0)
             )
             interval_end_time = (
-                datetime.timedelta(seconds=end_seconds)
-                if end_seconds is not None
-                # ValueError is raised above if there are no NoteEvents, which is the only case
-                # where track.last_note_end_timestamp is None.
-                else typ.cast(datetime.timedelta, track.last_note_end_timestamp)
+                # TODO: import timedelta individually everywhere.
+                datetime.timedelta(seconds=end)
+                if end is not None
+                else track.last_note_end_timestamp
             )
         else:  # pragma: no cover
-            raise UnreachableError("at least one start_.* param must not be None")
+            raise UnreachableError("start must be int, float, datetime.timedelta, or None")
 
         return self._notes_per_second(track.note_events, interval_start_time, interval_end_time)
 
@@ -311,6 +357,11 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
         num_events_to_consider = sum(1 for e in events if is_event_eligible(e))
         interval_duration_seconds = (interval_end_time - interval_start_time).total_seconds()
+        if interval_duration_seconds <= 0:
+            raise ValueError(
+                "cannot calculate notes per second for non-positive duration "
+                f"interval; got interval of length {interval_duration_seconds} seconds"
+            )
         return num_events_to_consider / interval_duration_seconds
 
     def __str__(self) -> str:

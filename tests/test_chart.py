@@ -286,7 +286,7 @@ class TestChart(object):
                 ),
             ],
         )
-        def test_from_note_events(self, bare_chart, interval_start_time, interval_end_time, want):
+        def test_impl(self, bare_chart, interval_start_time, interval_end_time, want):
             note_event1 = NoteEventWithDefaults(
                 timestamp=datetime.timedelta(seconds=1),
                 note=Note.GRY,
@@ -306,17 +306,36 @@ class TestChart(object):
             assert got == want
 
         @testcase.parametrize(
+            ["interval_start_time", "interval_end_time"],
+            [
+                testcase.new(
+                    "zero",
+                    interval_start_time=datetime.timedelta(seconds=1),
+                    interval_end_time=datetime.timedelta(seconds=1),
+                ),
+                testcase.new(
+                    "negative",
+                    interval_start_time=datetime.timedelta(seconds=2),
+                    interval_end_time=datetime.timedelta(seconds=1),
+                ),
+            ],
+        )
+        def test_impl_error(self, bare_chart, interval_start_time, interval_end_time):
+            with pytest.raises(ValueError):
+                _ = bare_chart._notes_per_second([], interval_start_time, interval_end_time)
+
+        @testcase.parametrize(
             ["start_tick", "end_tick", "want_interval_start_time", "want_interval_end_time"],
             [
                 testcase.new(
-                    "all_start_args_none",
+                    "both_none",
                     start_tick=None,
-                    end_tick=2,
+                    end_tick=None,
                     want_interval_start_time=datetime.timedelta(0),
                     want_interval_end_time=datetime.timedelta(seconds=2),
                 ),
                 testcase.new(
-                    "last_none",
+                    "end_none",
                     start_tick=1,
                     end_tick=None,
                     want_interval_start_time=datetime.timedelta(seconds=1),
@@ -353,41 +372,36 @@ class TestChart(object):
                 return_value=want_interval_end_time,
             )
 
-            # NOTE: This _should_ be mocked as such, but because bpm_events is a frozen dataclass,
-            # it cannot be mocked conventionally (mocking tries to edit fields that are protected
-            # by frozenness).
-            # mocker.patch.object(
-            #    minimal_chart.sync_track.bpm_events,
-            #    "timestamp_at_tick",
-            #    side_effect=lambda tick, _resolution: (datetime.timedelta(seconds=tick),),
-            # )
+            # NOTE: This _should_ be mocked with patch, but because bpm_events is a frozen
+            # dataclass, it cannot be mocked conventionally (mocking tries to edit fields that are
+            # protected by frozenness).
             unsafe.setattr(
                 minimal_chart.sync_track.bpm_events,
-                "timestamp_at_tick",
-                lambda tick, *, _start_iteration_index=0: (datetime.timedelta(seconds=tick),),
+                "timestamp_at_tick_no_optimize_return",
+                lambda tick, *, _start_iteration_index=0: datetime.timedelta(seconds=tick),
             )
-            spy = mocker.spy(minimal_chart, "_notes_per_second")
+            mock = mocker.patch.object(minimal_chart, "_notes_per_second")
             _ = minimal_chart.notes_per_second(
                 defaults.instrument,
                 defaults.difficulty,
-                start_tick=start_tick,
-                end_tick=end_tick,
+                start=start_tick,
+                end=end_tick,
             )
-            spy.assert_called_once_with(
+            mock.assert_called_once_with(
                 [defaults.note_event], want_interval_start_time, want_interval_end_time
             )
 
-            # NOTE: Manually reset timestamp_at_tick from mocked version.
+            # NOTE: Manually reset timestamp_at_tick_no_optimize_return from mocked version.
             unsafe.delattr(
                 minimal_chart.sync_track.bpm_events,
-                "timestamp_at_tick",
+                "timestamp_at_tick_no_optimize_return",
             )
 
         @testcase.parametrize(
             ["start_time", "end_time", "want_interval_start_time", "want_interval_end_time"],
             [
                 testcase.new(
-                    "last_none",
+                    "end_none",
                     start_time=datetime.timedelta(seconds=1),
                     end_time=None,
                     want_interval_start_time=datetime.timedelta(seconds=1),
@@ -424,14 +438,14 @@ class TestChart(object):
                 return_value=want_interval_end_time,
             )
 
-            spy = mocker.spy(minimal_chart, "_notes_per_second")
+            mock = mocker.patch.object(minimal_chart, "_notes_per_second")
             _ = minimal_chart.notes_per_second(
                 defaults.instrument,
                 defaults.difficulty,
-                start_time=start_time,
-                end_time=end_time,
+                start=start_time,
+                end=end_time,
             )
-            spy.assert_called_once_with(
+            mock.assert_called_once_with(
                 [defaults.note_event], want_interval_start_time, want_interval_end_time
             )
 
@@ -439,16 +453,16 @@ class TestChart(object):
             ["start_seconds", "end_seconds", "want_interval_start_time", "want_interval_end_time"],
             [
                 testcase.new(
-                    "last_none",
-                    start_seconds=1,
+                    "end_none",
+                    start_seconds=1.0,
                     end_seconds=None,
                     want_interval_start_time=datetime.timedelta(seconds=1),
                     want_interval_end_time=datetime.timedelta(seconds=1000),
                 ),
                 testcase.new(
                     "no_none",
-                    start_seconds=1,
-                    end_seconds=2,
+                    start_seconds=1.0,
+                    end_seconds=2.0,
                     want_interval_start_time=datetime.timedelta(seconds=1),
                     want_interval_end_time=datetime.timedelta(seconds=2),
                 ),
@@ -476,55 +490,16 @@ class TestChart(object):
                 return_value=want_interval_end_time,
             )
 
-            spy = mocker.spy(minimal_chart, "_notes_per_second")
+            mock = mocker.patch.object(minimal_chart, "_notes_per_second")
             _ = minimal_chart.notes_per_second(
                 defaults.instrument,
                 defaults.difficulty,
-                start_seconds=start_seconds,
-                end_seconds=end_seconds,
+                start=start_seconds,
+                end=end_seconds,
             )
-            spy.assert_called_once_with(
+            mock.assert_called_once_with(
                 [defaults.note_event], want_interval_start_time, want_interval_end_time
             )
-
-        @testcase.parametrize(
-            ["start_time", "start_tick", "start_seconds"],
-            [
-                testcase.new(
-                    "time_and_tick",
-                    start_time=defaults.timestamp,
-                    start_tick=defaults.tick,
-                    start_seconds=None,
-                ),
-                testcase.new(
-                    "time_and_seconds",
-                    start_time=defaults.timestamp,
-                    start_tick=None,
-                    start_seconds=defaults.seconds,
-                ),
-                testcase.new(
-                    "tick_and_seconds",
-                    start_time=None,
-                    start_tick=defaults.tick,
-                    start_seconds=defaults.seconds,
-                ),
-                testcase.new(
-                    "all_three",
-                    start_time=defaults.timestamp,
-                    start_tick=defaults.tick,
-                    start_seconds=defaults.seconds,
-                ),
-            ],
-        )
-        def test_too_many_start_args(self, bare_chart, start_time, start_tick, start_seconds):
-            with pytest.raises(ValueError):
-                _ = bare_chart.notes_per_second(
-                    defaults.instrument,
-                    defaults.difficulty,
-                    start_time=start_time,
-                    start_tick=start_tick,
-                    start_seconds=start_seconds,
-                )
 
         @testcase.parametrize(
             ["instrument", "difficulty"],
