@@ -223,10 +223,6 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         """The concatenation of this track's difficulty and instrument (in that order)."""
         return self.difficulty.value + self.instrument.value
 
-    resolution: int
-    """The number of ticks for which a quarter note lasts."""
-    # TODO: Why does this need resolution? Can it just be dropped?
-
     instrument: Instrument
     """The instrument to which this track corresponds."""
 
@@ -241,11 +237,6 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
     track_events: Sequence[TrackEvent]
     """An (instrument, difficulty) pair's ``TrackEvent`` objects."""
-
-    def __post_init__(self):
-        """Validates all instance attributes."""
-        if self.resolution <= 0:
-            raise ValueError(f"resolution ({self.resolution}) must be positive")
 
     @functools.cached_property
     def last_note_end_timestamp(self) -> datetime.timedelta | None:
@@ -291,7 +282,6 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         )
         note_events = cls._build_note_events_from_data(note_data, star_power_events, bpm_events)
         return cls(
-            resolution=bpm_events.resolution,
             instrument=instrument,
             difficulty=difficulty,
             note_events=note_events,

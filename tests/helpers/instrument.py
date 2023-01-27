@@ -12,7 +12,6 @@ from tests.helpers import defaults
 
 def InstrumentTrackWithDefaults(
     *,
-    resolution=defaults.resolution,
     instrument=defaults.instrument,
     difficulty=defaults.difficulty,
     note_events=[defaults.note_event],
@@ -20,7 +19,6 @@ def InstrumentTrackWithDefaults(
     track_events=[defaults.track_event],
 ):
     return InstrumentTrack(
-        resolution=resolution,
         instrument=instrument,
         difficulty=difficulty,
         note_events=note_events,

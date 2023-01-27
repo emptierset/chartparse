@@ -121,18 +121,6 @@ class TestComplexSustainFromParsedDatas(object):
 
 
 class TestInstrumentTrack(object):
-    class TestPostInit(object):
-        @testcase.parametrize(
-            ["resolution"],
-            [
-                testcase.new("zero", resolution=0),
-                testcase.new("negative", resolution=-1),
-            ],
-        )
-        def test_non_positive_resolution(self, resolution):
-            with pytest.raises(ValueError):
-                _ = InstrumentTrackWithDefaults(resolution=0)
-
     class TestSectionName(object):
         @testcase.parametrize(
             ["instrument", "difficulty", "want"],
@@ -206,7 +194,6 @@ class TestInstrumentTrack(object):
             )
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self
-                resolution=defaults.resolution,
                 instrument=defaults.instrument,
                 difficulty=defaults.difficulty,
                 note_events=[defaults.note_event],

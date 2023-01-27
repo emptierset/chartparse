@@ -152,7 +152,6 @@ def minimal_instrument_track(bare_instrument_track):
 @pytest.fixture
 def default_instrument_track():
     return InstrumentTrack(
-        resolution=defaults.resolution,
         instrument=defaults.instrument,
         difficulty=defaults.difficulty,
         note_events=[defaults.note_event],
