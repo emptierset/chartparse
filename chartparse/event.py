@@ -9,8 +9,8 @@ from __future__ import annotations
 
 import abc
 import dataclasses
-import datetime
 import typing as typ
+from datetime import timedelta
 
 from chartparse.util import DictPropertiesEqMixin, DictReprMixin
 
@@ -26,7 +26,7 @@ class Event(DictPropertiesEqMixin, DictReprMixin):
     tick: int
     """The tick at which this event occurs."""
 
-    timestamp: datetime.timedelta
+    timestamp: timedelta
     """The timestamp when this event occurs."""
 
     _proximal_bpm_event_index: int = 0

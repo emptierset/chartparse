@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import datetime
 import math
+from datetime import timedelta
 
 from chartparse.globalevents import GlobalEvent, LyricEvent, SectionEvent, TextEvent
 from chartparse.instrument import (
@@ -23,7 +23,7 @@ filepath = "/not/a/real/path"
 
 tick = 0
 
-timestamp = datetime.timedelta(0)
+timestamp = timedelta(0)
 
 seconds = 0
 microseconds = seconds // 1000000
@@ -31,7 +31,7 @@ microseconds = seconds // 1000000
 proximal_bpm_event_index = 0
 proximal_star_power_event_index = 0
 
-timestamp_at_tick_timestamp = datetime.timedelta(seconds=111)
+timestamp_at_tick_timestamp = timedelta(seconds=111)
 timestamp_at_tick_proximal_bpm_event_index = 222
 
 bpm = 120.000

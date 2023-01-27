@@ -19,12 +19,12 @@ Example:
 from __future__ import annotations
 
 import collections
-import datetime
 import itertools
 import logging
 import re
 import typing as typ
 from collections.abc import Iterable, Sequence
+from datetime import timedelta
 from pathlib import Path
 
 from chartparse.exceptions import RegexNotMatchError, UnreachableError
@@ -206,7 +206,7 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         self,
         instrument: Instrument,
         difficulty: Difficulty,
-        start: datetime.timedelta,
+        start: timedelta,
         end: None,
     ) -> float:
         ...  # pragma: no cover
@@ -216,8 +216,8 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         self,
         instrument: Instrument,
         difficulty: Difficulty,
-        start: datetime.timedelta,
-        end: datetime.timedelta,
+        start: timedelta,
+        end: timedelta,
     ) -> float:
         ...  # pragma: no cover
 
@@ -265,8 +265,8 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         self,
         instrument: Instrument,
         difficulty: Difficulty,
-        start: datetime.timedelta | int | float | None = None,
-        end: datetime.timedelta | int | float | None = None,
+        start: timedelta | int | float | None = None,
+        end: timedelta | int | float | None = None,
     ) -> float:
         """Returns the average notes per second over the input interval.
 
@@ -315,48 +315,41 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
         if start is None or isinstance(start, int):  # units are ticks
             assert end is None or isinstance(end, int)
-            interval_start_time = (
+            start_time = (
                 self.sync_track.bpm_events.timestamp_at_tick_no_optimize_return(start)
                 if start is not None
-                else datetime.timedelta(0)
+                else timedelta(0)
             )
-            interval_end_time = (
+            end_time = (
                 self.sync_track.bpm_events.timestamp_at_tick_no_optimize_return(end)
                 if end is not None
                 else track.last_note_end_timestamp
             )
-        elif isinstance(start, datetime.timedelta):  # units are time
-            assert end is None or isinstance(end, datetime.timedelta)
-            interval_start_time = start if start is not None else datetime.timedelta(0)
-            interval_end_time = end if end is not None else track.last_note_end_timestamp
+        elif isinstance(start, timedelta):  # units are time
+            assert end is None or isinstance(end, timedelta)
+            start_time = start if start is not None else timedelta(0)
+            end_time = end if end is not None else track.last_note_end_timestamp
         elif isinstance(start, float):  # units are seconds
             # TODO: create NewTypes for timeinterval (time?), seconds, ticks
             assert end is None or isinstance(end, float)
-            interval_start_time = (
-                datetime.timedelta(seconds=start) if start is not None else datetime.timedelta(0)
-            )
-            interval_end_time = (
-                # TODO: import timedelta individually everywhere.
-                datetime.timedelta(seconds=end)
-                if end is not None
-                else track.last_note_end_timestamp
-            )
+            start_time = timedelta(seconds=start) if start is not None else timedelta(0)
+            end_time = timedelta(seconds=end) if end is not None else track.last_note_end_timestamp
         else:  # pragma: no cover
-            raise UnreachableError("start must be int, float, datetime.timedelta, or None")
+            raise UnreachableError("start must be int, float, timedelta, or None")
 
-        return self._notes_per_second(track.note_events, interval_start_time, interval_end_time)
+        return self._notes_per_second(track.note_events, start_time, end_time)
 
     @staticmethod
     def _notes_per_second(
         events: Sequence[NoteEvent],
-        interval_start_time: datetime.timedelta,
-        interval_end_time: datetime.timedelta,
+        start_time: timedelta,
+        end_time: timedelta,
     ) -> float:
         def is_event_eligible(note: NoteEvent) -> bool:
-            return interval_start_time <= note.timestamp <= interval_end_time
+            return start_time <= note.timestamp <= end_time
 
         num_events_to_consider = sum(1 for e in events if is_event_eligible(e))
-        interval_duration_seconds = (interval_end_time - interval_start_time).total_seconds()
+        interval_duration_seconds = (end_time - start_time).total_seconds()
         if interval_duration_seconds <= 0:
             raise ValueError(
                 "cannot calculate notes per second for non-positive duration "

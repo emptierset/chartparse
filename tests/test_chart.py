@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-import datetime
 import pathlib
 import unittest.mock
+from datetime import timedelta
 
 import pytest
 
@@ -258,95 +258,95 @@ class TestChart(object):
 
     class TestNotesPerSecond(object):
         @testcase.parametrize(
-            ["interval_start_time", "interval_end_time", "want"],
+            ["start_time", "end_time", "want"],
             [
                 testcase.new(
                     "boundaries_included",
-                    interval_start_time=datetime.timedelta(seconds=1),
-                    interval_end_time=datetime.timedelta(seconds=3),
+                    start_time=timedelta(seconds=1),
+                    end_time=timedelta(seconds=3),
                     want=3 / 2,
                 ),
                 testcase.new(
                     "filtered_too_early_note",
-                    interval_start_time=datetime.timedelta(seconds=2),
-                    interval_end_time=datetime.timedelta(seconds=3),
+                    start_time=timedelta(seconds=2),
+                    end_time=timedelta(seconds=3),
                     want=2,
                 ),
                 testcase.new(
                     "filtered_too_late_note",
-                    interval_start_time=datetime.timedelta(seconds=1),
-                    interval_end_time=datetime.timedelta(seconds=2),
+                    start_time=timedelta(seconds=1),
+                    end_time=timedelta(seconds=2),
                     want=2,
                 ),
                 testcase.new(
                     "wider_interval_than_notes",
-                    interval_start_time=datetime.timedelta(seconds=0),
-                    interval_end_time=datetime.timedelta(seconds=4),
+                    start_time=timedelta(seconds=0),
+                    end_time=timedelta(seconds=4),
                     want=3 / 4,
                 ),
             ],
         )
-        def test_impl(self, bare_chart, interval_start_time, interval_end_time, want):
+        def test_impl(self, bare_chart, start_time, end_time, want):
             note_event1 = NoteEventWithDefaults(
-                timestamp=datetime.timedelta(seconds=1),
+                timestamp=timedelta(seconds=1),
                 note=Note.GRY,
             )
             note_event2 = NoteEventWithDefaults(
-                timestamp=datetime.timedelta(seconds=2),
+                timestamp=timedelta(seconds=2),
                 note=Note.RYB,
             )
             note_event3 = NoteEventWithDefaults(
-                timestamp=datetime.timedelta(seconds=3),
+                timestamp=timedelta(seconds=3),
                 note=Note.YBO,
             )
             test_notes_per_second_note_events = [note_event1, note_event2, note_event3]
             got = bare_chart._notes_per_second(
-                test_notes_per_second_note_events, interval_start_time, interval_end_time
+                test_notes_per_second_note_events, start_time, end_time
             )
             assert got == want
 
         @testcase.parametrize(
-            ["interval_start_time", "interval_end_time"],
+            ["start_time", "end_time"],
             [
                 testcase.new(
                     "zero",
-                    interval_start_time=datetime.timedelta(seconds=1),
-                    interval_end_time=datetime.timedelta(seconds=1),
+                    start_time=timedelta(seconds=1),
+                    end_time=timedelta(seconds=1),
                 ),
                 testcase.new(
                     "negative",
-                    interval_start_time=datetime.timedelta(seconds=2),
-                    interval_end_time=datetime.timedelta(seconds=1),
+                    start_time=timedelta(seconds=2),
+                    end_time=timedelta(seconds=1),
                 ),
             ],
         )
-        def test_impl_error(self, bare_chart, interval_start_time, interval_end_time):
+        def test_impl_error(self, bare_chart, start_time, end_time):
             with pytest.raises(ValueError):
-                _ = bare_chart._notes_per_second([], interval_start_time, interval_end_time)
+                _ = bare_chart._notes_per_second([], start_time, end_time)
 
         @testcase.parametrize(
-            ["start_tick", "end_tick", "want_interval_start_time", "want_interval_end_time"],
+            ["start_tick", "end_tick", "want_start_time", "want_end_time"],
             [
                 testcase.new(
                     "both_none",
                     start_tick=None,
                     end_tick=None,
-                    want_interval_start_time=datetime.timedelta(0),
-                    want_interval_end_time=datetime.timedelta(seconds=2),
+                    want_start_time=timedelta(0),
+                    want_end_time=timedelta(seconds=2),
                 ),
                 testcase.new(
                     "end_none",
                     start_tick=1,
                     end_tick=None,
-                    want_interval_start_time=datetime.timedelta(seconds=1),
-                    want_interval_end_time=datetime.timedelta(seconds=1000),
+                    want_start_time=timedelta(seconds=1),
+                    want_end_time=timedelta(seconds=1000),
                 ),
                 testcase.new(
                     "no_none",
                     start_tick=1,
                     end_tick=2,
-                    want_interval_start_time=datetime.timedelta(seconds=1),
-                    want_interval_end_time=datetime.timedelta(seconds=2),
+                    want_start_time=timedelta(seconds=1),
+                    want_end_time=timedelta(seconds=2),
                 ),
             ],
         )
@@ -356,8 +356,8 @@ class TestChart(object):
             minimal_chart,
             start_tick,
             end_tick,
-            want_interval_start_time,
-            want_interval_end_time,
+            want_start_time,
+            want_end_time,
         ):
             unsafe.setattr(
                 minimal_chart[defaults.instrument][defaults.difficulty],
@@ -369,7 +369,7 @@ class TestChart(object):
                 InstrumentTrack,
                 "last_note_end_timestamp",
                 new_callable=mocker.PropertyMock,
-                return_value=want_interval_end_time,
+                return_value=want_end_time,
             )
 
             # NOTE: This _should_ be mocked with patch, but because bpm_events is a frozen
@@ -378,7 +378,7 @@ class TestChart(object):
             unsafe.setattr(
                 minimal_chart.sync_track.bpm_events,
                 "timestamp_at_tick_no_optimize_return",
-                lambda tick, *, _start_iteration_index=0: datetime.timedelta(seconds=tick),
+                lambda tick, *, _start_iteration_index=0: timedelta(seconds=tick),
             )
             mock = mocker.patch.object(minimal_chart, "_notes_per_second")
             _ = minimal_chart.notes_per_second(
@@ -387,9 +387,7 @@ class TestChart(object):
                 start=start_tick,
                 end=end_tick,
             )
-            mock.assert_called_once_with(
-                [defaults.note_event], want_interval_start_time, want_interval_end_time
-            )
+            mock.assert_called_once_with([defaults.note_event], want_start_time, want_end_time)
 
             # NOTE: Manually reset timestamp_at_tick_no_optimize_return from mocked version.
             unsafe.delattr(
@@ -398,21 +396,21 @@ class TestChart(object):
             )
 
         @testcase.parametrize(
-            ["start_time", "end_time", "want_interval_start_time", "want_interval_end_time"],
+            ["start_time", "end_time", "want_start_time", "want_end_time"],
             [
                 testcase.new(
                     "end_none",
-                    start_time=datetime.timedelta(seconds=1),
+                    start_time=timedelta(seconds=1),
                     end_time=None,
-                    want_interval_start_time=datetime.timedelta(seconds=1),
-                    want_interval_end_time=datetime.timedelta(seconds=1000),
+                    want_start_time=timedelta(seconds=1),
+                    want_end_time=timedelta(seconds=1000),
                 ),
                 testcase.new(
                     "no_none",
-                    start_time=datetime.timedelta(seconds=1),
-                    end_time=datetime.timedelta(seconds=2),
-                    want_interval_start_time=datetime.timedelta(seconds=1),
-                    want_interval_end_time=datetime.timedelta(seconds=2),
+                    start_time=timedelta(seconds=1),
+                    end_time=timedelta(seconds=2),
+                    want_start_time=timedelta(seconds=1),
+                    want_end_time=timedelta(seconds=2),
                 ),
             ],
         )
@@ -422,8 +420,8 @@ class TestChart(object):
             minimal_chart,
             start_time,
             end_time,
-            want_interval_start_time,
-            want_interval_end_time,
+            want_start_time,
+            want_end_time,
         ):
             unsafe.setattr(
                 minimal_chart[defaults.instrument][defaults.difficulty],
@@ -435,7 +433,7 @@ class TestChart(object):
                 InstrumentTrack,
                 "last_note_end_timestamp",
                 new_callable=mocker.PropertyMock,
-                return_value=want_interval_end_time,
+                return_value=want_end_time,
             )
 
             mock = mocker.patch.object(minimal_chart, "_notes_per_second")
@@ -445,26 +443,24 @@ class TestChart(object):
                 start=start_time,
                 end=end_time,
             )
-            mock.assert_called_once_with(
-                [defaults.note_event], want_interval_start_time, want_interval_end_time
-            )
+            mock.assert_called_once_with([defaults.note_event], want_start_time, want_end_time)
 
         @testcase.parametrize(
-            ["start_seconds", "end_seconds", "want_interval_start_time", "want_interval_end_time"],
+            ["start_seconds", "end_seconds", "want_start_time", "want_end_time"],
             [
                 testcase.new(
                     "end_none",
                     start_seconds=1.0,
                     end_seconds=None,
-                    want_interval_start_time=datetime.timedelta(seconds=1),
-                    want_interval_end_time=datetime.timedelta(seconds=1000),
+                    want_start_time=timedelta(seconds=1),
+                    want_end_time=timedelta(seconds=1000),
                 ),
                 testcase.new(
                     "no_none",
                     start_seconds=1.0,
                     end_seconds=2.0,
-                    want_interval_start_time=datetime.timedelta(seconds=1),
-                    want_interval_end_time=datetime.timedelta(seconds=2),
+                    want_start_time=timedelta(seconds=1),
+                    want_end_time=timedelta(seconds=2),
                 ),
             ],
         )
@@ -474,8 +470,8 @@ class TestChart(object):
             minimal_chart,
             start_seconds,
             end_seconds,
-            want_interval_start_time,
-            want_interval_end_time,
+            want_start_time,
+            want_end_time,
         ):
             unsafe.setattr(
                 minimal_chart[defaults.instrument][defaults.difficulty],
@@ -487,7 +483,7 @@ class TestChart(object):
                 InstrumentTrack,
                 "last_note_end_timestamp",
                 new_callable=mocker.PropertyMock,
-                return_value=want_interval_end_time,
+                return_value=want_end_time,
             )
 
             mock = mocker.patch.object(minimal_chart, "_notes_per_second")
@@ -497,9 +493,7 @@ class TestChart(object):
                 start=start_seconds,
                 end=end_seconds,
             )
-            mock.assert_called_once_with(
-                [defaults.note_event], want_interval_start_time, want_interval_end_time
-            )
+            mock.assert_called_once_with([defaults.note_event], want_start_time, want_end_time)
 
         @testcase.parametrize(
             ["instrument", "difficulty"],

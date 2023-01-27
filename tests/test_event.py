@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import datetime
+from datetime import timedelta
 
 from tests.helpers import testcase
 from tests.helpers.event import EventWithDefaults
@@ -14,11 +14,11 @@ class TestEvent(object):
             [
                 testcase.new(
                     "integral_timestamp",
-                    event=EventWithDefaults(timestamp=datetime.timedelta(seconds=1.2)),
+                    event=EventWithDefaults(timestamp=timedelta(seconds=1.2)),
                 ),
                 testcase.new(
                     "nonintegral_timestamp",
-                    event=EventWithDefaults(timestamp=datetime.timedelta(seconds=1)),
+                    event=EventWithDefaults(timestamp=timedelta(seconds=1)),
                 ),
             ],
         )

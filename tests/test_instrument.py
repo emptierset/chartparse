@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-import datetime
 import re
 import unittest.mock
+from datetime import timedelta
 
 import pytest
 
@@ -414,11 +414,11 @@ class TestInstrumentTrack(object):
                 testcase.new(
                     "in_the_middle",
                     note_events=[
-                        NoteEventWithDefaults(end_timestamp=datetime.timedelta(seconds=0)),
-                        NoteEventWithDefaults(end_timestamp=datetime.timedelta(seconds=1)),
-                        NoteEventWithDefaults(end_timestamp=datetime.timedelta(seconds=0.5)),
+                        NoteEventWithDefaults(end_timestamp=timedelta(seconds=0)),
+                        NoteEventWithDefaults(end_timestamp=timedelta(seconds=1)),
+                        NoteEventWithDefaults(end_timestamp=timedelta(seconds=0.5)),
                     ],
-                    want=datetime.timedelta(seconds=1),
+                    want=timedelta(seconds=1),
                 ),
             ],
         )

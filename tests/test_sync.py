@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import datetime
 import unittest.mock
+from datetime import timedelta
 
 import pytest
 
@@ -34,7 +34,7 @@ class TestSyncTrack(object):
                     time_signature_events=[
                         TimeSignatureEventWithDefaults(
                             tick=1,
-                            timestamp=datetime.timedelta(seconds=1),
+                            timestamp=timedelta(seconds=1),
                         )
                     ],
                 )
@@ -195,7 +195,7 @@ class TestBPMEvent(object):
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self
                 tick=0,
-                timestamp=datetime.timedelta(0),
+                timestamp=timedelta(0),
                 bpm=defaults.bpm,
                 _proximal_bpm_event_index=0,
             )
@@ -203,7 +203,7 @@ class TestBPMEvent(object):
         def test_prev_event_present(self, mocker):
             data = BPMEventParsedDataWithDefaults(tick=3)
 
-            prev_event = BPMEventWithDefaults(tick=1, timestamp=datetime.timedelta(seconds=1))
+            prev_event = BPMEventWithDefaults(tick=1, timestamp=timedelta(seconds=1))
 
             spy_init = mocker.spy(BPMEvent, "__init__")
 
@@ -225,7 +225,7 @@ class TestBPMEvent(object):
             spy_init.assert_called_once_with(
                 unittest.mock.ANY,  # ignore self
                 tick=data.tick,
-                timestamp=prev_event.timestamp + datetime.timedelta(seconds=seconds_since_prev),
+                timestamp=prev_event.timestamp + timedelta(seconds=seconds_since_prev),
                 bpm=defaults.bpm,
                 _proximal_bpm_event_index=1,
             )
@@ -285,7 +285,7 @@ class TestBPMEvents(object):
                     events=[
                         BPMEventWithDefaults(
                             tick=1,
-                            timestamp=datetime.timedelta(seconds=1),
+                            timestamp=timedelta(seconds=1),
                         )
                     ]
                 )
@@ -309,22 +309,22 @@ class TestBPMEvents(object):
             [
                 testcase.new_anonymous(
                     tick=100,
-                    want_timestamp=datetime.timedelta(seconds=1),
+                    want_timestamp=timedelta(seconds=1),
                     want_proximal_bpm_event_index=1,
                 ),
                 testcase.new_anonymous(
                     tick=120,
-                    want_timestamp=datetime.timedelta(seconds=1.1),
+                    want_timestamp=timedelta(seconds=1.1),
                     want_proximal_bpm_event_index=1,
                 ),
                 testcase.new_anonymous(
                     tick=400,
-                    want_timestamp=datetime.timedelta(seconds=2.5),
+                    want_timestamp=timedelta(seconds=2.5),
                     want_proximal_bpm_event_index=2,
                 ),
                 testcase.new_anonymous(
                     tick=1000,
-                    want_timestamp=datetime.timedelta(seconds=5.166666),
+                    want_timestamp=timedelta(seconds=5.166666),
                     want_proximal_bpm_event_index=3,
                 ),
             ],

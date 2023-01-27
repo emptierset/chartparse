@@ -11,13 +11,13 @@ a :class:`~chartparse.chart.Chart` and inspect its attributes via that object.
 from __future__ import annotations
 
 import dataclasses
-import datetime
 import enum
 import functools
 import logging
 import re
 import typing as typ
 from collections.abc import Iterable, Sequence
+from datetime import timedelta
 from enum import Enum
 
 import chartparse.tick
@@ -239,7 +239,7 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     """An (instrument, difficulty) pair's ``TrackEvent`` objects."""
 
     @functools.cached_property
-    def last_note_end_timestamp(self) -> datetime.timedelta | None:
+    def last_note_end_timestamp(self) -> timedelta | None:
         """The timestamp at which the :attr:`~chartparse.instrument.NoteEvent.sustain` value of the
         last :class:`~chartparse.instrument.NoteEvent` ends.
 
@@ -451,7 +451,7 @@ class NoteEvent(Event):
     sustain: ComplexSustain = 0
     """Information about this note event's sustain value."""
 
-    end_timestamp: datetime.timedelta
+    end_timestamp: timedelta
     """The timestamp at which this note ends."""
 
     hopo_state: HOPOState

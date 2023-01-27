@@ -11,11 +11,11 @@ You should not need to create any of this module's objects manually; please inst
 from __future__ import annotations
 
 import dataclasses
-import datetime
 import logging
 import re
 import typing as typ
 from collections.abc import Sequence
+from datetime import timedelta
 
 import chartparse.tick
 import chartparse.track
@@ -278,7 +278,7 @@ class BPMEvent(Event):
         bpm = bpm_whole_part + bpm_decimal_part
 
         if prev_event is None:
-            timestamp, proximal_bpm_event_index = datetime.timedelta(0), 0
+            timestamp, proximal_bpm_event_index = timedelta(0), 0
         else:
             if data.tick <= prev_event.tick:
                 # TODO: This branch can be removed if we move chart validation to an external flow.
@@ -291,7 +291,7 @@ class BPMEvent(Event):
             seconds_since_prev = chartparse.tick.seconds_from_ticks_at_bpm(
                 ticks_since_prev, prev_event.bpm, resolution
             )
-            timestamp = prev_event.timestamp + datetime.timedelta(seconds=seconds_since_prev)
+            timestamp = prev_event.timestamp + timedelta(seconds=seconds_since_prev)
             proximal_bpm_event_index = prev_event._proximal_bpm_event_index + 1
 
         return cls(
@@ -390,7 +390,7 @@ class BPMEvents(Sequence[BPMEvent]):
 
     def timestamp_at_tick_no_optimize_return(
         self, tick: int, *, start_iteration_index: int = 0
-    ) -> datetime.timedelta:
+    ) -> timedelta:
         """Returns the timestamp at the input tick.
 
         Args:
@@ -410,7 +410,7 @@ class BPMEvents(Sequence[BPMEvent]):
 
     def timestamp_at_tick(
         self, tick: int, *, start_iteration_index: int = 0
-    ) -> tuple[datetime.timedelta, int]:
+    ) -> tuple[timedelta, int]:
         """Returns the timestamp at the input tick, and an optimizing value.
 
         Args:
@@ -437,9 +437,7 @@ class BPMEvents(Sequence[BPMEvent]):
             proximal_bpm_event.bpm,
             self.resolution,
         )
-        timedelta_since_proximal_bpm_event = datetime.timedelta(
-            seconds=seconds_since_proximal_bpm_event
-        )
+        timedelta_since_proximal_bpm_event = timedelta(seconds=seconds_since_proximal_bpm_event)
         timestamp = proximal_bpm_event.timestamp + timedelta_since_proximal_bpm_event
         return timestamp, proximal_bpm_event_index
 
@@ -484,7 +482,7 @@ class AnchorEvent(Event):
             An an instance of this object initialized from ``data``.
         """
 
-        timestamp = datetime.timedelta(microseconds=data.microseconds)
+        timestamp = timedelta(microseconds=data.microseconds)
         return cls(tick=data.tick, timestamp=timestamp)
 
     @typ.final
