@@ -6,6 +6,7 @@ from chartparse.exceptions import MissingRequiredField
 from chartparse.metadata import Metadata
 from tests.helpers import defaults
 
+# TODO: typecheck the tests in this file by adding "-> None" annotations to each test function.
 
 class TestMetadata(object):
     class TestFromChartLines(object):

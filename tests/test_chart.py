@@ -26,6 +26,7 @@ _missing_global_events_track_chart_filepath = (
 )
 _unhandled_section_chart_filepath = _chart_directory_filepath / "unhandled_section.chart"
 
+# TODO: typecheck the tests in this file by adding "-> None" annotations to each test function.
 
 class TestChart(object):
     class TestInit(object):

@@ -28,8 +28,6 @@ def sum(a: Ticks, b: Ticks) -> Ticks:
     return Ticks(a + b)  # pragma: no cover
 
 
-# TODO: Check whether this has a significant impact on performance. If so, scrap these helpers and
-# re-wrap results of arithmetic locally. If it doesn't matter, then actually cover these nocovers.
 def difference(minuend: Ticks, subtrahend: Ticks) -> Ticks:
     return Ticks(minuend - subtrahend)  # pragma: no cover
 

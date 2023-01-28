@@ -9,6 +9,7 @@ from chartparse.exceptions import (
     raise_,
 )
 
+# TODO: typecheck the tests in this file by adding "-> None" annotations to each test function.
 
 class TestRaise(object):
     def test(self):

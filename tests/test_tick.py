@@ -3,8 +3,37 @@ from __future__ import annotations
 import pytest
 
 import chartparse.tick
-from chartparse.tick import NoteDuration
+from chartparse.tick import NoteDuration, Tick, Ticks
 from tests.helpers import testcase
+
+# TODO: typecheck the tests in this file by adding "-> None" annotations to each test function.
+
+class TestAdd(object):
+    def test(self):
+        want = Tick(3)
+        got = chartparse.tick.add(Tick(1), Ticks(2))
+        assert got == want
+
+
+class TestSum(object):
+    def test(self):
+        want = Ticks(3)
+        got = chartparse.tick.add(Ticks(1), Ticks(2))
+        assert got == want
+
+
+class TestDifference(object):
+    def test(self):
+        want = Ticks(1)
+        got = chartparse.tick.difference(Ticks(3), Ticks(2))
+        assert got == want
+
+
+class TestBetween(object):
+    def test(self):
+        want = Ticks(2)
+        got = chartparse.tick.between(Tick(1), Tick(3))
+        assert got == want
 
 
 class TestCalculateTicksBetweenNotes(object):

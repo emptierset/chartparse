@@ -21,6 +21,7 @@ from tests.helpers.sync import (
     TimeSignatureEventWithDefaults,
 )
 
+# TODO: typecheck the tests in this file by adding "-> None" annotations to each test function.
 
 class TestSyncTrack(object):
     class TestPostInit(object):

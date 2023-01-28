@@ -12,6 +12,7 @@ from tests.helpers.fruit import Fruit
 from tests.helpers.log import LogChecker
 from tests.helpers.sync import BPMEventsWithDefaults
 
+# TODO: typecheck the tests in this file by adding "-> None" annotations to each test function.
 
 class TestBuildEventsFromData(object):
     @testcase.parametrize(

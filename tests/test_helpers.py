@@ -5,6 +5,7 @@ import pytest
 import tests.helpers.lines
 from tests.helpers import defaults
 
+# TODO: typecheck the tests in this file by adding "-> None" annotations to each test function.
 
 class TestGenerateValidBPMLine(object):
     def test(self):
