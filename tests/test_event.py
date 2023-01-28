@@ -5,8 +5,6 @@ from datetime import timedelta
 from tests.helpers import testcase
 from tests.helpers.event import EventWithDefaults
 
-# TODO: typecheck the tests in this file by adding "-> None" annotations to each test function.
-
 
 class TestEvent(object):
     class TestStr(object):
@@ -24,5 +22,5 @@ class TestEvent(object):
                 ),
             ],
         )
-        def test(self, event):
+        def test(self, event) -> None:
             str(event)
