@@ -131,17 +131,20 @@ class _FieldParsingSpec(object):
         self.processing_fn = processing_fn
 
     @staticmethod
-    def make_field_regex(
-        field_name: PascalCaseFieldName, value_regex: str, is_value_quoted: bool
-    ) -> str:
-        to_join = [rf"^\s*?{field_name} = "]
-        if is_value_quoted:
-            to_join.append(r'"')
-        to_join.append(rf"({value_regex})")
-        if is_value_quoted:
-            to_join.append(r'"')
-        to_join.append(r"\s*?$")
-        return "".join(to_join)
+    def make_field_regex(field_name: PascalCaseFieldName, value_regex: str) -> str:
+        """Returns a regex for parsing a particular field.
+
+        Args:
+            field_name: The name of the field to be parsed.
+
+            value_regex: The regex that parses the field's value. This should _not_ contain ^ or $,
+                as this will be interpolated within another regex pattern that does have those.
+
+        Returns:
+            A regex capable of extracting a particular field's value from a chart line containing a
+            a definition for that field.
+        """
+        return rf"^\s*?{field_name} = \"?({value_regex})\"?\s*?$"
 
 
 @typ.final
@@ -151,7 +154,7 @@ class _IntFieldSpec(_FieldParsingSpec):
 
     @staticmethod
     def make_int_field_regex(field_name: PascalCaseFieldName) -> str:
-        return _FieldParsingSpec.make_field_regex(field_name, r"\d+?", False)
+        return _FieldParsingSpec.make_field_regex(field_name, r"\d+?")
 
 
 @typ.final
@@ -161,7 +164,7 @@ class _MultiwordStrFieldSpec(_FieldParsingSpec):
 
     @staticmethod
     def make_multiword_str_field_regex(field_name: PascalCaseFieldName) -> str:
-        return _FieldParsingSpec.make_field_regex(field_name, r".+?", True)
+        return _FieldParsingSpec.make_field_regex(field_name, r".+?")
 
 
 @typ.final
@@ -175,7 +178,7 @@ class _QuotelessStrFieldSpec(_FieldParsingSpec):
 
     @staticmethod
     def make_quoteless_str_field_regex(field_name: PascalCaseFieldName) -> str:
-        return _FieldParsingSpec.make_field_regex(field_name, r'[^"]+?', False)
+        return _FieldParsingSpec.make_field_regex(field_name, r'[^"]+?')
 
 
 class _FieldParsingSpecDict(typ.TypedDict):
