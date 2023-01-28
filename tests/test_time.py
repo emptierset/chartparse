@@ -6,7 +6,6 @@ import chartparse.time
 from chartparse.time import Seconds, Timestamp
 from tests.helpers import testcase
 
-# TODO: typecheck the tests in this file by adding "-> None" annotations to each test function.
 
 class TestAdd(object):
     @testcase.parametrize(
@@ -26,6 +25,6 @@ class TestAdd(object):
             ),
         ],
     )
-    def test(self, ts, other, want):
+    def test(self, ts, other, want) -> None:
         got = chartparse.time.add(ts, other)
         assert got == want
