@@ -6,32 +6,30 @@ import chartparse.tick
 from chartparse.tick import NoteDuration, Tick, Ticks
 from tests.helpers import testcase
 
-# TODO: typecheck the tests in this file by adding "-> None" annotations to each test function.
-
 
 class TestAdd(object):
-    def test(self):
+    def test(self) -> None:
         want = Tick(3)
         got = chartparse.tick.add(Tick(1), Ticks(2))
         assert got == want
 
 
 class TestSum(object):
-    def test(self):
+    def test(self) -> None:
         want = Ticks(3)
-        got = chartparse.tick.add(Ticks(1), Ticks(2))
+        got = chartparse.tick.sum(Ticks(1), Ticks(2))
         assert got == want
 
 
 class TestDifference(object):
-    def test(self):
+    def test(self) -> None:
         want = Ticks(1)
         got = chartparse.tick.difference(Ticks(3), Ticks(2))
         assert got == want
 
 
 class TestBetween(object):
-    def test(self):
+    def test(self) -> None:
         want = Ticks(2)
         got = chartparse.tick.between(Tick(1), Tick(3))
         assert got == want
@@ -68,7 +66,7 @@ class TestCalculateTicksBetweenNotes(object):
             ),
         ],
     )
-    def test(self, resolution, note_duration, want):
+    def test(self, resolution, note_duration, want) -> None:
         got = chartparse.tick.calculate_ticks_between_notes(resolution, note_duration)
         assert got == want
 
@@ -109,7 +107,7 @@ class TestSecondsFromTicksAtBPM(object):
             ),
         ],
     )
-    def test(self, ticks, bpm, resolution, want):
+    def test(self, ticks, bpm, resolution, want) -> None:
         got = chartparse.tick.seconds_from_ticks_at_bpm(ticks, bpm, resolution)
         assert got == want
 
@@ -148,6 +146,6 @@ class TestSecondsFromTicksAtBPM(object):
             ),
         ],
     )
-    def test_error(self, ticks, bpm, resolution):
+    def test_error(self, ticks, bpm, resolution) -> None:
         with pytest.raises(ValueError):
             _ = chartparse.tick.seconds_from_ticks_at_bpm(ticks, bpm, resolution)
