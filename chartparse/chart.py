@@ -241,32 +241,12 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     ) -> float:
         ...  # pragma: no cover
 
-    @typ.overload
     def notes_per_second(
         self,
         instrument: Instrument,
         difficulty: Difficulty,
-        start: float,
-        end: None,
-    ) -> float:
-        ...  # pragma: no cover
-
-    @typ.overload
-    def notes_per_second(
-        self,
-        instrument: Instrument,
-        difficulty: Difficulty,
-        start: float,
-        end: float,
-    ) -> float:
-        ...  # pragma: no cover
-
-    def notes_per_second(
-        self,
-        instrument: Instrument,
-        difficulty: Difficulty,
-        start: timedelta | int | float | None = None,
-        end: timedelta | int | float | None = None,
+        start: timedelta | int | None = None,
+        end: timedelta | int | None = None,
     ) -> float:
         """Returns the average notes per second over the input interval.
 
@@ -274,9 +254,6 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         objects per second. Chords do not count as multiple "notes" in one instant.
 
         The interval is closed on both ends.
-
-        Important: passing ints will be interpreted as tick values; if you would like your inputs
-        to be interpreted as seconds, pass floats (even if they are whole-numbered).
 
         Args:
             instrument: The instrument for which the
@@ -329,11 +306,6 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             assert end is None or isinstance(end, timedelta)
             start_time = start if start is not None else timedelta(0)
             end_time = end if end is not None else track.last_note_end_timestamp
-        elif isinstance(start, float):  # units are seconds
-            # TODO: create NewTypes for timeinterval (time?), seconds, ticks
-            assert end is None or isinstance(end, float)
-            start_time = timedelta(seconds=start) if start is not None else timedelta(0)
-            end_time = timedelta(seconds=end) if end is not None else track.last_note_end_timestamp
         else:  # pragma: no cover
             raise UnreachableError("start must be int, float, timedelta, or None")
 

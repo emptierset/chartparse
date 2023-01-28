@@ -446,56 +446,6 @@ class TestChart(object):
             mock.assert_called_once_with([defaults.note_event], want_start_time, want_end_time)
 
         @testcase.parametrize(
-            ["start_seconds", "end_seconds", "want_start_time", "want_end_time"],
-            [
-                testcase.new(
-                    "end_none",
-                    start_seconds=1.0,
-                    end_seconds=None,
-                    want_start_time=timedelta(seconds=1),
-                    want_end_time=timedelta(seconds=1000),
-                ),
-                testcase.new(
-                    "no_none",
-                    start_seconds=1.0,
-                    end_seconds=2.0,
-                    want_start_time=timedelta(seconds=1),
-                    want_end_time=timedelta(seconds=2),
-                ),
-            ],
-        )
-        def test_with_seconds(
-            self,
-            mocker,
-            minimal_chart,
-            start_seconds,
-            end_seconds,
-            want_start_time,
-            want_end_time,
-        ):
-            unsafe.setattr(
-                minimal_chart[defaults.instrument][defaults.difficulty],
-                "note_events",
-                [defaults.note_event],
-            )
-
-            mocker.patch.object(
-                InstrumentTrack,
-                "last_note_end_timestamp",
-                new_callable=mocker.PropertyMock,
-                return_value=want_end_time,
-            )
-
-            mock = mocker.patch.object(minimal_chart, "_notes_per_second")
-            _ = minimal_chart.notes_per_second(
-                defaults.instrument,
-                defaults.difficulty,
-                start=start_seconds,
-                end=end_seconds,
-            )
-            mock.assert_called_once_with([defaults.note_event], want_start_time, want_end_time)
-
-        @testcase.parametrize(
             ["instrument", "difficulty"],
             [
                 testcase.new_anonymous(
