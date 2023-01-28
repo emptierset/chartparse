@@ -28,6 +28,7 @@ _unhandled_section_chart_filepath = _chart_directory_filepath / "unhandled_secti
 
 # TODO: typecheck the tests in this file by adding "-> None" annotations to each test function.
 
+
 class TestChart(object):
     class TestInit(object):
         def test(

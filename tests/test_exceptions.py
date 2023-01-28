@@ -11,6 +11,7 @@ from chartparse.exceptions import (
 
 # TODO: typecheck the tests in this file by adding "-> None" annotations to each test function.
 
+
 class TestRaise(object):
     def test(self):
         with pytest.raises(ValueError):

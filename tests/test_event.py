@@ -7,6 +7,7 @@ from tests.helpers.event import EventWithDefaults
 
 # TODO: typecheck the tests in this file by adding "-> None" annotations to each test function.
 
+
 class TestEvent(object):
     class TestStr(object):
         # This just exercises the path; asserting the output is irksome and unnecessary.

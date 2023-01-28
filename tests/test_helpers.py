@@ -7,6 +7,7 @@ from tests.helpers import defaults
 
 # TODO: typecheck the tests in this file by adding "-> None" annotations to each test function.
 
+
 class TestGenerateValidBPMLine(object):
     def test(self):
         got = tests.helpers.lines.generate_bpm(100, 120.000)

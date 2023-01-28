@@ -24,6 +24,7 @@ from tests.helpers.globalevents import (
 
 # TODO: typecheck the tests in this file by adding "-> None" annotations to each test function.
 
+
 class TestGlobalEventsTrack(object):
     def test_from_chart_lines(self, mocker, minimal_bpm_events, invalid_chart_line):
         mock_parse_data = mocker.patch.object(

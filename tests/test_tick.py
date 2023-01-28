@@ -8,6 +8,7 @@ from tests.helpers import testcase
 
 # TODO: typecheck the tests in this file by adding "-> None" annotations to each test function.
 
+
 class TestAdd(object):
     def test(self):
         want = Tick(3)

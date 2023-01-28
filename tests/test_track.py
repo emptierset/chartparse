@@ -14,6 +14,7 @@ from tests.helpers.sync import BPMEventsWithDefaults
 
 # TODO: typecheck the tests in this file by adding "-> None" annotations to each test function.
 
+
 class TestBuildEventsFromData(object):
     @testcase.parametrize(
         ["data", "from_data_return_value", "want"],

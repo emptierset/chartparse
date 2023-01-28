@@ -44,6 +44,7 @@ class NoteDuration(Enum):
     :attr:`~chartparse.metadata.Metadata.resolution`.
     """
 
+    # TODO: Try setting these to Ticks(...) values.
     WHOLE = 2 ** (-2)
     HALF = 2 ** (-1)
     QUARTER = 2**0

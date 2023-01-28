@@ -40,6 +40,7 @@ from tests.helpers.lines import generate_track as generate_track_line
 
 # TODO: typecheck the tests in this file by adding "-> None" annotations to each test function.
 
+
 class TestNote(object):
     class TestFromParsedData(object):
         @testcase.parametrize(

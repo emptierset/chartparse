@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import typing as typ
+
 from chartparse.util import (
     AllValuesGettableEnum,
     DictPropertiesEqMixin,
@@ -8,26 +10,25 @@ from chartparse.util import (
 )
 from tests.helpers import testcase
 
-# TODO: typecheck the tests in this file by adding "-> None" annotations to each test function.
 
 class TestDictPropertiesEqMixin(object):
     class Foo(DictPropertiesEqMixin):
-        def __init__(self, x, y):
+        def __init__(self, x: typ.Any, y: typ.Any):
             self.x = x
             self.y = y
 
     class Bar(object):
-        def __init__(self, x, y):
+        def __init__(self, x: typ.Any, y: typ.Any):
             self.x = x
             self.y = y
 
     class Baz(DictPropertiesEqMixin):
-        def __init__(self, x, y):
+        def __init__(self, x: typ.Any, y: typ.Any):
             self.x = x
             self.y = y
 
     class TestEq(object):
-        def test(self):
+        def test(self) -> None:
             foo1 = TestDictPropertiesEqMixin.Foo(1, 2)
             foo2 = TestDictPropertiesEqMixin.Foo(1, 2)
             foo3 = TestDictPropertiesEqMixin.Foo(1, 3)
@@ -39,7 +40,7 @@ class TestDictPropertiesEqMixin(object):
             assert foo1 == baz
             assert baz == foo1
 
-        def test_unimplemented(self):
+        def test_unimplemented(self) -> None:
             foo = TestDictPropertiesEqMixin.Foo(1, 2)
             bar = TestDictPropertiesEqMixin.Bar(1, 2)
             assert foo != bar
@@ -58,10 +59,10 @@ class TestAllValuesGettableEnum(object):
         TOO = 2
 
     class TestAllValues(object):
-        def test(self):
+        def test(self) -> None:
             assert TestAllValuesGettableEnum.TrinketEnum.all_values() == [1, 2]
 
-        def test_does_not_get_aliases(self):
+        def test_does_not_get_aliases(self) -> None:
             assert TestAllValuesGettableEnum.TrinketEnumWithAlias.all_values() == [1, 2]
 
 
@@ -72,7 +73,7 @@ class TestDictReprMixin(object):
 
     class TestRepr(object):
         # This just exercises the path; asserting the output is irksome and unnecessary.
-        def test(self):
+        def test(self) -> None:
             f = TestDictReprMixin.TrinketClass(1)
             str(f)
 
@@ -97,6 +98,6 @@ class TestDictReprTruncatedSequencesMixin(object):
     )
     class TestRepr(object):
         # This just exercises the path; asserting the output is irksome and unnecessary.
-        def test(self, x):
+        def test(self, x) -> None:
             f = TestDictReprTruncatedSequencesMixin.TrinketClass(x)
             str(f)
