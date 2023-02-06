@@ -44,27 +44,26 @@ class NoteDuration(Enum):
     :attr:`~chartparse.metadata.Metadata.resolution`.
     """
 
-    # TODO: Try setting these to Ticks(...) values.
-    WHOLE = 2 ** (-2)
-    HALF = 2 ** (-1)
-    QUARTER = 2**0
-    EIGHTH = 2**1
-    SIXTEENTH = 2**2
-    THIRTY_SECOND = 2**3
-    SIXTY_FOURTH = 2**4
-    HUNDRED_TWENTY_EIGHTH = 2**5
-    TWO_HUNDRED_FIFTH_SIXTH = 2**6
-    FIVE_HUNDRED_TWELFTH = 2**7
+    WHOLE = Ticks(int(2 ** (-2)))
+    HALF = Ticks(int(2 ** (-1)))
+    QUARTER = Ticks(int(2**0))
+    EIGHTH = Ticks(int(2**1))
+    SIXTEENTH = Ticks(int(2**2))
+    THIRTY_SECOND = Ticks(int(2**3))
+    SIXTY_FOURTH = Ticks(int(2**4))
+    HUNDRED_TWENTY_EIGHTH = Ticks(int(2**5))
+    TWO_HUNDRED_FIFTH_SIXTH = Ticks(int(2**6))
+    FIVE_HUNDRED_TWELFTH = Ticks(int(2**7))
 
-    THIRD = (HALF + QUARTER) / 2
-    SIXTH = (QUARTER + EIGHTH) / 2
-    TWELFTH = (EIGHTH + SIXTEENTH) / 2
-    TWENTY_FOURTH = (SIXTEENTH + THIRTY_SECOND) / 2
-    FOURTY_EIGHTH = (THIRTY_SECOND + SIXTY_FOURTH) / 2
-    NINETY_SIXTH = (SIXTY_FOURTH + HUNDRED_TWENTY_EIGHTH) / 2
-    HUNDRED_NINETY_SECOND = (HUNDRED_TWENTY_EIGHTH + TWO_HUNDRED_FIFTH_SIXTH) / 2
-    THREE_HUNDRED_EIGHTY_FOURTH = (TWO_HUNDRED_FIFTH_SIXTH + FIVE_HUNDRED_TWELFTH) / 2
-    SEVEN_HUNDRED_SIXTY_EIGHTH = (FIVE_HUNDRED_TWELFTH + FIVE_HUNDRED_TWELFTH * 2) / 2
+    THIRD = Ticks(int((HALF + QUARTER) / 2))
+    SIXTH = Ticks(int((QUARTER + EIGHTH) / 2))
+    TWELFTH = Ticks(int((EIGHTH + SIXTEENTH) / 2))
+    TWENTY_FOURTH = Ticks(int((SIXTEENTH + THIRTY_SECOND) / 2))
+    FOURTY_EIGHTH = Ticks(int((THIRTY_SECOND + SIXTY_FOURTH) / 2))
+    NINETY_SIXTH = Ticks(int((SIXTY_FOURTH + HUNDRED_TWENTY_EIGHTH) / 2))
+    HUNDRED_NINETY_SECOND = Ticks(int((HUNDRED_TWENTY_EIGHTH + TWO_HUNDRED_FIFTH_SIXTH) / 2))
+    THREE_HUNDRED_EIGHTY_FOURTH = Ticks(int((TWO_HUNDRED_FIFTH_SIXTH + FIVE_HUNDRED_TWELFTH) / 2))
+    SEVEN_HUNDRED_SIXTY_EIGHTH = Ticks(int((FIVE_HUNDRED_TWELFTH + FIVE_HUNDRED_TWELFTH * 2) / 2))
 
     # Aliases
 
