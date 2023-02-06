@@ -6,12 +6,10 @@ from chartparse.exceptions import MissingRequiredField
 from chartparse.metadata import Metadata
 from tests.helpers import defaults
 
-# TODO: typecheck the tests in this file by adding "-> None" annotations to each test function.
-
 
 class TestMetadata(object):
     class TestFromChartLines(object):
-        def test(self):
+        def test(self) -> None:
             lines = [
                 f'  Name = "{defaults.name}"',
                 f'  Artist = "{defaults.artist}"',
@@ -64,6 +62,6 @@ class TestMetadata(object):
             assert metadata.keys_stream == defaults.keys_stream
             assert metadata.crowd_stream == defaults.crowd_stream
 
-        def test_missing_resolution(self):
+        def test_missing_resolution(self) -> None:
             with pytest.raises(MissingRequiredField):
                 _ = Metadata.from_chart_lines([])
