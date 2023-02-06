@@ -7,6 +7,7 @@ import pytest
 
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.sync import AnchorEvent, BPMEvent, BPMEvents, SyncTrack, TimeSignatureEvent
+from chartparse.tick import Tick, Ticks
 from tests.helpers import defaults, testcase, unsafe
 from tests.helpers.lines import generate_anchor as generate_anchor_line
 from tests.helpers.lines import generate_bpm as generate_bpm_line
@@ -21,16 +22,14 @@ from tests.helpers.sync import (
     TimeSignatureEventWithDefaults,
 )
 
-# TODO: typecheck the tests in this file by adding "-> None" annotations to each test function.
-
 
 class TestSyncTrack(object):
     class TestPostInit(object):
-        def test_empty_time_signature_events(self):
+        def test_empty_time_signature_events(self) -> None:
             with pytest.raises(ValueError):
                 _ = SyncTrackWithDefaults(time_signature_events=[])
 
-        def test_missing_first_time_signature_event(self):
+        def test_missing_first_time_signature_event(self) -> None:
             with pytest.raises(ValueError):
                 _ = SyncTrackWithDefaults(
                     time_signature_events=[
@@ -42,7 +41,7 @@ class TestSyncTrack(object):
                 )
 
     class TestFromChartLines(object):
-        def test(self, mocker, invalid_chart_line):
+        def test(self, mocker, invalid_chart_line) -> None:
             mock_parse_data = mocker.patch.object(
                 SyncTrack,
                 "_parse_data_from_chart_lines",
@@ -122,7 +121,7 @@ class TestTimeSignatureEvent(object):
                 ),
             ],
         )
-        def test(self, mocker, minimal_bpm_events_with_mock, prev_event, data, want_lower):
+        def test(self, mocker, minimal_bpm_events_with_mock, prev_event, data, want_lower) -> None:
             spy_init = mocker.spy(TimeSignatureEvent, "__init__")
 
             _ = TimeSignatureEvent.from_parsed_data(data, prev_event, minimal_bpm_events_with_mock)
@@ -141,7 +140,7 @@ class TestTimeSignatureEvent(object):
             )
 
     class TestStr(object):
-        def test(self):
+        def test(self) -> None:
             e = TimeSignatureEventWithDefaults()
             str(e)
 
@@ -169,25 +168,25 @@ class TestTimeSignatureEvent(object):
                     ),
                 ],
             )
-            def test(self, mocker, line, want_lower):
+            def test(self, mocker, line, want_lower) -> None:
                 got = TimeSignatureEvent.ParsedData.from_chart_line(line)
                 assert got.tick == defaults.tick
                 assert got.upper == defaults.upper_time_signature_numeral
                 assert got.lower == want_lower
 
-            def test_no_match(self, invalid_chart_line):
+            def test_no_match(self, invalid_chart_line) -> None:
                 with pytest.raises(RegexNotMatchError):
                     _ = TimeSignatureEvent.ParsedData.from_chart_line(invalid_chart_line)
 
 
 class TestBPMEvent(object):
     class TestPostInit(object):
-        def test_more_than_three_decimal_places_error(self):
+        def test_more_than_three_decimal_places_error(self) -> None:
             with pytest.raises(ValueError):
                 _ = BPMEventWithDefaults(bpm=120.0001)
 
     class TestFromParsedData(object):
-        def test_prev_event_none(self, mocker):
+        def test_prev_event_none(self, mocker) -> None:
             spy_init = mocker.spy(BPMEvent, "__init__")
 
             _ = BPMEvent.from_parsed_data(
@@ -202,7 +201,7 @@ class TestBPMEvent(object):
                 _proximal_bpm_event_index=0,
             )
 
-        def test_prev_event_present(self, mocker):
+        def test_prev_event_present(self, mocker) -> None:
             data = BPMEventParsedDataWithDefaults(tick=3)
 
             prev_event = BPMEventWithDefaults(tick=1, timestamp=timedelta(seconds=1))
@@ -247,41 +246,41 @@ class TestBPMEvent(object):
                 ),
             ],
         )
-        def test_wrongly_ordered_events(self, mocker, prev_event, data):
+        def test_wrongly_ordered_events(self, mocker, prev_event, data) -> None:
             with pytest.raises(ValueError):
                 _ = BPMEvent.from_parsed_data(data, prev_event, defaults.resolution)
 
     class TestStr(object):
-        def test(self):
+        def test(self) -> None:
             e = BPMEventWithDefaults()
             str(e)
 
     class TestParsedData(object):
         class TestFromChartLine(object):
-            def test(self):
+            def test(self) -> None:
                 line = generate_bpm_line(defaults.tick, defaults.bpm)
                 got = BPMEvent.ParsedData.from_chart_line(line)
                 assert got.tick == defaults.tick
                 assert got.raw_bpm == defaults.raw_bpm
 
-            def test_no_match(self, invalid_chart_line):
+            def test_no_match(self, invalid_chart_line) -> None:
                 with pytest.raises(RegexNotMatchError):
                     _ = BPMEvent.ParsedData.from_chart_line(invalid_chart_line)
 
 
 class TestBPMEvents(object):
     class TestPostInit(object):
-        def test_non_positive_resolution(self):
+        def test_non_positive_resolution(self) -> None:
             with pytest.raises(ValueError):
                 _ = BPMEventsWithDefaults(resolution=0)
             with pytest.raises(ValueError):
                 _ = BPMEventsWithDefaults(resolution=-1)
 
-        def test_empty_bpm_events(self):
+        def test_empty_bpm_events(self) -> None:
             with pytest.raises(ValueError):
                 _ = BPMEventsWithDefaults(events=[])
 
-        def test_missing_first_bpm_event(self):
+        def test_missing_first_bpm_event(self) -> None:
             with pytest.raises(ValueError):
                 _ = BPMEventsWithDefaults(
                     events=[
@@ -293,13 +292,13 @@ class TestBPMEvents(object):
                 )
 
     class TestLen(object):
-        def test(self):
+        def test(self) -> None:
             events = BPMEventsWithDefaults(events=[BPMEventWithDefaults(), BPMEventWithDefaults()])
             got = len(events)
             assert got == 2
 
     class TestGetItem(object):
-        def test(self):
+        def test(self) -> None:
             want = BPMEventWithDefaults(tick=5)
             events = BPMEventsWithDefaults(events=[BPMEventWithDefaults(tick=0), want])
             got = events[1]
@@ -331,19 +330,19 @@ class TestBPMEvents(object):
                 ),
             ],
         )
-        def test(self, tick, want_timestamp, want_proximal_bpm_event_index):
-            resolution = 100
+        def test(self, tick, want_timestamp, want_proximal_bpm_event_index) -> None:
+            resolution = Ticks(100)
             event0 = BPMEvent.from_parsed_data(
-                BPMEvent.ParsedData(tick=0, raw_bpm="60000"), None, resolution
+                BPMEvent.ParsedData(tick=Tick(0), raw_bpm="60000"), None, resolution
             )
             event1 = BPMEvent.from_parsed_data(
-                BPMEvent.ParsedData(tick=100, raw_bpm="120000"), event0, resolution
+                BPMEvent.ParsedData(tick=Tick(100), raw_bpm="120000"), event0, resolution
             )
             event2 = BPMEvent.from_parsed_data(
-                BPMEvent.ParsedData(tick=400, raw_bpm="180000"), event1, resolution
+                BPMEvent.ParsedData(tick=Tick(400), raw_bpm="180000"), event1, resolution
             )
             event3 = BPMEvent.from_parsed_data(
-                BPMEvent.ParsedData(tick=800, raw_bpm="90000"), event2, resolution
+                BPMEvent.ParsedData(tick=Tick(800), raw_bpm="90000"), event2, resolution
             )
             test_bpm_events = BPMEvents(
                 events=[event0, event1, event2, event3], resolution=resolution
@@ -354,7 +353,7 @@ class TestBPMEvents(object):
             assert got_proximal_bpm_event_index == want_proximal_bpm_event_index
 
     class TestTimestampAtTickNoOptimizeReturn(object):
-        def test(self, mocker, minimal_bpm_events_with_mock):
+        def test(self, mocker, minimal_bpm_events_with_mock) -> None:
             tick = 451
             start_iteration_index = 1337
             _ = minimal_bpm_events_with_mock.timestamp_at_tick_no_optimize_return(
@@ -407,7 +406,7 @@ class TestBPMEvents(object):
                 ),
             ],
         )
-        def test(self, bare_bpm_events, bpm_event_list, tick, want):
+        def test(self, bare_bpm_events, bpm_event_list, tick, want) -> None:
             unsafe.setattr(bare_bpm_events, "events", bpm_event_list)
             got = bare_bpm_events._index_of_proximal_event(tick)
             assert got == want
@@ -442,7 +441,9 @@ class TestBPMEvents(object):
                 ),
             ],
         )
-        def test_raises(self, bare_bpm_events, tick, start_iteration_index, bpm_event_list):
+        def test_raises(
+            self, bare_bpm_events, tick, start_iteration_index, bpm_event_list
+        ) -> None:
             unsafe.setattr(bare_bpm_events, "events", bpm_event_list)
             with pytest.raises(ValueError):
                 _ = bare_bpm_events._index_of_proximal_event(
@@ -453,7 +454,7 @@ class TestBPMEvents(object):
 
 class TestAnchorEvent(object):
     class TestFromParsedData(object):
-        def test(self, mocker):
+        def test(self, mocker) -> None:
             spy_init = mocker.spy(AnchorEvent, "__init__")
 
             data = AnchorEventParsedDataWithDefaults()
@@ -467,12 +468,12 @@ class TestAnchorEvent(object):
 
     class TestParsedData(object):
         class TestFromChartLine(object):
-            def test(self):
+            def test(self) -> None:
                 line = generate_anchor_line(defaults.tick, defaults.microseconds)
                 got = AnchorEvent.ParsedData.from_chart_line(line)
                 assert got.tick == defaults.tick
                 assert got.microseconds == defaults.microseconds
 
-            def test_no_match(self, invalid_chart_line):
+            def test_no_match(self, invalid_chart_line) -> None:
                 with pytest.raises(RegexNotMatchError):
                     _ = AnchorEvent.ParsedData.from_chart_line(invalid_chart_line)
