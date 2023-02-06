@@ -47,6 +47,10 @@ class Difficulty(AllValuesGettableEnum):
     chart. That number is referred to as "intensity".
     """
 
+    # NOTE: Adding `value` manually is required for mypy to understand that `.value` is not of type
+    # `Any`. See https://github.com/python/mypy/issues/8722.
+    value: str
+
     EASY = "Easy"
     MEDIUM = "Medium"
     HARD = "Hard"
@@ -57,6 +61,10 @@ class Difficulty(AllValuesGettableEnum):
 @enum.unique
 class Instrument(AllValuesGettableEnum):
     """The instrument to which a :class:`~chartparse.instrument.InstrumentTrack` corresponds."""
+
+    # NOTE: Adding `value` manually is required for mypy to understand that `.value` is not of type
+    # `Any`. See https://github.com/python/mypy/issues/8722.
+    value: str
 
     GUITAR = "Single"
     GUITAR_COOP = "DoubleGuitar"
@@ -73,6 +81,10 @@ class Note(Enum):
     """The note lane(s) to which a :class:`~chartparse.instrument.NoteEvent` corresponds."""
 
     _Self = typ.TypeVar("_Self", bound="Note")
+
+    # NOTE: Adding `value` manually is required for mypy to understand that `.value` is not of type
+    # `Any`. See https://github.com/python/mypy/issues/8722.
+    value: bytearray
 
     # TODO: optimization: Are bytearrays really better than plain tuples here?
     P = bytearray((0, 0, 0, 0, 0))
@@ -142,9 +154,8 @@ class Note(Enum):
     ORANGE = bytearray((0, 0, 0, 0, 1))
 
     @functools.lru_cache
-    def is_chord(self):
+    def is_chord(self) -> bool:
         """Returns whether this ``Note`` has multiple active lanes."""
-
         return sum(self.value) > 1
 
     @classmethod
@@ -176,6 +187,10 @@ class NoteTrackIndex(AllValuesGettableEnum):
 
     _Self = typ.TypeVar("_Self", bound="NoteTrackIndex")
 
+    # NOTE: Adding `value` manually is required for mypy to understand that `.value` is not of type
+    # `Any`. See https://github.com/python/mypy/issues/8722.
+    value: int
+
     G = 0
     R = 1
     Y = 2
@@ -192,12 +207,12 @@ class NoteTrackIndex(AllValuesGettableEnum):
     ORANGE = 4
     OPEN = 7
 
-    def __lt__(self, other):
+    def __lt__(self, other: NoteTrackIndex) -> bool:
         if self.__class__ is other.__class__:
             return self.value < other.value
         return NotImplemented  # pragma: no cover
 
-    def __le__(self, other):
+    def __le__(self, other: NoteTrackIndex) -> bool:
         if self.__class__ is other.__class__:
             return self.value < other.value or self.value == other.value
         return NotImplemented  # pragma: no cover
@@ -208,6 +223,7 @@ class NoteTrackIndex(AllValuesGettableEnum):
         return NoteTrackIndex.G.value <= self.value <= NoteTrackIndex.O.value
 
 
+# TODO: Consider using attrs instead of dataclasses.
 @typ.final
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):

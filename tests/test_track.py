@@ -83,13 +83,13 @@ class TestParseDataFromChartLines(object):
             return cls(tick=int(line), fruit=Fruit(int(line)))
 
     @testcase.parametrize(
-        ["types", "lines", "want"],
+        ["types", "lines", "want_dict"],
         [
             testcase.new(
                 "two_typical_events",
                 types=(ParsedData,),
                 lines=["0", "1"],
-                want={
+                want_dict={
                     ParsedData: [
                         ParsedData(tick=Tick(0), fruit=Fruit(0)),
                         ParsedData(tick=Tick(1), fruit=Fruit(1)),
@@ -98,9 +98,9 @@ class TestParseDataFromChartLines(object):
             ),
         ],
     )
-    def test(self, types, lines, want) -> None:
+    def test(self, types, lines, want_dict) -> None:
         got = parse_data_from_chart_lines(types, lines)
-        assert got == want
+        assert got._dict == want_dict
 
     def test_no_suitable_parsers(self, mocker, caplog, invalid_chart_line) -> None:
         _ = parse_data_from_chart_lines(tuple(), [invalid_chart_line])

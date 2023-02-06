@@ -15,7 +15,7 @@ from chartparse.time import Timestamp
 from chartparse.util import DictPropertiesEqMixin, DictReprMixin
 
 if typ.TYPE_CHECKING:  # pragma: no cover
-    from chartparse.chart import Tick
+    from chartparse.tick import Tick
 
 
 @dataclasses.dataclass(kw_only=True, frozen=True)

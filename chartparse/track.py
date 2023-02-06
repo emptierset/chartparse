@@ -19,6 +19,7 @@ from chartparse.event import Event
 from chartparse.exceptions import RegexNotMatchError, UnreachableError
 from chartparse.sync import AnchorEvent, BPMEvents
 from chartparse.tick import Ticks
+from chartparse.util import DictPropertiesEqMixin, DictReprTruncatedSequencesMixin
 
 if typ.TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Callable
@@ -32,22 +33,29 @@ logger = logging.getLogger(__name__)
 _unparsable_line_msg_tmpl: typ.Final[str] = 'unparsable line: "{}" for types {}'
 
 
-class ParsedDataDict(collections.defaultdict):
-    def __init__(self):
-        super().__init__(list)
+_ParsedDataT = typ.TypeVar("_ParsedDataT", bound=Event.ParsedData)
 
-    def __getitem__(self, k: type[Event.ParsedData._Self]) -> list[Event.ParsedData._Self]:
-        return super().__getitem__(k)
 
-    def __setitem__(
-        self, k: type[Event.ParsedData._Self], v: list[Event.ParsedData._Self]
-    ) -> None:
-        return super().__setitem__(k, v)
+class ParsedDataMap(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
+    """A dict mapping ParsedData subtypes to lists of values of those types.
+
+    TODO: Explain this in greater depth.
+    """
+
+    def __init__(self) -> None:
+        self._dict: collections.defaultdict[typ.Any, typ.Any] = collections.defaultdict(list)
+
+    def __getitem__(self, k: type[_ParsedDataT]) -> list[_ParsedDataT]:
+        # Annotating _dict as [Any, Any] makes this a mandatory cast. I'm not aware of a better
+        # annotation for _dict, as this entire class exists to circumvent the issue that I cannot
+        # define a dict of type [type[T], list[T]] for any T. i.e. T is bound
+        # https://github.com/python/typing/issues/548
+        return typ.cast(list[_ParsedDataT], self._dict.__getitem__(k))
 
 
 def parse_data_from_chart_lines(
-    types: Sequence[type[Event.ParsedData]], lines: Iterable[str]
-) -> ParsedDataDict:
+    types: Sequence[type[_ParsedDataT]], lines: Iterable[str]
+) -> ParsedDataMap:
     """Convert one or more chart lines into parsed data, and partition by type.
 
     Args:
@@ -62,18 +70,18 @@ def parse_data_from_chart_lines(
         A dictionary mapping each type in ``types`` to a list of datas that were parsed into that
         type from lines in ``lines``.
     """
-    d = ParsedDataDict()
+    m = ParsedDataMap()
     for line in lines:
         for t in types:
             try:
                 data = t.from_chart_line(line)
             except RegexNotMatchError:
                 continue
-            d[t].append(data)
+            m[t].append(data)
             break
         else:
             logger.warning(_unparsable_line_msg_tmpl.format(line, [t.__qualname__ for t in types]))
-    return d
+    return m
 
 
 @typ.overload
@@ -204,7 +212,8 @@ def build_events_from_data(
     ...  # pragma: no cover
 
 
-def build_events_from_data(datas, from_data_fn, resolution_or_bpm_events_or_None=None, /):
+# TODO: Figure out htf to annotate this.
+def build_events_from_data(datas, from_data_fn, resolution_or_bpm_events_or_None=None, /):  # type: ignore  # noqa
     events = []
     for data in datas:
         if isinstance(data, AnchorEvent.ParsedData):
@@ -217,7 +226,7 @@ def build_events_from_data(datas, from_data_fn, resolution_or_bpm_events_or_None
     if isinstance(resolution_or_bpm_events_or_None, int):
         # Using BPMEvent.ParsedData.
         # In this case, BPMEvents must already be in increasing tick order, by definition.
-        return BPMEvents(events=events, resolution=resolution_or_bpm_events_or_None)
+        return BPMEvents(events=events, resolution=Ticks(resolution_or_bpm_events_or_None))
     elif resolution_or_bpm_events_or_None is None:
         # Using AnchorEvent.ParsedData.
         # In this case, AnchorEvents must already be in increasing tick order, by definition.
@@ -225,6 +234,8 @@ def build_events_from_data(datas, from_data_fn, resolution_or_bpm_events_or_None
     elif isinstance(resolution_or_bpm_events_or_None, BPMEvents):
         # TODO: Should we instead optionally validate a chart, which allows us to assume everything
         # is sorted? etc.
-        return sorted(events, key=lambda e: e.tick)
+        # NOTE: This ignore is because it doesn't understand that e.tick is comparable. When this
+        # function is annotated, this can go away.
+        return sorted(events, key=lambda e: e.tick)  # type: ignore
     else:  # pragma: no cover
         raise UnreachableError("resolution_or_bpm_events_or_None must be one of the named types")

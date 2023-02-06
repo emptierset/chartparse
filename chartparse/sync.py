@@ -54,7 +54,7 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     anchor_events: Sequence[AnchorEvent]
     """A ``SyncTrack``'s ``AnchorEvent``\\ s."""
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Validates all instance attributes.
 
         Raises:
@@ -241,7 +241,7 @@ class BPMEvent(Event):
     bpm: float
     """The beats per minute value. Must not have more than 3 decimal places."""
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Validate instance attributes.
 
         Raises:
