@@ -20,9 +20,10 @@ from chartparse.instrument import (
     SpecialEvent,
     StarPowerData,
     StarPowerEvent,
+    SustainTuple,
     TrackEvent,
 )
-from chartparse.tick import NoteDuration
+from chartparse.tick import NoteDuration, Tick, Ticks
 from tests.helpers import defaults, testcase, unsafe
 from tests.helpers.instrument import (
     InstrumentTrackWithDefaults,
@@ -37,8 +38,6 @@ from tests.helpers.instrument import (
 from tests.helpers.lines import generate_note as generate_note_line
 from tests.helpers.lines import generate_star_power as generate_star_power_line
 from tests.helpers.lines import generate_track as generate_track_line
-
-# TODO: typecheck the tests in this file by adding "-> None" annotations to each test function.
 
 
 class TestNote(object):
@@ -61,14 +60,14 @@ class TestNote(object):
                 ),
             ],
         )
-        def test(self, data, want):
+        def test(self, data, want) -> None:
             got = Note.from_parsed_data(data)
             assert got == want
 
 
 class TestNoteTrackIndex(object):
     class TestOrderability(object):
-        def test(self):
+        def test(self) -> None:
             assert NoteTrackIndex.G < NoteTrackIndex.R
             assert NoteTrackIndex.G <= NoteTrackIndex.R
             assert NoteTrackIndex.R >= NoteTrackIndex.G
@@ -117,7 +116,7 @@ class TestComplexSustainFromParsedDatas(object):
             ),
         ],
     )
-    def test(self, datas, want):
+    def test(self, datas, want) -> None:
         got = chartparse.instrument.complex_sustain_from_parsed_datas(datas)
         assert got == want
 
@@ -139,13 +138,13 @@ class TestInstrumentTrack(object):
                 ),
             ],
         )
-        def test(self, instrument, difficulty, want):
+        def test(self, instrument, difficulty, want) -> None:
             track = InstrumentTrackWithDefaults(instrument=instrument, difficulty=difficulty)
             got = track.section_name
             assert got == want
 
     class TestFromChartLines(object):
-        def test(self, mocker, minimal_bpm_events):
+        def test(self, mocker, minimal_bpm_events) -> None:
             mock_parse_data = mocker.patch.object(
                 InstrumentTrack,
                 "_parse_data_from_chart_lines",
@@ -397,7 +396,7 @@ class TestInstrumentTrack(object):
             want_note_events,
             want_star_power_events,
             minimal_bpm_events_with_mock,
-        ):
+        ) -> None:
             got = InstrumentTrack.from_chart_lines(
                 defaults.instrument,
                 defaults.difficulty,
@@ -424,18 +423,18 @@ class TestInstrumentTrack(object):
                 ),
             ],
         )
-        def test(self, bare_instrument_track, note_events, want):
+        def test(self, bare_instrument_track, note_events, want) -> None:
             unsafe.setattr(bare_instrument_track, "note_events", note_events)
             got = bare_instrument_track.last_note_end_timestamp
             assert got == want
 
-        def test_empty(self, minimal_instrument_track):
+        def test_empty(self, minimal_instrument_track) -> None:
             got = minimal_instrument_track.last_note_end_timestamp
             assert got is None
 
     class TestStr(object):
         # This just exercises the path; asserting the output is irksome and unnecessary.
-        def test(self, default_instrument_track):
+        def test(self, default_instrument_track) -> None:
             str(default_instrument_track)
 
 
@@ -498,7 +497,7 @@ class TestNoteEvent(object):
             want_star_power_data,
             want_star_power_event_index,
             want_proximal_bpm_event_index,
-        ):
+        ) -> None:
             mock_compute_hopo_state = mocker.patch.object(
                 NoteEvent, "_compute_hopo_state", return_value=want_hopo_state
             )
@@ -579,7 +578,7 @@ class TestNoteEvent(object):
                 ),
             ],
         )
-        def test(self, event):
+        def test(self, event) -> None:
             str(event)
 
     class TestComputeHOPOState(object):
@@ -752,7 +751,7 @@ class TestNoteEvent(object):
                 ),
             ],
         )
-        def test(self, tick, note, is_tap, is_forced, previous, want):
+        def test(self, tick, note, is_tap, is_forced, previous, want) -> None:
             got = NoteEvent._compute_hopo_state(
                 defaults.resolution,
                 tick,
@@ -763,7 +762,7 @@ class TestNoteEvent(object):
             )
             assert got == want
 
-        def test_forced_first_note_raises(self):
+        def test_forced_first_note_raises(self) -> None:
             with pytest.raises(ValueError):
                 _ = NoteEvent._compute_hopo_state(
                     defaults.resolution,
@@ -778,7 +777,7 @@ class TestNoteEvent(object):
         class TestFromChartLine(object):
             test_regex = r"^T (\d+?) I (\d+?) S (\d+?)$"
 
-            tick = 4
+            tick = Tick(4)
 
             @testcase.parametrize(
                 ["want_note_track_index", "want_sustain"],
@@ -809,7 +808,7 @@ class TestNoteEvent(object):
                 self,
                 want_note_track_index,
                 want_sustain,
-            ):
+            ) -> None:
                 got = NoteEvent.ParsedData.from_chart_line(
                     f"T {self.tick} I {want_note_track_index.value} S {want_sustain}"
                 )
@@ -820,11 +819,11 @@ class TestNoteEvent(object):
                 )
                 assert got == want
 
-            def test_no_match(self, invalid_chart_line):
+            def test_no_match(self, invalid_chart_line) -> None:
                 with pytest.raises(RegexNotMatchError):
                     _ = NoteEvent.ParsedData.from_chart_line(invalid_chart_line)
 
-            def test_unhandled_note_track_index(self, mocker, caplog):
+            def test_unhandled_note_track_index(self, mocker, caplog) -> None:
                 invalid_instrument_note_track_index = 8
                 with pytest.raises(ValueError):
                     _ = NoteEvent.ParsedData.from_chart_line(
@@ -862,7 +861,7 @@ class TestNoteEvent(object):
                     ),
                 ],
             )
-            def test(self, bare_note_event_parsed_data, sustain, want):
+            def test(self, bare_note_event_parsed_data, sustain, want) -> None:
                 bare_note_event_parsed_data.__dict__["sustain"] = sustain
                 got = bare_note_event_parsed_data.sustain
                 assert got == want
@@ -922,7 +921,7 @@ class TestNoteEvent(object):
             star_power_events,
             want_data,
             want_proximal_star_power_event_index,
-        ):
+        ) -> None:
             got_data, got_proximal_star_power_event_index = NoteEvent._compute_star_power_data(
                 tick,
                 star_power_events,
@@ -931,7 +930,7 @@ class TestNoteEvent(object):
             assert got_data == want_data
             assert got_proximal_star_power_event_index == want_proximal_star_power_event_index
 
-        def test_proximal_star_power_event_index_after_last_event(self):
+        def test_proximal_star_power_event_index_after_last_event(self) -> None:
             with pytest.raises(ValueError):
                 _, _ = NoteEvent._compute_star_power_data(
                     defaults.tick,
@@ -955,7 +954,7 @@ class TestNoteEvent(object):
                 ),
             ],
         )
-        def test(self, mocker, bare_note_event, sustain, want):
+        def test(self, mocker, bare_note_event, sustain, want) -> None:
             # Test wrapper
             unsafe.setattr(bare_note_event, "sustain", 100)
             spy = mocker.spy(NoteEvent, "_longest_sustain")
@@ -966,20 +965,20 @@ class TestNoteEvent(object):
             got = NoteEvent._longest_sustain(sustain)
             assert got == want
 
-        def test_impl_all_none(self):
+        def test_impl_all_none(self) -> None:
             with pytest.raises(ValueError):
-                _ = NoteEvent._longest_sustain((None, None, None, None, None))
+                _ = NoteEvent._longest_sustain(SustainTuple((None, None, None, None, None)))
 
     class TestEndTick(object):
-        def test_wrapper(self, mocker, bare_note_event):
+        def test_wrapper(self, mocker, bare_note_event) -> None:
             unsafe.setattr(bare_note_event, "tick", 100)
             unsafe.setattr(bare_note_event, "sustain", 10)
             spy = mocker.spy(NoteEvent, "_end_tick")
             bare_note_event.end_tick
             assert spy.called_once_with(100, 10)
 
-        def test_impl(self):
-            got = NoteEvent._end_tick(100, 10)
+        def test_impl(self) -> None:
+            got = NoteEvent._end_tick(Tick(100), Ticks(10))
             want = 110
             assert got == want
 
@@ -999,7 +998,7 @@ class TestSpecialEvent(object):
                 ),
             ],
         )
-        def test(self, mocker, minimal_bpm_events_with_mock, prev_event):
+        def test(self, mocker, minimal_bpm_events_with_mock, prev_event) -> None:
             spy_init = mocker.spy(SpecialEvent, "__init__")
 
             _ = SpecialEvent.from_parsed_data(
@@ -1020,7 +1019,7 @@ class TestSpecialEvent(object):
 
     class TestStr(object):
         # This just exercises the path; asserting the output is irksome and unnecessary.
-        def test(self):
+        def test(self) -> None:
             e = SpecialEventWithDefaults()
             str(e)
 
@@ -1028,14 +1027,14 @@ class TestSpecialEvent(object):
         class TestFromChartLine(object):
             test_regex = r"^T (\d+?) V (.*?)$"
 
-            def test(self, mocker):
+            def test(self, mocker) -> None:
                 got = SpecialEvent.ParsedData.from_chart_line(
                     f"T {defaults.tick} V {defaults.sustain}"
                 )
                 assert got.tick == defaults.tick
                 assert got.sustain == defaults.sustain
 
-            def test_no_match(self, invalid_chart_line):
+            def test_no_match(self, invalid_chart_line) -> None:
                 with pytest.raises(RegexNotMatchError):
                     _ = SpecialEvent.ParsedData.from_chart_line(invalid_chart_line)
 
@@ -1073,7 +1072,7 @@ class TestSpecialEvent(object):
                 ),
             ],
         )
-        def test(self, tick, want):
+        def test(self, tick, want) -> None:
             event = SpecialEventWithDefaults(tick=100, sustain=10)
             got = event.tick_is_after_event(tick)
             assert got == want
@@ -1104,7 +1103,7 @@ class TestSpecialEvent(object):
                 ),
             ],
         )
-        def test(self, tick, want):
+        def test(self, tick, want) -> None:
             event = SpecialEventWithDefaults(tick=100, sustain=10)
             got = event.tick_is_during_event(tick)
             assert got == want
@@ -1130,7 +1129,7 @@ class TestTrackEvent(object):
                 ),
             ],
         )
-        def test(self, mocker, minimal_bpm_events_with_mock, prev_event):
+        def test(self, mocker, minimal_bpm_events_with_mock, prev_event) -> None:
             spy_init = mocker.spy(TrackEvent, "__init__")
 
             _ = TrackEvent.from_parsed_data(
@@ -1154,18 +1153,18 @@ class TestTrackEvent(object):
 
     class TestStr(object):
         # This just exercises the path; asserting the output is irksome and unnecessary.
-        def test(self):
+        def test(self) -> None:
             e = TrackEventWithDefaults()
             str(e)
 
     class TestParsedData(object):
         class TestFromChartLine(object):
-            def test(self, mocker):
+            def test(self, mocker) -> None:
                 line = generate_track_line(defaults.tick, defaults.track_event_value)
                 got = TrackEvent.ParsedData.from_chart_line(line)
                 assert got.tick == defaults.tick
                 assert got.value == defaults.track_event_value
 
-            def test_no_match(self, invalid_chart_line):
+            def test_no_match(self, invalid_chart_line) -> None:
                 with pytest.raises(RegexNotMatchError):
                     _ = TrackEvent.ParsedData.from_chart_line(invalid_chart_line)
