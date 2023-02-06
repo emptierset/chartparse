@@ -62,7 +62,7 @@ lint: flake blackcheck  ## Run pep8 linter and black.
 
 .PHONY: mypy
 mypy:              ## Run mypy type checker.
-	$(ENV_PREFIX)mypy --ignore-missing-imports $(SRC_DIRECTORIES)
+	$(ENV_PREFIX)mypy $(SRC_DIRECTORIES)
 
 .PHONY: check
 check: lint mypy   ## Run all linters and mypy.
