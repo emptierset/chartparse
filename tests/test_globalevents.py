@@ -22,11 +22,9 @@ from tests.helpers.globalevents import (
     TextEventParsedDataWithDefaults,
 )
 
-# TODO: typecheck the tests in this file by adding "-> None" annotations to each test function.
-
 
 class TestGlobalEventsTrack(object):
-    def test_from_chart_lines(self, mocker, minimal_bpm_events, invalid_chart_line):
+    def test_from_chart_lines(self, mocker, minimal_bpm_events, invalid_chart_line) -> None:
         mock_parse_data = mocker.patch.object(
             GlobalEventsTrack,
             "_parse_data_from_chart_lines",
@@ -91,7 +89,7 @@ class TestGlobalEvent(object):
                 ),
             ],
         )
-        def test(self, mocker, minimal_bpm_events_with_mock, prev_event):
+        def test(self, mocker, minimal_bpm_events_with_mock, prev_event) -> None:
             spy_init = mocker.spy(GlobalEvent, "__init__")
 
             _ = GlobalEvent.from_parsed_data(
@@ -115,7 +113,7 @@ class TestGlobalEvent(object):
 
     class TestStr(object):
         # This just exercises the path; asserting the output is irksome and unnecessary.
-        def test(self):
+        def test(self) -> None:
             e = GlobalEventWithDefaults()
             str(e)
 
@@ -123,14 +121,14 @@ class TestGlobalEvent(object):
         class TestFromChartLine(object):
             test_regex = r"^T (\d+?) V (.*?)$"
 
-            def test(self, mocker):
+            def test(self, mocker) -> None:
                 got = GlobalEvent.ParsedData.from_chart_line(
                     f"T {defaults.tick} V {defaults.global_event_value}"
                 )
                 assert got.tick == defaults.tick
                 assert got.value == defaults.global_event_value
 
-            def test_no_match(self, invalid_chart_line):
+            def test_no_match(self, invalid_chart_line) -> None:
                 with pytest.raises(RegexNotMatchError):
                     _ = GlobalEvent.ParsedData.from_chart_line(invalid_chart_line)
 
