@@ -26,8 +26,6 @@ _missing_global_events_track_chart_filepath = (
 )
 _unhandled_section_chart_filepath = _chart_directory_filepath / "unhandled_section.chart"
 
-# TODO: typecheck the tests in this file by adding "-> None" annotations to each test function.
-
 
 class TestChart(object):
     class TestInit(object):
@@ -39,7 +37,7 @@ class TestChart(object):
             default_sync_track,
             default_instrument_track,
             default_instrument_tracks,
-        ):
+        ) -> None:
             got = Chart(
                 default_metadata,
                 default_global_events_track,
@@ -53,7 +51,7 @@ class TestChart(object):
             assert got.instrument_tracks == default_instrument_tracks
 
     class TestFromFilepath(object):
-        def test(self, mocker, default_chart):
+        def test(self, mocker, default_chart) -> None:
             spy = mocker.spy(Chart, "from_file")
             _ = Chart.from_filepath(_valid_chart_filepath, want_tracks=[])
             spy.assert_called_once_with(
@@ -72,7 +70,7 @@ class TestChart(object):
             default_sync_track,
             default_instrument_track,
             invalid_chart_line,
-        ):
+        ) -> None:
             mocker.patch.object(
                 Chart,
                 "_parse_section_dict",
@@ -140,11 +138,11 @@ class TestChart(object):
                 ),
             ],
         )
-        def test_invalid_chart(self, path):
+        def test_invalid_chart(self, path) -> None:
             with open(path, "r", encoding="utf-8-sig") as f, pytest.raises(ValueError):
                 _ = Chart.from_file(f)
 
-        def test_unhandled_section(self, caplog):
+        def test_unhandled_section(self, caplog) -> None:
             with open(_unhandled_section_chart_filepath, "r", encoding="utf-8-sig") as f:
                 _ = Chart.from_file(f)
             logchecker = LogChecker(caplog)
@@ -153,7 +151,7 @@ class TestChart(object):
             )
 
     class TestFindSections(object):
-        def test(self):
+        def test(self) -> None:
             with open(_valid_chart_filepath, "r", encoding="utf-8-sig") as f:
                 lines = f.read().splitlines()
 
@@ -254,7 +252,7 @@ class TestChart(object):
                 ),
             ],
         )
-        def test_raises(self, lines):
+        def test_raises(self, lines) -> None:
             with pytest.raises(RegexNotMatchError):
                 _ = Chart._parse_section_dict(lines)
 
@@ -288,7 +286,7 @@ class TestChart(object):
                 ),
             ],
         )
-        def test_impl(self, bare_chart, start_time, end_time, want):
+        def test_impl(self, bare_chart, start_time, end_time, want) -> None:
             note_event1 = NoteEventWithDefaults(
                 timestamp=timedelta(seconds=1),
                 note=Note.GRY,
@@ -322,7 +320,7 @@ class TestChart(object):
                 ),
             ],
         )
-        def test_impl_error(self, bare_chart, start_time, end_time):
+        def test_impl_error(self, bare_chart, start_time, end_time) -> None:
             with pytest.raises(ValueError):
                 _ = bare_chart._notes_per_second([], start_time, end_time)
 
@@ -360,7 +358,7 @@ class TestChart(object):
             end_tick,
             want_start_time,
             want_end_time,
-        ):
+        ) -> None:
             unsafe.setattr(
                 minimal_chart[defaults.instrument][defaults.difficulty],
                 "note_events",
@@ -424,7 +422,7 @@ class TestChart(object):
             end_time,
             want_start_time,
             want_end_time,
-        ):
+        ) -> None:
             unsafe.setattr(
                 minimal_chart[defaults.instrument][defaults.difficulty],
                 "note_events",
@@ -464,14 +462,16 @@ class TestChart(object):
                 ),
             ],
         )
-        def test_missing_instrument_difficulty(self, default_chart, instrument, difficulty):
+        def test_missing_instrument_difficulty(
+            self, default_chart, instrument, difficulty
+        ) -> None:
             with pytest.raises(ValueError):
                 _ = default_chart.notes_per_second(
                     instrument,
                     difficulty,
                 )
 
-        def test_empty_note_events(self, bare_chart, minimal_instrument_tracks):
+        def test_empty_note_events(self, bare_chart, minimal_instrument_tracks) -> None:
             bare_chart.instrument_tracks = minimal_instrument_tracks
             with pytest.raises(ValueError):
                 _ = bare_chart.notes_per_second(
@@ -480,12 +480,12 @@ class TestChart(object):
                 )
 
     class TestGetItem(object):
-        def test(self, default_chart):
+        def test(self, default_chart) -> None:
             got = default_chart[defaults.instrument][defaults.difficulty]
             want = default_chart.instrument_tracks[defaults.instrument][defaults.difficulty]
             assert got == want
 
     class TestStr(object):
         # This just exercises the path; asserting the output is irksome and unnecessary.
-        def test(self, default_chart):
+        def test(self, default_chart) -> None:
             str(default_chart)
