@@ -190,13 +190,13 @@ class TestInstrumentTrack(object):
             mock_build_events.assert_has_calls(
                 [
                     unittest.mock.call(
+                        StarPowerEvent,
                         [defaults.star_power_event],
-                        StarPowerEvent.from_parsed_data,
                         minimal_bpm_events,
                     ),
                     unittest.mock.call(
+                        TrackEvent,
                         [defaults.track_event_parsed_data],
-                        TrackEvent.from_parsed_data,
                         minimal_bpm_events,
                     ),
                 ],

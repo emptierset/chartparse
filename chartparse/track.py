@@ -22,8 +22,6 @@ from chartparse.tick import Ticks
 from chartparse.util import DictPropertiesEqMixin, DictReprTruncatedSequencesMixin
 
 if typ.TYPE_CHECKING:  # pragma: no cover
-    from collections.abc import Callable
-
     from chartparse.globalevents import LyricEvent, SectionEvent, TextEvent
     from chartparse.instrument import StarPowerEvent, TrackEvent
     from chartparse.sync import BPMEvent, TimeSignatureEvent
@@ -86,8 +84,8 @@ def parse_data_from_chart_lines(
 
 @typ.overload
 def build_events_from_data(
+    event_type: type[AnchorEvent],
     datas: Iterable[AnchorEvent.ParsedData],
-    from_data_fn: Callable[[AnchorEvent.ParsedData], AnchorEvent],
     /,
 ) -> list[AnchorEvent]:
     ...  # pragma: no cover
@@ -95,15 +93,8 @@ def build_events_from_data(
 
 @typ.overload
 def build_events_from_data(
+    event_type: type[BPMEvent],
     datas: Iterable[BPMEvent.ParsedData],
-    from_data_fn: Callable[
-        [
-            BPMEvent.ParsedData,
-            BPMEvent | None,
-            Ticks,
-        ],
-        BPMEvent,
-    ],
     resolution: Ticks,
     /,
 ) -> BPMEvents:
@@ -112,15 +103,8 @@ def build_events_from_data(
 
 @typ.overload
 def build_events_from_data(
+    event_type: type[TimeSignatureEvent],
     datas: Iterable[TimeSignatureEvent.ParsedData],
-    from_data_fn: Callable[
-        [
-            TimeSignatureEvent.ParsedData,
-            TimeSignatureEvent | None,
-            BPMEvents,
-        ],
-        TimeSignatureEvent,
-    ],
     bpm_events: BPMEvents,
     /,
 ) -> list[TimeSignatureEvent]:
@@ -129,15 +113,8 @@ def build_events_from_data(
 
 @typ.overload
 def build_events_from_data(
+    event_type: type[SectionEvent],
     datas: Iterable[SectionEvent.ParsedData],
-    from_data_fn: Callable[
-        [
-            SectionEvent.ParsedData,
-            SectionEvent | None,
-            BPMEvents,
-        ],
-        SectionEvent,
-    ],
     bpm_events: BPMEvents,
     /,
 ) -> list[SectionEvent]:
@@ -146,15 +123,8 @@ def build_events_from_data(
 
 @typ.overload
 def build_events_from_data(
+    event_type: type[LyricEvent],
     datas: Iterable[LyricEvent.ParsedData],
-    from_data_fn: Callable[
-        [
-            LyricEvent.ParsedData,
-            LyricEvent | None,
-            BPMEvents,
-        ],
-        LyricEvent,
-    ],
     bpm_events: BPMEvents,
     /,
 ) -> list[LyricEvent]:
@@ -163,15 +133,8 @@ def build_events_from_data(
 
 @typ.overload
 def build_events_from_data(
+    event_type: type[TextEvent],
     datas: Iterable[TextEvent.ParsedData],
-    from_data_fn: Callable[
-        [
-            TextEvent.ParsedData,
-            TextEvent | None,
-            BPMEvents,
-        ],
-        TextEvent,
-    ],
     bpm_events: BPMEvents,
     /,
 ) -> list[TextEvent]:
@@ -180,15 +143,8 @@ def build_events_from_data(
 
 @typ.overload
 def build_events_from_data(
+    event_type: type[StarPowerEvent],
     datas: Iterable[StarPowerEvent.ParsedData],
-    from_data_fn: Callable[
-        [
-            StarPowerEvent.ParsedData,
-            StarPowerEvent | None,
-            BPMEvents,
-        ],
-        StarPowerEvent,
-    ],
     bpm_events: BPMEvents,
     /,
 ) -> list[StarPowerEvent]:
@@ -197,15 +153,8 @@ def build_events_from_data(
 
 @typ.overload
 def build_events_from_data(
+    event_type: type[TrackEvent],
     datas: Iterable[TrackEvent.ParsedData],
-    from_data_fn: Callable[
-        [
-            TrackEvent.ParsedData,
-            TrackEvent | None,
-            BPMEvents,
-        ],
-        TrackEvent,
-    ],
     bpm_events: BPMEvents,
     /,
 ) -> list[TrackEvent]:
@@ -213,15 +162,15 @@ def build_events_from_data(
 
 
 # TODO: Figure out htf to annotate this.
-def build_events_from_data(datas, from_data_fn, resolution_or_bpm_events_or_None=None, /):  # type: ignore  # noqa
+def build_events_from_data(event_type, datas, resolution_or_bpm_events_or_None=None, /):  # type: ignore  # noqa
     events = []
     for data in datas:
         if isinstance(data, AnchorEvent.ParsedData):
-            event = from_data_fn(data)
+            event = event_type.from_parsed_data(data)
             events.append(event)
         else:
             prev_event = events[-1] if events else None
-            event = from_data_fn(data, prev_event, resolution_or_bpm_events_or_None)
+            event = event_type.from_parsed_data(data, prev_event, resolution_or_bpm_events_or_None)
             events.append(event)
     if isinstance(resolution_or_bpm_events_or_None, int):
         # Using BPMEvent.ParsedData.
@@ -234,7 +183,7 @@ def build_events_from_data(datas, from_data_fn, resolution_or_bpm_events_or_None
     elif isinstance(resolution_or_bpm_events_or_None, BPMEvents):
         # TODO: Should we instead optionally validate a chart, which allows us to assume everything
         # is sorted? etc.
-        # NOTE: This ignore is because it doesn't understand that e.tick is comparable. When this
+        # NOTE: This `ignore` is because it doesn't understand that e.tick is comparable. When this
         # function is annotated, this can go away.
         return sorted(events, key=lambda e: e.tick)  # type: ignore
     else:  # pragma: no cover

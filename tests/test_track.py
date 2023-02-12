@@ -8,8 +8,8 @@ import pytest
 
 import chartparse.track
 from chartparse.event import Event
-from chartparse.sync import BPMEvent, BPMEvents
-from chartparse.tick import Tick, Ticks
+from chartparse.sync import AnchorEvent, BPMEvent, BPMEvents, TimeSignatureEvent
+from chartparse.tick import Tick
 from chartparse.track import build_events_from_data, parse_data_from_chart_lines
 from tests.helpers import defaults, testcase
 from tests.helpers.fruit import Fruit
@@ -24,17 +24,19 @@ class TestBuildEventsFromData(object):
         invalid_chart_line: str,
         minimal_bpm_events_with_mock: BPMEventsWithMock,
     ) -> None:
-        from_data_fn_mock = mocker.Mock(return_value=defaults.time_signature_event)
+        mocker.patch.object(
+            TimeSignatureEvent, "from_parsed_data", return_value=defaults.time_signature_event
+        )
 
         want = [defaults.time_signature_event]
         got = build_events_from_data(
+            TimeSignatureEvent,
             [defaults.time_signature_event_parsed_data],
-            from_data_fn_mock,
             typ.cast(BPMEvents, minimal_bpm_events_with_mock),
         )
 
         assert got == want
-        from_data_fn_mock.assert_called_once_with(
+        TimeSignatureEvent.from_parsed_data.assert_called_once_with(  # type: ignore[attr-defined]
             defaults.time_signature_event_parsed_data, None, minimal_bpm_events_with_mock
         )
 
@@ -43,33 +45,32 @@ class TestBuildEventsFromData(object):
         mocker: typ.Any,
         invalid_chart_line: str,
     ) -> None:
-        from_data_fn_mock = mocker.Mock(return_value=defaults.anchor_event)
+        mocker.patch.object(AnchorEvent, "from_parsed_data", return_value=defaults.anchor_event)
 
         want = [defaults.anchor_event]
-        got = build_events_from_data([defaults.anchor_event_parsed_data], from_data_fn_mock)
+        got = build_events_from_data(AnchorEvent, [defaults.anchor_event_parsed_data])
 
         assert got == want
-        from_data_fn_mock.assert_called_once_with(defaults.anchor_event_parsed_data)
+        AnchorEvent.from_parsed_data.assert_called_once_with(  # type: ignore[attr-defined]
+            defaults.anchor_event_parsed_data
+        )
 
     def test_with_resolution(
         self,
         mocker: typ.Any,
         invalid_chart_line: str,
     ) -> None:
-        from_data_fn_mock = mocker.Mock(return_value=defaults.bpm_event)
+        mocker.patch.object(BPMEvent, "from_parsed_data", return_value=defaults.bpm_event)
 
         want = BPMEventsWithDefaults()
         got = build_events_from_data(
+            BPMEvent,
             [defaults.bpm_event_parsed_data],
-            typ.cast(
-                typ.Callable[[BPMEvent.ParsedData, typ.Optional[BPMEvent], Ticks], BPMEvent],
-                from_data_fn_mock,
-            ),
             defaults.resolution,
         )
 
         assert got == want
-        from_data_fn_mock.assert_called_once_with(
+        BPMEvent.from_parsed_data.assert_called_once_with(  # type: ignore[attr-defined]
             defaults.bpm_event_parsed_data, None, defaults.resolution
         )
 

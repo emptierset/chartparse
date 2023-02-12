@@ -27,56 +27,57 @@ from tests.helpers.sync import BPMEventsWithMock
 
 
 class TestGlobalEventsTrack(object):
-    def test_from_chart_lines(
-        self, mocker: typ.Any, minimal_bpm_events: BPMEvents, invalid_chart_line: str
-    ) -> None:
-        mock_parse_data = mocker.patch.object(
-            GlobalEventsTrack,
-            "_parse_data_from_chart_lines",
-            return_value=(
-                [defaults.text_event_parsed_data],
-                [defaults.section_event_parsed_data],
-                [defaults.lyric_event_parsed_data],
-            ),
-        )
-        mock_build_events = mocker.patch(
-            "chartparse.track.build_events_from_data",
-            side_effect=[
-                [defaults.text_event],
-                [defaults.section_event],
-                [defaults.lyric_event],
-            ],
-        )
-        spy_init = mocker.spy(GlobalEventsTrack, "__init__")
+    class TestFromChartLines(object):
+        def test(
+            self, mocker: typ.Any, minimal_bpm_events: BPMEvents, invalid_chart_line: str
+        ) -> None:
+            mock_parse_data = mocker.patch.object(
+                GlobalEventsTrack,
+                "_parse_data_from_chart_lines",
+                return_value=(
+                    [defaults.text_event_parsed_data],
+                    [defaults.section_event_parsed_data],
+                    [defaults.lyric_event_parsed_data],
+                ),
+            )
+            mock_build_events = mocker.patch(
+                "chartparse.track.build_events_from_data",
+                side_effect=[
+                    [defaults.text_event],
+                    [defaults.section_event],
+                    [defaults.lyric_event],
+                ],
+            )
+            spy_init = mocker.spy(GlobalEventsTrack, "__init__")
 
-        _ = GlobalEventsTrack.from_chart_lines([invalid_chart_line], minimal_bpm_events)
+            _ = GlobalEventsTrack.from_chart_lines([invalid_chart_line], minimal_bpm_events)
 
-        mock_parse_data.assert_called_once_with([invalid_chart_line])
-        mock_build_events.assert_has_calls(
-            [
-                unittest.mock.call(
-                    [TextEventParsedDataWithDefaults()],
-                    TextEvent.from_parsed_data,
-                    minimal_bpm_events,
-                ),
-                unittest.mock.call(
-                    [SectionEventParsedDataWithDefaults()],
-                    SectionEvent.from_parsed_data,
-                    minimal_bpm_events,
-                ),
-                unittest.mock.call(
-                    [LyricEventParsedDataWithDefaults()],
-                    LyricEvent.from_parsed_data,
-                    minimal_bpm_events,
-                ),
-            ],
-        )
-        spy_init.assert_called_once_with(
-            unittest.mock.ANY,  # ignore self
-            text_events=[defaults.text_event],
-            section_events=[defaults.section_event],
-            lyric_events=[defaults.lyric_event],
-        )
+            mock_parse_data.assert_called_once_with([invalid_chart_line])
+            mock_build_events.assert_has_calls(
+                [
+                    unittest.mock.call(
+                        TextEvent,
+                        [TextEventParsedDataWithDefaults()],
+                        minimal_bpm_events,
+                    ),
+                    unittest.mock.call(
+                        SectionEvent,
+                        [SectionEventParsedDataWithDefaults()],
+                        minimal_bpm_events,
+                    ),
+                    unittest.mock.call(
+                        LyricEvent,
+                        [LyricEventParsedDataWithDefaults()],
+                        minimal_bpm_events,
+                    ),
+                ],
+            )
+            spy_init.assert_called_once_with(
+                unittest.mock.ANY,  # ignore self
+                text_events=[defaults.text_event],
+                section_events=[defaults.section_event],
+                lyric_events=[defaults.lyric_event],
+            )
 
 
 class TestGlobalEvent(object):

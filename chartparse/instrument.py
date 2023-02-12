@@ -287,15 +287,9 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
         note_data, star_power_data, track_data = cls._parse_data_from_chart_lines(lines)
         star_power_events = chartparse.track.build_events_from_data(
-            star_power_data,
-            StarPowerEvent.from_parsed_data,
-            bpm_events,
+            StarPowerEvent, star_power_data, bpm_events
         )
-        track_events = chartparse.track.build_events_from_data(
-            track_data,
-            TrackEvent.from_parsed_data,
-            bpm_events,
-        )
+        track_events = chartparse.track.build_events_from_data(TrackEvent, track_data, bpm_events)
         note_events = cls._build_note_events_from_data(note_data, star_power_events, bpm_events)
         return cls(
             instrument=instrument,

@@ -87,19 +87,13 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
         time_signature_data, bpm_data, anchor_data = cls._parse_data_from_chart_lines(lines)
 
-        bpm_events = chartparse.track.build_events_from_data(
-            bpm_data,
-            BPMEvent.from_parsed_data,
-            resolution,
-        )
+        bpm_events = chartparse.track.build_events_from_data(BPMEvent, bpm_data, resolution)
 
         time_signature_events = chartparse.track.build_events_from_data(
-            time_signature_data, TimeSignatureEvent.from_parsed_data, bpm_events
+            TimeSignatureEvent, time_signature_data, bpm_events
         )
 
-        anchor_events = chartparse.track.build_events_from_data(
-            anchor_data, AnchorEvent.from_parsed_data
-        )
+        anchor_events = chartparse.track.build_events_from_data(AnchorEvent, anchor_data)
 
         return cls(
             time_signature_events=time_signature_events,

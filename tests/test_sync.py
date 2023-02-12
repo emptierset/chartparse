@@ -69,18 +69,18 @@ class TestSyncTrack(object):
             mock_build_events.assert_has_calls(
                 [
                     unittest.mock.call(
+                        BPMEvent,
                         [defaults.bpm_event_parsed_data],
-                        BPMEvent.from_parsed_data,
                         defaults.resolution,
                     ),
                     unittest.mock.call(
+                        TimeSignatureEvent,
                         [defaults.time_signature_event_parsed_data],
-                        TimeSignatureEvent.from_parsed_data,
                         unittest.mock.ANY,  # ignore object conjured locally
                     ),
                     unittest.mock.call(
+                        AnchorEvent,
                         [defaults.anchor_event_parsed_data],
-                        AnchorEvent.from_parsed_data,
                     ),
                 ]
             )
