@@ -66,7 +66,7 @@ class TestCalculateTicksBetweenNotes(object):
             ),
         ],
     )
-    def test(self, resolution, note_duration, want) -> None:
+    def test(self, resolution: Ticks, note_duration: NoteDuration, want: Ticks) -> None:
         got = chartparse.tick.calculate_ticks_between_notes(resolution, note_duration)
         assert got == want
 
@@ -107,7 +107,7 @@ class TestSecondsFromTicksAtBPM(object):
             ),
         ],
     )
-    def test(self, ticks, bpm, resolution, want) -> None:
+    def test(self, ticks: Ticks, bpm: float, resolution: Ticks, want: float) -> None:
         got = chartparse.tick.seconds_from_ticks_at_bpm(ticks, bpm, resolution)
         assert got == want
 
@@ -146,6 +146,6 @@ class TestSecondsFromTicksAtBPM(object):
             ),
         ],
     )
-    def test_error(self, ticks, bpm, resolution) -> None:
+    def test_error(self, ticks: Ticks, bpm: float, resolution: Ticks) -> None:
         with pytest.raises(ValueError):
             _ = chartparse.tick.seconds_from_ticks_at_bpm(ticks, bpm, resolution)

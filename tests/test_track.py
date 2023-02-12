@@ -2,24 +2,27 @@ from __future__ import annotations
 
 import dataclasses
 import typing as typ
+from collections.abc import Sequence
+
+import pytest
 
 import chartparse.track
 from chartparse.event import Event
-from chartparse.sync import BPMEvent
+from chartparse.sync import BPMEvent, BPMEvents
 from chartparse.tick import Tick, Ticks
 from chartparse.track import build_events_from_data, parse_data_from_chart_lines
 from tests.helpers import defaults, testcase
 from tests.helpers.fruit import Fruit
 from tests.helpers.log import LogChecker
-from tests.helpers.sync import BPMEventsWithDefaults
+from tests.helpers.sync import BPMEventsWithDefaults, BPMEventsWithMock
 
 
 class TestBuildEventsFromData(object):
     def with_bpm_events_getter(
         self,
-        mocker,
-        invalid_chart_line,
-        minimal_bpm_events_with_mock,
+        mocker: typ.Any,
+        invalid_chart_line: str,
+        minimal_bpm_events_with_mock: BPMEventsWithMock,
     ) -> None:
         from_data_fn_mock = mocker.Mock(return_value=defaults.time_signature_event)
 
@@ -27,7 +30,7 @@ class TestBuildEventsFromData(object):
         got = build_events_from_data(
             [defaults.time_signature_event_parsed_data],
             from_data_fn_mock,
-            minimal_bpm_events_with_mock,
+            typ.cast(BPMEvents, minimal_bpm_events_with_mock),
         )
 
         assert got == want
@@ -37,9 +40,8 @@ class TestBuildEventsFromData(object):
 
     def test_with_none(
         self,
-        mocker,
-        invalid_chart_line,
-        minimal_bpm_events_with_mock,
+        mocker: typ.Any,
+        invalid_chart_line: str,
     ) -> None:
         from_data_fn_mock = mocker.Mock(return_value=defaults.anchor_event)
 
@@ -51,9 +53,8 @@ class TestBuildEventsFromData(object):
 
     def test_with_resolution(
         self,
-        mocker,
-        invalid_chart_line,
-        minimal_bpm_events_with_mock,
+        mocker: typ.Any,
+        invalid_chart_line: str,
     ) -> None:
         from_data_fn_mock = mocker.Mock(return_value=defaults.bpm_event)
 
@@ -64,7 +65,7 @@ class TestBuildEventsFromData(object):
                 typ.Callable[[BPMEvent.ParsedData, typ.Optional[BPMEvent], Ticks], BPMEvent],
                 from_data_fn_mock,
             ),
-            typ.cast(Ticks, defaults.resolution),
+            defaults.resolution,
         )
 
         assert got == want
@@ -76,17 +77,21 @@ class TestBuildEventsFromData(object):
 class TestParseDataFromChartLines(object):
     @dataclasses.dataclass(kw_only=True, frozen=True)
     class ParsedData(Event.ParsedData):
+        _Self = typ.TypeVar("_Self", bound="TestParseDataFromChartLines.ParsedData")
+
         fruit: Fruit
 
         @classmethod
-        def from_chart_line(cls, line):
-            return cls(tick=int(line), fruit=Fruit(int(line)))
+        def from_chart_line(cls: type[_Self], line: str) -> _Self:
+            return cls(tick=Tick(int(line)), fruit=Fruit(int(line)))
+
+    _ParsedDataT = typ.TypeVar("_ParsedDataT", bound=Event.ParsedData)
 
     @testcase.parametrize(
         ["types", "lines", "want_dict"],
         [
             testcase.new(
-                "two_typical_events",
+                "two_consecutive_events",
                 types=(ParsedData,),
                 lines=["0", "1"],
                 want_dict={
@@ -96,13 +101,21 @@ class TestParseDataFromChartLines(object):
                     ]
                 },
             ),
+            # TODO: Add test case with multiple `types`.
         ],
     )
-    def test(self, types, lines, want_dict) -> None:
+    def test(
+        self,
+        types: Sequence[type[_ParsedDataT]],
+        lines: Sequence[str],
+        want_dict: dict[type[_ParsedDataT], Sequence[_ParsedDataT]],
+    ) -> None:
         got = parse_data_from_chart_lines(types, lines)
         assert got._dict == want_dict
 
-    def test_no_suitable_parsers(self, mocker, caplog, invalid_chart_line) -> None:
+    def test_no_suitable_parsers(
+        self, mocker: typ.Any, caplog: pytest.LogCaptureFixture, invalid_chart_line: str
+    ) -> None:
         _ = parse_data_from_chart_lines(tuple(), [invalid_chart_line])
         logchecker = LogChecker(caplog)
         logchecker.assert_contains_string_in_one_line(

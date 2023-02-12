@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import typing as typ
 import unittest.mock
 
 import pytest
@@ -13,6 +14,7 @@ from chartparse.globalevents import (
     SectionEvent,
     TextEvent,
 )
+from chartparse.sync import BPMEvents
 from tests.helpers import defaults, testcase
 from tests.helpers.globalevents import (
     GlobalEventParsedDataWithDefaults,
@@ -21,10 +23,13 @@ from tests.helpers.globalevents import (
     SectionEventParsedDataWithDefaults,
     TextEventParsedDataWithDefaults,
 )
+from tests.helpers.sync import BPMEventsWithMock
 
 
 class TestGlobalEventsTrack(object):
-    def test_from_chart_lines(self, mocker, minimal_bpm_events, invalid_chart_line) -> None:
+    def test_from_chart_lines(
+        self, mocker: typ.Any, minimal_bpm_events: BPMEvents, invalid_chart_line: str
+    ) -> None:
         mock_parse_data = mocker.patch.object(
             GlobalEventsTrack,
             "_parse_data_from_chart_lines",
@@ -89,13 +94,18 @@ class TestGlobalEvent(object):
                 ),
             ],
         )
-        def test(self, mocker, minimal_bpm_events_with_mock, prev_event) -> None:
+        def test(
+            self,
+            mocker: typ.Any,
+            minimal_bpm_events_with_mock: BPMEventsWithMock,
+            prev_event: GlobalEvent | None,
+        ) -> None:
             spy_init = mocker.spy(GlobalEvent, "__init__")
 
             _ = GlobalEvent.from_parsed_data(
                 GlobalEventParsedDataWithDefaults(),
                 prev_event,
-                minimal_bpm_events_with_mock,
+                typ.cast(BPMEvents, minimal_bpm_events_with_mock),
             )
 
             minimal_bpm_events_with_mock.timestamp_at_tick_mock.assert_called_once_with(
@@ -121,22 +131,22 @@ class TestGlobalEvent(object):
         class TestFromChartLine(object):
             test_regex = r"^T (\d+?) V (.*?)$"
 
-            def test(self, mocker) -> None:
+            def test(self, mocker: typ.Any) -> None:
                 got = GlobalEvent.ParsedData.from_chart_line(
                     f"T {defaults.tick} V {defaults.global_event_value}"
                 )
                 assert got.tick == defaults.tick
                 assert got.value == defaults.global_event_value
 
-            def test_no_match(self, invalid_chart_line) -> None:
+            def test_no_match(self, invalid_chart_line: str) -> None:
                 with pytest.raises(RegexNotMatchError):
                     _ = GlobalEvent.ParsedData.from_chart_line(invalid_chart_line)
 
-            def setup_method(self):
+            def setup_method(self) -> None:
                 GlobalEvent.ParsedData._regex = self.test_regex
                 GlobalEvent.ParsedData._regex_prog = re.compile(GlobalEvent.ParsedData._regex)
 
-            def teardown_method(self):
+            def teardown_method(self) -> None:
                 del GlobalEvent.ParsedData._regex
                 del GlobalEvent.ParsedData._regex_prog
 

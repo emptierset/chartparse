@@ -1,23 +1,34 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
+from datetime import timedelta
+
 from chartparse.instrument import (
+    Difficulty,
+    HOPOState,
+    Instrument,
     InstrumentTrack,
+    Note,
     NoteEvent,
+    NoteTrackIndex,
     SpecialEvent,
+    StarPowerData,
     StarPowerEvent,
     TrackEvent,
 )
+from chartparse.tick import Tick, Ticks
+from chartparse.time import Timestamp
 from tests.helpers import defaults
 
 
 def InstrumentTrackWithDefaults(
     *,
-    instrument=defaults.instrument,
-    difficulty=defaults.difficulty,
-    note_events=[defaults.note_event],
-    star_power_events=[defaults.star_power_event],
-    track_events=[defaults.track_event],
-):
+    instrument: Instrument = defaults.instrument,
+    difficulty: Difficulty = defaults.difficulty,
+    note_events: Sequence[NoteEvent] = [defaults.note_event],
+    star_power_events: Sequence[StarPowerEvent] = [defaults.star_power_event],
+    track_events: Sequence[TrackEvent] = [defaults.track_event],
+) -> InstrumentTrack:
     return InstrumentTrack(
         instrument=instrument,
         difficulty=difficulty,
@@ -29,16 +40,16 @@ def InstrumentTrackWithDefaults(
 
 def SpecialEventWithDefaults(
     *,
-    tick=defaults.tick,
-    timestamp=defaults.timestamp,
-    sustain=defaults.sustain,
-    _proximal_bpm_event_index=defaults.proximal_bpm_event_index,
-    init_end_tick=False,
-):
+    tick: Tick | int = defaults.tick,
+    timestamp: Timestamp | timedelta = defaults.timestamp,
+    sustain: Ticks | int = defaults.sustain,
+    _proximal_bpm_event_index: int = defaults.proximal_bpm_event_index,
+    init_end_tick: bool = False,
+) -> SpecialEvent:
     s = SpecialEvent(
-        tick=tick,
-        timestamp=timestamp,
-        sustain=sustain,
+        tick=Tick(tick),
+        timestamp=Timestamp(timestamp),
+        sustain=Ticks(sustain),
         _proximal_bpm_event_index=_proximal_bpm_event_index,
     )
     if init_end_tick:
@@ -48,24 +59,24 @@ def SpecialEventWithDefaults(
 
 def SpecialEventParsedDataWithDefaults(
     *,
-    tick=defaults.tick,
-    sustain=defaults.sustain,
-):
-    return SpecialEvent.ParsedData(tick=tick, sustain=sustain)
+    tick: Tick | int = defaults.tick,
+    sustain: Ticks | int = defaults.sustain,
+) -> SpecialEvent.ParsedData:
+    return SpecialEvent.ParsedData(tick=Tick(tick), sustain=Ticks(sustain))
 
 
 def StarPowerEventWithDefaults(
     *,
-    tick=defaults.tick,
-    timestamp=defaults.timestamp,
-    sustain=defaults.sustain,
-    _proximal_bpm_event_index=defaults.proximal_bpm_event_index,
-    init_end_tick=False,
-):
+    tick: Tick | int = defaults.tick,
+    timestamp: Timestamp | timedelta = defaults.timestamp,
+    sustain: Ticks | int = defaults.sustain,
+    _proximal_bpm_event_index: int = defaults.proximal_bpm_event_index,
+    init_end_tick: bool = False,
+) -> StarPowerEvent:
     s = StarPowerEvent(
-        tick=tick,
-        timestamp=timestamp,
-        sustain=sustain,
+        tick=Tick(tick),
+        timestamp=Timestamp(timestamp),
+        sustain=Ticks(sustain),
         _proximal_bpm_event_index=_proximal_bpm_event_index,
     )
     if init_end_tick:
@@ -75,22 +86,22 @@ def StarPowerEventWithDefaults(
 
 def NoteEventWithDefaults(
     *,
-    tick=defaults.tick,
-    timestamp=defaults.timestamp,
-    end_timestamp=defaults.timestamp,
-    note=defaults.note,
-    hopo_state=defaults.hopo_state,
-    sustain=defaults.sustain,
-    star_power_data=None,
-    _proximal_bpm_event_index=defaults.proximal_bpm_event_index,
-):
+    tick: Tick | int = defaults.tick,
+    timestamp: Timestamp | timedelta = defaults.timestamp,
+    end_timestamp: Timestamp | timedelta = defaults.timestamp,
+    note: Note = defaults.note,
+    hopo_state: HOPOState = defaults.hopo_state,
+    sustain: Ticks | int = defaults.sustain,
+    star_power_data: StarPowerData | None = None,
+    _proximal_bpm_event_index: int = defaults.proximal_bpm_event_index,
+) -> NoteEvent:
     return NoteEvent(
-        tick=tick,
-        timestamp=timestamp,
-        end_timestamp=end_timestamp,
+        tick=Tick(tick),
+        timestamp=Timestamp(timestamp),
+        end_timestamp=Timestamp(end_timestamp),
         note=note,
         hopo_state=hopo_state,
-        sustain=sustain,
+        sustain=Ticks(sustain),
         star_power_data=star_power_data,
         _proximal_bpm_event_index=_proximal_bpm_event_index,
     )
@@ -98,27 +109,27 @@ def NoteEventWithDefaults(
 
 def NoteEventParsedDataWithDefaults(
     *,
-    tick=defaults.tick,
-    note_track_index=defaults.note_track_index,
-    sustain=defaults.sustain_list,
-):
+    tick: Tick | int = defaults.tick,
+    note_track_index: NoteTrackIndex = defaults.note_track_index,
+    sustain: Ticks | int = defaults.sustain,
+) -> NoteEvent.ParsedData:
     return NoteEvent.ParsedData(
-        tick=tick,
+        tick=Tick(tick),
         note_track_index=note_track_index,
-        sustain=sustain,
+        sustain=Ticks(sustain),
     )
 
 
 def TrackEventWithDefaults(
     *,
-    tick=defaults.tick,
-    timestamp=defaults.timestamp,
-    value=defaults.global_event_value,
-    _proximal_bpm_event_index=defaults.proximal_bpm_event_index,
-):
+    tick: Tick | int = defaults.tick,
+    timestamp: Timestamp | timedelta = defaults.timestamp,
+    value: str = defaults.global_event_value,
+    _proximal_bpm_event_index: int = defaults.proximal_bpm_event_index,
+) -> TrackEvent:
     return TrackEvent(
-        tick=tick,
-        timestamp=timestamp,
+        tick=Tick(tick),
+        timestamp=Timestamp(timestamp),
         value=value,
         _proximal_bpm_event_index=_proximal_bpm_event_index,
     )
@@ -126,7 +137,7 @@ def TrackEventWithDefaults(
 
 def TrackEventParsedDataWithDefaults(
     *,
-    tick=defaults.tick,
-    value=defaults.track_event_value,
-):
-    return TrackEvent.ParsedData(tick=tick, value=value)
+    tick: Tick | int = defaults.tick,
+    value: str = defaults.track_event_value,
+) -> TrackEvent.ParsedData:
+    return TrackEvent.ParsedData(tick=Tick(tick), value=value)

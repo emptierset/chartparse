@@ -5,6 +5,8 @@ import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "helpers"))
 
+import typing as typ
+
 import pytest
 
 from chartparse.chart import Chart
@@ -17,98 +19,73 @@ from chartparse.globalevents import (
     TextEvent,
 )
 from chartparse.instrument import (
+    Difficulty,
+    Instrument,
     InstrumentTrack,
     NoteEvent,
     SpecialEvent,
-    StarPowerData,
     StarPowerEvent,
     TrackEvent,
 )
 from chartparse.metadata import Metadata
 from chartparse.sync import AnchorEvent, BPMEvent, BPMEvents, SyncTrack, TimeSignatureEvent
+from chartparse.tick import Tick
+from chartparse.time import Timestamp
 from tests.helpers import defaults, unsafe
+from tests.helpers.sync import BPMEventsWithMock
 
 
 @pytest.fixture
-def invalid_chart_line():
+def invalid_chart_line() -> str:
     return defaults.invalid_chart_line
-
-
-@pytest.fixture
-def minimal_compute_hopo_state_mock(mocker):
-    return mocker.patch.object(NoteEvent, "_compute_hopo_state", return_value=defaults.hopo_state)
-
-
-@pytest.fixture
-def minimal_compute_star_power_data_mock(mocker):
-    return mocker.patch.object(
-        NoteEvent, "_compute_star_power_data", return_value=(StarPowerData(0), 0)
-    )
-
-
-@pytest.fixture(
-    params=[
-        # Base events
-        "default_event",
-        # Sync events
-        "default_time_signature_event",
-        "default_bpm_event",
-        "default_anchor_event",
-        # Global events
-        "default_text_event",
-        "default_section_event",
-        "default_lyric_event",
-        # Instrument events
-        "default_note_event",
-        "default_star_power_event",
-        "default_track_event",
-    ]
-)
-def all_events(request):
-    return request.getfixturevalue(request.param)
 
 
 # chart.py object fixtures
 
 
 @pytest.fixture
-def minimal_instrument_tracks(minimal_instrument_track):
+def minimal_instrument_tracks(
+    minimal_instrument_track: InstrumentTrack,
+) -> dict[Instrument, dict[Difficulty, InstrumentTrack]]:
     return {defaults.instrument: {defaults.difficulty: minimal_instrument_track}}
 
 
 @pytest.fixture
-def default_instrument_tracks(default_instrument_track):
+def default_instrument_tracks(
+    default_instrument_track: InstrumentTrack,
+) -> dict[Instrument, dict[Difficulty, InstrumentTrack]]:
     return {defaults.instrument: {defaults.difficulty: default_instrument_track}}
 
 
 @pytest.fixture
-def bare_chart():
+def bare_chart() -> Chart:
     return Chart.__new__(Chart)
 
 
 @pytest.fixture
 def minimal_chart(
-    bare_chart,
-    minimal_metadata,
-    minimal_instrument_tracks,
-    minimal_sync_track,
-    minimal_global_events_track,
-):
+    bare_chart: Chart,
+    minimal_metadata: Metadata,
+    # TODO: Add InstrumentTrackMap newtype.
+    minimal_instrument_tracks: dict[Instrument, dict[Difficulty, InstrumentTrack]],
+    minimal_sync_track: SyncTrack,
+    minimal_global_events_track: GlobalEventsTrack,
+) -> Chart:
     """Minimal initialization necessary to avoid attribute errors."""
-    bare_chart.metadata = minimal_metadata
-    bare_chart.sync_track = minimal_sync_track
-    bare_chart.global_events_track = minimal_global_events_track
-    bare_chart.instrument_tracks = minimal_instrument_tracks
+    unsafe.setattr(bare_chart, "metadata", minimal_metadata)
+    unsafe.setattr(bare_chart, "sync_track", minimal_sync_track)
+    unsafe.setattr(bare_chart, "global_events_track", minimal_global_events_track)
+    unsafe.setattr(bare_chart, "instrument_tracks", minimal_instrument_tracks)
     return bare_chart
 
 
 @pytest.fixture
 def default_chart(
-    default_metadata,
-    default_global_events_track,
-    default_sync_track,
-    default_instrument_tracks,
-):
+    default_metadata: Metadata,
+    default_global_events_track: GlobalEventsTrack,
+    default_sync_track: SyncTrack,
+    default_instrument_tracks: dict[Instrument, dict[Difficulty, InstrumentTrack]],
+) -> Chart:
     return Chart(
         default_metadata,
         default_global_events_track,
@@ -121,12 +98,12 @@ def default_chart(
 
 
 @pytest.fixture
-def bare_event():
+def bare_event() -> Event:
     return Event.__new__(Event)
 
 
 @pytest.fixture
-def default_event():
+def default_event() -> Event:
     return Event(tick=defaults.tick, timestamp=defaults.timestamp)
 
 
@@ -134,12 +111,12 @@ def default_event():
 
 
 @pytest.fixture
-def bare_instrument_track():
+def bare_instrument_track() -> InstrumentTrack:
     return InstrumentTrack.__new__(InstrumentTrack)
 
 
 @pytest.fixture
-def minimal_instrument_track(bare_instrument_track):
+def minimal_instrument_track(bare_instrument_track: InstrumentTrack) -> InstrumentTrack:
     """Minimal initialization necessary to avoid attribute errors."""
     unsafe.setattr(bare_instrument_track, "instrument", defaults.instrument)
     unsafe.setattr(bare_instrument_track, "difficulty", defaults.difficulty)
@@ -150,7 +127,7 @@ def minimal_instrument_track(bare_instrument_track):
 
 
 @pytest.fixture
-def default_instrument_track():
+def default_instrument_track() -> InstrumentTrack:
     return InstrumentTrack(
         instrument=defaults.instrument,
         difficulty=defaults.difficulty,
@@ -161,47 +138,47 @@ def default_instrument_track():
 
 
 @pytest.fixture
-def bare_note_event():
+def bare_note_event() -> NoteEvent:
     return NoteEvent.__new__(NoteEvent)
 
 
 @pytest.fixture
-def bare_note_event_parsed_data():
+def bare_note_event_parsed_data() -> NoteEvent.ParsedData:
     return NoteEvent.ParsedData.__new__(NoteEvent.ParsedData)
 
 
 @pytest.fixture
-def default_note_event():
+def default_note_event() -> NoteEvent:
     return defaults.note_event
 
 
 @pytest.fixture
-def bare_special_event():
+def bare_special_event() -> SpecialEvent:
     return SpecialEvent.__new__(SpecialEvent)
 
 
 @pytest.fixture
-def default_special_event():
-    return SpecialEvent(defaults.tick, defaults.timestamp, defaults.sustain)
+def default_special_event() -> SpecialEvent:
+    return SpecialEvent(tick=defaults.tick, timestamp=defaults.timestamp, sustain=defaults.sustain)
 
 
 @pytest.fixture
-def bare_star_power_event():
+def bare_star_power_event() -> StarPowerEvent:
     return StarPowerEvent.__new__(StarPowerEvent)
 
 
 @pytest.fixture
-def default_star_power_event():
+def default_star_power_event() -> StarPowerEvent:
     return defaults.star_power_event
 
 
 @pytest.fixture
-def bare_track_event():
+def bare_track_event() -> TrackEvent:
     return TrackEvent.__new__(TrackEvent)
 
 
 @pytest.fixture
-def default_track_event():
+def default_track_event() -> TrackEvent:
     return defaults.track_event
 
 
@@ -209,12 +186,12 @@ def default_track_event():
 
 
 @pytest.fixture
-def bare_sync_track():
+def bare_sync_track() -> SyncTrack:
     return SyncTrack.__new__(SyncTrack)
 
 
 @pytest.fixture
-def minimal_sync_track(bare_sync_track, bare_bpm_events):
+def minimal_sync_track(bare_sync_track: SyncTrack, bare_bpm_events: BPMEvents) -> SyncTrack:
     """Minimal initialization necessary to avoid attribute errors."""
     unsafe.setattr(bare_sync_track, "anchor_events", [])
     unsafe.setattr(bare_sync_track, "time_signature_events", [])
@@ -223,50 +200,54 @@ def minimal_sync_track(bare_sync_track, bare_bpm_events):
 
 
 @pytest.fixture
-def default_sync_track():
+def default_sync_track() -> SyncTrack:
     return SyncTrack(
         time_signature_events=[defaults.time_signature_event],
-        bpm_events=[defaults.bpm_event],
+        bpm_events=defaults.bpm_events,
         anchor_events=[defaults.anchor_event],
     )
 
 
 @pytest.fixture
-def bare_time_signature_event():
+def bare_time_signature_event() -> TimeSignatureEvent:
     return TimeSignatureEvent.__new__(TimeSignatureEvent)
 
 
 @pytest.fixture
-def default_time_signature_event():
+def default_time_signature_event() -> TimeSignatureEvent:
     return defaults.time_signature_event
 
 
 @pytest.fixture
-def bare_bpm_event():
+def bare_bpm_event() -> BPMEvent:
     return BPMEvent.__new__(BPMEvent)
 
 
 @pytest.fixture
-def default_bpm_event():
+def default_bpm_event() -> BPMEvent:
     return defaults.bpm_event
 
 
 @pytest.fixture
-def bare_bpm_events():
+def bare_bpm_events() -> BPMEvents:
     return BPMEvents.__new__(BPMEvents)
 
 
 @pytest.fixture
-def minimal_bpm_events(bare_bpm_events):
+def minimal_bpm_events(bare_bpm_events: BPMEvents) -> BPMEvents:
     unsafe.setattr(bare_bpm_events, "events", [])
     unsafe.setattr(bare_bpm_events, "resolution", defaults.resolution)
     return bare_bpm_events
 
 
 @pytest.fixture
-def minimal_bpm_events_with_mock(mocker, minimal_bpm_events):
+def minimal_bpm_events_with_mock(
+    mocker: typ.Any, minimal_bpm_events: BPMEvents
+) -> BPMEventsWithMock:
     class SpyableClass(object):
-        def timestamp_at_tick(self, tick, *, start_iteration_index=0):
+        def timestamp_at_tick(
+            self, tick: Tick, *, start_iteration_index: int = 0
+        ) -> tuple[Timestamp, int]:
             return (
                 defaults.timestamp_at_tick_timestamp,
                 defaults.timestamp_at_tick_proximal_bpm_event_index,
@@ -297,16 +278,17 @@ def minimal_bpm_events_with_mock(mocker, minimal_bpm_events):
         "timestamp_at_tick",
         s.timestamp_at_tick,
     )
+    assert isinstance(minimal_bpm_events, BPMEventsWithMock)
     return minimal_bpm_events
 
 
 @pytest.fixture
-def bare_anchor_event():
+def bare_anchor_event() -> AnchorEvent:
     return AnchorEvent.__new__(AnchorEvent)
 
 
 @pytest.fixture
-def default_anchor_event():
+def default_anchor_event() -> AnchorEvent:
     return defaults.anchor_event
 
 
@@ -314,12 +296,12 @@ def default_anchor_event():
 
 
 @pytest.fixture
-def bare_global_events_track():
+def bare_global_events_track() -> GlobalEventsTrack:
     return GlobalEventsTrack.__new__(GlobalEventsTrack)
 
 
 @pytest.fixture
-def minimal_global_events_track(bare_global_events_track):
+def minimal_global_events_track(bare_global_events_track: GlobalEventsTrack) -> GlobalEventsTrack:
     """Minimal initialization necessary to avoid attribute errors."""
     unsafe.setattr(bare_global_events_track, "text_events", [])
     unsafe.setattr(bare_global_events_track, "section_events", [])
@@ -328,7 +310,7 @@ def minimal_global_events_track(bare_global_events_track):
 
 
 @pytest.fixture
-def default_global_events_track():
+def default_global_events_track() -> GlobalEventsTrack:
     return GlobalEventsTrack(
         text_events=[defaults.text_event],
         section_events=[defaults.section_event],
@@ -337,42 +319,42 @@ def default_global_events_track():
 
 
 @pytest.fixture
-def bare_global_event():
+def bare_global_event() -> GlobalEvent:
     return GlobalEvent.__new__(GlobalEvent)
 
 
 @pytest.fixture
-def default_global_event():
+def default_global_event() -> GlobalEvent:
     return defaults.global_event
 
 
 @pytest.fixture
-def bare_text_event():
+def bare_text_event() -> TextEvent:
     return TextEvent.__new__(TextEvent)
 
 
 @pytest.fixture
-def default_text_event():
+def default_text_event() -> TextEvent:
     return defaults.text_event
 
 
 @pytest.fixture
-def bare_section_event():
+def bare_section_event() -> SectionEvent:
     return SectionEvent.__new__(SectionEvent)
 
 
 @pytest.fixture
-def default_section_event():
+def default_section_event() -> SectionEvent:
     return defaults.section_event
 
 
 @pytest.fixture
-def bare_lyric_event():
+def bare_lyric_event() -> LyricEvent:
     return LyricEvent.__new__(LyricEvent)
 
 
 @pytest.fixture
-def default_lyric_event():
+def default_lyric_event() -> LyricEvent:
     return defaults.lyric_event
 
 
@@ -380,18 +362,18 @@ def default_lyric_event():
 
 
 @pytest.fixture
-def bare_metadata():
+def bare_metadata() -> Metadata:
     return Metadata.__new__(Metadata)
 
 
 @pytest.fixture
-def minimal_metadata():
+def minimal_metadata() -> Metadata:
     """Minimal initialization necessary to avoid attribute errors."""
     return Metadata(resolution=defaults.resolution)
 
 
 @pytest.fixture
-def default_metadata():
+def default_metadata() -> Metadata:
     return Metadata(
         resolution=defaults.resolution,
         offset=defaults.offset,

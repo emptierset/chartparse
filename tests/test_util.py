@@ -68,7 +68,7 @@ class TestAllValuesGettableEnum(object):
 
 class TestDictReprMixin(object):
     class TrinketClass(DictReprMixin):
-        def __init__(self, x):
+        def __init__(self, x: typ.Any):
             self.x = x
 
     class TestRepr(object):
@@ -80,7 +80,7 @@ class TestDictReprMixin(object):
 
 class TestDictReprTruncatedSequencesMixin(object):
     class TrinketClass(DictReprTruncatedSequencesMixin):
-        def __init__(self, x):
+        def __init__(self, x: typ.Any):
             self.x = x
 
     @testcase.parametrize(
@@ -98,6 +98,6 @@ class TestDictReprTruncatedSequencesMixin(object):
     )
     class TestRepr(object):
         # This just exercises the path; asserting the output is irksome and unnecessary.
-        def test(self, x) -> None:
+        def test(self, x: typ.Any) -> None:
             f = TestDictReprTruncatedSequencesMixin.TrinketClass(x)
             str(f)

@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import re
+import typing as typ
 import unittest.mock
+from collections.abc import Sequence
 from datetime import timedelta
 
 import pytest
@@ -10,6 +12,7 @@ import chartparse.instrument
 import tests.helpers.tick
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.instrument import (
+    ComplexSustain,
     Difficulty,
     HOPOState,
     Instrument,
@@ -23,7 +26,9 @@ from chartparse.instrument import (
     SustainTuple,
     TrackEvent,
 )
+from chartparse.sync import BPMEvents
 from chartparse.tick import NoteDuration, Tick, Ticks
+from chartparse.time import Timestamp
 from tests.helpers import defaults, testcase, unsafe
 from tests.helpers.instrument import (
     InstrumentTrackWithDefaults,
@@ -38,6 +43,7 @@ from tests.helpers.instrument import (
 from tests.helpers.lines import generate_note as generate_note_line
 from tests.helpers.lines import generate_star_power as generate_star_power_line
 from tests.helpers.lines import generate_track as generate_track_line
+from tests.helpers.sync import BPMEventsWithMock
 
 
 class TestNote(object):
@@ -60,7 +66,9 @@ class TestNote(object):
                 ),
             ],
         )
-        def test(self, data, want) -> None:
+        def test(
+            self, data: NoteEvent.ParsedData | Sequence[NoteEvent.ParsedData], want: Note
+        ) -> None:
             got = Note.from_parsed_data(data)
             assert got == want
 
@@ -116,7 +124,7 @@ class TestComplexSustainFromParsedDatas(object):
             ),
         ],
     )
-    def test(self, datas, want) -> None:
+    def test(self, datas: Sequence[NoteEvent.ParsedData], want: ComplexSustain) -> None:
         got = chartparse.instrument.complex_sustain_from_parsed_datas(datas)
         assert got == want
 
@@ -138,13 +146,13 @@ class TestInstrumentTrack(object):
                 ),
             ],
         )
-        def test(self, instrument, difficulty, want) -> None:
+        def test(self, instrument: Instrument, difficulty: Difficulty, want: str) -> None:
             track = InstrumentTrackWithDefaults(instrument=instrument, difficulty=difficulty)
             got = track.section_name
             assert got == want
 
     class TestFromChartLines(object):
-        def test(self, mocker, minimal_bpm_events) -> None:
+        def test(self, mocker: typ.Any, minimal_bpm_events: BPMEvents) -> None:
             mock_parse_data = mocker.patch.object(
                 InstrumentTrack,
                 "_parse_data_from_chart_lines",
@@ -203,7 +211,7 @@ class TestInstrumentTrack(object):
             )
 
         @staticmethod
-        def NoteEventWithDefaultsPlus(**kwargs):
+        def NoteEventWithDefaultsPlus(**kwargs: typ.Any) -> NoteEvent:
             return NoteEventWithDefaults(
                 _proximal_bpm_event_index=defaults.timestamp_at_tick_proximal_bpm_event_index,
                 timestamp=defaults.timestamp_at_tick_timestamp,
@@ -212,7 +220,7 @@ class TestInstrumentTrack(object):
             )
 
         @staticmethod
-        def StarPowerEventWithDefaultsPlus(**kwargs):
+        def StarPowerEventWithDefaultsPlus(**kwargs: typ.Any) -> StarPowerEvent:
             return StarPowerEventWithDefaults(
                 _proximal_bpm_event_index=defaults.timestamp_at_tick_proximal_bpm_event_index,
                 timestamp=defaults.timestamp_at_tick_timestamp,
@@ -230,43 +238,43 @@ class TestInstrumentTrack(object):
                 ),
                 testcase.new(
                     "open_note",
-                    lines=[generate_note_line(0, NoteTrackIndex.OPEN.value)],
-                    want_note_events=[NoteEventWithDefaultsPlus(tick=0, note=Note.OPEN)],
+                    lines=[generate_note_line(Tick(0), NoteTrackIndex.OPEN)],
+                    want_note_events=[NoteEventWithDefaultsPlus(tick=Tick(0), note=Note.OPEN)],
                 ),
                 testcase.new(
                     "green_note",
-                    lines=[generate_note_line(0, NoteTrackIndex.G.value)],
-                    want_note_events=[NoteEventWithDefaultsPlus(tick=0, note=Note.G)],
+                    lines=[generate_note_line(Tick(0), NoteTrackIndex.G)],
+                    want_note_events=[NoteEventWithDefaultsPlus(tick=Tick(0), note=Note.G)],
                 ),
                 testcase.new(
                     "red_note",
-                    lines=[generate_note_line(0, NoteTrackIndex.R.value)],
-                    want_note_events=[NoteEventWithDefaultsPlus(tick=0, note=Note.R)],
+                    lines=[generate_note_line(Tick(0), NoteTrackIndex.R)],
+                    want_note_events=[NoteEventWithDefaultsPlus(tick=Tick(0), note=Note.R)],
                 ),
                 testcase.new(
                     "yellow_note",
-                    lines=[generate_note_line(0, NoteTrackIndex.Y.value)],
-                    want_note_events=[NoteEventWithDefaultsPlus(tick=0, note=Note.Y)],
+                    lines=[generate_note_line(Tick(0), NoteTrackIndex.Y)],
+                    want_note_events=[NoteEventWithDefaultsPlus(tick=Tick(0), note=Note.Y)],
                 ),
                 testcase.new(
                     "blue_note",
-                    lines=[generate_note_line(0, NoteTrackIndex.B.value)],
-                    want_note_events=[NoteEventWithDefaultsPlus(tick=0, note=Note.B)],
+                    lines=[generate_note_line(Tick(0), NoteTrackIndex.B)],
+                    want_note_events=[NoteEventWithDefaultsPlus(tick=Tick(0), note=Note.B)],
                 ),
                 testcase.new(
                     "orange_note",
-                    lines=[generate_note_line(0, NoteTrackIndex.O.value)],
-                    want_note_events=[NoteEventWithDefaultsPlus(tick=0, note=Note.O)],
+                    lines=[generate_note_line(Tick(0), NoteTrackIndex.O)],
+                    want_note_events=[NoteEventWithDefaultsPlus(tick=Tick(0), note=Note.O)],
                 ),
                 testcase.new(
                     "tap_green_note",
                     lines=[
-                        generate_note_line(0, NoteTrackIndex.G.value),
-                        generate_note_line(0, NoteTrackIndex.TAP.value),
+                        generate_note_line(Tick(0), NoteTrackIndex.G),
+                        generate_note_line(Tick(0), NoteTrackIndex.TAP),
                     ],
                     want_note_events=[
                         NoteEventWithDefaultsPlus(
-                            tick=0,
+                            tick=Tick(0),
                             note=Note.G,
                             hopo_state=HOPOState.TAP,
                         )
@@ -275,9 +283,9 @@ class TestInstrumentTrack(object):
                 testcase.new(
                     "forced_red_note",
                     lines=[
-                        generate_note_line(0, NoteTrackIndex.G.value),
-                        generate_note_line(1, NoteTrackIndex.R.value),
-                        generate_note_line(1, NoteTrackIndex.FORCED.value),
+                        generate_note_line(Tick(0), NoteTrackIndex.G),
+                        generate_note_line(Tick(1), NoteTrackIndex.R),
+                        generate_note_line(Tick(1), NoteTrackIndex.FORCED),
                     ],
                     want_note_events=[
                         NoteEventWithDefaultsPlus(
@@ -294,23 +302,23 @@ class TestInstrumentTrack(object):
                 testcase.new(
                     "green_with_sustain",
                     lines=[
-                        generate_note_line(0, NoteTrackIndex.G.value, sustain=100),
+                        generate_note_line(Tick(0), NoteTrackIndex.G, sustain=Ticks(100)),
                     ],
                     want_note_events=[NoteEventWithDefaultsPlus(tick=0, note=Note.G, sustain=100)],
                 ),
                 testcase.new(
                     "chord",
                     lines=[
-                        generate_note_line(0, NoteTrackIndex.G.value),
-                        generate_note_line(0, NoteTrackIndex.R.value),
+                        generate_note_line(Tick(0), NoteTrackIndex.G),
+                        generate_note_line(Tick(0), NoteTrackIndex.R),
                     ],
                     want_note_events=[NoteEventWithDefaultsPlus(tick=0, note=Note.GR)],
                 ),
                 testcase.new(
                     "nonuniform_sustains",
                     lines=[
-                        generate_note_line(0, NoteTrackIndex.G.value, sustain=100),
-                        generate_note_line(0, NoteTrackIndex.R.value),
+                        generate_note_line(Tick(0), NoteTrackIndex.G, sustain=Ticks(100)),
+                        generate_note_line(Tick(0), NoteTrackIndex.R),
                     ],
                     want_note_events=[
                         NoteEventWithDefaultsPlus(
@@ -322,23 +330,23 @@ class TestInstrumentTrack(object):
                 ),
                 testcase.new(
                     "single_star_power_phrase",
-                    lines=[generate_star_power_line(0, 100)],
+                    lines=[generate_star_power_line(Tick(0), Ticks(100))],
                     want_star_power_events=[StarPowerEventWithDefaultsPlus(tick=0, sustain=100)],
                 ),
                 testcase.new(
                     "everything_together",
                     lines=[
-                        generate_note_line(0, NoteTrackIndex.G.value, sustain=100),
-                        generate_star_power_line(0, 100),
-                        generate_note_line(2000, NoteTrackIndex.R.value, sustain=50),
-                        generate_note_line(2075, NoteTrackIndex.Y.value),
-                        generate_note_line(2075, NoteTrackIndex.B.value),
-                        generate_star_power_line(2000, 80),
-                        generate_note_line(2100, NoteTrackIndex.O.value),
-                        generate_note_line(2100, NoteTrackIndex.FORCED.value),
-                        generate_note_line(2200, NoteTrackIndex.B.value),
-                        generate_note_line(2200, NoteTrackIndex.TAP.value),
-                        generate_note_line(2300, NoteTrackIndex.OPEN.value),
+                        generate_note_line(Tick(0), NoteTrackIndex.G, sustain=Ticks(100)),
+                        generate_star_power_line(Tick(0), Ticks(100)),
+                        generate_note_line(Tick(2000), NoteTrackIndex.R, sustain=Ticks(50)),
+                        generate_note_line(Tick(2075), NoteTrackIndex.Y),
+                        generate_note_line(Tick(2075), NoteTrackIndex.B),
+                        generate_star_power_line(Tick(2000), Ticks(80)),
+                        generate_note_line(Tick(2100), NoteTrackIndex.O),
+                        generate_note_line(Tick(2100), NoteTrackIndex.FORCED),
+                        generate_note_line(Tick(2200), NoteTrackIndex.B),
+                        generate_note_line(Tick(2200), NoteTrackIndex.TAP),
+                        generate_note_line(Tick(2300), NoteTrackIndex.OPEN),
                     ],
                     want_note_events=[
                         NoteEventWithDefaultsPlus(
@@ -391,17 +399,17 @@ class TestInstrumentTrack(object):
         )
         def test_integration(
             self,
-            mocker,
-            lines,
-            want_note_events,
-            want_star_power_events,
-            minimal_bpm_events_with_mock,
+            mocker: typ.Any,
+            lines: Sequence[str],
+            want_note_events: Sequence[NoteEvent],
+            want_star_power_events: Sequence[StarPowerEvent],
+            minimal_bpm_events_with_mock: BPMEventsWithMock,
         ) -> None:
             got = InstrumentTrack.from_chart_lines(
                 defaults.instrument,
                 defaults.difficulty,
                 lines,
-                minimal_bpm_events_with_mock,
+                typ.cast(BPMEvents, minimal_bpm_events_with_mock),
             )
             assert got.instrument == defaults.instrument
             assert got.difficulty == defaults.difficulty
@@ -419,22 +427,27 @@ class TestInstrumentTrack(object):
                         NoteEventWithDefaults(end_timestamp=timedelta(seconds=1)),
                         NoteEventWithDefaults(end_timestamp=timedelta(seconds=0.5)),
                     ],
-                    want=timedelta(seconds=1),
+                    want=Timestamp(timedelta(seconds=1)),
                 ),
             ],
         )
-        def test(self, bare_instrument_track, note_events, want) -> None:
+        def test(
+            self,
+            bare_instrument_track: InstrumentTrack,
+            note_events: Sequence[NoteEvent],
+            want: Timestamp,
+        ) -> None:
             unsafe.setattr(bare_instrument_track, "note_events", note_events)
             got = bare_instrument_track.last_note_end_timestamp
             assert got == want
 
-        def test_empty(self, minimal_instrument_track) -> None:
+        def test_empty(self, minimal_instrument_track: InstrumentTrack) -> None:
             got = minimal_instrument_track.last_note_end_timestamp
             assert got is None
 
     class TestStr(object):
         # This just exercises the path; asserting the output is irksome and unnecessary.
-        def test(self, default_instrument_track) -> None:
+        def test(self, default_instrument_track: InstrumentTrack) -> None:
             str(default_instrument_track)
 
 
@@ -487,16 +500,16 @@ class TestNoteEvent(object):
         )
         def test(
             self,
-            mocker,
-            minimal_bpm_events_with_mock,
-            data,
-            want_tick,
-            want_sustain,
-            want_note,
-            want_hopo_state,
-            want_star_power_data,
-            want_star_power_event_index,
-            want_proximal_bpm_event_index,
+            mocker: typ.Any,
+            minimal_bpm_events_with_mock: BPMEventsWithMock,
+            data: NoteEvent.ParsedData | Sequence[NoteEvent.ParsedData],
+            want_tick: int,
+            want_sustain: ComplexSustain,
+            want_note: Note,
+            want_hopo_state: HOPOState,
+            want_star_power_data: StarPowerData,
+            want_star_power_event_index: int,
+            want_proximal_bpm_event_index: int,
         ) -> None:
             mock_compute_hopo_state = mocker.patch.object(
                 NoteEvent, "_compute_hopo_state", return_value=want_hopo_state
@@ -514,7 +527,7 @@ class TestNoteEvent(object):
                 data,
                 None,
                 [defaults.star_power_event],
-                minimal_bpm_events_with_mock,
+                typ.cast(BPMEvents, minimal_bpm_events_with_mock),
                 proximal_bpm_event_index=want_proximal_bpm_event_index,
                 star_power_event_index=want_star_power_event_index,
             )
@@ -578,7 +591,7 @@ class TestNoteEvent(object):
                 ),
             ],
         )
-        def test(self, event) -> None:
+        def test(self, event: NoteEvent) -> None:
             str(event)
 
     class TestComputeHOPOState(object):
@@ -751,10 +764,18 @@ class TestNoteEvent(object):
                 ),
             ],
         )
-        def test(self, tick, note, is_tap, is_forced, previous, want) -> None:
+        def test(
+            self,
+            tick: int,
+            note: Note,
+            is_tap: bool,
+            is_forced: bool,
+            previous: NoteEvent,
+            want: HOPOState,
+        ) -> None:
             got = NoteEvent._compute_hopo_state(
                 defaults.resolution,
-                tick,
+                Tick(tick),
                 note,
                 is_tap,
                 is_forced,
@@ -806,8 +827,8 @@ class TestNoteEvent(object):
             )
             def test(
                 self,
-                want_note_track_index,
-                want_sustain,
+                want_note_track_index: NoteTrackIndex,
+                want_sustain: int,
             ) -> None:
                 got = NoteEvent.ParsedData.from_chart_line(
                     f"T {self.tick} I {want_note_track_index.value} S {want_sustain}"
@@ -815,15 +836,15 @@ class TestNoteEvent(object):
                 want = NoteEvent.ParsedData(
                     tick=self.tick,
                     note_track_index=want_note_track_index,
-                    sustain=want_sustain,
+                    sustain=Ticks(want_sustain),
                 )
                 assert got == want
 
-            def test_no_match(self, invalid_chart_line) -> None:
+            def test_no_match(self, invalid_chart_line: str) -> None:
                 with pytest.raises(RegexNotMatchError):
                     _ = NoteEvent.ParsedData.from_chart_line(invalid_chart_line)
 
-            def test_unhandled_note_track_index(self, mocker, caplog) -> None:
+            def test_unhandled_note_track_index(self, caplog: pytest.LogCaptureFixture) -> None:
                 invalid_instrument_note_track_index = 8
                 with pytest.raises(ValueError):
                     _ = NoteEvent.ParsedData.from_chart_line(
@@ -832,11 +853,20 @@ class TestNoteEvent(object):
                         f"S {defaults.sustain}"
                     )
 
-            def setup_method(self):
-                NoteEvent.ParsedData._regex = self.test_regex
-                NoteEvent.ParsedData._regex_prog = re.compile(NoteEvent.ParsedData._regex)
+            def setup_method(self) -> None:
+                # I have no idea how to appease both the compiler and mypy here. The compiler hates
+                # the `else` here because it's assigning to final names. Mypy hates the `if`
+                # because you "can't apply this __setattr_ to ABCMeta object".
+                if typ.TYPE_CHECKING:
+                    unsafe.setattr(NoteEvent.ParsedData, "_regex", self.test_regex)
+                    unsafe.setattr(
+                        NoteEvent.ParsedData, "_regex_prog", re.compile(self.test_regex)
+                    )
+                else:
+                    NoteEvent.ParsedData._regex = self.test_regex
+                    NoteEvent.ParsedData._regex_prog = re.compile(self.test_regex)
 
-            def teardown_method(self):
+            def teardown_method(self) -> None:
                 del NoteEvent.ParsedData._regex
                 del NoteEvent.ParsedData._regex_prog
 
@@ -861,7 +891,12 @@ class TestNoteEvent(object):
                     ),
                 ],
             )
-            def test(self, bare_note_event_parsed_data, sustain, want) -> None:
+            def test(
+                self,
+                bare_note_event_parsed_data: NoteEvent.ParsedData,
+                sustain: ComplexSustain,
+                want: ComplexSustain,
+            ) -> None:
                 bare_note_event_parsed_data.__dict__["sustain"] = sustain
                 got = bare_note_event_parsed_data.sustain
                 assert got == want
@@ -897,7 +932,9 @@ class TestNoteEvent(object):
                 testcase.new(
                     "tick_in_event",
                     tick=0,
-                    star_power_events=[StarPowerEventWithDefaults(tick=0, sustain=10)],
+                    star_power_events=[
+                        StarPowerEventWithDefaults(tick=Tick(0), sustain=Ticks(10))
+                    ],
                     want_data=StarPowerData(
                         star_power_event_index=defaults.proximal_star_power_event_index
                     ),
@@ -907,8 +944,8 @@ class TestNoteEvent(object):
                     "tick_in_event_with_noninitial_candidate_index",
                     tick=100,
                     star_power_events=[
-                        StarPowerEventWithDefaults(tick=0, sustain=10),
-                        StarPowerEventWithDefaults(tick=100, sustain=10),
+                        StarPowerEventWithDefaults(tick=Tick(0), sustain=Ticks(10)),
+                        StarPowerEventWithDefaults(tick=Tick(100), sustain=Ticks(10)),
                     ],
                     want_data=StarPowerData(star_power_event_index=1),
                     want_proximal_star_power_event_index=1,
@@ -917,13 +954,13 @@ class TestNoteEvent(object):
         )
         def test(
             self,
-            tick,
-            star_power_events,
-            want_data,
-            want_proximal_star_power_event_index,
+            tick: int,
+            star_power_events: Sequence[StarPowerEvent],
+            want_data: StarPowerData,
+            want_proximal_star_power_event_index: int,
         ) -> None:
             got_data, got_proximal_star_power_event_index = NoteEvent._compute_star_power_data(
-                tick,
+                Tick(tick),
                 star_power_events,
                 proximal_star_power_event_index=defaults.proximal_star_power_event_index,
             )
@@ -944,24 +981,26 @@ class TestNoteEvent(object):
             [
                 testcase.new(
                     "simple_sustain",
-                    sustain=100,
-                    want=100,
+                    sustain=Ticks(100),
+                    want=Ticks(100),
                 ),
                 testcase.new(
                     "tuple_sustain",
-                    sustain=(50, 100, None, 200, None),
-                    want=200,
+                    sustain=SustainTuple((Ticks(50), Ticks(100), None, Ticks(200), None)),
+                    want=Ticks(200),
                 ),
             ],
         )
-        def test(self, mocker, bare_note_event, sustain, want) -> None:
-            # Test wrapper
+        def test(
+            self, mocker: typ.Any, bare_note_event: NoteEvent, sustain: ComplexSustain, want: Ticks
+        ) -> None:
+            # Test the wrapper.
             unsafe.setattr(bare_note_event, "sustain", 100)
             spy = mocker.spy(NoteEvent, "_longest_sustain")
             bare_note_event.longest_sustain
             spy.assert_called_once_with(100)
 
-            # Test impl
+            # Test the implementation.
             got = NoteEvent._longest_sustain(sustain)
             assert got == want
 
@@ -970,7 +1009,7 @@ class TestNoteEvent(object):
                 _ = NoteEvent._longest_sustain(SustainTuple((None, None, None, None, None)))
 
     class TestEndTick(object):
-        def test_wrapper(self, mocker, bare_note_event) -> None:
+        def test_wrapper(self, mocker: typ.Any, bare_note_event: NoteEvent) -> None:
             unsafe.setattr(bare_note_event, "tick", 100)
             unsafe.setattr(bare_note_event, "sustain", 10)
             spy = mocker.spy(NoteEvent, "_end_tick")
@@ -998,11 +1037,18 @@ class TestSpecialEvent(object):
                 ),
             ],
         )
-        def test(self, mocker, minimal_bpm_events_with_mock, prev_event) -> None:
+        def test(
+            self,
+            mocker: typ.Any,
+            minimal_bpm_events_with_mock: BPMEventsWithMock,
+            prev_event: SpecialEvent | None,
+        ) -> None:
             spy_init = mocker.spy(SpecialEvent, "__init__")
 
             _ = SpecialEvent.from_parsed_data(
-                SpecialEventParsedDataWithDefaults(), prev_event, minimal_bpm_events_with_mock
+                SpecialEventParsedDataWithDefaults(),
+                prev_event,
+                typ.cast(BPMEvents, minimal_bpm_events_with_mock),
             )
 
             minimal_bpm_events_with_mock.timestamp_at_tick_mock.assert_called_once_with(
@@ -1027,22 +1073,22 @@ class TestSpecialEvent(object):
         class TestFromChartLine(object):
             test_regex = r"^T (\d+?) V (.*?)$"
 
-            def test(self, mocker) -> None:
+            def test(self, mocker: typ.Any) -> None:
                 got = SpecialEvent.ParsedData.from_chart_line(
                     f"T {defaults.tick} V {defaults.sustain}"
                 )
                 assert got.tick == defaults.tick
                 assert got.sustain == defaults.sustain
 
-            def test_no_match(self, invalid_chart_line) -> None:
+            def test_no_match(self, invalid_chart_line: str) -> None:
                 with pytest.raises(RegexNotMatchError):
                     _ = SpecialEvent.ParsedData.from_chart_line(invalid_chart_line)
 
-            def setup_method(self):
+            def setup_method(self) -> None:
                 SpecialEvent.ParsedData._regex = self.test_regex
-                SpecialEvent.ParsedData._regex_prog = re.compile(SpecialEvent.ParsedData._regex)
+                SpecialEvent.ParsedData._regex_prog = re.compile(self.test_regex)
 
-            def teardown_method(self):
+            def teardown_method(self) -> None:
                 del SpecialEvent.ParsedData._regex
                 del SpecialEvent.ParsedData._regex_prog
 
@@ -1072,9 +1118,9 @@ class TestSpecialEvent(object):
                 ),
             ],
         )
-        def test(self, tick, want) -> None:
-            event = SpecialEventWithDefaults(tick=100, sustain=10)
-            got = event.tick_is_after_event(tick)
+        def test(self, tick: int, want: bool) -> None:
+            event = SpecialEventWithDefaults(tick=Tick(100), sustain=Ticks(10))
+            got = event.tick_is_after_event(Tick(tick))
             assert got == want
 
     class TestTickIsDuringEvent(object):
@@ -1103,9 +1149,9 @@ class TestSpecialEvent(object):
                 ),
             ],
         )
-        def test(self, tick, want) -> None:
-            event = SpecialEventWithDefaults(tick=100, sustain=10)
-            got = event.tick_is_during_event(tick)
+        def test(self, tick: int, want: bool) -> None:
+            event = SpecialEventWithDefaults(tick=Tick(100), sustain=Ticks(10))
+            got = event.tick_is_during_event(Tick(tick))
             assert got == want
 
 
@@ -1129,13 +1175,18 @@ class TestTrackEvent(object):
                 ),
             ],
         )
-        def test(self, mocker, minimal_bpm_events_with_mock, prev_event) -> None:
+        def test(
+            self,
+            mocker: typ.Any,
+            minimal_bpm_events_with_mock: BPMEventsWithMock,
+            prev_event: TrackEvent | None,
+        ) -> None:
             spy_init = mocker.spy(TrackEvent, "__init__")
 
             _ = TrackEvent.from_parsed_data(
                 TrackEventParsedDataWithDefaults(),
                 prev_event,
-                minimal_bpm_events_with_mock,
+                typ.cast(BPMEvents, minimal_bpm_events_with_mock),
             )
 
             minimal_bpm_events_with_mock.timestamp_at_tick_mock.assert_called_once_with(
@@ -1159,12 +1210,12 @@ class TestTrackEvent(object):
 
     class TestParsedData(object):
         class TestFromChartLine(object):
-            def test(self, mocker) -> None:
+            def test(self, mocker: typ.Any) -> None:
                 line = generate_track_line(defaults.tick, defaults.track_event_value)
                 got = TrackEvent.ParsedData.from_chart_line(line)
                 assert got.tick == defaults.tick
                 assert got.value == defaults.track_event_value
 
-            def test_no_match(self, invalid_chart_line) -> None:
+            def test_no_match(self, invalid_chart_line: str) -> None:
                 with pytest.raises(RegexNotMatchError):
                     _ = TrackEvent.ParsedData.from_chart_line(invalid_chart_line)

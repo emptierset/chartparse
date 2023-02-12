@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import typing as typ
 import unittest.mock
+from collections.abc import Sequence
 from datetime import timedelta
 
 import pytest
@@ -16,6 +18,7 @@ from tests.helpers.sync import (
     AnchorEventParsedDataWithDefaults,
     BPMEventParsedDataWithDefaults,
     BPMEventsWithDefaults,
+    BPMEventsWithMock,
     BPMEventWithDefaults,
     SyncTrackWithDefaults,
     TimeSignatureEventParsedDataWithDefaults,
@@ -41,7 +44,7 @@ class TestSyncTrack(object):
                 )
 
     class TestFromChartLines(object):
-        def test(self, mocker, invalid_chart_line) -> None:
+        def test(self, mocker: typ.Any, invalid_chart_line: str) -> None:
             mock_parse_data = mocker.patch.object(
                 SyncTrack,
                 "_parse_data_from_chart_lines",
@@ -121,10 +124,19 @@ class TestTimeSignatureEvent(object):
                 ),
             ],
         )
-        def test(self, mocker, minimal_bpm_events_with_mock, prev_event, data, want_lower) -> None:
+        def test(
+            self,
+            mocker: typ.Any,
+            minimal_bpm_events_with_mock: BPMEventsWithMock,
+            prev_event: TimeSignatureEvent | None,
+            data: TimeSignatureEvent.ParsedData,
+            want_lower: int,
+        ) -> None:
             spy_init = mocker.spy(TimeSignatureEvent, "__init__")
 
-            _ = TimeSignatureEvent.from_parsed_data(data, prev_event, minimal_bpm_events_with_mock)
+            _ = TimeSignatureEvent.from_parsed_data(
+                data, prev_event, typ.cast(BPMEvents, minimal_bpm_events_with_mock)
+            )
 
             minimal_bpm_events_with_mock.timestamp_at_tick_mock.assert_called_once_with(
                 defaults.tick,
@@ -162,19 +174,19 @@ class TestTimeSignatureEvent(object):
                         line=generate_time_signature_line(
                             defaults.tick,
                             defaults.upper_time_signature_numeral,
-                            lower=defaults.raw_lower_time_signature_numeral,
+                            lower=int(defaults.raw_lower_time_signature_numeral),
                         ),
                         want_lower=int(defaults.raw_lower_time_signature_numeral),
                     ),
                 ],
             )
-            def test(self, mocker, line, want_lower) -> None:
+            def test(self, mocker: typ.Any, line: str, want_lower: int) -> None:
                 got = TimeSignatureEvent.ParsedData.from_chart_line(line)
                 assert got.tick == defaults.tick
                 assert got.upper == defaults.upper_time_signature_numeral
                 assert got.lower == want_lower
 
-            def test_no_match(self, invalid_chart_line) -> None:
+            def test_no_match(self, invalid_chart_line: str) -> None:
                 with pytest.raises(RegexNotMatchError):
                     _ = TimeSignatureEvent.ParsedData.from_chart_line(invalid_chart_line)
 
@@ -186,7 +198,7 @@ class TestBPMEvent(object):
                 _ = BPMEventWithDefaults(bpm=120.0001)
 
     class TestFromParsedData(object):
-        def test_prev_event_none(self, mocker) -> None:
+        def test_prev_event_none(self, mocker: typ.Any) -> None:
             spy_init = mocker.spy(BPMEvent, "__init__")
 
             _ = BPMEvent.from_parsed_data(
@@ -201,7 +213,7 @@ class TestBPMEvent(object):
                 _proximal_bpm_event_index=0,
             )
 
-        def test_prev_event_present(self, mocker) -> None:
+        def test_prev_event_present(self, mocker: typ.Any) -> None:
             data = BPMEventParsedDataWithDefaults(tick=3)
 
             prev_event = BPMEventWithDefaults(tick=1, timestamp=timedelta(seconds=1))
@@ -246,7 +258,9 @@ class TestBPMEvent(object):
                 ),
             ],
         )
-        def test_wrongly_ordered_events(self, mocker, prev_event, data) -> None:
+        def test_wrongly_ordered_events(
+            self, mocker: typ.Any, prev_event: BPMEvent | None, data: BPMEvent.ParsedData
+        ) -> None:
             with pytest.raises(ValueError):
                 _ = BPMEvent.from_parsed_data(data, prev_event, defaults.resolution)
 
@@ -263,7 +277,7 @@ class TestBPMEvent(object):
                 assert got.tick == defaults.tick
                 assert got.raw_bpm == defaults.raw_bpm
 
-            def test_no_match(self, invalid_chart_line) -> None:
+            def test_no_match(self, invalid_chart_line: str) -> None:
                 with pytest.raises(RegexNotMatchError):
                     _ = BPMEvent.ParsedData.from_chart_line(invalid_chart_line)
 
@@ -330,7 +344,9 @@ class TestBPMEvents(object):
                 ),
             ],
         )
-        def test(self, tick, want_timestamp, want_proximal_bpm_event_index) -> None:
+        def test(
+            self, tick: int, want_timestamp: timedelta, want_proximal_bpm_event_index: int
+        ) -> None:
             resolution = Ticks(100)
             event0 = BPMEvent.from_parsed_data(
                 BPMEvent.ParsedData(tick=Tick(0), raw_bpm="60000"), None, resolution
@@ -348,13 +364,15 @@ class TestBPMEvents(object):
                 events=[event0, event1, event2, event3], resolution=resolution
             )
 
-            got_timestamp, got_proximal_bpm_event_index = test_bpm_events.timestamp_at_tick(tick)
+            got_timestamp, got_proximal_bpm_event_index = test_bpm_events.timestamp_at_tick(
+                Tick(tick)
+            )
             assert got_timestamp == want_timestamp
             assert got_proximal_bpm_event_index == want_proximal_bpm_event_index
 
     class TestTimestampAtTickNoOptimizeReturn(object):
-        def test(self, mocker, minimal_bpm_events_with_mock) -> None:
-            tick = 451
+        def test(self, mocker: typ.Any, minimal_bpm_events_with_mock: BPMEventsWithMock) -> None:
+            tick = Tick(451)
             start_iteration_index = 1337
             _ = minimal_bpm_events_with_mock.timestamp_at_tick_no_optimize_return(
                 tick, start_iteration_index=start_iteration_index
@@ -370,8 +388,8 @@ class TestBPMEvents(object):
                 testcase.new(
                     "tick_coincides_with_first_event",
                     bpm_event_list=[
-                        BPMEventWithDefaults(tick=0),
-                        BPMEventWithDefaults(tick=100),
+                        BPMEventWithDefaults(tick=Tick(0)),
+                        BPMEventWithDefaults(tick=Tick(100)),
                     ],
                     tick=0,
                     want=0,
@@ -379,8 +397,8 @@ class TestBPMEvents(object):
                 testcase.new(
                     "tick_between_first_and_second_events",
                     bpm_event_list=[
-                        BPMEventWithDefaults(tick=0),
-                        BPMEventWithDefaults(tick=100),
+                        BPMEventWithDefaults(tick=Tick(0)),
+                        BPMEventWithDefaults(tick=Tick(100)),
                     ],
                     tick=50,
                     want=0,
@@ -388,9 +406,9 @@ class TestBPMEvents(object):
                 testcase.new(
                     "tick_between_second_and_third_events",
                     bpm_event_list=[
-                        BPMEventWithDefaults(tick=0),
-                        BPMEventWithDefaults(tick=100),
-                        BPMEventWithDefaults(tick=200),
+                        BPMEventWithDefaults(tick=Tick(0)),
+                        BPMEventWithDefaults(tick=Tick(100)),
+                        BPMEventWithDefaults(tick=Tick(200)),
                     ],
                     tick=150,
                     want=1,
@@ -398,17 +416,23 @@ class TestBPMEvents(object):
                 testcase.new(
                     "tick_after_last_event",
                     bpm_event_list=[
-                        BPMEventWithDefaults(tick=0),
-                        BPMEventWithDefaults(tick=1),
+                        BPMEventWithDefaults(tick=Tick(0)),
+                        BPMEventWithDefaults(tick=Tick(1)),
                     ],
                     tick=2,
                     want=1,
                 ),
             ],
         )
-        def test(self, bare_bpm_events, bpm_event_list, tick, want) -> None:
+        def test(
+            self,
+            bare_bpm_events: BPMEvents,
+            bpm_event_list: Sequence[BPMEvent],
+            tick: int,
+            want: int,
+        ) -> None:
             unsafe.setattr(bare_bpm_events, "events", bpm_event_list)
-            got = bare_bpm_events._index_of_proximal_event(tick)
+            got = bare_bpm_events._index_of_proximal_event(Tick(tick))
             assert got == want
 
         @testcase.parametrize(
@@ -442,7 +466,11 @@ class TestBPMEvents(object):
             ],
         )
         def test_raises(
-            self, bare_bpm_events, tick, start_iteration_index, bpm_event_list
+            self,
+            bare_bpm_events: BPMEvents,
+            tick: int,
+            start_iteration_index: int,
+            bpm_event_list: Sequence[BPMEvent],
         ) -> None:
             unsafe.setattr(bare_bpm_events, "events", bpm_event_list)
             with pytest.raises(ValueError):
@@ -454,7 +482,7 @@ class TestBPMEvents(object):
 
 class TestAnchorEvent(object):
     class TestFromParsedData(object):
-        def test(self, mocker) -> None:
+        def test(self, mocker: typ.Any) -> None:
             spy_init = mocker.spy(AnchorEvent, "__init__")
 
             data = AnchorEventParsedDataWithDefaults()
@@ -474,6 +502,6 @@ class TestAnchorEvent(object):
                 assert got.tick == defaults.tick
                 assert got.microseconds == defaults.microseconds
 
-            def test_no_match(self, invalid_chart_line) -> None:
+            def test_no_match(self, invalid_chart_line: str) -> None:
                 with pytest.raises(RegexNotMatchError):
                     _ = AnchorEvent.ParsedData.from_chart_line(invalid_chart_line)

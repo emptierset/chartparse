@@ -13,18 +13,18 @@ class TestAdd(object):
         [
             testcase.new(
                 "seconds",
-                ts=Timestamp(timedelta(seconds=2.2)),
+                ts=timedelta(seconds=2.2),
                 other=Seconds(1.5),
-                want=Timestamp(timedelta(seconds=3.7)),
+                want=timedelta(seconds=3.7),
             ),
             testcase.new(
                 "timedelta",
-                ts=Timestamp(timedelta(seconds=2.3)),
+                ts=timedelta(seconds=2.3),
                 other=timedelta(seconds=1.6),
-                want=Timestamp(timedelta(seconds=3.9)),
+                want=timedelta(seconds=3.9),
             ),
         ],
     )
-    def test(self, ts, other, want) -> None:
-        got = chartparse.time.add(ts, other)
-        assert got == want
+    def test(self, ts: timedelta, other: timedelta | Seconds, want: timedelta) -> None:
+        got = chartparse.time.add(Timestamp(ts), other)
+        assert got == Timestamp(want)

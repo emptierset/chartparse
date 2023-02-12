@@ -1,3 +1,6 @@
+from collections.abc import Sequence
+from datetime import timedelta
+
 from chartparse.globalevents import (
     GlobalEvent,
     GlobalEventsTrack,
@@ -5,15 +8,17 @@ from chartparse.globalevents import (
     SectionEvent,
     TextEvent,
 )
+from chartparse.tick import Tick
+from chartparse.time import Timestamp
 from tests.helpers import defaults
 
 
 def GlobalEventsTrackWithDefaults(
     *,
-    text_events=[defaults.text_event],
-    section_events=[defaults.section_event],
-    lyric_events=[defaults.lyric_event],
-):
+    text_events: Sequence[TextEvent] = [defaults.text_event],
+    section_events: Sequence[SectionEvent] = [defaults.section_event],
+    lyric_events: Sequence[LyricEvent] = [defaults.lyric_event],
+) -> GlobalEventsTrack:
     return GlobalEventsTrack(
         text_events=text_events,
         section_events=section_events,
@@ -23,14 +28,14 @@ def GlobalEventsTrackWithDefaults(
 
 def GlobalEventWithDefaults(
     *,
-    tick=defaults.tick,
-    timestamp=defaults.timestamp,
-    value=defaults.global_event_value,
-    _proximal_bpm_event_index=defaults.proximal_bpm_event_index,
-):
+    tick: Tick | int = defaults.tick,
+    timestamp: Timestamp | timedelta = defaults.timestamp,
+    value: str = defaults.global_event_value,
+    _proximal_bpm_event_index: int = defaults.proximal_bpm_event_index,
+) -> GlobalEvent:
     return GlobalEvent(
-        tick=tick,
-        timestamp=timestamp,
+        tick=Tick(tick),
+        timestamp=Timestamp(timestamp),
         value=value,
         _proximal_bpm_event_index=_proximal_bpm_event_index,
     )
@@ -38,31 +43,31 @@ def GlobalEventWithDefaults(
 
 def GlobalEventParsedDataWithDefaults(
     *,
-    tick=defaults.tick,
-    value=defaults.global_event_value,
-):
-    return GlobalEvent.ParsedData(tick=tick, value=value)
+    tick: Tick | int = defaults.tick,
+    value: str = defaults.global_event_value,
+) -> GlobalEvent.ParsedData:
+    return GlobalEvent.ParsedData(tick=Tick(tick), value=value)
 
 
 def TextEventParsedDataWithDefaults(
     *,
-    tick=defaults.tick,
-    value=defaults.text_event_value,
-):
-    return TextEvent.ParsedData(tick=tick, value=value)
+    tick: Tick | int = defaults.tick,
+    value: str = defaults.text_event_value,
+) -> TextEvent.ParsedData:
+    return TextEvent.ParsedData(tick=Tick(tick), value=value)
 
 
 def SectionEventParsedDataWithDefaults(
     *,
-    tick=defaults.tick,
-    value=defaults.section_event_value,
-):
-    return SectionEvent.ParsedData(tick=tick, value=value)
+    tick: Tick | int = defaults.tick,
+    value: str = defaults.section_event_value,
+) -> SectionEvent.ParsedData:
+    return SectionEvent.ParsedData(tick=Tick(tick), value=value)
 
 
 def LyricEventParsedDataWithDefaults(
     *,
-    tick=defaults.tick,
-    value=defaults.lyric_event_value,
-):
-    return LyricEvent.ParsedData(tick=tick, value=value)
+    tick: Tick | int = defaults.tick,
+    value: str = defaults.lyric_event_value,
+) -> LyricEvent.ParsedData:
+    return LyricEvent.ParsedData(tick=Tick(tick), value=value)

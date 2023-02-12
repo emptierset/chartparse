@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import pathlib
+import typing as typ
 import unittest.mock
+from collections.abc import Sequence
 from datetime import timedelta
 
 import pytest
@@ -12,6 +14,8 @@ from chartparse.globalevents import GlobalEventsTrack
 from chartparse.instrument import Difficulty, Instrument, InstrumentTrack, Note
 from chartparse.metadata import Metadata
 from chartparse.sync import SyncTrack
+from chartparse.tick import Tick
+from chartparse.time import Timestamp
 from tests.helpers import defaults, testcase, unsafe
 from tests.helpers.instrument import NoteEventWithDefaults
 from tests.helpers.log import LogChecker
@@ -31,12 +35,12 @@ class TestChart(object):
     class TestInit(object):
         def test(
             self,
-            mocker,
-            default_metadata,
-            default_global_events_track,
-            default_sync_track,
-            default_instrument_track,
-            default_instrument_tracks,
+            mocker: typ.Any,
+            default_metadata: Metadata,
+            default_global_events_track: GlobalEventsTrack,
+            default_sync_track: SyncTrack,
+            default_instrument_track: InstrumentTrack,
+            default_instrument_tracks: dict[Instrument, dict[Difficulty, InstrumentTrack]],
         ) -> None:
             got = Chart(
                 default_metadata,
@@ -51,7 +55,7 @@ class TestChart(object):
             assert got.instrument_tracks == default_instrument_tracks
 
     class TestFromFilepath(object):
-        def test(self, mocker, default_chart) -> None:
+        def test(self, mocker: typ.Any, default_chart: Chart) -> None:
             spy = mocker.spy(Chart, "from_file")
             _ = Chart.from_filepath(_valid_chart_filepath, want_tracks=[])
             spy.assert_called_once_with(
@@ -63,13 +67,13 @@ class TestChart(object):
     class TestFromFile(object):
         def test(
             self,
-            mocker,
-            default_chart,
-            default_metadata,
-            default_global_events_track,
-            default_sync_track,
-            default_instrument_track,
-            invalid_chart_line,
+            mocker: typ.Any,
+            default_chart: Chart,
+            default_metadata: Metadata,
+            default_global_events_track: GlobalEventsTrack,
+            default_sync_track: SyncTrack,
+            default_instrument_track: InstrumentTrack,
+            invalid_chart_line: str,
         ) -> None:
             mocker.patch.object(
                 Chart,
@@ -138,11 +142,11 @@ class TestChart(object):
                 ),
             ],
         )
-        def test_invalid_chart(self, path) -> None:
+        def test_invalid_chart(self, path: str) -> None:
             with open(path, "r", encoding="utf-8-sig") as f, pytest.raises(ValueError):
                 _ = Chart.from_file(f)
 
-        def test_unhandled_section(self, caplog) -> None:
+        def test_unhandled_section(self, caplog: pytest.LogCaptureFixture) -> None:
             with open(_unhandled_section_chart_filepath, "r", encoding="utf-8-sig") as f:
                 _ = Chart.from_file(f)
             logchecker = LogChecker(caplog)
@@ -157,7 +161,7 @@ class TestChart(object):
 
             sections = Chart._parse_section_dict(lines)
 
-            def validate_lines(section_name, want_lines):
+            def validate_lines(section_name: str, want_lines: Sequence[str]) -> None:
                 assert section_name in sections
                 lines = sections[section_name]
                 assert list(lines) == want_lines
@@ -252,7 +256,7 @@ class TestChart(object):
                 ),
             ],
         )
-        def test_raises(self, lines) -> None:
+        def test_raises(self, lines: Sequence[str]) -> None:
             with pytest.raises(RegexNotMatchError):
                 _ = Chart._parse_section_dict(lines)
 
@@ -286,17 +290,19 @@ class TestChart(object):
                 ),
             ],
         )
-        def test_impl(self, bare_chart, start_time, end_time, want) -> None:
+        def test_impl(
+            self, bare_chart: Chart, start_time: Timestamp, end_time: Timestamp, want: float
+        ) -> None:
             note_event1 = NoteEventWithDefaults(
-                timestamp=timedelta(seconds=1),
+                timestamp=Timestamp(timedelta(seconds=1)),
                 note=Note.GRY,
             )
             note_event2 = NoteEventWithDefaults(
-                timestamp=timedelta(seconds=2),
+                timestamp=Timestamp(timedelta(seconds=2)),
                 note=Note.RYB,
             )
             note_event3 = NoteEventWithDefaults(
-                timestamp=timedelta(seconds=3),
+                timestamp=Timestamp(timedelta(seconds=3)),
                 note=Note.YBO,
             )
             test_notes_per_second_note_events = [note_event1, note_event2, note_event3]
@@ -320,7 +326,9 @@ class TestChart(object):
                 ),
             ],
         )
-        def test_impl_error(self, bare_chart, start_time, end_time) -> None:
+        def test_impl_error(
+            self, bare_chart: Chart, start_time: Timestamp, end_time: Timestamp
+        ) -> None:
             with pytest.raises(ValueError):
                 _ = bare_chart._notes_per_second([], start_time, end_time)
 
@@ -352,12 +360,12 @@ class TestChart(object):
         )
         def test_with_ticks(
             self,
-            mocker,
-            minimal_chart,
-            start_tick,
-            end_tick,
-            want_start_time,
-            want_end_time,
+            mocker: typ.Any,
+            minimal_chart: Chart,
+            start_tick: Tick,
+            end_tick: Tick,
+            want_start_time: Timestamp,
+            want_end_time: Timestamp,
         ) -> None:
             unsafe.setattr(
                 minimal_chart[defaults.instrument][defaults.difficulty],
@@ -416,12 +424,12 @@ class TestChart(object):
         )
         def test_with_time(
             self,
-            mocker,
-            minimal_chart,
-            start_time,
-            end_time,
-            want_start_time,
-            want_end_time,
+            mocker: typ.Any,
+            minimal_chart: Chart,
+            start_time: Timestamp,
+            end_time: Timestamp,
+            want_start_time: Timestamp,
+            want_end_time: Timestamp,
         ) -> None:
             unsafe.setattr(
                 minimal_chart[defaults.instrument][defaults.difficulty],
@@ -463,7 +471,7 @@ class TestChart(object):
             ],
         )
         def test_missing_instrument_difficulty(
-            self, default_chart, instrument, difficulty
+            self, default_chart: Chart, instrument: Instrument, difficulty: Difficulty
         ) -> None:
             with pytest.raises(ValueError):
                 _ = default_chart.notes_per_second(
@@ -471,8 +479,12 @@ class TestChart(object):
                     difficulty,
                 )
 
-        def test_empty_note_events(self, bare_chart, minimal_instrument_tracks) -> None:
-            bare_chart.instrument_tracks = minimal_instrument_tracks
+        def test_empty_note_events(
+            self,
+            bare_chart: Chart,
+            minimal_instrument_tracks: dict[Instrument, dict[Difficulty, InstrumentTrack]],
+        ) -> None:
+            unsafe.setattr(bare_chart, "instrument_tracks", minimal_instrument_tracks)
             with pytest.raises(ValueError):
                 _ = bare_chart.notes_per_second(
                     defaults.instrument,
@@ -480,12 +492,12 @@ class TestChart(object):
                 )
 
     class TestGetItem(object):
-        def test(self, default_chart) -> None:
+        def test(self, default_chart: Chart) -> None:
             got = default_chart[defaults.instrument][defaults.difficulty]
             want = default_chart.instrument_tracks[defaults.instrument][defaults.difficulty]
             assert got == want
 
     class TestStr(object):
         # This just exercises the path; asserting the output is irksome and unnecessary.
-        def test(self, default_chart) -> None:
+        def test(self, default_chart: Chart) -> None:
             str(default_chart)

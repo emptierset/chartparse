@@ -198,8 +198,6 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         self,
         instrument: Instrument,
         difficulty: Difficulty,
-        start: None,
-        end: None,
     ) -> float:
         ...  # pragma: no cover
 
@@ -209,7 +207,6 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         instrument: Instrument,
         difficulty: Difficulty,
         start: Timestamp,
-        end: None,
     ) -> float:
         ...  # pragma: no cover
 
@@ -229,7 +226,6 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         instrument: Instrument,
         difficulty: Difficulty,
         start: Tick,
-        end: None,
     ) -> float:
         ...  # pragma: no cover
 
