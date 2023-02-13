@@ -20,10 +20,12 @@ if typ.TYPE_CHECKING:  # pragma: no cover
 
 @dataclasses.dataclass(kw_only=True, frozen=True)
 class Event(DictPropertiesEqMixin, DictReprMixin):
-    """An event that occurs at a tick and timestamp in an :class:`~chartparse.track.EventTrack`.
+    """An event that occurs at a tick and timestamp in an event track.
 
     This is typically used only as a base class for more specialized subclasses. It implements an
     attractive ``__str__`` representation.
+
+    This is a ``frozen``, ``kw_only`` dataclass.
     """
 
     tick: Tick

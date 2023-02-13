@@ -10,21 +10,22 @@ and :class:`~chartparse.globalevents.GlobalEventsTrack` are considered to be eve
 
 from __future__ import annotations
 
+import abc
 import collections
 import logging
 import typing as typ
 from collections.abc import Iterable, Sequence
 
+import chartparse.globalevents
 from chartparse.event import Event
 from chartparse.exceptions import RegexNotMatchError, UnreachableError
-from chartparse.sync import AnchorEvent, BPMEvents
+from chartparse.instrument import StarPowerEvent, TrackEvent
+from chartparse.sync import AnchorEvent, BPMEvent, BPMEvents, TimeSignatureEvent
 from chartparse.tick import Ticks
 from chartparse.util import DictPropertiesEqMixin, DictReprTruncatedSequencesMixin
 
 if typ.TYPE_CHECKING:  # pragma: no cover
     from chartparse.globalevents import LyricEvent, SectionEvent, TextEvent
-    from chartparse.instrument import StarPowerEvent, TrackEvent
-    from chartparse.sync import BPMEvent, TimeSignatureEvent
 
 logger = logging.getLogger(__name__)
 
@@ -161,30 +162,109 @@ def build_events_from_data(
     ...  # pragma: no cover
 
 
-# TODO: Figure out htf to annotate this.
-def build_events_from_data(event_type, datas, resolution_or_bpm_events_or_None=None, /):  # type: ignore  # noqa
-    events = []
-    for data in datas:
-        if isinstance(data, AnchorEvent.ParsedData):
-            event = event_type.from_parsed_data(data)
+def build_events_from_data(
+    event_type: type[BPMEvent]
+    | type[TimeSignatureEvent]
+    | type[AnchorEvent]
+    | type[StarPowerEvent]
+    | type[TrackEvent]
+    | type[LyricEvent]
+    | type[SectionEvent]
+    | type[TextEvent],
+    datas: Iterable[BPMEvent.ParsedData]
+    | Iterable[TimeSignatureEvent.ParsedData]
+    | Iterable[AnchorEvent.ParsedData]
+    | Iterable[StarPowerEvent.ParsedData]
+    | Iterable[TrackEvent.ParsedData]
+    | Iterable[LyricEvent.ParsedData]
+    | Iterable[SectionEvent.ParsedData]
+    | Iterable[TextEvent.ParsedData],
+    resolution_or_bpm_events_or_None: Ticks | BPMEvents | None = None,
+    /,
+) -> (
+    BPMEvents
+    | list[TimeSignatureEvent]
+    | list[AnchorEvent]
+    | list[StarPowerEvent]
+    | list[TrackEvent]
+    | list[LyricEvent]
+    | list[SectionEvent]
+    | list[TextEvent]
+):
+    def data_to_anchor_events(datas: Iterable[AnchorEvent.ParsedData]) -> list[AnchorEvent]:
+        events: list[AnchorEvent] = []
+        for data in datas:
+            event = AnchorEvent.from_parsed_data(data)
             events.append(event)
-        else:
-            prev_event = events[-1] if events else None
-            event = event_type.from_parsed_data(data, prev_event, resolution_or_bpm_events_or_None)
-            events.append(event)
-    if isinstance(resolution_or_bpm_events_or_None, int):
-        # Using BPMEvent.ParsedData.
-        # In this case, BPMEvents must already be in increasing tick order, by definition.
-        return BPMEvents(events=events, resolution=Ticks(resolution_or_bpm_events_or_None))
-    elif resolution_or_bpm_events_or_None is None:
-        # Using AnchorEvent.ParsedData.
-        # In this case, AnchorEvents must already be in increasing tick order, by definition.
         return events
-    elif isinstance(resolution_or_bpm_events_or_None, BPMEvents):
-        # TODO: Should we instead optionally validate a chart, which allows us to assume everything
-        # is sorted? etc.
-        # NOTE: This `ignore` is because it doesn't understand that e.tick is comparable. When this
-        # function is annotated, this can go away.
-        return sorted(events, key=lambda e: e.tick)  # type: ignore
+
+    def data_to_bpm_events(datas: Iterable[BPMEvent.ParsedData], resolution: Ticks) -> BPMEvents:
+        events: list[BPMEvent] = []
+        for data in datas:
+            prev_event = events[-1] if events else None
+            events.append(BPMEvent.from_parsed_data(data, prev_event, resolution))
+        return BPMEvents(events=events, resolution=resolution)
+
+    # flake8 doesn't understand forward declaration of BPMNeedingEvent.
+    BPMNeedingEventT = typ.TypeVar("BPMNeedingEventT", bound="BPMNeedingEvent")  # noqa: F821
+
+    BPMNeedingParsedData = (
+        TimeSignatureEvent.ParsedData
+        | StarPowerEvent.ParsedData
+        | TrackEvent.ParsedData
+        # These are fully-qualified because there is otherwise a circular import.
+        | chartparse.globalevents.LyricEvent.ParsedData
+        | chartparse.globalevents.SectionEvent.ParsedData
+        | chartparse.globalevents.TextEvent.ParsedData
+    )
+
+    BPMNeedingParsedDatas = (
+        Iterable[TimeSignatureEvent.ParsedData]
+        | Iterable[StarPowerEvent.ParsedData]
+        | Iterable[TrackEvent.ParsedData]
+        # These are fully-qualified because there is otherwise a circular import.
+        | Iterable[chartparse.globalevents.LyricEvent.ParsedData]
+        | Iterable[chartparse.globalevents.SectionEvent.ParsedData]
+        | Iterable[chartparse.globalevents.TextEvent.ParsedData]
+    )
+
+    @typ.runtime_checkable
+    class BPMNeedingEvent(typ.Protocol):
+        @classmethod
+        @abc.abstractmethod
+        def from_parsed_data(
+            cls: type[BPMNeedingEventT],
+            data: BPMNeedingParsedData,
+            prev_event: BPMNeedingEventT | None,
+            bpm_events: BPMEvents,
+        ) -> BPMNeedingEventT:
+            ...  # pragma: no cover
+
+    def data_to_events(
+        event_type: type[BPMNeedingEventT],
+        datas: BPMNeedingParsedDatas,
+        bpm_events: BPMEvents,
+    ) -> list[BPMNeedingEventT]:
+        events: list[BPMNeedingEventT] = []
+        for data in datas:
+            prev_event = events[-1] if events else None
+            events.append(event_type.from_parsed_data(data, prev_event, bpm_events))
+        # TODO: Should we be able to validate a chart? This return value was previously sorted by
+        # tick, but that's a non-method member and is therefore incompatible with runtime_checkable
+        # protocols. Sorting here should be unnecessary because charts are probably fundamentally
+        # broken if their events are not in tick order.
+        return events
+
+    if issubclass(event_type, AnchorEvent):
+        datas = typ.cast(Iterable[AnchorEvent.ParsedData], datas)
+        return data_to_anchor_events(datas)
+    elif issubclass(event_type, BPMEvent):
+        datas = typ.cast(Iterable[BPMEvent.ParsedData], datas)
+        resolution = typ.cast(Ticks, resolution_or_bpm_events_or_None)
+        return data_to_bpm_events(datas, resolution)
+    elif issubclass(event_type, BPMNeedingEvent):
+        datas = typ.cast(BPMNeedingParsedDatas, datas)
+        bpm_events = typ.cast(BPMEvents, resolution_or_bpm_events_or_None)
+        return data_to_events(event_type, datas, bpm_events)
     else:  # pragma: no cover
-        raise UnreachableError("resolution_or_bpm_events_or_None must be one of the named types")
+        raise UnreachableError("ifs are exhaustive")
