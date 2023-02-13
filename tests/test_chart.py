@@ -8,7 +8,7 @@ from datetime import timedelta
 
 import pytest
 
-from chartparse.chart import Chart
+from chartparse.chart import Chart, InstrumentTrackMap
 from chartparse.exceptions import RegexNotMatchError
 from chartparse.globalevents import GlobalEventsTrack
 from chartparse.instrument import Difficulty, Instrument, InstrumentTrack, Note
@@ -40,7 +40,7 @@ class TestChart(object):
             default_global_events_track: GlobalEventsTrack,
             default_sync_track: SyncTrack,
             default_instrument_track: InstrumentTrack,
-            default_instrument_tracks: dict[Instrument, dict[Difficulty, InstrumentTrack]],
+            default_instrument_tracks: InstrumentTrackMap,
         ) -> None:
             got = Chart(
                 default_metadata,
@@ -482,7 +482,7 @@ class TestChart(object):
         def test_empty_note_events(
             self,
             bare_chart: Chart,
-            minimal_instrument_tracks: dict[Instrument, dict[Difficulty, InstrumentTrack]],
+            minimal_instrument_tracks: InstrumentTrackMap,
         ) -> None:
             unsafe.setattr(bare_chart, "instrument_tracks", minimal_instrument_tracks)
             with pytest.raises(ValueError):

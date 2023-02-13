@@ -9,7 +9,7 @@ import typing as typ
 
 import pytest
 
-from chartparse.chart import Chart
+from chartparse.chart import Chart, InstrumentTrackMap
 from chartparse.event import Event
 from chartparse.globalevents import (
     GlobalEvent,
@@ -19,8 +19,6 @@ from chartparse.globalevents import (
     TextEvent,
 )
 from chartparse.instrument import (
-    Difficulty,
-    Instrument,
     InstrumentTrack,
     NoteEvent,
     SpecialEvent,
@@ -44,17 +42,17 @@ def invalid_chart_line() -> str:
 
 
 @pytest.fixture
-def minimal_instrument_tracks(
-    minimal_instrument_track: InstrumentTrack,
-) -> dict[Instrument, dict[Difficulty, InstrumentTrack]]:
-    return {defaults.instrument: {defaults.difficulty: minimal_instrument_track}}
+def minimal_instrument_tracks(minimal_instrument_track: InstrumentTrack) -> InstrumentTrackMap:
+    return InstrumentTrackMap(
+        {defaults.instrument: {defaults.difficulty: minimal_instrument_track}}
+    )
 
 
 @pytest.fixture
-def default_instrument_tracks(
-    default_instrument_track: InstrumentTrack,
-) -> dict[Instrument, dict[Difficulty, InstrumentTrack]]:
-    return {defaults.instrument: {defaults.difficulty: default_instrument_track}}
+def default_instrument_tracks(default_instrument_track: InstrumentTrack) -> InstrumentTrackMap:
+    return InstrumentTrackMap(
+        {defaults.instrument: {defaults.difficulty: default_instrument_track}}
+    )
 
 
 @pytest.fixture
@@ -66,8 +64,7 @@ def bare_chart() -> Chart:
 def minimal_chart(
     bare_chart: Chart,
     minimal_metadata: Metadata,
-    # TODO: Add InstrumentTrackMap newtype.
-    minimal_instrument_tracks: dict[Instrument, dict[Difficulty, InstrumentTrack]],
+    minimal_instrument_tracks: InstrumentTrackMap,
     minimal_sync_track: SyncTrack,
     minimal_global_events_track: GlobalEventsTrack,
 ) -> Chart:
@@ -84,7 +81,7 @@ def default_chart(
     default_metadata: Metadata,
     default_global_events_track: GlobalEventsTrack,
     default_sync_track: SyncTrack,
-    default_instrument_tracks: dict[Instrument, dict[Difficulty, InstrumentTrack]],
+    default_instrument_tracks: InstrumentTrackMap,
 ) -> Chart:
     return Chart(
         default_metadata,

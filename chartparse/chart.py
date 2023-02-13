@@ -43,6 +43,11 @@ logging.basicConfig()
 logger = logging.getLogger(__name__)
 
 
+InstrumentTrackMap = typ.NewType(
+    "InstrumentTrackMap", dict[Instrument, dict[Difficulty, InstrumentTrack]]
+)
+
+
 @typ.final
 class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     """A Clone Hero / Moonscraper chart and its relevant gameplay data.
@@ -61,7 +66,7 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     sync_track: typ.Final[SyncTrack]
     """Contains the chart's sync-related events."""
 
-    instrument_tracks: typ.Final[dict[Instrument, dict[Difficulty, InstrumentTrack]]]
+    instrument_tracks: typ.Final[InstrumentTrackMap]
     """Contains all of the chart's :class:`~chartparse.instrument.InstrumentTrack` objects."""
 
     _required_sections: typ.Final[list[str]] = [
@@ -80,7 +85,7 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         metadata: Metadata,
         global_events_track: GlobalEventsTrack,
         sync_track: SyncTrack,
-        instrument_tracks: dict[Instrument, dict[Difficulty, InstrumentTrack]],
+        instrument_tracks: InstrumentTrackMap,
     ) -> None:
         """Instantiates all instance attributes and populates timestamps & note HOPO states."""
 
@@ -146,9 +151,7 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             str, tuple[Instrument, Difficulty]
         ] = {d.value + i.value: (i, d) for i, d in itertools.product(Instrument, Difficulty)}
 
-        instrument_tracks: collections.defaultdict[
-            Instrument, dict[Difficulty, InstrumentTrack]
-        ] = collections.defaultdict(dict)
+        instrument_tracks = InstrumentTrackMap(collections.defaultdict(dict))
         for section_name, section_lines in section_dict.items():
             if section_name in instrument_track_name_to_instrument_difficulty_pair:
                 instrument_difficulty_pair = instrument_track_name_to_instrument_difficulty_pair[
