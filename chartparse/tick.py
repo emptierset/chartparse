@@ -66,31 +66,54 @@ def between(a: Tick, b: Tick) -> Ticks:
 class NoteDuration(Enum):
     """The note durations supported by Moonscraper.
 
-    The enum values are the number of that type of note in a number of ticks equal to
-    :attr:`~chartparse.metadata.Metadata.resolution`.
+    The enum values are the number of that type of note in one
+    :attr:`~chartparse.metadata.Metadata.resolution`\\'s worth of ticks.
     """
 
-    # TODO: These aren't actually counted in ticks. Reread the comment.
-    WHOLE = Ticks(int(2 ** (-2)))
-    HALF = Ticks(int(2 ** (-1)))
-    QUARTER = Ticks(int(2**0))
-    EIGHTH = Ticks(int(2**1))
-    SIXTEENTH = Ticks(int(2**2))
-    THIRTY_SECOND = Ticks(int(2**3))
-    SIXTY_FOURTH = Ticks(int(2**4))
-    HUNDRED_TWENTY_EIGHTH = Ticks(int(2**5))
-    TWO_HUNDRED_FIFTH_SIXTH = Ticks(int(2**6))
-    FIVE_HUNDRED_TWELFTH = Ticks(int(2**7))
+    @staticmethod
+    def _int_if_possible(f: float) -> float | int:
+        if (i := int(f)) == f:
+            return i
+        return f
 
-    THIRD = Ticks(int((HALF + QUARTER) / 2))
-    SIXTH = Ticks(int((QUARTER + EIGHTH) / 2))
-    TWELFTH = Ticks(int((EIGHTH + SIXTEENTH) / 2))
-    TWENTY_FOURTH = Ticks(int((SIXTEENTH + THIRTY_SECOND) / 2))
-    FOURTY_EIGHTH = Ticks(int((THIRTY_SECOND + SIXTY_FOURTH) / 2))
-    NINETY_SIXTH = Ticks(int((SIXTY_FOURTH + HUNDRED_TWENTY_EIGHTH) / 2))
-    HUNDRED_NINETY_SECOND = Ticks(int((HUNDRED_TWENTY_EIGHTH + TWO_HUNDRED_FIFTH_SIXTH) / 2))
-    THREE_HUNDRED_EIGHTY_FOURTH = Ticks(int((TWO_HUNDRED_FIFTH_SIXTH + FIVE_HUNDRED_TWELFTH) / 2))
-    SEVEN_HUNDRED_SIXTY_EIGHTH = Ticks(int((FIVE_HUNDRED_TWELFTH + FIVE_HUNDRED_TWELFTH * 2) / 2))
+    WHOLE = _int_if_possible(2 ** (-2))
+    HALF = _int_if_possible(2 ** (-1))
+    QUARTER = _int_if_possible(2**0)
+    EIGHTH = _int_if_possible(2**1)
+    SIXTEENTH = _int_if_possible(2**2)
+    THIRTY_SECOND = _int_if_possible(2**3)
+    SIXTY_FOURTH = _int_if_possible(2**4)
+    HUNDRED_TWENTY_EIGHTH = _int_if_possible(2**5)
+    TWO_HUNDRED_FIFTH_SIXTH = _int_if_possible(2**6)
+    FIVE_HUNDRED_TWELFTH = _int_if_possible(2**7)
+
+    THIRD = _int_if_possible(
+        (HALF + QUARTER) / 2,
+    )
+    SIXTH = _int_if_possible(
+        (QUARTER + EIGHTH) / 2,
+    )
+    TWELFTH = _int_if_possible(
+        (EIGHTH + SIXTEENTH) / 2,
+    )
+    TWENTY_FOURTH = _int_if_possible(
+        (SIXTEENTH + THIRTY_SECOND) / 2,
+    )
+    FOURTY_EIGHTH = _int_if_possible(
+        (THIRTY_SECOND + SIXTY_FOURTH) / 2,
+    )
+    NINETY_SIXTH = _int_if_possible(
+        (SIXTY_FOURTH + HUNDRED_TWENTY_EIGHTH) / 2,
+    )
+    HUNDRED_NINETY_SECOND = _int_if_possible(
+        (HUNDRED_TWENTY_EIGHTH + TWO_HUNDRED_FIFTH_SIXTH) / 2,
+    )
+    THREE_HUNDRED_EIGHTY_FOURTH = _int_if_possible(
+        (TWO_HUNDRED_FIFTH_SIXTH + FIVE_HUNDRED_TWELFTH) / 2
+    )
+    SEVEN_HUNDRED_SIXTY_EIGHTH = _int_if_possible(
+        (FIVE_HUNDRED_TWELFTH + FIVE_HUNDRED_TWELFTH * 2) / 2
+    )
 
     # Aliases
 
