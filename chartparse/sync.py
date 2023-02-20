@@ -377,27 +377,17 @@ class BPMEvents(Sequence[BPMEvent]):
     def __getitem__(self, index: int | slice) -> BPMEvent | Sequence[BPMEvent]:
         return self.events[index]
 
-    # TODO: Remove start_iteration_index from this. If we aren't interested in receiving an
-    # optimizer, we probably don't care to pass one either.
     # TODO: Figure out why kwargs docstring is ugly in Sphinx.
-    def timestamp_at_tick_no_optimize_return(
-        self, tick: Tick, *, start_iteration_index: int = 0
-    ) -> Timestamp:
+    def timestamp_at_tick_no_optimize_return(self, tick: Tick) -> Timestamp:
         """Returns the timestamp at the input tick.
 
         Args:
             tick: The tick at which the timestamp should be calculated.
 
-        Kwargs:
-            start_iteration_index: An optional optimizing input that allows this function to start
-                iterating over BPM events at a later index. Only pass this if you are certain that
-                the event that should be proximal to tick is _not_ before this index. Not passing
-                this kwarg results only in slower execution.
-
         Returns:
             The timestamp at the input tick.
         """
-        timestamp, _ = self.timestamp_at_tick(tick, start_iteration_index=start_iteration_index)
+        timestamp, _ = self.timestamp_at_tick(tick)
         return timestamp
 
     def timestamp_at_tick(
