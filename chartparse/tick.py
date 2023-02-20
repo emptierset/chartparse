@@ -52,14 +52,13 @@ def difference(a: Ticks, b: Ticks) -> Ticks:
 
 
 def between(a: Tick, b: Tick) -> Ticks:
-    """Returns the number of ticks in ``b - a``.
+    """Returns the number of ticks in ``abs(a - b)``.
 
     Args:
         a: A tick moment.
         b: A tick moment.
     """
-    # TODO: Should this be absolute value?
-    return Ticks(b - a)
+    return Ticks(abs(a - b))
 
 
 @typ.final

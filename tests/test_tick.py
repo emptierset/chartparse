@@ -29,9 +29,26 @@ class TestDifference(object):
 
 
 class TestBetween(object):
-    def test(self) -> None:
-        want = Ticks(2)
-        got = chartparse.tick.between(Tick(1), Tick(3))
+    @testcase.parametrize(
+        ["a", "b", "want"],
+        [
+            testcase.new(
+                "bigger_first",
+                a=10,
+                b=7,
+                want=3,
+            ),
+            testcase.new(
+                "bigger_second",
+                a=7,
+                b=10,
+                want=3,
+            ),
+        ],
+    )
+    def test(self, a: int, b: int, want: int) -> None:
+        want = Ticks(want)
+        got = chartparse.tick.between(Tick(a), Tick(b))
         assert got == want
 
 
