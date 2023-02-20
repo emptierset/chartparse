@@ -32,9 +32,9 @@ author = 'emptyset'
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
-    'sphinx_toolbox.more_autodoc.typehints',
-    'sphinx_toolbox.more_autodoc.genericalias',
 ]
+
+autodoc_typehints = 'both'
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
