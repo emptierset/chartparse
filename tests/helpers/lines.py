@@ -1,6 +1,8 @@
 from chartparse.instrument import NoteTrackIndex
 from chartparse.tick import Tick, Ticks
 
+# TODO: Just include _line suffix in this file. This is painful.
+
 
 def generate_bpm(tick: Tick, bpm: float) -> str:
     bpm_sans_decimal_point = int(bpm * 1000)
