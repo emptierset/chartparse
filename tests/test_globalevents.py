@@ -219,10 +219,10 @@ class TestSectionEvent(object):
                     testcase.new_anonymous(value="one_word"),
                     testcase.new_anonymous(value="56numbers34"),
                     testcase.new_anonymous(value="$%%symbols*#&$"),
+                    testcase.new_anonymous(value="Solo 1"),
                 ],
             )
             # ^\s*?(\d+?) = E \"section (.*?)\"\s*?$
-            # TODO: Validate this regexes. Can sections actually have spaces?
             def test_match(self, tick: int, value: str) -> None:
                 line = generate_section_line(Tick(tick), value)
                 m = SectionEvent.ParsedData._regex_prog.match(line)
@@ -254,9 +254,9 @@ class TestLyricEvent(object):
                     testcase.new_anonymous(value="one_word"),
                     testcase.new_anonymous(value="56numbers34"),
                     testcase.new_anonymous(value="$%%symbols*#&$"),
+                    testcase.new_anonymous(value="ooOOO oo"),
                 ],
             )
-            # TODO: Validate this regexes. Can lyrics actually have spaces?
             # ^\s*?(\d+?) = E \"lyric (.*?)\"\s*?$
             def test_match(self, tick: int, value: str) -> None:
                 line = generate_lyric_line(Tick(tick), value)
