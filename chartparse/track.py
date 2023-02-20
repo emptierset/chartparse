@@ -24,9 +24,6 @@ from chartparse.sync import AnchorEvent, BPMEvent, BPMEvents, TimeSignatureEvent
 from chartparse.tick import Ticks
 from chartparse.util import DictPropertiesEqMixin, DictReprTruncatedSequencesMixin
 
-if typ.TYPE_CHECKING:  # pragma: no cover
-    from chartparse.globalevents import LyricEvent, SectionEvent, TextEvent
-
 logger = logging.getLogger(__name__)
 
 _unparsable_line_msg_tmpl: typ.Final[str] = 'unparsable line: "{}" for types {}'
@@ -114,31 +111,31 @@ def build_events_from_data(
 
 @typ.overload
 def build_events_from_data(
-    event_type: type[SectionEvent],
-    datas: Iterable[SectionEvent.ParsedData],
+    event_type: type[chartparse.globalevents.SectionEvent],
+    datas: Iterable[chartparse.globalevents.SectionEvent.ParsedData],
     bpm_events: BPMEvents,
     /,
-) -> list[SectionEvent]:
+) -> list[chartparse.globalevents.SectionEvent]:
     ...  # pragma: no cover
 
 
 @typ.overload
 def build_events_from_data(
-    event_type: type[LyricEvent],
-    datas: Iterable[LyricEvent.ParsedData],
+    event_type: type[chartparse.globalevents.LyricEvent],
+    datas: Iterable[chartparse.globalevents.LyricEvent.ParsedData],
     bpm_events: BPMEvents,
     /,
-) -> list[LyricEvent]:
+) -> list[chartparse.globalevents.LyricEvent]:
     ...  # pragma: no cover
 
 
 @typ.overload
 def build_events_from_data(
-    event_type: type[TextEvent],
-    datas: Iterable[TextEvent.ParsedData],
+    event_type: type[chartparse.globalevents.TextEvent],
+    datas: Iterable[chartparse.globalevents.TextEvent.ParsedData],
     bpm_events: BPMEvents,
     /,
-) -> list[TextEvent]:
+) -> list[chartparse.globalevents.TextEvent]:
     ...  # pragma: no cover
 
 
@@ -168,17 +165,17 @@ def build_events_from_data(
     | type[AnchorEvent]
     | type[StarPowerEvent]
     | type[TrackEvent]
-    | type[LyricEvent]
-    | type[SectionEvent]
-    | type[TextEvent],
+    | type[chartparse.globalevents.LyricEvent]
+    | type[chartparse.globalevents.SectionEvent]
+    | type[chartparse.globalevents.TextEvent],
     datas: Iterable[BPMEvent.ParsedData]
     | Iterable[TimeSignatureEvent.ParsedData]
     | Iterable[AnchorEvent.ParsedData]
     | Iterable[StarPowerEvent.ParsedData]
     | Iterable[TrackEvent.ParsedData]
-    | Iterable[LyricEvent.ParsedData]
-    | Iterable[SectionEvent.ParsedData]
-    | Iterable[TextEvent.ParsedData],
+    | Iterable[chartparse.globalevents.LyricEvent.ParsedData]
+    | Iterable[chartparse.globalevents.SectionEvent.ParsedData]
+    | Iterable[chartparse.globalevents.TextEvent.ParsedData],
     resolution_or_bpm_events_or_None: Ticks | BPMEvents | None = None,
     /,
 ) -> (
@@ -187,9 +184,9 @@ def build_events_from_data(
     | list[AnchorEvent]
     | list[StarPowerEvent]
     | list[TrackEvent]
-    | list[LyricEvent]
-    | list[SectionEvent]
-    | list[TextEvent]
+    | list[chartparse.globalevents.LyricEvent]
+    | list[chartparse.globalevents.SectionEvent]
+    | list[chartparse.globalevents.TextEvent]
 ):
     def data_to_anchor_events(datas: Iterable[AnchorEvent.ParsedData]) -> list[AnchorEvent]:
         events: list[AnchorEvent] = []

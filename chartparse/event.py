@@ -11,11 +11,9 @@ import abc
 import dataclasses
 import typing as typ
 
+from chartparse.tick import Tick
 from chartparse.time import Timestamp
 from chartparse.util import DictPropertiesEqMixin, DictReprMixin
-
-if typ.TYPE_CHECKING:  # pragma: no cover
-    from chartparse.tick import Tick
 
 
 @dataclasses.dataclass(kw_only=True, frozen=True)
