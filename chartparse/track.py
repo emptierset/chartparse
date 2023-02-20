@@ -246,10 +246,10 @@ def build_events_from_data(
         for data in datas:
             prev_event = events[-1] if events else None
             events.append(event_type.from_parsed_data(data, prev_event, bpm_events))
-        # TODO: Should we be able to validate a chart? This return value was previously sorted by
-        # tick, but that's a non-method member and is therefore incompatible with runtime_checkable
-        # protocols. Sorting here should be unnecessary because charts are probably fundamentally
-        # broken if their events are not in tick order.
+        # This return value was previously sorted by tick, but that's a non-method member and is
+        # therefore incompatible with runtime_checkable protocols. Sorting here should be
+        # unnecessary because charts are probably fundamentally broken if their events are not in
+        # tick order.
         return events
 
     if issubclass(event_type, AnchorEvent):

@@ -272,7 +272,6 @@ class BPMEvent(Event):
             timestamp, proximal_bpm_event_index = Timestamp(timedelta(0)), 0
         else:
             if data.tick <= prev_event.tick:
-                # TODO: This branch can be removed if we move chart validation to an external flow.
                 raise ValueError(
                     f"{cls.__name__} at tick {data.tick} does not occur after previous "
                     f"{cls.__name__} at tick {prev_event.tick}; tick values of "
