@@ -37,19 +37,16 @@ logger = logging.getLogger(__name__)
 class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     """All of a :class:`~chartparse.chart.Chart` object's tempo-mapping related events."""
 
-    _Self = typ.TypeVar("_Self", bound="SyncTrack")
+    Self = typ.TypeVar("Self", bound="SyncTrack")
 
     section_name: typ.ClassVar[str] = "SyncTrack"
     """The name of this track's section in a ``.chart`` file."""
 
     time_signature_events: Sequence[TimeSignatureEvent]
-    """A ``SyncTrack``'s ``TimeSignatureEvent``\\ s."""
 
     bpm_events: BPMEvents
-    """A ``SyncTrack``'s ``BPMEvent``\\ s."""
 
     anchor_events: Sequence[AnchorEvent]
-    """A ``SyncTrack``'s ``AnchorEvent``\\ s."""
 
     def __post_init__(self) -> None:
         """Validates all instance attributes.
@@ -68,15 +65,15 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
     @classmethod
     def from_chart_lines(
-        cls: type[_Self],
+        cls: type[Self],
         resolution: Ticks,
         lines: Iterable[str],
-    ) -> _Self:
+    ) -> Self:
         """Initializes instance attributes by parsing an iterable of strings.
 
         Args:
             resolution: The number of ticks in a quarter note.
-            lines: An iterable of strings most likely from a Moonscraper ``.chart``.
+            lines: An iterable of strings most likely from a Moonscraper ``.chart`` file.
 
         Returns:
             A ``SyncTrack`` parsed from ``lines``.
@@ -100,7 +97,7 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
     @classmethod
     def _parse_data_from_chart_lines(
-        cls: type[_Self],
+        cls: type[Self],
         lines: Iterable[str],
     ) -> tuple[
         list[TimeSignatureEvent.ParsedData],
@@ -120,9 +117,12 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 @typ.final
 @dataclasses.dataclass(kw_only=True, frozen=True)
 class TimeSignatureEvent(Event):
-    """An event representing a time signature change at a particular tick."""
+    """An event representing a time signature change at a particular tick.
 
-    _Self = typ.TypeVar("_Self", bound="TimeSignatureEvent")
+    The first ``TimeSignatureEvent`` sets the initial time signature.
+    """
+
+    Self = typ.TypeVar("Self", bound="TimeSignatureEvent")
 
     upper_numeral: int
     """The number indicating how many beats constitute a bar."""
@@ -131,22 +131,23 @@ class TimeSignatureEvent(Event):
     """The number indicating the note value that represents one beat."""
 
     _default_lower_numeral: typ.ClassVar[int] = 4
+    """If ``from_parsed_data``\\'s input lacks ``lower``, we assume the true lower numeral is 4."""
 
     @classmethod
     def from_parsed_data(
-        cls: type[_Self],
+        cls: type[Self],
         data: TimeSignatureEvent.ParsedData,
-        prev_event: _Self | None,
+        prev_event: Self | None,
         bpm_events: BPMEvents,
-    ) -> _Self:
+    ) -> Self:
         """Obtain an instance of this object from parsed data.
 
         Args:
-            data: The data necessary to create an event. Most likely from a Moonscraper ``.chart``.
+            data: The data necessary to create an event.
 
-            prev_event: The ``TimeSignatureEvent`` with the greatest ``tick`` value less than that
-                of this event. If this is ``None``, then this must be the first
-                ``TimeSignatureEvent``.
+            prev_event: The event of this type with the greatest ``tick`` value less than that of
+                this event. If this is ``None``, then this must be the tick-wise first event of
+                this type.
 
             bpm_events: An object that can be used to get a timestamp at a particular tick.
 
@@ -178,23 +179,24 @@ class TimeSignatureEvent(Event):
     class ParsedData(Event.ParsedData, DictReprMixin):
         """The data on a single chart line associated with a ``TimeSignatureEvent``."""
 
-        _Self = typ.TypeVar("_Self", bound="TimeSignatureEvent.ParsedData")
+        # TODO: Figure out how to hide this from Sphinx without prepending an underscore.
+        Self = typ.TypeVar("Self", bound="TimeSignatureEvent.ParsedData")
 
         upper: int
+        """The number indicating how many beats constitute a bar."""
+
         lower: int | None
+        """The log (base 2) of the number indicating the note value that represents one beat."""
 
         # Match 1: Tick
         # Match 2: Upper numeral
-        # Match 3: Lower numeral (optional; assumed to be 4 if absent)
+        # Match 3: Lower numeral (optional)
         _regex: typ.Final[str] = r"^\s*?(\d+?) = TS (\d+?)(?: (\d+?))?\s*?$"
         _regex_prog: typ.Final[typ.Pattern[str]] = re.compile(_regex)
 
         @classmethod
-        def from_chart_line(cls: type[_Self], line: str) -> _Self:
+        def from_chart_line(cls: type[Self], line: str) -> Self:
             """Attempt to construct this object from a ``.chart`` line.
-
-            Args:
-                line: A string, most likely from a Moonscraper ``.chart``.
 
             Returns:
                 An an instance of this object initialized from ``line``.
@@ -216,9 +218,12 @@ class TimeSignatureEvent(Event):
 @typ.final
 @dataclasses.dataclass(kw_only=True, frozen=True)
 class BPMEvent(Event):
-    """An event representing a BPM (beats per minute) change at a particular tick."""
+    """An event representing a BPM (beats per minute) change at a particular tick.
 
-    _Self = typ.TypeVar("_Self", bound="BPMEvent")
+    The first ``BPMEvent`` sets the initial BPM.
+    """
+
+    Self = typ.TypeVar("Self", bound="BPMEvent")
 
     bpm: float
     """The beats per minute value. Must not have more than 3 decimal places."""
@@ -234,18 +239,19 @@ class BPMEvent(Event):
 
     @classmethod
     def from_parsed_data(
-        cls: type[_Self],
+        cls: type[Self],
         data: BPMEvent.ParsedData,
-        prev_event: _Self | None,
+        prev_event: Self | None,
         resolution: Ticks,
-    ) -> _Self:
+    ) -> Self:
         """Obtain an instance of this object from parsed data.
 
         Args:
-            data: The data necessary to create an event. Most likely from a Moonscraper ``.chart``.
+            data: The data necessary to create an event.
 
             prev_event: The event of this type with the greatest ``tick`` value less than that of
-                this event. If this is ``None``, then this must be the first event of this type.
+                this event. If this is ``None``, then this must be the tick-wise first event of
+                this type.
 
             resolution: The number of ticks for which a quarter note lasts.
 
@@ -298,7 +304,7 @@ class BPMEvent(Event):
     class ParsedData(Event.ParsedData, DictReprMixin):
         """The data on a single chart line associated with a ``BPMEvent``."""
 
-        _Self = typ.TypeVar("_Self", bound="BPMEvent.ParsedData")
+        Self = typ.TypeVar("Self", bound="BPMEvent.ParsedData")
 
         raw_bpm: str
 
@@ -308,11 +314,11 @@ class BPMEvent(Event):
         _regex_prog: typ.Final[typ.Pattern[str]] = re.compile(_regex)
 
         @classmethod
-        def from_chart_line(cls: type[_Self], line: str) -> _Self:
+        def from_chart_line(cls: type[Self], line: str) -> Self:
             """Attempt to construct this object from a ``.chart`` line.
 
             Args:
-                line: A string, most likely from a Moonscraper ``.chart``.
+                line: A string, most likely from a Moonscraper ``.chart`` file.
 
             Returns:
                 An an instance of this object initialized from ``line``.
@@ -333,7 +339,9 @@ class BPMEvents(Sequence[BPMEvent]):
     """The chart's ``BPMEvent``\\s, wrapped with the chart's resolution.
 
     This exists solely to allow ``timestamp_at_tick`` to be called the moment all requisite data is
-    accessible.
+    accessible. If the resolution and BPM events were instead bundled into ``SyncTrack`` and
+    ``timestamp_at_tick`` were attached to ``SyncTrack``, is would be irksome to call
+    ``timestamp_at_tick`` while initializing ``TimeSignatureEvents``.
     """
 
     events: Sequence[BPMEvent]
@@ -370,6 +378,9 @@ class BPMEvents(Sequence[BPMEvent]):
     def __getitem__(self, index: int | slice) -> BPMEvent | Sequence[BPMEvent]:
         return self.events[index]
 
+    # TODO: Remove start_iteration_index from this. If we aren't interested in receiving an
+    # optimizer, we probably don't care to pass one either.
+    # TODO: Figure out why kwargs docstring is ugly in Sphinx.
     def timestamp_at_tick_no_optimize_return(
         self, tick: Tick, *, start_iteration_index: int = 0
     ) -> Timestamp:
@@ -379,10 +390,10 @@ class BPMEvents(Sequence[BPMEvent]):
             tick: The tick at which the timestamp should be calculated.
 
         Kwargs:
-            start_iteration_index: An optional optimizing input that allows this
-                function to start iterating over ``BPMEvent``s at a later index. Only pass this if
-                you are certain that the event that should be proximal to ``tick`` is _not_ before
-                this index. Not passing this kwarg results only in slower execution.
+            start_iteration_index: An optional optimizing input that allows this function to start
+                iterating over BPM events at a later index. Only pass this if you are certain that
+                the event that should be proximal to tick is _not_ before this index. Not passing
+                this kwarg results only in slower execution.
 
         Returns:
             The timestamp at the input tick.
@@ -399,10 +410,10 @@ class BPMEvents(Sequence[BPMEvent]):
             tick: The tick at which the timestamp should be calculated.
 
         Kwargs:
-            start_iteration_index: An optional optimizing input that allows this
-                function to start iterating over ``BPMEvent``s at a later index. Only pass this if
-                you are certain that the event that should be proximal to ``tick`` is _not_ before
-                this index. Not passing this kwarg results only in slower execution.
+            start_iteration_index: An optional optimizing input that allows this function to start
+                iterating over BPM events at a later index. Only pass this if you are certain that
+                the event that should be proximal to tick is _not_ before this index. Not passing
+                this kwarg results only in slower execution.
 
         Returns:
             The timestamp at the input tick, plus the index of the ``BPMEvent`` proximal to the
@@ -452,14 +463,14 @@ class BPMEvents(Sequence[BPMEvent]):
 class AnchorEvent(Event):
     """An event representing a tick "locked" to a particular timestamp."""
 
-    _Self = typ.TypeVar("_Self", bound="AnchorEvent")
+    Self = typ.TypeVar("Self", bound="AnchorEvent")
 
     @classmethod
-    def from_parsed_data(cls: type[_Self], data: AnchorEvent.ParsedData) -> _Self:
+    def from_parsed_data(cls: type[Self], data: AnchorEvent.ParsedData) -> Self:
         """Obtain an instance of this object from parsed data.
 
         Args:
-            data: The data necessary to create an event. Most likely from a Moonscraper ``.chart``.
+            data: The data necessary to create an event.
 
         Returns:
             An an instance of this object initialized from ``data``.
@@ -473,7 +484,7 @@ class AnchorEvent(Event):
     class ParsedData(Event.ParsedData, DictReprMixin):
         """The data on a single chart line associated with an ``AnchorEvent``."""
 
-        _Self = typ.TypeVar("_Self", bound="AnchorEvent.ParsedData")
+        Self = typ.TypeVar("Self", bound="AnchorEvent.ParsedData")
 
         microseconds: int
 
@@ -483,11 +494,11 @@ class AnchorEvent(Event):
         _regex_prog: typ.Final[typ.Pattern[str]] = re.compile(_regex)
 
         @classmethod
-        def from_chart_line(cls: type[_Self], line: str) -> _Self:
+        def from_chart_line(cls: type[Self], line: str) -> Self:
             """Attempt to construct this object from a ``.chart`` line.
 
             Args:
-                line: A string, most likely from a Moonscraper ``.chart``.
+                line: A string, most likely from a Moonscraper ``.chart`` file.
 
             Returns:
                 An an instance of this object initialized from ``line``.

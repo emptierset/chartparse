@@ -92,6 +92,8 @@ FieldValueParser = Callable[[str], FieldValue]
 
 
 class _FieldValuesDict(typ.TypedDict, total=False):
+    # TODO: Should resolution even be here? I think it is technically part of this section of the
+    # chart, but it is much more useful coupled to BPMEvents.
     resolution: Ticks
     offset: int
     player2: Player2Instrument
@@ -242,7 +244,7 @@ _field_parsing_specs: _FieldParsingSpecDict = {
 class Metadata(DictPropertiesEqMixin, DictReprMixin):
     """All of a :class:`~chartparse.chart.Chart` object's metadata."""
 
-    _Self = typ.TypeVar("_Self", bound="Metadata")
+    Self = typ.TypeVar("Self", bound="Metadata")
 
     section_name: typ.ClassVar[str] = "Song"
     """The name of this track's section in a ``.chart`` file."""
@@ -262,7 +264,7 @@ class Metadata(DictPropertiesEqMixin, DictReprMixin):
     difficulty: int = 0
     """The perceived difficulty to play the chart.
 
-    This is often referred to as "intensity".
+    This is often referred to as "intensity" in modern Guitar Hero.
     """
 
     preview_start: int = 0
@@ -301,8 +303,8 @@ class Metadata(DictPropertiesEqMixin, DictReprMixin):
     year: str | None = None
     """The year the chart's song came out.
 
-    This is formatted as, e.g. ", 2018" because it saved time when importing into GHTCP (Guitar
-    Hero Three Control Panel).
+    This is formatted as, e.g. ", 2018" because it historically saved time when importing into
+    GHTCP (Guitar Hero Three Control Panel).
     """
 
     music_stream: str | None = None
@@ -339,11 +341,11 @@ class Metadata(DictPropertiesEqMixin, DictReprMixin):
     """The filename of the crowd audio file."""
 
     @classmethod
-    def from_chart_lines(cls: type[_Self], lines_iter: Iterable[str]) -> _Self:
+    def from_chart_lines(cls: type[Self], lines_iter: Iterable[str]) -> Self:
         """Initializes instance attributes by parsing an iterable of strings.
 
         Args:
-            lines: An iterable of strings most likely from a Moonscraper ``.chart``.
+            lines_iter: An iterable of strings most likely from a Moonscraper ``.chart`` file.
         """
         kwargs: _FieldValuesDict = dict()
 

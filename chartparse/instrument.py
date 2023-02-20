@@ -1,4 +1,4 @@
-"""For representing the data related to a single (instrument, difficulty) pair.
+"""For representing the data related instruments and notes.
 
 You should not need to create any of this module's objects manually; please instead create
 a :class:`~chartparse.chart.Chart` and inspect its attributes via that object.
@@ -72,15 +72,17 @@ class Instrument(AllValuesGettableEnum):
     RHYTHM = "DoubleRhythm"
     KEYS = "Keyboard"
     DRUMS = "Drums"
-    GHL_GUITAR = "GHLGuitar"  # Guitar (Guitar Hero: Live)
-    GHL_BASS = "GHLBass"  # Bass (Guitar Hero: Live)
+    GHL_GUITAR = "GHLGuitar"
+    """Guitar (Guitar Hero Live)"""
+    GHL_BASS = "GHLBass"
+    """Bass (Guitar Hero Live)"""
 
 
 @typ.final
 class Note(Enum):
     """The note lane(s) to which a :class:`~chartparse.instrument.NoteEvent` corresponds."""
 
-    _Self = typ.TypeVar("_Self", bound="Note")
+    Self = typ.TypeVar("Self", bound="Note")
 
     # NOTE: Adding `value` manually is required for mypy to understand that `.value` is not of type
     # `Any`. See https://github.com/python/mypy/issues/8722.
@@ -160,8 +162,8 @@ class Note(Enum):
 
     @classmethod
     def from_parsed_data(
-        cls: type[_Self], data: NoteEvent.ParsedData | Sequence[NoteEvent.ParsedData]
-    ) -> _Self:
+        cls: type[Self], data: NoteEvent.ParsedData | Sequence[NoteEvent.ParsedData]
+    ) -> Self:
         """Returns the ``Note`` represented by one or more ``NoteEvent.ParsedData``\\s.
 
         Args:
@@ -183,12 +185,18 @@ class Note(Enum):
 
 @typ.final
 class NoteTrackIndex(AllValuesGettableEnum):
-    """The integer in a line in a Moonscraper ``.chart`` file's instrument track."""
+    """The integer in a line in a Moonscraper ``.chart`` file's instrument track.
 
-    _Self = typ.TypeVar("_Self", bound="NoteTrackIndex")
+    This only specifies one note lane (or a note "flag") because multiple chart lines coalesce to
+    form chords and/or "flagged" notes.
+    """
+
+    Self = typ.TypeVar("Self", bound="NoteTrackIndex")
 
     # NOTE: Adding `value` manually is required for mypy to understand that `.value` is not of type
     # `Any`. See https://github.com/python/mypy/issues/8722.
+    # TODO: Figure out how to hide this from Sphinx, given that prepending an underscore probably
+    # breaks it.
     value: int
 
     G = 0
@@ -229,7 +237,7 @@ class NoteTrackIndex(AllValuesGettableEnum):
 class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     """All of the instrument-related events for one (instrument, difficulty) pair."""
 
-    _Self = typ.TypeVar("_Self", bound="InstrumentTrack")
+    Self = typ.TypeVar("Self", bound="InstrumentTrack")
 
     @functools.cached_property
     def section_name(self) -> str:
@@ -264,18 +272,18 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
     @classmethod
     def from_chart_lines(
-        cls: type[_Self],
+        cls: type[Self],
         instrument: Instrument,
         difficulty: Difficulty,
         lines: Iterable[str],
         bpm_events: BPMEvents,
-    ) -> _Self:
+    ) -> Self:
         """Initializes instance attributes by parsing an iterable of strings.
 
         Args:
             instrument: The instrument to which this track corresponds.
             difficulty: This track's difficulty setting.
-            lines: An iterable of strings most likely from a Moonscraper ``.chart``.
+            lines: An iterable of strings most likely from a Moonscraper ``.chart`` file.
             bpm_events: The chart's wrapped BPMEvents.
 
         Returns:
@@ -298,7 +306,7 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
     @classmethod
     def _parse_data_from_chart_lines(
-        cls: type[_Self],
+        cls: type[Self],
         lines: Iterable[str],
     ) -> tuple[
         list[NoteEvent.ParsedData], list[StarPowerEvent.ParsedData], list[TrackEvent.ParsedData]
@@ -377,19 +385,19 @@ SustainTuple = typ.NewType(
 
 An element is ``None`` if and only if the corresponding note lane is inactive. If an element is
 ``0``, then there will be at least one other non-``0``, non-``None`` element; this is because that
-``0`` element represents an unsustained note in unison with a sustained note.
+``0`` element represents an unsustained (but present) note in unison with a sustained note.
 """
 
 ComplexSustain = Ticks | SustainTuple
-"""An sustain value representing multiple coinciding notes with different sustain values.
+"""A sustain value representing the possibility for coinciding notes with different sustain values.
 
 If this value is a ``Ticks``, it means that all active note lanes at this tick value are sustained
-for the same number of ticks. If this value is ``0``, then none of the note lanes are active.
+for the same number of ticks.
 """
 
 
 def complex_sustain_from_parsed_datas(datas: Sequence[NoteEvent.ParsedData]) -> ComplexSustain:
-    """Returns a ComplexSustain incorporating multiple ParsedDatas.
+    """Returns a ``ComplexSustain`` incorporating the sustains of multiple ``ParsedDatas``.
 
     If ``datas`` has multiple elements, one or more of which correspond to open notes, this
     function's behavior is undefined.
@@ -398,8 +406,10 @@ def complex_sustain_from_parsed_datas(datas: Sequence[NoteEvent.ParsedData]) -> 
         datas: The datas whose sustain values should be coalesced.
 
     Returns:
-        The sustain values of ``datas`` coalesced into a single ComplexSustain.
+        The sustain values of ``datas`` coalesced into a single ``ComplexSustain``.
     """
+    # Undefined behavior if there are other open notes. We could validate this, but this function
+    # runs in a very tight loop.
     if datas[0].note_track_index == NoteTrackIndex.OPEN:
         return datas[0].sustain
 
@@ -425,7 +435,7 @@ def _refined_sustain_tuple(sustain_tuple: SustainTuple) -> ComplexSustain:
 @typ.final
 @enum.unique
 class HOPOState(Enum):
-    """The manner in which a :class:`~chartparse.instrument.NoteEvent` can/must be hit."""
+    """The manner in which a :class:`~chartparse.instrument.NoteEvent` can or must be hit."""
 
     STRUM = 0
     HOPO = 1
@@ -435,29 +445,31 @@ class HOPOState(Enum):
 @typ.final
 @dataclasses.dataclass(kw_only=True, frozen=True)
 class NoteEvent(Event):
-    """An event representing all of the notes at a particular tick.
+    """An event representing all of the active note lanes / flags at a particular tick.
+
+    A single ``NoteEvent`` is treated as a single "note" in Guitar Hero.
 
     A note event's ``str`` representation looks like this::
 
-        NoteEvent(t@0000816 0:00:02.093750): sustain=0: Note.Y [flags=H]
+        NoteEvent(t@0000816 0:00:02.093750): sustain=0: Note.Y [hopo_state=H]
 
     This event occurs at tick 816 and timestamp 0:00:02.093750. It is not sustained. It is yellow.
     It is a HOPO. Other valid flags are ``T`` (for "tap") and ``S`` (for "strum").
     """
 
-    _Self = typ.TypeVar("_Self", bound="NoteEvent")
+    Self = typ.TypeVar("Self", bound="NoteEvent")
 
     note: Note
     """The note lane(s) that are active."""
 
     sustain: ComplexSustain = Ticks(0)
-    """Information about this note event's sustain value."""
+    """The duration(s) for which this event's note lane(s) are sustained."""
 
     end_timestamp: Timestamp
     """The timestamp at which this note ends."""
 
     hopo_state: HOPOState
-    """Whether the note is a strum, a HOPO, or a tap note."""
+    """Whether this note is a strum, a HOPO, or a tap note."""
 
     star_power_data: StarPowerData | None = None
     """Information associated with star power for this note.
@@ -469,7 +481,7 @@ class NoteEvent(Event):
     def longest_sustain(self) -> Ticks:
         """The length of the longest sustained note in this event.
 
-        It's possible for different notes to have different sustain values at the same tick.
+        It's possible for different note lanes to have different sustain values at the same tick.
         """
         return self._longest_sustain(self.sustain)
 
@@ -492,23 +504,28 @@ class NoteEvent(Event):
 
     @classmethod
     def from_parsed_data(
-        cls: type[_Self],
+        cls: type[Self],
         data: NoteEvent.ParsedData | Sequence[NoteEvent.ParsedData],
         prev_event: NoteEvent | None,
         star_power_events: Sequence[StarPowerEvent],
         bpm_events: BPMEvents,
         proximal_bpm_event_index: int = 0,
         star_power_event_index: int = 0,
-    ) -> tuple[_Self, int, int]:
+    ) -> tuple[Self, int, int]:
         """Obtain an instance of this object from parsed data.
 
         This function assumes that, if there are multiple input datas, they all have the same
         ``tick`` value. If they do not, this function's behavior is undefined.
 
         Args:
-            data: The data necessary to create an event. Most likely from a Moonscraper ``.chart``.
-            prev_event: The event with the largest tick value less than that of the input data.
+            data: The data necessary to create an event.
+
+            prev_event: The event of this type with the greatest ``tick`` value less than that of
+                this event. If this is ``None``, then this must be the tick-wise first event of
+                this type.
+
             star_power_events: All ``StarPowerEvent``\\s.
+
             bpm_events: The chart's wrapped BPMEvents.
 
             proximal_bpm_event_index: The index of the ``BPMEvent`` with the largest tick value
@@ -649,7 +666,7 @@ class NoteEvent(Event):
     class ParsedData(Event.ParsedData, DictReprMixin):
         """The data on a single chart line associated with a ``NoteEvent``."""
 
-        _Self = typ.TypeVar("_Self", bound="NoteEvent.ParsedData")
+        Self = typ.TypeVar("Self", bound="NoteEvent.ParsedData")
 
         note_track_index: NoteTrackIndex
         """The note lane active on this chart line."""
@@ -669,11 +686,11 @@ class NoteEvent(Event):
         ] = "unhandled note track index {} at tick {}"
 
         @classmethod
-        def from_chart_line(cls: type[_Self], line: str) -> _Self:
+        def from_chart_line(cls: type[Self], line: str) -> Self:
             """Attempt to construct this object from a ``.chart`` line.
 
             Args:
-                line: A string, most likely from a Moonscraper ``.chart``.
+                line: A string, most likely from a Moonscraper ``.chart`` file.
 
             Returns:
                 An an instance of this object initialized from ``line``.
@@ -700,14 +717,15 @@ class SpecialEvent(Event):
     This is typically used only as a base class for more specialized subclasses.
     """
 
-    _Self = typ.TypeVar("_Self", bound="SpecialEvent")
+    Self = typ.TypeVar("Self", bound="SpecialEvent")
 
     sustain: Ticks
     """The number of ticks for which this event is sustained.
 
-    This event does _not_ overlap events at ``tick + sustain``; it ends immediately before that
+    This event does _not_ "cover" events at ``tick + sustain``; it ends immediately before that
     tick.
     """
+    # TODO: Figure out how to italicize the "_not_" above.
 
     @functools.cached_property
     def end_tick(self) -> Tick:
@@ -716,18 +734,19 @@ class SpecialEvent(Event):
 
     @classmethod
     def from_parsed_data(
-        cls: type[_Self],
+        cls: type[Self],
         data: SpecialEvent.ParsedData,
-        prev_event: _Self | None,
+        prev_event: Self | None,
         bpm_events: BPMEvents,
-    ) -> _Self:
+    ) -> Self:
         """Obtain an instance of this object from parsed data.
 
         Args:
-            data: The data necessary to create an event. Most likely from a Moonscraper ``.chart``.
+            data: The data necessary to create an event.
 
             prev_event: The event of this type with the greatest ``tick`` value less than that of
-                this event. If this is ``None``, then this must be the first event of this type.
+                this event. If this is ``None``, then this must be the tick-wise first event of
+                this type.
 
             bpm_events: The chart's wrapped BPMEvents.
 
@@ -772,7 +791,7 @@ class SpecialEvent(Event):
     class ParsedData(Event.ParsedData, DictReprMixin):
         """The data on a single chart line associated with a ``SpecialEvent``."""
 
-        _Self = typ.TypeVar("_Self", bound="SpecialEvent.ParsedData")
+        Self = typ.TypeVar("Self", bound="SpecialEvent.ParsedData")
 
         sustain: Ticks
         """The duration in ticks of the event represented by this data."""
@@ -786,11 +805,11 @@ class SpecialEvent(Event):
         _index_regex: typ.ClassVar[str]
 
         @classmethod
-        def from_chart_line(cls: type[_Self], line: str) -> _Self:
+        def from_chart_line(cls: type[Self], line: str) -> Self:
             """Attempt to construct this object from a ``.chart`` line.
 
             Args:
-                line: A string, most likely from a Moonscraper ``.chart``.
+                line: A string, most likely from a Moonscraper ``.chart`` file.
 
             Returns:
                 An an instance of this object initialized from ``line``.
@@ -833,29 +852,30 @@ class StarPowerEvent(SpecialEvent):
 class TrackEvent(Event):
     """An event representing arbitrary data at a particular tick.
 
-    This is questionably named, as this Python package refers to the various chart file sections
+    This is questionably named, as this parsing library refers to the various chart file sections
     as "tracks". This event only occurs in instrument tracks.
     """
 
-    _Self = typ.TypeVar("_Self", bound="TrackEvent")
+    Self = typ.TypeVar("Self", bound="TrackEvent")
 
     value: str
     """The data that this event stores."""
 
     @classmethod
     def from_parsed_data(
-        cls: type[_Self],
+        cls: type[Self],
         data: TrackEvent.ParsedData,
-        prev_event: _Self | None,
+        prev_event: Self | None,
         bpm_events: BPMEvents,
-    ) -> _Self:
+    ) -> Self:
         """Obtain an instance of this object from parsed data.
 
         Args:
-            data: The data necessary to create an event. Most likely from a Moonscraper ``.chart``.
+            data: The data necessary to create an event.
 
             prev_event: The event of this type with the greatest ``tick`` value less than that of
-                this event. If this is ``None``, then this must be the first event of this type.
+                this event. If this is ``None``, then this must be the tick-wise first event of
+                this type.
 
             bpm_events: The chart's wrapped BPMEvents.
 
@@ -882,7 +902,7 @@ class TrackEvent(Event):
     class ParsedData(Event.ParsedData, DictReprMixin):
         """The data on a single chart line associated with a ``TrackEvent``."""
 
-        _Self = typ.TypeVar("_Self", bound="TrackEvent.ParsedData")
+        Self = typ.TypeVar("Self", bound="TrackEvent.ParsedData")
 
         value: str
 
@@ -892,11 +912,11 @@ class TrackEvent(Event):
         _regex_prog: typ.Final[typ.Pattern[str]] = re.compile(_regex)
 
         @classmethod
-        def from_chart_line(cls: type[_Self], line: str) -> _Self:
+        def from_chart_line(cls: type[Self], line: str) -> Self:
             """Attempt to construct this object from a ``.chart`` line.
 
             Args:
-                line: A string, most likely from a Moonscraper ``.chart``.
+                line: A string, most likely from a Moonscraper ``.chart`` file.
 
             Returns:
                 An an instance of this object initialized from ``line``.

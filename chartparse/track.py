@@ -1,4 +1,4 @@
-"""For functionality useful for all event track objects.
+"""Functionality useful for all event track objects.
 
 Most notably, :class:`~chartparse.instrument.InstrumentTrack`, :class:`~chartparse.sync.SyncTrack`,
 and :class:`~chartparse.globalevents.GlobalEventsTrack` are considered to be event tracks.
@@ -60,7 +60,7 @@ def parse_data_from_chart_lines(
             because it chooses the first type that matches, users should put the more common ones
             first.
 
-        lines: An iterable of strings most likely from a Moonscraper ``.chart``.
+        lines: An iterable of strings most likely from a Moonscraper ``.chart`` file.
 
     Returns:
         A dictionary mapping each type in ``types`` to a list of datas that were parsed into that

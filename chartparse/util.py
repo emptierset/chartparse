@@ -14,7 +14,11 @@ from chartparse.hints import T
 
 
 class DictPropertiesEqMixin(object):
-    """A mixin that implements ``__eq__`` via ``__dict__().__eq__``."""
+    """A mixin that implements ``__eq__`` via ``__dict__().__eq__``.
+
+    An object with this mixed in will equate to other objects that share this mixin and have equal
+    ``__dict__``\\s.
+    """
 
     def __eq__(self, other: object) -> bool:
         if not issubclass(other.__class__, DictPropertiesEqMixin):

@@ -21,19 +21,44 @@ Ticks = typ.NewType("Ticks", int)
 
 
 def add(a: Tick, b: Ticks) -> Tick:
+    """Returns the tick value at ``a + b``.
+
+    Args:
+        a: A tick moment.
+        b: A number of ticks.
+    """
     return Tick(a + b)
 
 
 def sum(a: Ticks, b: Ticks) -> Ticks:
+    """Returns the number of ticks in ``a + b``.
+
+    Args:
+        a: A number of ticks.
+        b: A number of ticks.
+    """
     return Ticks(a + b)  # pragma: no cover
 
 
-def difference(minuend: Ticks, subtrahend: Ticks) -> Ticks:
-    return Ticks(minuend - subtrahend)  # pragma: no cover
+def difference(a: Ticks, b: Ticks) -> Ticks:
+    """Returns the number of ticks in ``a - b``.
+
+    Args:
+        a: A number of ticks.
+        b: A number of ticks.
+    """
+    return Ticks(a - b)  # pragma: no cover
 
 
-def between(beginning: Tick, end: Tick) -> Ticks:
-    return Ticks(end - beginning)
+def between(a: Tick, b: Tick) -> Ticks:
+    """Returns the number of ticks in ``b - a``.
+
+    Args:
+        a: A tick moment.
+        b: A tick moment.
+    """
+    # TODO: Should this be absolute value?
+    return Ticks(b - a)
 
 
 @typ.final
@@ -44,6 +69,7 @@ class NoteDuration(Enum):
     :attr:`~chartparse.metadata.Metadata.resolution`.
     """
 
+    # TODO: These aren't actually counted in ticks. Reread the comment.
     WHOLE = Ticks(int(2 ** (-2)))
     HALF = Ticks(int(2 ** (-1)))
     QUARTER = Ticks(int(2**0))
@@ -78,16 +104,19 @@ class NoteDuration(Enum):
     FIVE_HUNDRED_TWELFTH_TRIPLET = SEVEN_HUNDRED_SIXTY_EIGHTH
 
 
+# TODO: lru cache this, probably. 99% of charts will have resolution=192, so the cardinality of
+# this function is tiny. This would be a dictionary instead of resolution was always 192.
+# TODO: This name should probably change. Something like calculate_ticks_from_note_duration.
 def calculate_ticks_between_notes(resolution: Ticks, note_duration: NoteDuration) -> Ticks:
     """Returns the number of ticks between two notes of a particular note value.
 
-    It is unknown whether Moonscraper rounds or truncates when ``resolution`` does not divide
-    evenly. The vast majority of charts have a ``resolution`` of ``192``, so this is mostly a
-    nonissue.
+    I do not know whether Moonscraper rounds or truncates when ``resolution`` does not divide
+    evenly. The vast majority of charts have a ``resolution`` of exactly ``192``, so this is mostly
+    a nonissue, because ``192`` is divided evenly by every note value.
 
     Args:
         resolution: The number of ticks in a quarter note.
-        note_duration: The number of notes in a quarter note.
+        note_duration: The note duration for which the tick interval should be computed.
 
     Returns: The number of ticks between two notes of a particular note value.
 
@@ -96,7 +125,7 @@ def calculate_ticks_between_notes(resolution: Ticks, note_duration: NoteDuration
 
 
 def seconds_from_ticks_at_bpm(ticks: Ticks, bpm: float, resolution: Ticks) -> Seconds:
-    """Returns the number of seconds that elapse over a number of ticks at a particular tempo.
+    """Returns the number of seconds that elapse over some number of ticks at a particular tempo.
 
     Args:
         ticks: The number of ticks for which the duration should be calculated.

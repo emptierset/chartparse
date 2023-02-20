@@ -34,30 +34,27 @@ logger = logging.getLogger(__name__)
 class GlobalEventsTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     """A :class:`~chartparse.chart.Chart`'s :class:`~chartparse.globalevents.GlobalEvent`\\ s."""
 
-    _Self = typ.TypeVar("_Self", bound="GlobalEventsTrack")
+    Self = typ.TypeVar("Self", bound="GlobalEventsTrack")
 
     section_name: typ.Final[str] = "Events"
     """The name of this track's section in a ``.chart`` file."""
 
     text_events: Sequence[TextEvent]
-    """A ``GlobalEventTrack``'s ``TextEvent``\\ s."""
 
     section_events: Sequence[SectionEvent]
-    """A ``GlobalEventTrack``'s ``SectionEvent``\\ s."""
 
     lyric_events: Sequence[LyricEvent]
-    """A ``GlobalEventTrack``'s ``LyricEvent``\\ s."""
 
     @classmethod
     def from_chart_lines(
-        cls: type[_Self],
+        cls: type[Self],
         lines: Iterable[str],
         bpm_events: BPMEvents,
-    ) -> _Self:
+    ) -> Self:
         """Initializes instance attributes by parsing an iterable of strings.
 
         Args:
-            lines: An iterable of strings most likely from a Moonscraper ``.chart``.
+            lines: An iterable of strings most likely from a Moonscraper ``.chart`` file.
             bpm_events: The chart's wrapped BPMEvents.
 
         Returns:
@@ -79,7 +76,7 @@ class GlobalEventsTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
     @classmethod
     def _parse_data_from_chart_lines(
-        cls: type[_Self],
+        cls: type[Self],
         lines: Iterable[str],
     ) -> tuple[
         list[TextEvent.ParsedData],
@@ -105,30 +102,30 @@ class GlobalEvent(Event):
     attractive ``__str__`` representation and supplies a regular expression template for subclasses
     to fill in.
 
-    Subclasses should define ``_regex_prog`` and can be instantiated with their ``from_chart_line``
+    Subclasses should set ``_regex_prog`` and can be instantiated with their ``from_chart_line``
     method.
     """
 
-    _Self = typ.TypeVar("_Self", bound="GlobalEvent")
+    Self = typ.TypeVar("Self", bound="GlobalEvent")
 
     value: str
     """The data that this event stores."""
 
     @classmethod
     def from_parsed_data(
-        cls: type[_Self],
+        cls: type[Self],
         data: GlobalEvent.ParsedData,
-        prev_event: _Self | None,
+        prev_event: Self | None,
         bpm_events: BPMEvents,
-    ) -> _Self:
+    ) -> Self:
         """Obtain an instance of this object from parsed data.
 
         Args:
-            data: The data necessary to create an event. Most likely from a Moonscraper ``.chart``.
+            data: The data necessary to create an event.
 
             prev_event: The event of this type with the greatest ``tick`` value less than that of
-                        this event. If this is ``None``, then this must be the first event of this
-                        type.
+                this event. If this is ``None``, then this must be the tick-wise first event of
+                this type.
 
             bpm_events: The chart's wrapped BPMEvents.
 
@@ -155,7 +152,7 @@ class GlobalEvent(Event):
     class ParsedData(Event.ParsedData, DictReprMixin):
         """The data on a single chart line associated with a ``GlobalEvent``."""
 
-        _Self = typ.TypeVar("_Self", bound="GlobalEvent.ParsedData")
+        Self = typ.TypeVar("Self", bound="GlobalEvent.ParsedData")
 
         value: str
 
@@ -168,11 +165,11 @@ class GlobalEvent(Event):
         _value_regex: typ.ClassVar[str]
 
         @classmethod
-        def from_chart_line(cls: type[_Self], line: str) -> _Self:
+        def from_chart_line(cls: type[Self], line: str) -> Self:
             """Attempt to construct this object from a ``.chart`` line.
 
             Args:
-                line: A string, most likely from a Moonscraper ``.chart``.
+                line: A string, most likely from a Moonscraper ``.chart`` file.
 
             Returns:
                 An an instance of this object initialized from ``line``.
@@ -186,10 +183,13 @@ class GlobalEvent(Event):
             raw_tick, raw_value = m.groups()
             return cls(tick=Tick(int(raw_tick)), value=raw_value)
 
+        # TODO: Sphinx presents inherited attributes here, after the definition of ParsedData. That
+        # looks ugly as sin in Sphinx -- how can I ensure the attributes stay together in Sphinx.
+
 
 @typ.final
 class TextEvent(GlobalEvent):
-    """A :class:`~chartparse.globalevents.GlobalEvent` that stores freeform text event data."""
+    """A ``GlobalEvent`` that stores freeform text event data."""
 
     @typ.final
     @dataclasses.dataclass(kw_only=True, frozen=True, repr=False)
@@ -203,7 +203,7 @@ class TextEvent(GlobalEvent):
 
 @typ.final
 class SectionEvent(GlobalEvent):
-    """A :class:`~chartparse.globalevents.GlobalEvent` that signifies a new section.
+    """A ``GlobalEvent`` that signifies a new section.
 
     The event's ``value`` attribute contains the section's name.
     """
@@ -220,7 +220,7 @@ class SectionEvent(GlobalEvent):
 
 @typ.final
 class LyricEvent(GlobalEvent):
-    """A :class:`~chartparse.globalevents.GlobalEvent` that signifies a new section.
+    """A ``GlobalEvent`` that stores lyric data.
 
     The event's ``value`` attribute contains the lyric's text, typically a single syllable's worth.
     """

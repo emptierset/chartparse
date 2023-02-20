@@ -2,7 +2,7 @@
 
 This module is the main entrypoint to this package. Typically, a
 developer needs only to create a ``Chart`` object and then inspect
-its attributes:
+its attributes, like so:
 
 Example:
     Creating a ``Chart`` object::
@@ -101,11 +101,10 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         """Given a path, parses the contents of its file and returns a new Chart.
 
         Args:
-            path: A ``Path`` object that points to a ``.chart`` file written by Moonscraper. Must
-                have at least a ``[Song]``, ``[SyncTrack]``, and ``[Events]`` track.
-            want_tracks: An optional sequence of ``Instrument`` & ``Difficulty`` tuples. If
-                specified, only the specified instruments and difficulties will be parsed from
-                ``path``.
+            path: A path that points to a ``.chart`` file written by Moonscraper. Must have at
+                least a ``[Song]``, ``[SyncTrack]``, and ``[Events]`` track.
+            want_tracks: If specified, only the specified instruments and difficulties will be
+                parsed from ``path``.
 
         Returns:
             A ``Chart`` object, initialized with data parsed from ``path``.
@@ -124,9 +123,8 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         Args:
             fp: A file object that allows reading from a .chart file written by Moonscraper. Must
                 have at least a ``[Song]``, ``[SyncTrack]``, and ``[Events]`` track.
-            want_tracks: An optional sequence of ``Instrument`` & ``Difficulty`` tuples. If
-                specified, only the specified instruments and difficulties will be parsed from
-                ``fp``.
+            want_tracks: If specified, only the specified instruments and difficulties will be
+                parsed from ``fp``.
 
         Returns:
             A ``Chart`` object, initialized with data parsed from ``fp``.
@@ -260,7 +258,7 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             instrument: The instrument for which the
                 :class:`~chartparse.instrument.InstrumentTrack` should be looked up.
 
-            difficulty: The instrument for which the
+            difficulty: The difficulty for which the
                 :class:`~chartparse.instrument.InstrumentTrack` should be looked up.
 
             start: The beginning of the interval.

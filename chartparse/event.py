@@ -54,9 +54,9 @@ class Event(DictPropertiesEqMixin, DictReprMixin):
         tick: Tick
         """The tick at which the event represented by this data occurs."""
 
-        _Self = typ.TypeVar("_Self", bound="Event.ParsedData")
+        Self = typ.TypeVar("Self", bound="Event.ParsedData")
 
         @classmethod
         @abc.abstractmethod
-        def from_chart_line(cls: type[_Self], line: str) -> _Self:
+        def from_chart_line(cls: type[Self], line: str) -> Self:
             ...  # pragma: no cover
