@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import functools
 import typing as typ
 from enum import Enum
 
@@ -104,9 +105,8 @@ class NoteDuration(Enum):
     FIVE_HUNDRED_TWELFTH_TRIPLET = SEVEN_HUNDRED_SIXTY_EIGHTH
 
 
-# TODO: lru cache this, probably. 99% of charts will have resolution=192, so the cardinality of
-# this function is tiny. This would be a dictionary instead of resolution was always 192.
 # TODO: This name should probably change. Something like calculate_ticks_from_note_duration.
+@functools.lru_cache
 def calculate_ticks_between_notes(resolution: Ticks, note_duration: NoteDuration) -> Ticks:
     """Returns the number of ticks between two notes of a particular note value.
 
