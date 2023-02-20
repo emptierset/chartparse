@@ -22,8 +22,6 @@ class Event(DictPropertiesEqMixin, DictReprMixin):
 
     This is typically used only as a base class for more specialized subclasses. It implements an
     attractive ``__str__`` representation.
-
-    This is a ``frozen``, ``kw_only`` dataclass.
     """
 
     tick: Tick
@@ -51,10 +49,7 @@ class Event(DictPropertiesEqMixin, DictReprMixin):
 
     @dataclasses.dataclass(kw_only=True, frozen=True)
     class ParsedData(abc.ABC):
-        """The data on a single chart line associated with an ``Event``.
-
-        This is a ``frozen``, ``kw_only`` dataclass.
-        """
+        """The data on a single chart line associated with an ``Event``."""
 
         tick: Tick
         """The tick at which the event represented by this data occurs."""

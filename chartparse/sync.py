@@ -35,10 +35,7 @@ logger = logging.getLogger(__name__)
 @typ.final
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
-    """All of a :class:`~chartparse.chart.Chart` object's tempo-mapping related events.
-
-    This is a ``frozen``, ``kw_only`` dataclass.
-    """
+    """All of a :class:`~chartparse.chart.Chart` object's tempo-mapping related events."""
 
     _Self = typ.TypeVar("_Self", bound="SyncTrack")
 
@@ -123,10 +120,7 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 @typ.final
 @dataclasses.dataclass(kw_only=True, frozen=True)
 class TimeSignatureEvent(Event):
-    """An event representing a time signature change at a particular tick.
-
-    This is a ``frozen``, ``kw_only`` dataclass.
-    """
+    """An event representing a time signature change at a particular tick."""
 
     _Self = typ.TypeVar("_Self", bound="TimeSignatureEvent")
 
@@ -182,10 +176,7 @@ class TimeSignatureEvent(Event):
     @typ.final
     @dataclasses.dataclass(kw_only=True, frozen=True, repr=False)
     class ParsedData(Event.ParsedData, DictReprMixin):
-        """The data on a single chart line associated with a ``TimeSignatureEvent``.
-
-        This is a ``frozen``, ``kw_only`` dataclass.
-        """
+        """The data on a single chart line associated with a ``TimeSignatureEvent``."""
 
         _Self = typ.TypeVar("_Self", bound="TimeSignatureEvent.ParsedData")
 
@@ -225,10 +216,7 @@ class TimeSignatureEvent(Event):
 @typ.final
 @dataclasses.dataclass(kw_only=True, frozen=True)
 class BPMEvent(Event):
-    """An event representing a BPM (beats per minute) change at a particular tick.
-
-    This is a ``frozen``, ``kw_only`` dataclass.
-    """
+    """An event representing a BPM (beats per minute) change at a particular tick."""
 
     _Self = typ.TypeVar("_Self", bound="BPMEvent")
 
@@ -308,10 +296,7 @@ class BPMEvent(Event):
     @typ.final
     @dataclasses.dataclass(kw_only=True, frozen=True, repr=False)
     class ParsedData(Event.ParsedData, DictReprMixin):
-        """The data on a single chart line associated with a ``BPMEvent``.
-
-        This is a ``frozen``, ``kw_only`` dataclass.
-        """
+        """The data on a single chart line associated with a ``BPMEvent``."""
 
         _Self = typ.TypeVar("_Self", bound="BPMEvent.ParsedData")
 
@@ -349,8 +334,6 @@ class BPMEvents(Sequence[BPMEvent]):
 
     This exists solely to allow ``timestamp_at_tick`` to be called the moment all requisite data is
     accessible.
-
-    This is a ``frozen``, ``kw_only`` dataclass.
     """
 
     events: Sequence[BPMEvent]
@@ -488,10 +471,7 @@ class AnchorEvent(Event):
     @typ.final
     @dataclasses.dataclass(kw_only=True, frozen=True, repr=False)
     class ParsedData(Event.ParsedData, DictReprMixin):
-        """The data on a single chart line associated with an ``AnchorEvent``.
-
-        This is a ``frozen``, ``kw_only`` dataclass.
-        """
+        """The data on a single chart line associated with an ``AnchorEvent``."""
 
         _Self = typ.TypeVar("_Self", bound="AnchorEvent.ParsedData")
 

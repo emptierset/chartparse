@@ -32,10 +32,7 @@ logger = logging.getLogger(__name__)
 @typ.final
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class GlobalEventsTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
-    """A :class:`~chartparse.chart.Chart`'s :class:`~chartparse.globalevents.GlobalEvent`\\ s.
-
-    This is a ``frozen``, ``kw_only`` dataclass.
-    """
+    """A :class:`~chartparse.chart.Chart`'s :class:`~chartparse.globalevents.GlobalEvent`\\ s."""
 
     _Self = typ.TypeVar("_Self", bound="GlobalEventsTrack")
 
@@ -110,8 +107,6 @@ class GlobalEvent(Event):
 
     Subclasses should define ``_regex_prog`` and can be instantiated with their ``from_chart_line``
     method.
-
-    This is a ``frozen``, ``kw_only`` dataclass.
     """
 
     _Self = typ.TypeVar("_Self", bound="GlobalEvent")
@@ -158,10 +153,7 @@ class GlobalEvent(Event):
 
     @dataclasses.dataclass(kw_only=True, frozen=True, repr=False)
     class ParsedData(Event.ParsedData, DictReprMixin):
-        """The data on a single chart line associated with a ``GlobalEvent``.
-
-        This is a ``frozen``, ``kw_only`` dataclass.
-        """
+        """The data on a single chart line associated with a ``GlobalEvent``."""
 
         _Self = typ.TypeVar("_Self", bound="GlobalEvent.ParsedData")
 
@@ -202,10 +194,7 @@ class TextEvent(GlobalEvent):
     @typ.final
     @dataclasses.dataclass(kw_only=True, frozen=True, repr=False)
     class ParsedData(GlobalEvent.ParsedData, DictReprMixin):
-        """The data on a single chart line associated with a ``TextEvent``.
-
-        This is a ``frozen``, ``kw_only`` dataclass.
-        """
+        """The data on a single chart line associated with a ``TextEvent``."""
 
         _value_regex = r"([^ ]*?)"
         _regex = GlobalEvent.ParsedData._regex_template.format(_value_regex)
@@ -222,10 +211,7 @@ class SectionEvent(GlobalEvent):
     @typ.final
     @dataclasses.dataclass(kw_only=True, frozen=True, repr=False)
     class ParsedData(GlobalEvent.ParsedData, DictReprMixin):
-        """The data on a single chart line associated with a ``SectionEvent``.
-
-        This is a ``frozen``, ``kw_only`` dataclass.
-        """
+        """The data on a single chart line associated with a ``SectionEvent``."""
 
         _value_regex = r"section (.*?)"
         _regex = GlobalEvent.ParsedData._regex_template.format(_value_regex)
@@ -242,10 +228,7 @@ class LyricEvent(GlobalEvent):
     @typ.final
     @dataclasses.dataclass(kw_only=True, frozen=True, repr=False)
     class ParsedData(GlobalEvent.ParsedData, DictReprMixin):
-        """The data on a single chart line associated with a ``LyricEvent``.
-
-        This is a ``frozen``, ``kw_only`` dataclass.
-        """
+        """The data on a single chart line associated with a ``LyricEvent``."""
 
         _value_regex = "lyric (.*?)"
         _regex = GlobalEvent.ParsedData._regex_template.format(_value_regex)

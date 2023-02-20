@@ -227,10 +227,7 @@ class NoteTrackIndex(AllValuesGettableEnum):
 @typ.final
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
-    """All of the instrument-related events for one (instrument, difficulty) pair.
-
-    This is a ``frozen``, ``kw_only`` dataclass.
-    """
+    """All of the instrument-related events for one (instrument, difficulty) pair."""
 
     _Self = typ.TypeVar("_Self", bound="InstrumentTrack")
 
@@ -363,10 +360,7 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 @typ.final
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class StarPowerData(DictPropertiesEqMixin):
-    """Star power related info for a :class:`~chartparse.instrument.NoteEvent`.
-
-    This is a ``frozen``, ``kw_only`` dataclass.
-    """
+    """Star power related info for a :class:`~chartparse.instrument.NoteEvent`."""
 
     # This is conceptually Final, but annotating it as such confuses mypy into thinking it should
     # be ClassVar.
@@ -449,8 +443,6 @@ class NoteEvent(Event):
 
     This event occurs at tick 816 and timestamp 0:00:02.093750. It is not sustained. It is yellow.
     It is a HOPO. Other valid flags are ``T`` (for "tap") and ``S`` (for "strum").
-
-    This is a ``frozen``, ``kw_only`` dataclass.
     """
 
     _Self = typ.TypeVar("_Self", bound="NoteEvent")
@@ -655,10 +647,7 @@ class NoteEvent(Event):
 
     @dataclasses.dataclass(kw_only=True, frozen=True, repr=False)
     class ParsedData(Event.ParsedData, DictReprMixin):
-        """The data on a single chart line associated with a ``NoteEvent``.
-
-        This is a ``frozen``, ``kw_only`` dataclass.
-        """
+        """The data on a single chart line associated with a ``NoteEvent``."""
 
         _Self = typ.TypeVar("_Self", bound="NoteEvent.ParsedData")
 
@@ -709,8 +698,6 @@ class SpecialEvent(Event):
     """Provides a regex template for parsing 'S' style chart lines.
 
     This is typically used only as a base class for more specialized subclasses.
-
-    This is a ``frozen``, ``kw_only`` dataclass.
     """
 
     _Self = typ.TypeVar("_Self", bound="SpecialEvent")
@@ -783,10 +770,7 @@ class SpecialEvent(Event):
 
     @dataclasses.dataclass(kw_only=True, frozen=True, repr=False)
     class ParsedData(Event.ParsedData, DictReprMixin):
-        """The data on a single chart line associated with a ``SpecialEvent``.
-
-        This is a ``frozen``, ``kw_only`` dataclass.
-        """
+        """The data on a single chart line associated with a ``SpecialEvent``."""
 
         _Self = typ.TypeVar("_Self", bound="SpecialEvent.ParsedData")
 
@@ -831,10 +815,7 @@ class StarPowerEvent(SpecialEvent):
     @typ.final
     @dataclasses.dataclass(kw_only=True, frozen=True, repr=False)
     class ParsedData(SpecialEvent.ParsedData, DictReprMixin):
-        """The data on a single chart line associated with a ``StarPowerEvent``.
-
-        This is a ``frozen``, ``kw_only`` dataclass.
-        """
+        """The data on a single chart line associated with a ``StarPowerEvent``."""
 
         _index_regex = r"2"
         _regex = SpecialEvent.ParsedData._regex_template.format(_index_regex)
@@ -854,8 +835,6 @@ class TrackEvent(Event):
 
     This is questionably named, as this Python package refers to the various chart file sections
     as "tracks". This event only occurs in instrument tracks.
-
-    This is a ``frozen``, ``kw_only`` dataclass.
     """
 
     _Self = typ.TypeVar("_Self", bound="TrackEvent")
@@ -901,10 +880,7 @@ class TrackEvent(Event):
 
     @dataclasses.dataclass(kw_only=True, frozen=True, repr=False)
     class ParsedData(Event.ParsedData, DictReprMixin):
-        """The data on a single chart line associated with a ``TrackEvent``.
-
-        This is a ``frozen``, ``kw_only`` dataclass.
-        """
+        """The data on a single chart line associated with a ``TrackEvent``."""
 
         _Self = typ.TypeVar("_Self", bound="TrackEvent.ParsedData")
 

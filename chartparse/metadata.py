@@ -240,10 +240,7 @@ _field_parsing_specs: _FieldParsingSpecDict = {
 @typ.final
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class Metadata(DictPropertiesEqMixin, DictReprMixin):
-    """All of a :class:`~chartparse.chart.Chart` object's metadata.
-
-    This is a ``frozen``, ``kw_only`` dataclass.
-    """
+    """All of a :class:`~chartparse.chart.Chart` object's metadata."""
 
     _Self = typ.TypeVar("_Self", bound="Metadata")
 
