@@ -40,9 +40,7 @@ from tests.helpers.instrument import (
     TrackEventParsedDataWithDefaults,
     TrackEventWithDefaults,
 )
-from tests.helpers.lines import generate_note as generate_note_line
-from tests.helpers.lines import generate_star_power as generate_star_power_line
-from tests.helpers.lines import generate_track as generate_track_line
+from tests.helpers.lines import generate_note_line, generate_star_power_line, generate_track_line
 from tests.helpers.sync import BPMEventsWithMock
 
 

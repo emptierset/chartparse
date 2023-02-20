@@ -24,9 +24,7 @@ from tests.helpers.globalevents import (
     SectionEventParsedDataWithDefaults,
     TextEventParsedDataWithDefaults,
 )
-from tests.helpers.lines import generate_lyric as generate_lyric_line
-from tests.helpers.lines import generate_section as generate_section_line
-from tests.helpers.lines import generate_text as generate_text_line
+from tests.helpers.lines import generate_lyric_line, generate_section_line, generate_text_line
 from tests.helpers.sync import BPMEventsWithMock
 
 

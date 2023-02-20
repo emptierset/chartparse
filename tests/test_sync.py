@@ -11,9 +11,11 @@ from chartparse.exceptions import RegexNotMatchError
 from chartparse.sync import AnchorEvent, BPMEvent, BPMEvents, SyncTrack, TimeSignatureEvent
 from chartparse.tick import Tick, Ticks
 from tests.helpers import defaults, testcase, unsafe
-from tests.helpers.lines import generate_anchor as generate_anchor_line
-from tests.helpers.lines import generate_bpm as generate_bpm_line
-from tests.helpers.lines import generate_time_signature as generate_time_signature_line
+from tests.helpers.lines import (
+    generate_anchor_line,
+    generate_bpm_line,
+    generate_time_signature_line,
+)
 from tests.helpers.sync import (
     AnchorEventParsedDataWithDefaults,
     BPMEventParsedDataWithDefaults,
