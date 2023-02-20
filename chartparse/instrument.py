@@ -722,10 +722,9 @@ class SpecialEvent(Event):
     sustain: Ticks
     """The number of ticks for which this event is sustained.
 
-    This event does _not_ "cover" events at ``tick + sustain``; it ends immediately before that
+    This event does `not` "cover" events at ``tick + sustain``; it ends immediately before that
     tick.
     """
-    # TODO: Figure out how to italicize the "_not_" above.
 
     @functools.cached_property
     def end_tick(self) -> Tick:
