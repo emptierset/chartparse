@@ -76,6 +76,10 @@ class Instrument(AllValuesGettableEnum):
     """Guitar (Guitar Hero Live)"""
     GHL_BASS = "GHLBass"
     """Bass (Guitar Hero Live)"""
+    GHL_COOP = "GHLCoop"
+    """Co-op (Guitar Hero Live)"""
+    GHL_RHYTHM = "GHLRhythm"
+    """Rhythm (Guitar Hero Live)"""
 
 
 @typ.final

@@ -75,6 +75,7 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         GlobalEventsTrack.section_name,
     ]
 
+    # TODO: "section names" are called "header tags" in the spec.
     _section_name_regex: typ.Final[str] = r"^\[(.+?)\]$"
     _section_name_regex_prog: typ.Final[typ.Pattern[str]] = re.compile(_section_name_regex)
 
