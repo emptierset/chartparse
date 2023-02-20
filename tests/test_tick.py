@@ -35,7 +35,7 @@ class TestBetween(object):
         assert got == want
 
 
-class TestCalculateTicksBetweenNotes(object):
+class TestNoteDurationToTicks(object):
     @testcase.parametrize(
         ["resolution", "note_duration", "want"],
         [
@@ -67,7 +67,7 @@ class TestCalculateTicksBetweenNotes(object):
         ],
     )
     def test(self, resolution: Ticks, note_duration: NoteDuration, want: Ticks) -> None:
-        got = chartparse.tick.calculate_ticks_between_notes(resolution, note_duration)
+        got = chartparse.tick.note_duration_to_ticks(resolution, note_duration)
         assert got == want
 
 

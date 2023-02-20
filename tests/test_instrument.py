@@ -601,7 +601,7 @@ class TestNoteEvent(object):
                 testcase.new(
                     "forced_tap_note_is_a_tap",
                     # TODO: I don't actually know if this test case is accurate. Needs verifying.
-                    tick=tests.helpers.tick.calculate_ticks_between_notes_with_defaults(
+                    tick=tests.helpers.tick.note_duration_to_ticks(
                         NoteDuration.SIXTEENTH,
                     ),
                     note=Note.R,
@@ -624,7 +624,7 @@ class TestNoteEvent(object):
                 ),
                 testcase.new(
                     "16th_notes_are_hopos",
-                    tick=tests.helpers.tick.calculate_ticks_between_notes_with_defaults(
+                    tick=tests.helpers.tick.note_duration_to_ticks(
                         NoteDuration.SIXTEENTH,
                     ),
                     note=Note.R,
@@ -638,7 +638,7 @@ class TestNoteEvent(object):
                 ),
                 testcase.new(
                     "12th_notes_are_hopos",
-                    tick=tests.helpers.tick.calculate_ticks_between_notes_with_defaults(
+                    tick=tests.helpers.tick.note_duration_to_ticks(
                         NoteDuration.TWELFTH,
                     ),
                     note=Note.R,
@@ -652,7 +652,7 @@ class TestNoteEvent(object):
                 ),
                 testcase.new(
                     "8th_notes_are_strums",
-                    tick=tests.helpers.tick.calculate_ticks_between_notes_with_defaults(
+                    tick=tests.helpers.tick.note_duration_to_ticks(
                         NoteDuration.EIGHTH,
                     ),
                     note=Note.R,
@@ -666,7 +666,7 @@ class TestNoteEvent(object):
                 ),
                 testcase.new(
                     "consecutive_16th_notes_are_strums",
-                    tick=tests.helpers.tick.calculate_ticks_between_notes_with_defaults(
+                    tick=tests.helpers.tick.note_duration_to_ticks(
                         NoteDuration.SIXTEENTH,
                     ),
                     note=Note.G,
@@ -680,7 +680,7 @@ class TestNoteEvent(object):
                 ),
                 testcase.new(
                     "consecutive_12th_notes_are_strums",
-                    tick=tests.helpers.tick.calculate_ticks_between_notes_with_defaults(
+                    tick=tests.helpers.tick.note_duration_to_ticks(
                         NoteDuration.TWELFTH,
                     ),
                     note=Note.G,
@@ -694,7 +694,7 @@ class TestNoteEvent(object):
                 ),
                 testcase.new(
                     "consecutive_8th_notes_are_strums",
-                    tick=tests.helpers.tick.calculate_ticks_between_notes_with_defaults(
+                    tick=tests.helpers.tick.note_duration_to_ticks(
                         NoteDuration.EIGHTH,
                     ),
                     note=Note.G,
@@ -708,7 +708,7 @@ class TestNoteEvent(object):
                 ),
                 testcase.new(
                     "pull_off_from_chord_is_hopo",
-                    tick=tests.helpers.tick.calculate_ticks_between_notes_with_defaults(
+                    tick=tests.helpers.tick.note_duration_to_ticks(
                         NoteDuration.TWELFTH,
                     ),
                     note=Note.G,
@@ -722,7 +722,7 @@ class TestNoteEvent(object):
                 ),
                 testcase.new(
                     "hammer_on_to_chord_is_not_hopo",
-                    tick=tests.helpers.tick.calculate_ticks_between_notes_with_defaults(
+                    tick=tests.helpers.tick.note_duration_to_ticks(
                         NoteDuration.TWELFTH,
                     ),
                     note=Note.RY,
@@ -736,7 +736,7 @@ class TestNoteEvent(object):
                 ),
                 testcase.new(
                     "hammer_on_to_open_is_hopo",
-                    tick=tests.helpers.tick.calculate_ticks_between_notes_with_defaults(
+                    tick=tests.helpers.tick.note_duration_to_ticks(
                         NoteDuration.TWELFTH,
                     ),
                     note=Note.OPEN,
@@ -750,7 +750,7 @@ class TestNoteEvent(object):
                 ),
                 testcase.new(
                     "pull_off_to_open_is_hopo",
-                    tick=tests.helpers.tick.calculate_ticks_between_notes_with_defaults(
+                    tick=tests.helpers.tick.note_duration_to_ticks(
                         NoteDuration.TWELFTH,
                     ),
                     note=Note.G,

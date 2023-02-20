@@ -105,9 +105,8 @@ class NoteDuration(Enum):
     FIVE_HUNDRED_TWELFTH_TRIPLET = SEVEN_HUNDRED_SIXTY_EIGHTH
 
 
-# TODO: This name should probably change. Something like calculate_ticks_from_note_duration.
 @functools.lru_cache
-def calculate_ticks_between_notes(resolution: Ticks, note_duration: NoteDuration) -> Ticks:
+def note_duration_to_ticks(resolution: Ticks, note_duration: NoteDuration) -> Ticks:
     """Returns the number of ticks between two notes of a particular note value.
 
     I do not know whether Moonscraper rounds or truncates when ``resolution`` does not divide

@@ -3,9 +3,9 @@ from chartparse.tick import NoteDuration, Ticks
 from tests.helpers import defaults
 
 
-def calculate_ticks_between_notes_with_defaults(
+def note_duration_to_ticks(
     note_duration: NoteDuration,
     *,
     resolution: Ticks = defaults.resolution,
 ) -> Ticks:
-    return chartparse.tick.calculate_ticks_between_notes(resolution, note_duration)
+    return chartparse.tick.note_duration_to_ticks(resolution, note_duration)

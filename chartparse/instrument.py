@@ -601,7 +601,7 @@ class NoteEvent(Event):
         if previous is None:
             return HOPOState.STRUM
 
-        eighth_triplet_tick_boundary = chartparse.tick.calculate_ticks_between_notes(
+        eighth_triplet_tick_boundary = chartparse.tick.note_duration_to_ticks(
             resolution, NoteDuration.EIGHTH_TRIPLET
         )
         ticks_since_previous = tick - previous.tick
