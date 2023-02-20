@@ -199,8 +199,6 @@ class NoteTrackIndex(AllValuesGettableEnum):
 
     # NOTE: Adding `value` manually is required for mypy to understand that `.value` is not of type
     # `Any`. See https://github.com/python/mypy/issues/8722.
-    # TODO: Figure out how to hide this from Sphinx, given that prepending an underscore probably
-    # breaks it.
     value: int
 
     G = 0

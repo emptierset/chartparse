@@ -26,7 +26,11 @@ chartparse.sync module
 chartparse.instrument module
 ----------------------------
 
+..
+    :exclude-members: value is a hack to hide the `value` attribute added to enums to satisfy mypy.
+    This is probably dangerous, because it recursively hides everything named `value` everywhere.
 .. automodule:: chartparse.instrument
+   :exclude-members: value
 
 chartparse.event module
 -----------------------
