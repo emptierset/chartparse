@@ -54,8 +54,8 @@ class GlobalEventsTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         """Initializes instance attributes by parsing an iterable of strings.
 
         Args:
-            lines: An iterable of strings most likely from a Moonscraper ``.chart`` file.
-            bpm_events: The chart's wrapped BPMEvents.
+            lines: An iterable of strings obtained from a Moonscraper ``.chart`` file.  bpm_events:
+            The chart's wrapped BPMEvents.
 
         Returns:
             A ``GlobalEventsTrack`` parsed from ``lines``.
@@ -169,7 +169,7 @@ class GlobalEvent(Event):
             """Attempt to construct this object from a ``.chart`` line.
 
             Args:
-                line: A string, most likely from a Moonscraper ``.chart`` file.
+                line: A string, obtained from a Moonscraper ``.chart`` file.
 
             Returns:
                 An an instance of this object initialized from ``line``.

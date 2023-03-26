@@ -63,7 +63,7 @@ def parse_data_from_chart_lines(
             because it chooses the first type that matches, users should put the more common ones
             first.
 
-        lines: An iterable of strings most likely from a Moonscraper ``.chart`` file.
+        lines: An iterable of strings obtained from a Moonscraper ``.chart`` file.
 
     Returns:
         A dictionary mapping each type in ``types`` to a list of datas that were parsed into that

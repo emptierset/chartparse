@@ -285,7 +285,7 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         Args:
             instrument: The instrument to which this track corresponds.
             difficulty: This track's difficulty setting.
-            lines: An iterable of strings most likely from a Moonscraper ``.chart`` file.
+            lines: An iterable of strings obtained from a Moonscraper ``.chart`` file.
             bpm_events: The chart's wrapped BPMEvents.
 
         Returns:
@@ -692,7 +692,7 @@ class NoteEvent(Event):
             """Attempt to construct this object from a ``.chart`` line.
 
             Args:
-                line: A string, most likely from a Moonscraper ``.chart`` file.
+                line: A string, obtained from a Moonscraper ``.chart`` file.
 
             Returns:
                 An an instance of this object initialized from ``line``.
@@ -810,7 +810,7 @@ class SpecialEvent(Event):
             """Attempt to construct this object from a ``.chart`` line.
 
             Args:
-                line: A string, most likely from a Moonscraper ``.chart`` file.
+                line: A string, obtained from a Moonscraper ``.chart`` file.
 
             Returns:
                 An an instance of this object initialized from ``line``.
@@ -913,7 +913,7 @@ class TrackEvent(Event):
             """Attempt to construct this object from a ``.chart`` line.
 
             Args:
-                line: A string, most likely from a Moonscraper ``.chart`` file.
+                line: A string, obtained from a Moonscraper ``.chart`` file.
 
             Returns:
                 An an instance of this object initialized from ``line``.

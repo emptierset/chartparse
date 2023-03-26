@@ -345,7 +345,7 @@ class Metadata(DictPropertiesEqMixin, DictReprMixin):
         """Initializes instance attributes by parsing an iterable of strings.
 
         Args:
-            lines_iter: An iterable of strings most likely from a Moonscraper ``.chart`` file.
+            lines_iter: An iterable of strings obtained from a Moonscraper ``.chart`` file.
         """
         kwargs: _FieldValuesDict = dict()
 

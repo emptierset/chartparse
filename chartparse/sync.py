@@ -73,7 +73,7 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
         Args:
             resolution: The number of ticks in a quarter note.
-            lines: An iterable of strings most likely from a Moonscraper ``.chart`` file.
+            lines: An iterable of strings obtained from a Moonscraper ``.chart`` file.
 
         Returns:
             A ``SyncTrack`` parsed from ``lines``.
@@ -316,7 +316,7 @@ class BPMEvent(Event):
             """Attempt to construct this object from a ``.chart`` line.
 
             Args:
-                line: A string, most likely from a Moonscraper ``.chart`` file.
+                line: A string, obtained from a Moonscraper ``.chart`` file.
 
             Returns:
                 An an instance of this object initialized from ``line``.
@@ -486,7 +486,7 @@ class AnchorEvent(Event):
             """Attempt to construct this object from a ``.chart`` line.
 
             Args:
-                line: A string, most likely from a Moonscraper ``.chart`` file.
+                line: A string, obtained from a Moonscraper ``.chart`` file.
 
             Returns:
                 An an instance of this object initialized from ``line``.
