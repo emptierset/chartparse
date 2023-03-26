@@ -41,7 +41,7 @@ from tests.helpers.instrument import (
     TrackEventWithDefaults,
 )
 from tests.helpers.lines import generate_note_line, generate_star_power_line, generate_track_line
-from tests.helpers.sync import BPMEventsWithMock
+from tests.helpers.sync import BPMEventsWithMock, BPMEventWithDefaults
 
 
 class TestNote(object):
@@ -208,24 +208,6 @@ class TestInstrumentTrack(object):
                 track_events=[defaults.track_event],
             )
 
-        @staticmethod
-        def NoteEventWithDefaultsPlus(**kwargs: typ.Any) -> NoteEvent:
-            return NoteEventWithDefaults(
-                _proximal_bpm_event_index=defaults.timestamp_at_tick_proximal_bpm_event_index,
-                timestamp=defaults.timestamp_at_tick_timestamp,
-                end_timestamp=defaults.timestamp_at_tick_timestamp,
-                **kwargs,
-            )
-
-        @staticmethod
-        def StarPowerEventWithDefaultsPlus(**kwargs: typ.Any) -> StarPowerEvent:
-            return StarPowerEventWithDefaults(
-                _proximal_bpm_event_index=defaults.timestamp_at_tick_proximal_bpm_event_index,
-                timestamp=defaults.timestamp_at_tick_timestamp,
-                **kwargs,
-            )
-
-        # TODO(P1): This doesn't actually test timestamp generation.
         @testcase.parametrize(
             ["lines", "want_note_events", "want_star_power_events"],
             [
@@ -237,32 +219,68 @@ class TestInstrumentTrack(object):
                 testcase.new(
                     "open_note",
                     lines=[generate_note_line(Tick(0), NoteTrackIndex.OPEN)],
-                    want_note_events=[NoteEventWithDefaultsPlus(tick=Tick(0), note=Note.OPEN)],
+                    want_note_events=[
+                        NoteEventWithDefaults(
+                            tick=Tick(0),
+                            timestamp=timedelta(0),
+                            note=Note.OPEN,
+                        )
+                    ],
                 ),
                 testcase.new(
                     "green_note",
                     lines=[generate_note_line(Tick(0), NoteTrackIndex.G)],
-                    want_note_events=[NoteEventWithDefaultsPlus(tick=Tick(0), note=Note.G)],
+                    want_note_events=[
+                        NoteEventWithDefaults(
+                            tick=Tick(0),
+                            timestamp=timedelta(0),
+                            note=Note.G,
+                        )
+                    ],
                 ),
                 testcase.new(
                     "red_note",
                     lines=[generate_note_line(Tick(0), NoteTrackIndex.R)],
-                    want_note_events=[NoteEventWithDefaultsPlus(tick=Tick(0), note=Note.R)],
+                    want_note_events=[
+                        NoteEventWithDefaults(
+                            tick=Tick(0),
+                            timestamp=timedelta(0),
+                            note=Note.R,
+                        )
+                    ],
                 ),
                 testcase.new(
                     "yellow_note",
                     lines=[generate_note_line(Tick(0), NoteTrackIndex.Y)],
-                    want_note_events=[NoteEventWithDefaultsPlus(tick=Tick(0), note=Note.Y)],
+                    want_note_events=[
+                        NoteEventWithDefaults(
+                            tick=Tick(0),
+                            timestamp=timedelta(0),
+                            note=Note.Y,
+                        )
+                    ],
                 ),
                 testcase.new(
                     "blue_note",
                     lines=[generate_note_line(Tick(0), NoteTrackIndex.B)],
-                    want_note_events=[NoteEventWithDefaultsPlus(tick=Tick(0), note=Note.B)],
+                    want_note_events=[
+                        NoteEventWithDefaults(
+                            tick=Tick(0),
+                            timestamp=timedelta(0),
+                            note=Note.B,
+                        )
+                    ],
                 ),
                 testcase.new(
                     "orange_note",
                     lines=[generate_note_line(Tick(0), NoteTrackIndex.O)],
-                    want_note_events=[NoteEventWithDefaultsPlus(tick=Tick(0), note=Note.O)],
+                    want_note_events=[
+                        NoteEventWithDefaults(
+                            tick=Tick(0),
+                            timestamp=timedelta(0),
+                            note=Note.O,
+                        )
+                    ],
                 ),
                 testcase.new(
                     "tap_green_note",
@@ -271,8 +289,9 @@ class TestInstrumentTrack(object):
                         generate_note_line(Tick(0), NoteTrackIndex.TAP),
                     ],
                     want_note_events=[
-                        NoteEventWithDefaultsPlus(
+                        NoteEventWithDefaults(
                             tick=Tick(0),
+                            timestamp=timedelta(0),
                             note=Note.G,
                             hopo_state=HOPOState.TAP,
                         )
@@ -286,12 +305,15 @@ class TestInstrumentTrack(object):
                         generate_note_line(Tick(1), NoteTrackIndex.FORCED),
                     ],
                     want_note_events=[
-                        NoteEventWithDefaultsPlus(
+                        NoteEventWithDefaults(
                             tick=0,
+                            timestamp=timedelta(0),
                             note=Note.G,
                         ),
-                        NoteEventWithDefaultsPlus(
+                        NoteEventWithDefaults(
                             tick=1,
+                            timestamp=timedelta(microseconds=2604),
+                            end_timestamp=timedelta(microseconds=2604),
                             note=Note.R,
                             hopo_state=HOPOState.STRUM,
                         ),
@@ -302,7 +324,15 @@ class TestInstrumentTrack(object):
                     lines=[
                         generate_note_line(Tick(0), NoteTrackIndex.G, sustain=Ticks(100)),
                     ],
-                    want_note_events=[NoteEventWithDefaultsPlus(tick=0, note=Note.G, sustain=100)],
+                    want_note_events=[
+                        NoteEventWithDefaults(
+                            tick=0,
+                            timestamp=timedelta(0),
+                            end_timestamp=timedelta(microseconds=260417),
+                            note=Note.G,
+                            sustain=100,
+                        )
+                    ],
                 ),
                 testcase.new(
                     "chord",
@@ -310,7 +340,13 @@ class TestInstrumentTrack(object):
                         generate_note_line(Tick(0), NoteTrackIndex.G),
                         generate_note_line(Tick(0), NoteTrackIndex.R),
                     ],
-                    want_note_events=[NoteEventWithDefaultsPlus(tick=0, note=Note.GR)],
+                    want_note_events=[
+                        NoteEventWithDefaults(
+                            tick=0,
+                            timestamp=timedelta(0),
+                            note=Note.GR,
+                        )
+                    ],
                 ),
                 testcase.new(
                     "nonuniform_sustains",
@@ -319,9 +355,11 @@ class TestInstrumentTrack(object):
                         generate_note_line(Tick(0), NoteTrackIndex.R),
                     ],
                     want_note_events=[
-                        NoteEventWithDefaultsPlus(
+                        NoteEventWithDefaults(
                             tick=0,
+                            timestamp=timedelta(0),
                             note=Note.GR,
+                            end_timestamp=timedelta(microseconds=260417),
                             sustain=(100, 0, None, None, None),
                         )
                     ],
@@ -329,7 +367,13 @@ class TestInstrumentTrack(object):
                 testcase.new(
                     "single_star_power_phrase",
                     lines=[generate_star_power_line(Tick(0), Ticks(100))],
-                    want_star_power_events=[StarPowerEventWithDefaultsPlus(tick=0, sustain=100)],
+                    want_star_power_events=[
+                        StarPowerEventWithDefaults(
+                            tick=0,
+                            timestamp=timedelta(0),
+                            sustain=100,
+                        )
+                    ],
                 ),
                 testcase.new(
                     "everything_together",
@@ -347,46 +391,60 @@ class TestInstrumentTrack(object):
                         generate_note_line(Tick(2300), NoteTrackIndex.OPEN),
                     ],
                     want_note_events=[
-                        NoteEventWithDefaultsPlus(
+                        NoteEventWithDefaults(
                             tick=0,
+                            timestamp=timedelta(0),
                             note=Note.G,
                             sustain=100,
+                            end_timestamp=timedelta(microseconds=260417),
                             star_power_data=StarPowerData(star_power_event_index=0),
                         ),
-                        NoteEventWithDefaultsPlus(
+                        NoteEventWithDefaults(
                             tick=2000,
+                            timestamp=timedelta(seconds=5, microseconds=208333),
+                            end_timestamp=timedelta(seconds=5, microseconds=338542),
                             note=Note.R,
                             sustain=50,
                             star_power_data=StarPowerData(star_power_event_index=1),
                         ),
-                        NoteEventWithDefaultsPlus(
+                        NoteEventWithDefaults(
                             tick=2075,
+                            timestamp=timedelta(seconds=5, microseconds=403646),
+                            end_timestamp=timedelta(seconds=5, microseconds=403646),
                             note=Note.YB,
                             star_power_data=StarPowerData(star_power_event_index=1),
                         ),
-                        NoteEventWithDefaultsPlus(
+                        NoteEventWithDefaults(
                             tick=2100,
+                            timestamp=timedelta(seconds=5, microseconds=468750),
+                            end_timestamp=timedelta(seconds=5, microseconds=468750),
                             note=Note.O,
                             hopo_state=HOPOState.STRUM,
                         ),
-                        NoteEventWithDefaultsPlus(
+                        NoteEventWithDefaults(
                             tick=2200,
+                            timestamp=timedelta(seconds=5, microseconds=729167),
+                            end_timestamp=timedelta(seconds=5, microseconds=729167),
                             note=Note.B,
                             hopo_state=HOPOState.TAP,
                         ),
-                        NoteEventWithDefaultsPlus(
+                        NoteEventWithDefaults(
                             tick=2300,
+                            timestamp=timedelta(seconds=5, microseconds=989583),
+                            end_timestamp=timedelta(seconds=5, microseconds=989583),
                             note=Note.OPEN,
                         ),
                     ],
                     want_star_power_events=[
-                        StarPowerEventWithDefaultsPlus(
+                        StarPowerEventWithDefaults(
                             tick=0,
+                            timestamp=timedelta(0),
                             sustain=100,
                             init_end_tick=True,
                         ),
-                        StarPowerEventWithDefaultsPlus(
+                        StarPowerEventWithDefaults(
                             tick=2000,
+                            timestamp=timedelta(seconds=5, microseconds=208333),
                             sustain=80,
                             init_end_tick=True,
                         ),
@@ -401,13 +459,14 @@ class TestInstrumentTrack(object):
             lines: Sequence[str],
             want_note_events: Sequence[NoteEvent],
             want_star_power_events: Sequence[StarPowerEvent],
-            minimal_bpm_events_with_mock: BPMEventsWithMock,
+            minimal_bpm_events: BPMEvents,
         ) -> None:
+            unsafe.setattr(minimal_bpm_events, "events", [BPMEventWithDefaults()])
             got = InstrumentTrack.from_chart_lines(
                 defaults.instrument,
                 defaults.difficulty,
                 lines,
-                typ.cast(BPMEvents, minimal_bpm_events_with_mock),
+                minimal_bpm_events,
             )
             assert got.instrument == defaults.instrument
             assert got.difficulty == defaults.difficulty
@@ -599,7 +658,7 @@ class TestNoteEvent(object):
                 testcase.new(
                     "forced_tap_note_is_a_tap",
                     # TODO(P1): I don't actually know if this test case is accurate. Needs
-                    # verifying.
+                    # verifying in Moonscraper.
                     tick=tests.helpers.tick.note_duration_to_ticks(
                         NoteDuration.SIXTEENTH,
                     ),

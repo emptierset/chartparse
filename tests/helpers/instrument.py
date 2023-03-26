@@ -3,7 +3,9 @@ from __future__ import annotations
 from collections.abc import Sequence
 from datetime import timedelta
 
+from chartparse.exceptions import UnreachableError
 from chartparse.instrument import (
+    ComplexSustain,
     Difficulty,
     HOPOState,
     Instrument,
@@ -14,6 +16,7 @@ from chartparse.instrument import (
     SpecialEvent,
     StarPowerData,
     StarPowerEvent,
+    SustainTuple,
     TrackEvent,
 )
 from chartparse.tick import Tick, Ticks
@@ -91,17 +94,36 @@ def NoteEventWithDefaults(
     end_timestamp: Timestamp | timedelta = defaults.timestamp,
     note: Note = defaults.note,
     hopo_state: HOPOState = defaults.hopo_state,
-    sustain: Ticks | int = defaults.sustain,
+    sustain: tuple[int | None, int | None, int | None, int | None, int | None]
+    | int = defaults.sustain,
     star_power_data: StarPowerData | None = None,
     _proximal_bpm_event_index: int = defaults.proximal_bpm_event_index,
 ) -> NoteEvent:
+    # TODO(P2): This is probably correct logic, but it would be preferable if it could be more
+    # trivially correct. I don't want to write tests for these.
+    cs: ComplexSustain
+    if isinstance(sustain, tuple):
+        cs = SustainTuple(
+            (
+                Ticks(sustain[0]) if sustain[0] is not None else None,
+                Ticks(sustain[1]) if sustain[1] is not None else None,
+                Ticks(sustain[2]) if sustain[2] is not None else None,
+                Ticks(sustain[3]) if sustain[3] is not None else None,
+                Ticks(sustain[4]) if sustain[4] is not None else None,
+            )
+        )
+    elif isinstance(sustain, int):
+        cs = Ticks(sustain)
+    else:
+        raise UnreachableError("unhandled sustain type")
+
     return NoteEvent(
         tick=Tick(tick),
         timestamp=Timestamp(timestamp),
         end_timestamp=Timestamp(end_timestamp),
         note=note,
         hopo_state=hopo_state,
-        sustain=Ticks(sustain),
+        sustain=cs,
         star_power_data=star_power_data,
         _proximal_bpm_event_index=_proximal_bpm_event_index,
     )

@@ -178,7 +178,7 @@ class Note(Enum):
         # TODO(P1): Is this isinstance check really slow?
         datas = data if isinstance(data, Sequence) else [data]
 
-        n = [0]*5
+        n = [0] * 5
         for d in datas:
             try:
                 n[d.note_track_index.value] = 1

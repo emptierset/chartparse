@@ -190,7 +190,7 @@ class TestTextEvent(object):
             @testcase.parametrize(
                 ["tick", "value"],
                 [
-                    testcase.new_anonymous(tick=1, value="has \"quotes\""),
+                    testcase.new_anonymous(tick=1, value='has "quotes"'),
                 ],
             )
             def test_no_match(self, tick: int, value: str) -> None:
@@ -220,7 +220,6 @@ class TestSectionEvent(object):
                     testcase.new_anonymous(value="Solo 1"),
                 ],
             )
-            # ^\s*?(\d+?) = E \"section (.*?)\"\s*?$
             def test_match(self, tick: int, value: str) -> None:
                 line = generate_section_line(Tick(tick), value)
                 m = SectionEvent.ParsedData._regex_prog.match(line)
@@ -255,7 +254,6 @@ class TestLyricEvent(object):
                     testcase.new_anonymous(value="ooOOO oo"),
                 ],
             )
-            # ^\s*?(\d+?) = E \"lyric (.*?)\"\s*?$
             def test_match(self, tick: int, value: str) -> None:
                 line = generate_lyric_line(Tick(tick), value)
                 m = LyricEvent.ParsedData._regex_prog.match(line)
