@@ -35,16 +35,19 @@ _ParsedDataT = typ.TypeVar("_ParsedDataT", bound=Event.ParsedData)
 class ParsedDataMap(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     """A dict mapping ParsedData subtypes to lists of values of those types.
 
-    TODO: Explain this in greater depth.
+    This type exposes a __getitem__ implementation that is typed such that you can only lookup
+    values of type ``list[_ParsedDataT]`` given keys of type ``type[_ParsedDataT]``. This type's
+    internal dict is a ``defaultdict(list)`` and __setitem__ is not exposed, so the only useful
+    things you can do with a ParsedDataMap is lookup/append to that dict's lists.
     """
 
     def __init__(self) -> None:
         self._dict: collections.defaultdict[typ.Any, typ.Any] = collections.defaultdict(list)
 
     def __getitem__(self, k: type[_ParsedDataT]) -> list[_ParsedDataT]:
-        # Annotating _dict as [Any, Any] makes this a mandatory cast. I'm not aware of a better
-        # annotation for _dict, as this entire class exists to circumvent the issue that I cannot
-        # define a dict of type [type[T], list[T]] for any T. i.e. T is bound
+        # Annotating self._dict as [Any, Any] makes this a mandatory cast. I'm not aware of a
+        # better annotation for _dict, as this entire class exists to circumvent the issue that I
+        # cannot define a dict of type [type[T], list[T]] for any T.
         # https://github.com/python/typing/issues/548
         return typ.cast(list[_ParsedDataT], self._dict.__getitem__(k))
 
