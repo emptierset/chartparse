@@ -179,7 +179,6 @@ class TimeSignatureEvent(Event):
     class ParsedData(Event.ParsedData, DictReprMixin):
         """The data on a single chart line associated with a ``TimeSignatureEvent``."""
 
-        # TODO(P2): Figure out how to hide this from Sphinx without prepending an underscore.
         Self = typ.TypeVar("Self", bound="TimeSignatureEvent.ParsedData")
 
         upper: int
