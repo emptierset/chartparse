@@ -32,8 +32,8 @@ class Event(DictPropertiesEqMixin, DictReprMixin):
 
     _proximal_bpm_event_index: int = 0
 
-    # TODO: Figure out a way for the final closing parenthesis to wrap _around_ any additional info
-    # added by subclass __str__ implementations.
+    # TODO(P2): Figure out a way for the final closing parenthesis to wrap _around_ any additional
+    # info added by subclass __str__ implementations.
     def __str__(self) -> str:
         to_join = [f"{type(self).__name__}(t@{self.tick:07})"]
         as_str = (

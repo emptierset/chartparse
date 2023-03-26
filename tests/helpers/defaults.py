@@ -111,7 +111,7 @@ lyric_event_parsed_data = LyricEvent.ParsedData(tick=tick, value=lyric_event_val
 
 difficulty = Difficulty.EXPERT
 instrument = Instrument.GUITAR
-section_name = difficulty.value + instrument.value
+header_tag = difficulty.value + instrument.value
 sustain = Ticks(0)
 sustain_list = _SustainList([Ticks(0), None, None, None, None])
 sustain_tuple = SustainTuple((Ticks(0), None, None, None, None))

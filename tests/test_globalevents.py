@@ -189,7 +189,7 @@ class TestTextEvent(object):
             @testcase.parametrize(
                 ["tick", "value"],
                 [
-                    # TODO: Check documentation. Is this really supposed to not match?
+                    # TODO(P1): Check documentation. Is this really supposed to not match?
                     testcase.new_anonymous(tick=1, value="two words"),
                 ],
             )

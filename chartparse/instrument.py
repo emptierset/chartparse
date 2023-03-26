@@ -92,7 +92,7 @@ class Note(Enum):
     # `Any`. See https://github.com/python/mypy/issues/8722.
     value: bytearray
 
-    # TODO: optimization: Are bytearrays really better than plain tuples here?
+    # TODO(P2): optimization: Are bytearrays really better than plain tuples here?
     P = bytearray((0, 0, 0, 0, 0))
     G = bytearray((1, 0, 0, 0, 0))
     GR = bytearray((1, 1, 0, 0, 0))
@@ -233,7 +233,7 @@ class NoteTrackIndex(AllValuesGettableEnum):
         return NoteTrackIndex.G.value <= self.value <= NoteTrackIndex.O.value
 
 
-# TODO: Consider using attrs instead of dataclasses.
+# TODO(P2): Consider using attrs instead of dataclasses.
 @typ.final
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
@@ -242,7 +242,7 @@ class InstrumentTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     Self = typ.TypeVar("Self", bound="InstrumentTrack")
 
     @functools.cached_property
-    def section_name(self) -> str:
+    def header_tag(self) -> str:
         """The concatenation of this track's difficulty and instrument (in that order)."""
         return self.difficulty.value + self.instrument.value
 
@@ -676,7 +676,7 @@ class NoteEvent(Event):
         sustain: Ticks
         """The duration in ticks of the active lane in the event represented by this data."""
 
-        # This regex matches a single "N" line within a instrument track section.
+        # This regex matches a single "N" line within a instrument data section.
         # Match 1: Tick
         # Match 2: Note index
         # Match 3: Sustain (ticks)
@@ -842,20 +842,16 @@ class StarPowerEvent(SpecialEvent):
         _regex_prog = re.compile(_regex)
 
 
-# TODO: Support S 0 ## and S 1 ## (GH1/2 Co-op)
+# TODO(P2): Support S 0 ## and S 1 ## (GH1/2 Co-op)
 
 
-# TODO: Support S 64 ## (Rock Band drum fills)
+# TODO(P2): Support S 64 ## (Rock Band drum fills)
 
 
 @typ.final
 @dataclasses.dataclass(kw_only=True, frozen=True)
 class TrackEvent(Event):
-    """An event representing arbitrary data at a particular tick.
-
-    This is questionably named, as this parsing library refers to the various chart file sections
-    as "tracks". This event only occurs in instrument tracks.
-    """
+    """An event representing arbitrary data at a particular tick."""
 
     Self = typ.TypeVar("Self", bound="TrackEvent")
 

@@ -36,8 +36,8 @@ class GlobalEventsTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
     Self = typ.TypeVar("Self", bound="GlobalEventsTrack")
 
-    section_name: typ.Final[str] = "Events"
-    """The name of this track's section in a ``.chart`` file."""
+    header_tag: typ.Final[str] = "Events"
+    """The name of this track's data section in a ``.chart`` file."""
 
     text_events: Sequence[TextEvent]
 
@@ -183,8 +183,9 @@ class GlobalEvent(Event):
             raw_tick, raw_value = m.groups()
             return cls(tick=Tick(int(raw_tick)), value=raw_value)
 
-        # TODO: Sphinx presents inherited attributes here, after the definition of ParsedData. That
-        # looks ugly as sin in Sphinx -- how can I ensure the attributes stay together in Sphinx.
+        # TODO(P2): Sphinx presents inherited attributes here, after the definition of ParsedData.
+        # That looks ugly as sin in Sphinx -- how can I ensure the attributes stay together in
+        # Sphinx?
 
 
 @typ.final

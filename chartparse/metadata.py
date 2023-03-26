@@ -92,7 +92,7 @@ FieldValueParser = Callable[[str], FieldValue]
 
 
 class _FieldValuesDict(typ.TypedDict, total=False):
-    # TODO: Should resolution even be here? I think it is technically part of this section of the
+    # TODO(P2): Should resolution even be here? I think it is technically part of this part of the
     # chart, but it is much more useful coupled to BPMEvents.
     resolution: Ticks
     offset: int
@@ -246,8 +246,8 @@ class Metadata(DictPropertiesEqMixin, DictReprMixin):
 
     Self = typ.TypeVar("Self", bound="Metadata")
 
-    section_name: typ.ClassVar[str] = "Song"
-    """The name of this track's section in a ``.chart`` file."""
+    header_tag: typ.ClassVar[str] = "Song"
+    """The name of this track's data section in a ``.chart`` file."""
 
     resolution: Ticks
     """The number of ticks for which a quarter note lasts."""

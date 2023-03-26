@@ -28,7 +28,7 @@ _missing_sync_track_chart_filepath = _chart_directory_filepath / "missing_sync_t
 _missing_global_events_track_chart_filepath = (
     _chart_directory_filepath / "missing_global_events_track.chart"
 )
-_unhandled_section_chart_filepath = _chart_directory_filepath / "unhandled_section.chart"
+_unhandled_data_section_chart_filepath = _chart_directory_filepath / "unhandled_data_section.chart"
 
 
 class TestChart(object):
@@ -77,7 +77,7 @@ class TestChart(object):
         ) -> None:
             mocker.patch.object(
                 Chart,
-                "_parse_section_dict",
+                "_partition_lines_by_data_section",
                 return_value={
                     "Song": [invalid_chart_line],
                     "Events": [invalid_chart_line],
@@ -116,8 +116,8 @@ class TestChart(object):
             assert got == default_chart
 
             # This assert tests the want_tracks filtering logic; because EasySingle is returned by
-            # _parse_section_dict, InstrumentTrack.from_chart_lines will be called more than once
-            # if the filtering logic does not work.
+            # _partition_lines_by_data_section, InstrumentTrack.from_chart_lines will be called
+            # more than once if the filtering logic does not work.
             instrument_track_from_chart_lines_mock.assert_called_once_with(
                 Instrument.GUITAR,
                 Difficulty.EXPERT,
@@ -146,24 +146,24 @@ class TestChart(object):
             with open(path, "r", encoding="utf-8-sig") as f, pytest.raises(ValueError):
                 _ = Chart.from_file(f)
 
-        def test_unhandled_section(self, caplog: pytest.LogCaptureFixture) -> None:
-            with open(_unhandled_section_chart_filepath, "r", encoding="utf-8-sig") as f:
+        def test_unhandled_data_section(self, caplog: pytest.LogCaptureFixture) -> None:
+            with open(_unhandled_data_section_chart_filepath, "r", encoding="utf-8-sig") as f:
                 _ = Chart.from_file(f)
             logchecker = LogChecker(caplog)
             logchecker.assert_contains_string_in_one_line(
-                Chart._unhandled_section_log_msg_tmpl.format("Foo")
+                Chart._unhandled_data_section_log_msg_tmpl.format("Foo")
             )
 
-    class TestFindSections(object):
+    class TestPartitionLinesByDataSection(object):
         def test(self) -> None:
             with open(_valid_chart_filepath, "r", encoding="utf-8-sig") as f:
                 lines = f.read().splitlines()
 
-            sections = Chart._parse_section_dict(lines)
+            data_sections = Chart._partition_lines_by_data_section(lines)
 
-            def validate_lines(section_name: str, want_lines: Sequence[str]) -> None:
-                assert section_name in sections
-                lines = sections[section_name]
+            def validate_lines(header_tag: str, want_lines: Sequence[str]) -> None:
+                assert header_tag in data_sections
+                lines = data_sections[header_tag]
                 assert list(lines) == want_lines
 
             validate_lines(
@@ -245,7 +245,7 @@ class TestChart(object):
                     lines=["[Song", "{", '  Name = "Song Name"', "}"],
                 ),
                 testcase.new(
-                    "malformed_noninitial_section",
+                    "malformed_noninitial_data_section",
                     lines=[
                         "[Song]",
                         "{",
@@ -258,7 +258,7 @@ class TestChart(object):
         )
         def test_raises(self, lines: Sequence[str]) -> None:
             with pytest.raises(RegexNotMatchError):
-                _ = Chart._parse_section_dict(lines)
+                _ = Chart._partition_lines_by_data_section(lines)
 
     class TestNotesPerSecond(object):
         @testcase.parametrize(

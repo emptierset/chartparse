@@ -39,8 +39,8 @@ class SyncTrack(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
 
     Self = typ.TypeVar("Self", bound="SyncTrack")
 
-    section_name: typ.ClassVar[str] = "SyncTrack"
-    """The name of this track's section in a ``.chart`` file."""
+    header_tag: typ.ClassVar[str] = "SyncTrack"
+    """The name of this track's data section in a ``.chart`` file."""
 
     time_signature_events: Sequence[TimeSignatureEvent]
 
@@ -179,7 +179,7 @@ class TimeSignatureEvent(Event):
     class ParsedData(Event.ParsedData, DictReprMixin):
         """The data on a single chart line associated with a ``TimeSignatureEvent``."""
 
-        # TODO: Figure out how to hide this from Sphinx without prepending an underscore.
+        # TODO(P2): Figure out how to hide this from Sphinx without prepending an underscore.
         Self = typ.TypeVar("Self", bound="TimeSignatureEvent.ParsedData")
 
         upper: int
@@ -377,7 +377,7 @@ class BPMEvents(Sequence[BPMEvent]):
     def __getitem__(self, index: int | slice) -> BPMEvent | Sequence[BPMEvent]:
         return self.events[index]
 
-    # TODO: Figure out why kwargs docstring is ugly in Sphinx.
+    # TODO(P2): Figure out why kwargs docstring is ugly in Sphinx.
     def timestamp_at_tick_no_optimize_return(self, tick: Tick) -> Timestamp:
         """Returns the timestamp at the input tick.
 

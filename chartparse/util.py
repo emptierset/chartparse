@@ -38,9 +38,9 @@ class DictReprMixin(object):
         return f"{type(self).__name__}({str(instance_attrs)[1:-1]})"
 
 
-# TODO: this (and DictReprMixin) probably needs to handle missing values somehow? The repr of bare
-# test objects raises an exception for missing attributes, but I guess it expects them to be there
-# because they are dataclasses?
+# TODO(P2): this (and DictReprMixin) probably needs to handle missing values somehow? The repr of
+# bare test objects raises an exception for missing attributes, but I guess it expects them to be
+# there because they are dataclasses?
 class DictReprTruncatedSequencesMixin(object):
     """A mixin implementing ``__repr__`` by dumping ``__dict__()`` with truncated sequences.
 
@@ -55,8 +55,8 @@ class DictReprTruncatedSequencesMixin(object):
     """
 
     def __repr__(self) -> str:
-        # TODO: This doesn't work if dataclasses were created in the "bare" manner, since it thinks
-        # all of the dataclass' fields should be set, and crashes when they aren't. Possible
+        # TODO(P2): This doesn't work if dataclasses were created in the "bare" manner, since it
+        # thinks all of the dataclass' fields should be set, and crashes when they aren't. Possible
         # solution is to migrate all usage of "bare" to "minimal".
         instance_attrs = {k: v for k, v in self.__dict__.items() if not hasattr(self.__class__, k)}
 

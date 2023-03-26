@@ -69,17 +69,16 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
     instrument_tracks: typ.Final[InstrumentTrackMap]
     """Contains all of the chart's :class:`~chartparse.instrument.InstrumentTrack` objects."""
 
-    _required_sections: typ.Final[list[str]] = [
-        Metadata.section_name,
-        SyncTrack.section_name,
-        GlobalEventsTrack.section_name,
+    _required_header_tags: typ.Final[list[str]] = [
+        Metadata.header_tag,
+        SyncTrack.header_tag,
+        GlobalEventsTrack.header_tag,
     ]
 
-    # TODO: "section names" are called "header tags" in the spec.
-    _section_name_regex: typ.Final[str] = r"^\[(.+?)\]$"
-    _section_name_regex_prog: typ.Final[typ.Pattern[str]] = re.compile(_section_name_regex)
+    _header_tag_regex: typ.Final[str] = r"^\[(.+?)\]$"
+    _header_tag_regex_prog: typ.Final[typ.Pattern[str]] = re.compile(_header_tag_regex)
 
-    _unhandled_section_log_msg_tmpl: typ.Final[str] = "unhandled section titled '{}'"
+    _unhandled_data_section_log_msg_tmpl: typ.Final[str] = "unhandled data section titled '{}'"
 
     def __init__(
         self,
@@ -131,19 +130,19 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
             A ``Chart`` object, initialized with data parsed from ``fp``.
         """
         lines = fp.read().splitlines()
-        section_dict = cls._parse_section_dict(lines)
-        if not all(section in section_dict for section in cls._required_sections):
+        data_sections = cls._partition_lines_by_data_section(lines)
+        if not all(tag in data_sections for tag in cls._required_header_tags):
             raise ValueError(
-                f"parsed section list {list(section_dict.keys())} does not contain all "
-                f"required sections {cls._required_sections}"
+                f"chart has data sections {list(data_sections.keys())}; does not contain all "
+                f"required data sections {cls._required_header_tags}"
             )
 
-        metadata = Metadata.from_chart_lines(section_dict[Metadata.section_name])
+        metadata = Metadata.from_chart_lines(data_sections[Metadata.header_tag])
         sync_track = SyncTrack.from_chart_lines(
-            metadata.resolution, section_dict[SyncTrack.section_name]
+            metadata.resolution, data_sections[SyncTrack.header_tag]
         )
         global_events_track = GlobalEventsTrack.from_chart_lines(
-            section_dict[GlobalEventsTrack.section_name], sync_track.bpm_events
+            data_sections[GlobalEventsTrack.header_tag], sync_track.bpm_events
         )
 
         instrument_track_name_to_instrument_difficulty_pair: dict[
@@ -151,10 +150,10 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
         ] = {d.value + i.value: (i, d) for i, d in itertools.product(Instrument, Difficulty)}
 
         instrument_tracks = InstrumentTrackMap(collections.defaultdict(dict))
-        for section_name, section_lines in section_dict.items():
-            if section_name in instrument_track_name_to_instrument_difficulty_pair:
+        for header_tag, data_section_lines in data_sections.items():
+            if header_tag in instrument_track_name_to_instrument_difficulty_pair:
                 instrument_difficulty_pair = instrument_track_name_to_instrument_difficulty_pair[
-                    section_name
+                    header_tag
                 ]
                 if want_tracks is not None and instrument_difficulty_pair not in want_tracks:
                     continue
@@ -162,35 +161,35 @@ class Chart(DictPropertiesEqMixin, DictReprTruncatedSequencesMixin):
                 track = InstrumentTrack.from_chart_lines(
                     instrument,
                     difficulty,
-                    section_lines,
+                    data_section_lines,
                     sync_track.bpm_events,
                 )
                 instrument_tracks[instrument][difficulty] = track
-            elif section_name not in cls._required_sections:
-                logger.warning(cls._unhandled_section_log_msg_tmpl.format(section_name))
+            elif header_tag not in cls._required_header_tags:
+                logger.warning(cls._unhandled_data_section_log_msg_tmpl.format(header_tag))
 
         return cls(metadata, global_events_track, sync_track, instrument_tracks)
 
     @classmethod
-    def _parse_section_dict(cls, lines: Iterable[str]) -> dict[str, Iterable[str]]:
+    def _partition_lines_by_data_section(cls, lines: Iterable[str]) -> dict[str, Iterable[str]]:
         d: dict[str, Iterable[str]] = dict()
-        curr_section_name = None
+        curr_header_tag = None
         curr_first_line_index = None
         curr_last_line_index = None
         for i, line in enumerate(lines):
-            if curr_section_name is None:
-                m = cls._section_name_regex_prog.match(line)
+            if curr_header_tag is None:
+                m = cls._header_tag_regex_prog.match(line)
                 if not m:
-                    raise RegexNotMatchError(cls._section_name_regex, line)
-                curr_section_name = m.group(1)
+                    raise RegexNotMatchError(cls._header_tag_regex, line)
+                curr_header_tag = m.group(1)
             elif line == "{":
                 curr_first_line_index = i + 1
             elif line == "}":
                 curr_last_line_index = i - 1
-                d[curr_section_name] = itertools.islice(
+                d[curr_header_tag] = itertools.islice(
                     lines, curr_first_line_index, curr_last_line_index + 1
                 )
-                curr_section_name = None
+                curr_header_tag = None
                 curr_first_line_index = None
                 curr_last_line_index = None
         return d

@@ -117,7 +117,7 @@ def minimal_instrument_track(bare_instrument_track: InstrumentTrack) -> Instrume
     """Minimal initialization necessary to avoid attribute errors."""
     unsafe.setattr(bare_instrument_track, "instrument", defaults.instrument)
     unsafe.setattr(bare_instrument_track, "difficulty", defaults.difficulty)
-    unsafe.setattr(bare_instrument_track, "section_name", "ExpertSingle")
+    unsafe.setattr(bare_instrument_track, "header_tag", "ExpertSingle")
     unsafe.setattr(bare_instrument_track, "note_events", [])
     unsafe.setattr(bare_instrument_track, "star_power_events", [])
     return bare_instrument_track

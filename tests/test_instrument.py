@@ -128,7 +128,7 @@ class TestComplexSustainFromParsedDatas(object):
 
 
 class TestInstrumentTrack(object):
-    class TestSectionName(object):
+    class TestHeaderTag(object):
         @testcase.parametrize(
             ["instrument", "difficulty", "want"],
             [
@@ -146,7 +146,7 @@ class TestInstrumentTrack(object):
         )
         def test(self, instrument: Instrument, difficulty: Difficulty, want: str) -> None:
             track = InstrumentTrackWithDefaults(instrument=instrument, difficulty=difficulty)
-            got = track.section_name
+            got = track.header_tag
             assert got == want
 
     class TestFromChartLines(object):
@@ -225,7 +225,7 @@ class TestInstrumentTrack(object):
                 **kwargs,
             )
 
-        # TODO: This doesn't actually test timestamp generation.
+        # TODO(P1): This doesn't actually test timestamp generation.
         @testcase.parametrize(
             ["lines", "want_note_events", "want_star_power_events"],
             [
@@ -598,7 +598,8 @@ class TestNoteEvent(object):
             [
                 testcase.new(
                     "forced_tap_note_is_a_tap",
-                    # TODO: I don't actually know if this test case is accurate. Needs verifying.
+                    # TODO(P1): I don't actually know if this test case is accurate. Needs
+                    # verifying.
                     tick=tests.helpers.tick.note_duration_to_ticks(
                         NoteDuration.SIXTEENTH,
                     ),
@@ -1153,7 +1154,7 @@ class TestSpecialEvent(object):
             assert got == want
 
 
-# TODO: Test regex?
+# TODO(P2): Test regex?
 class TestStarPowerEvent(object):
     pass
 

@@ -40,7 +40,7 @@ class RegexNotMatchError(Exception):
     regex: typ.Final[str]
     message: typ.Final[str]
 
-    # TODO: How do you document overloads with Sphinx?
+    # TODO(P2): How do you document overloads with Sphinx?
     @typ.overload
     def __init__(self, regex: str) -> None:
         ...  # pragma: no cover
