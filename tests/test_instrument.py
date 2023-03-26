@@ -47,16 +47,16 @@ from tests.helpers.sync import BPMEventsWithMock, BPMEventWithDefaults
 class TestNote(object):
     class TestFromParsedData(object):
         @testcase.parametrize(
-            ["data", "want"],
+            ["datas", "want"],
             [
                 testcase.new(
                     "single_data",
-                    data=NoteEventParsedDataWithDefaults(note_track_index=NoteTrackIndex.G),
+                    datas=[NoteEventParsedDataWithDefaults(note_track_index=NoteTrackIndex.G)],
                     want=Note.G,
                 ),
                 testcase.new(
                     "multiple_data",
-                    data=[
+                    datas=[
                         NoteEventParsedDataWithDefaults(note_track_index=NoteTrackIndex.G),
                         NoteEventParsedDataWithDefaults(note_track_index=NoteTrackIndex.R),
                     ],
@@ -64,10 +64,8 @@ class TestNote(object):
                 ),
             ],
         )
-        def test(
-            self, data: NoteEvent.ParsedData | Sequence[NoteEvent.ParsedData], want: Note
-        ) -> None:
-            got = Note.from_parsed_data(data)
+        def test(self, datas: Sequence[NoteEvent.ParsedData], want: Note) -> None:
+            got = Note.from_parsed_datas(datas)
             assert got == want
 
 
@@ -512,7 +510,7 @@ class TestNoteEvent(object):
     class TestFromParsedData(object):
         @testcase.parametrize(
             [
-                "data",
+                "datas",
                 "want_tick",
                 "want_sustain",
                 "want_note",
@@ -524,9 +522,11 @@ class TestNoteEvent(object):
             [
                 testcase.new(
                     "single_data",
-                    data=NoteEventParsedDataWithDefaults(
-                        tick=1, note_track_index=NoteTrackIndex.G, sustain=100
-                    ),
+                    datas=[
+                        NoteEventParsedDataWithDefaults(
+                            tick=1, note_track_index=NoteTrackIndex.G, sustain=100
+                        )
+                    ],
                     want_tick=1,
                     want_sustain=100,
                     want_note=Note.G,
@@ -537,7 +537,7 @@ class TestNoteEvent(object):
                 ),
                 testcase.new(
                     "multiple_data",
-                    data=[
+                    datas=[
                         NoteEventParsedDataWithDefaults(
                             tick=1, note_track_index=NoteTrackIndex.G, sustain=100
                         ),
@@ -559,7 +559,7 @@ class TestNoteEvent(object):
             self,
             mocker: typ.Any,
             minimal_bpm_events_with_mock: BPMEventsWithMock,
-            data: NoteEvent.ParsedData | Sequence[NoteEvent.ParsedData],
+            datas: Sequence[NoteEvent.ParsedData],
             want_tick: int,
             want_sustain: ComplexSustain,
             want_note: Note,
@@ -581,7 +581,7 @@ class TestNoteEvent(object):
             spy_init = mocker.spy(NoteEvent, "__init__")
 
             _event, _bpm_event_index, _star_power_event_index = NoteEvent.from_parsed_data(
-                data,
+                datas,
                 None,
                 [defaults.star_power_event],
                 typ.cast(BPMEvents, minimal_bpm_events_with_mock),

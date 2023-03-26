@@ -164,20 +164,15 @@ class Note(Enum):
         return sum(self.value) > 1
 
     @classmethod
-    def from_parsed_data(
-        cls: type[Self], data: NoteEvent.ParsedData | Sequence[NoteEvent.ParsedData]
-    ) -> Self:
-        """Returns the ``Note`` represented by one or more ``NoteEvent.ParsedData``\\s.
+    def from_parsed_datas(cls: type[Self], datas: Sequence[NoteEvent.ParsedData]) -> Self:
+        """Returns the ``Note`` represented by some number of ``NoteEvent.ParsedData``\\s.
 
         Args:
-            data: The data or datas whose note track indices should be examined.
+            datas: The data whose note track indices should be examined.
 
         Returns:
             The ``Note`` represented by ``datas``.
         """
-        # TODO(P1): Is this isinstance check really slow?
-        datas = data if isinstance(data, Sequence) else [data]
-
         n = [0] * 5
         for d in datas:
             try:
@@ -507,20 +502,20 @@ class NoteEvent(Event):
     @classmethod
     def from_parsed_data(
         cls: type[Self],
-        data: NoteEvent.ParsedData | Sequence[NoteEvent.ParsedData],
+        datas: Sequence[NoteEvent.ParsedData],
         prev_event: NoteEvent | None,
         star_power_events: Sequence[StarPowerEvent],
         bpm_events: BPMEvents,
         proximal_bpm_event_index: int = 0,
         star_power_event_index: int = 0,
     ) -> tuple[Self, int, int]:
-        """Obtain an instance of this object from parsed data.
+        """Obtain an instance of this object from parsed datas.
 
-        This function assumes that, if there are multiple input datas, they all have the same
-        ``tick`` value. If they do not, this function's behavior is undefined.
+        This function assumes that all input ``datas`` have the same ``tick`` value. If they do
+        not, this function's behavior is undefined.
 
         Args:
-            data: The data necessary to create an event.
+            datas: The data necessary to create an event.
 
             prev_event: The event of this type with the greatest ``tick`` value less than that of
                 this event. If this is ``None``, then this must be the tick-wise first event of
@@ -540,10 +535,8 @@ class NoteEvent(Event):
             An instance of this object initialized from the input parsed data, along with the index
             of the latest ``BPMEvent`` and ``StarPowerEvent`` not after this event
         """
-        datas = data if isinstance(data, Sequence) else [data]
-
         tick = datas[0].tick
-        note = Note.from_parsed_data(data)
+        note = Note.from_parsed_datas(datas)
         sustain = complex_sustain_from_parsed_datas(datas)
         is_tap = any(d.note_track_index == NoteTrackIndex.TAP for d in datas)
         is_forced = any(d.note_track_index == NoteTrackIndex.FORCED for d in datas)
