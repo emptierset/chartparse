@@ -10,6 +10,9 @@ Testcase = typ.NewType("Testcase", tuple[str, dict[str, typ.Any]])
 AnonymousTestcase = typ.NewType("AnonymousTestcase", tuple[dict[str, typ.Any]])
 
 
+# TODO(P2): rename this to pytestcase and make it an independent Python package on PIP.
+
+
 def new(testname: str, **kwargs: typ.Any) -> Testcase:
     return Testcase((testname, kwargs))
 

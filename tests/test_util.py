@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import dataclasses
 import typing as typ
+
+import pytest
 
 from chartparse.util import (
     AllValuesGettableEnum,
@@ -83,21 +86,38 @@ class TestDictReprTruncatedSequencesMixin(object):
         def __init__(self, x: typ.Any):
             self.x = x
 
-    @testcase.parametrize(
-        ["x"],
-        [
-            testcase.new(
-                "non-sequence",
-                x=1,
-            ),
-            testcase.new(
-                "sequence",
-                x=[3, 1],
-            ),
-        ],
-    )
+    @dataclasses.dataclass
+    class TrinketDataclass(DictReprTruncatedSequencesMixin):
+        x: typ.Any
+
+    # This just exercises the path; asserting the output is irksome and unnecessary.
     class TestRepr(object):
-        # This just exercises the path; asserting the output is irksome and unnecessary.
-        def test(self, x: typ.Any) -> None:
-            f = TestDictReprTruncatedSequencesMixin.TrinketClass(x)
-            str(f)
+        @testcase.parametrize(
+            ["x"],
+            [
+                testcase.new(
+                    "non-sequence",
+                    x=1,
+                ),
+                testcase.new(
+                    "sequence",
+                    x=[3, 1],
+                ),
+            ],
+        )
+        def test_class(self, x: typ.Any) -> None:
+            c = TestDictReprTruncatedSequencesMixin.TrinketClass(x)
+            str(c)
+
+        def test_bare_class(self) -> None:
+            c = TestDictReprTruncatedSequencesMixin.TrinketClass.__new__(
+                TestDictReprTruncatedSequencesMixin.TrinketClass
+            )
+            str(c)
+
+        def test_bare_dataclass(self) -> None:
+            c = TestDictReprTruncatedSequencesMixin.TrinketDataclass.__new__(
+                TestDictReprTruncatedSequencesMixin.TrinketDataclass
+            )
+            with pytest.raises(AttributeError):
+                str(c)
