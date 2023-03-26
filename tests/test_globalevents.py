@@ -172,6 +172,7 @@ class TestTextEvent(object):
                     testcase.new_anonymous(value="one_word"),
                     testcase.new_anonymous(value="56numbers34"),
                     testcase.new_anonymous(value="$%%symbols*#&$"),
+                    testcase.new_anonymous(value="two words"),
                 ],
             )
             def test_match(self, tick: int, value: str) -> None:
@@ -189,8 +190,7 @@ class TestTextEvent(object):
             @testcase.parametrize(
                 ["tick", "value"],
                 [
-                    # TODO(P1): Check documentation. Is this really supposed to not match?
-                    testcase.new_anonymous(tick=1, value="two words"),
+                    testcase.new_anonymous(tick=1, value="has \"quotes\""),
                 ],
             )
             def test_no_match(self, tick: int, value: str) -> None:

@@ -195,9 +195,12 @@ class TextEvent(GlobalEvent):
     @typ.final
     @dataclasses.dataclass(kw_only=True, frozen=True, repr=False)
     class ParsedData(GlobalEvent.ParsedData, DictReprMixin):
-        """The data on a single chart line associated with a ``TextEvent``."""
+        """The data on a single chart line associated with a ``TextEvent``.
 
-        _value_regex = r"([^ ]*?)"
+        Must not contain quotation marks.
+        """
+
+        _value_regex = r'([^"]*?)'
         _regex = GlobalEvent.ParsedData._regex_template.format(_value_regex)
         _regex_prog = re.compile(_regex)
 
