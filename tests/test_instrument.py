@@ -460,6 +460,7 @@ class TestInstrumentTrack(object):
             minimal_bpm_events: BPMEvents,
         ) -> None:
             unsafe.setattr(minimal_bpm_events, "events", [BPMEventWithDefaults()])
+            unsafe.setattr(minimal_bpm_events, "resolution", defaults.resolution)
             got = InstrumentTrack.from_chart_lines(
                 defaults.instrument,
                 defaults.difficulty,
@@ -488,12 +489,12 @@ class TestInstrumentTrack(object):
         )
         def test(
             self,
-            bare_instrument_track: InstrumentTrack,
+            minimal_instrument_track: InstrumentTrack,
             note_events: Sequence[NoteEvent],
             want: Timestamp,
         ) -> None:
-            unsafe.setattr(bare_instrument_track, "note_events", note_events)
-            got = bare_instrument_track.last_note_end_timestamp
+            unsafe.setattr(minimal_instrument_track, "note_events", note_events)
+            got = minimal_instrument_track.last_note_end_timestamp
             assert got == want
 
         def test_empty(self, minimal_instrument_track: InstrumentTrack) -> None:
@@ -951,12 +952,12 @@ class TestNoteEvent(object):
             )
             def test(
                 self,
-                bare_note_event_parsed_data: NoteEvent.ParsedData,
+                minimal_note_event_parsed_data: NoteEvent.ParsedData,
                 sustain: ComplexSustain,
                 want: ComplexSustain,
             ) -> None:
-                bare_note_event_parsed_data.__dict__["sustain"] = sustain
-                got = bare_note_event_parsed_data.sustain
+                minimal_note_event_parsed_data.__dict__["sustain"] = sustain
+                got = minimal_note_event_parsed_data.sustain
                 assert got == want
 
     class TestComputeStarPowerData(object):
@@ -1050,12 +1051,16 @@ class TestNoteEvent(object):
             ],
         )
         def test(
-            self, mocker: typ.Any, bare_note_event: NoteEvent, sustain: ComplexSustain, want: Ticks
+            self,
+            mocker: typ.Any,
+            minimal_note_event: NoteEvent,
+            sustain: ComplexSustain,
+            want: Ticks,
         ) -> None:
             # Test the wrapper.
-            unsafe.setattr(bare_note_event, "sustain", 100)
+            unsafe.setattr(minimal_note_event, "sustain", 100)
             spy = mocker.spy(NoteEvent, "_longest_sustain")
-            bare_note_event.longest_sustain
+            minimal_note_event.longest_sustain
             spy.assert_called_once_with(100)
 
             # Test the implementation.
@@ -1067,11 +1072,11 @@ class TestNoteEvent(object):
                 _ = NoteEvent._longest_sustain(SustainTuple((None, None, None, None, None)))
 
     class TestEndTick(object):
-        def test_wrapper(self, mocker: typ.Any, bare_note_event: NoteEvent) -> None:
-            unsafe.setattr(bare_note_event, "tick", 100)
-            unsafe.setattr(bare_note_event, "sustain", 10)
+        def test_wrapper(self, mocker: typ.Any, minimal_note_event: NoteEvent) -> None:
+            unsafe.setattr(minimal_note_event, "tick", 100)
+            unsafe.setattr(minimal_note_event, "sustain", 10)
             spy = mocker.spy(NoteEvent, "_end_tick")
-            bare_note_event.end_tick
+            minimal_note_event.end_tick
             assert spy.called_once_with(100, 10)
 
         def test_impl(self) -> None:

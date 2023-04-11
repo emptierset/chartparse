@@ -291,7 +291,7 @@ class TestChart(object):
             ],
         )
         def test_impl(
-            self, bare_chart: Chart, start_time: Timestamp, end_time: Timestamp, want: float
+            self, minimal_chart: Chart, start_time: Timestamp, end_time: Timestamp, want: float
         ) -> None:
             note_event1 = NoteEventWithDefaults(
                 timestamp=Timestamp(timedelta(seconds=1)),
@@ -306,7 +306,7 @@ class TestChart(object):
                 note=Note.YBO,
             )
             test_notes_per_second_note_events = [note_event1, note_event2, note_event3]
-            got = bare_chart._notes_per_second(
+            got = minimal_chart._notes_per_second(
                 test_notes_per_second_note_events, start_time, end_time
             )
             assert got == want
@@ -327,10 +327,10 @@ class TestChart(object):
             ],
         )
         def test_impl_error(
-            self, bare_chart: Chart, start_time: Timestamp, end_time: Timestamp
+            self, minimal_chart: Chart, start_time: Timestamp, end_time: Timestamp
         ) -> None:
             with pytest.raises(ValueError):
-                _ = bare_chart._notes_per_second([], start_time, end_time)
+                _ = minimal_chart._notes_per_second([], start_time, end_time)
 
         @testcase.parametrize(
             ["start_tick", "end_tick", "want_start_time", "want_end_time"],
@@ -479,14 +479,9 @@ class TestChart(object):
                     difficulty,
                 )
 
-        def test_empty_note_events(
-            self,
-            bare_chart: Chart,
-            minimal_instrument_tracks: InstrumentTrackMap,
-        ) -> None:
-            unsafe.setattr(bare_chart, "instrument_tracks", minimal_instrument_tracks)
+        def test_empty_note_events(self, minimal_chart: Chart) -> None:
             with pytest.raises(ValueError):
-                _ = bare_chart.notes_per_second(
+                _ = minimal_chart.notes_per_second(
                     defaults.instrument,
                     defaults.difficulty,
                 )

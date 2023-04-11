@@ -423,13 +423,14 @@ class TestBPMEvents(object):
         )
         def test(
             self,
-            bare_bpm_events: BPMEvents,
+            minimal_bpm_events: BPMEvents,
             bpm_event_list: Sequence[BPMEvent],
             tick: int,
             want: int,
         ) -> None:
-            unsafe.setattr(bare_bpm_events, "events", bpm_event_list)
-            got = bare_bpm_events._index_of_proximal_event(Tick(tick))
+            unsafe.setattr(minimal_bpm_events, "events", bpm_event_list)
+            unsafe.setattr(minimal_bpm_events, "resolution", defaults.resolution)
+            got = minimal_bpm_events._index_of_proximal_event(Tick(tick))
             assert got == want
 
         @testcase.parametrize(
@@ -464,14 +465,15 @@ class TestBPMEvents(object):
         )
         def test_raises(
             self,
-            bare_bpm_events: BPMEvents,
+            minimal_bpm_events: BPMEvents,
             tick: int,
             start_iteration_index: int,
             bpm_event_list: Sequence[BPMEvent],
         ) -> None:
-            unsafe.setattr(bare_bpm_events, "events", bpm_event_list)
+            unsafe.setattr(minimal_bpm_events, "events", bpm_event_list)
+            unsafe.setattr(minimal_bpm_events, "resolution", defaults.resolution)
             with pytest.raises(ValueError):
-                _ = bare_bpm_events._index_of_proximal_event(
+                _ = minimal_bpm_events._index_of_proximal_event(
                     defaults.tick,
                     start_iteration_index=start_iteration_index,
                 )
